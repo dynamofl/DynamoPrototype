@@ -9,10 +9,11 @@ import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Play, Save, Share, History, Settings, Code, Eye, AlertTriangle, CheckCircle, XCircle, Clock, Plus, X, Info } from 'lucide-react'
+
+import { Play, Save, Share, History, Settings, Code, Eye, AlertTriangle, CheckCircle, XCircle, Clock, Plus, X, Info, Trash2 } from 'lucide-react'
 import { APIKeyStorage } from '@/lib/secure-storage'
 import { runEvaluation, getAvailableModels } from '@/lib/evalRunner'
-import type { EvaluationInput, EvaluationConfig, EvaluationResult } from '@/types/evaluation'
+import type { EvaluationInput, EvaluationConfig, EvaluationResult, EvaluationPrompt } from '@/types/evaluation'
 import type { Guardrail } from '@/types'
 import { useGuardrails } from '@/lib/useGuardrails'
 import {
@@ -87,9 +88,14 @@ export function EvaluationSandbox() {
   })
 
   const [evaluationInput, setEvaluationInput] = useState<EvaluationInput>({
-    prompt: '',
-    topic: '',
-    userMarkedAdversarial: false
+    prompts: [
+      {
+        id: crypto.randomUUID(),
+        prompt: '',
+        topic: '',
+        userMarkedAdversarial: false
+      }
+    ]
   })
 
   const [metricsEnabled, setMetricsEnabled] = useState<MetricToggles>({
@@ -135,9 +141,45 @@ export function EvaluationSandbox() {
   // Get available models for selection
   const availableModels = getAvailableModels()
 
+  // Helper functions to manage prompts
+  const addPrompt = () => {
+    setEvaluationInput(prev => ({
+      ...prev,
+      prompts: [
+        ...prev.prompts,
+        {
+          id: crypto.randomUUID(),
+          prompt: '',
+          topic: '',
+          userMarkedAdversarial: false
+        }
+      ]
+    }))
+  }
+
+  const removePrompt = (id: string) => {
+    if (evaluationInput.prompts.length > 1) {
+      setEvaluationInput(prev => ({
+        ...prev,
+        prompts: prev.prompts.filter(p => p.id !== id)
+      }))
+    }
+  }
+
+  const updatePrompt = (id: string, field: keyof EvaluationPrompt, value: string | boolean) => {
+    setEvaluationInput(prev => ({
+      ...prev,
+      prompts: prev.prompts.map(p => 
+        p.id === id ? { ...p, [field]: value } : p
+      )
+    }))
+  }
+
   const handleSubmit = async () => {
-    if (!evaluationInput.prompt.trim()) {
-      setError('Please provide a prompt')
+    // Check if at least one prompt has content
+    const hasValidPrompt = evaluationInput.prompts.some(p => p.prompt.trim())
+    if (!hasValidPrompt) {
+      setError('Please provide at least one prompt')
       return
     }
 
@@ -534,7 +576,7 @@ export function EvaluationSandbox() {
                 <Button 
                   className="w-full" 
                   onClick={handleSubmit}
-                  disabled={isLoading || !evaluationInput.prompt.trim() || availableModels.length === 1 && availableModels[0].id === 'no-models'}
+                                          disabled={isLoading || !evaluationInput.prompts.some(p => p.prompt.trim()) || availableModels.length === 1 && availableModels[0].id === 'no-models'}
                 >
                   <Play className="mr-2 h-4 w-4" />
                   {isLoading ? 'Generating...' : 'Submit'}
@@ -570,48 +612,84 @@ export function EvaluationSandbox() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* Prompt Input */}
-                  <div className="space-y-2">
-                    <Label htmlFor="prompt">Prompt</Label>
-                    <Textarea
-                      id="prompt"
-                      placeholder="Enter the prompt you want to evaluate..."
-                      value={evaluationInput.prompt}
-                      onChange={(e) => setEvaluationInput({ ...evaluationInput, prompt: e.target.value })}
-                      className="min-h-[120px] resize-none"
-                    />
-                  </div>
-
-                  {/* Topic Input */}
-                  <div className="space-y-2">
-                    <Label htmlFor="topic">
-                      Topic/Category
-                      <span className="text-sm text-muted-foreground font-normal ml-1">(optional)</span>
-                    </Label>
-                    <Input
-                      id="topic"
-                      placeholder="e.g., Housing, Finance, Legal, Healthcare, Education (leave empty for 'any')"
-                      value={evaluationInput.topic}
-                      onChange={(e) => setEvaluationInput({ ...evaluationInput, topic: e.target.value })}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      If no topic is specified, the evaluation will consider the prompt under "any" category
-                    </p>
-                  </div>
-
-                  {/* Adversarial Toggle */}
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="adversarial">Expect Blocked Response</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Indicate if you expect the AI to block/refuse this prompt (adversarial prompt)
-                      </p>
+                  {/* Multiple Prompts Table */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label>Evaluation Prompts</Label>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={addPrompt}
+                        className="flex items-center gap-2"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Add Prompt
+                      </Button>
                     </div>
-                    <Switch
-                      id="adversarial"
-                      checked={evaluationInput.userMarkedAdversarial}
-                      onCheckedChange={(checked) => setEvaluationInput({ ...evaluationInput, userMarkedAdversarial: checked })}
-                    />
+                    
+                    <div className="border rounded-md">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-[40%]">Prompt</TableHead>
+                            <TableHead className="w-[25%]">Topic (optional)</TableHead>
+                            <TableHead className="w-[25%]">Adversarial</TableHead>
+                            <TableHead className="w-[10%]">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {evaluationInput.prompts.map((prompt, index) => (
+                            <TableRow key={prompt.id}>
+                              <TableCell>
+                                <Textarea
+                                  placeholder="Enter the prompt you want to evaluate..."
+                                  value={prompt.prompt}
+                                  onChange={(e) => updatePrompt(prompt.id, 'prompt', e.target.value)}
+                                  className="min-h-[80px] resize-none text-sm"
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <Input
+                                  placeholder="e.g., Finance, Legal (leave empty for 'any')"
+                                  value={prompt.topic}
+                                  onChange={(e) => updatePrompt(prompt.id, 'topic', e.target.value)}
+                                  className="text-sm"
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center space-x-2">
+                                  <Switch
+                                    checked={prompt.userMarkedAdversarial}
+                                    onCheckedChange={(checked) => updatePrompt(prompt.id, 'userMarkedAdversarial', checked)}
+                                  />
+                                  <span className="text-xs text-muted-foreground">
+                                    {prompt.userMarkedAdversarial ? 'Blocked' : 'Passed'}
+                                  </span>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {evaluationInput.prompts.length > 1 && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => removePrompt(prompt.id)}
+                                    className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                    
+                    <p className="text-xs text-muted-foreground">
+                      Add multiple prompts to evaluate them together. Each prompt will be processed individually and results will be shown collectively.
+                    </p>
                   </div>
 
                   {/* Error Display */}
@@ -654,48 +732,84 @@ export function EvaluationSandbox() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      {/* Prompt Input */}
-                      <div className="space-y-2">
-                        <Label htmlFor="prompt">Prompt</Label>
-                        <Textarea
-                          id="prompt"
-                          placeholder="Enter the prompt you want to evaluate..."
-                          value={evaluationInput.prompt}
-                          onChange={(e) => setEvaluationInput({ ...evaluationInput, prompt: e.target.value })}
-                          className="min-h-[120px] resize-none"
-                        />
-                      </div>
-
-                      {/* Topic Input */}
-                      <div className="space-y-2">
-                        <Label htmlFor="topic">
-                          Topic/Category
-                          <span className="text-sm text-muted-foreground font-normal ml-1">(optional)</span>
-                        </Label>
-                        <Input
-                          id="topic"
-                          placeholder="e.g., Housing, Finance, Legal, Healthcare, Education (leave empty for 'any')"
-                          value={evaluationInput.topic}
-                          onChange={(e) => setEvaluationInput({ ...evaluationInput, topic: e.target.value })}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          If no topic is specified, the evaluation will consider the prompt under "any" category
-                        </p>
-                      </div>
-
-                      {/* Adversarial Toggle */}
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label htmlFor="adversarial">Expect Blocked Response</Label>
-                          <p className="text-sm text-muted-foreground">
-                            Indicate if you expect the AI to block/refuse this prompt (adversarial prompt)
-                          </p>
+                      {/* Multiple Prompts Table */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label>Evaluation Prompts</Label>
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={addPrompt}
+                            className="flex items-center gap-2"
+                          >
+                            <Plus className="h-4 w-4" />
+                            Add Prompt
+                          </Button>
                         </div>
-                        <Switch
-                          id="adversarial"
-                          checked={evaluationInput.userMarkedAdversarial}
-                          onCheckedChange={(checked) => setEvaluationInput({ ...evaluationInput, userMarkedAdversarial: checked })}
-                        />
+                        
+                        <div className="border rounded-md">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className="w-[40%]">Prompt</TableHead>
+                                <TableHead className="w-[25%]">Topic (optional)</TableHead>
+                                <TableHead className="w-[25%]">Adversarial</TableHead>
+                                <TableHead className="w-[10%]">Actions</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {evaluationInput.prompts.map((prompt, index) => (
+                                <TableRow key={prompt.id}>
+                                  <TableCell>
+                                    <Textarea
+                                      placeholder="Enter the prompt you want to evaluate..."
+                                      value={prompt.prompt}
+                                      onChange={(e) => updatePrompt(prompt.id, 'prompt', e.target.value)}
+                                      className="min-h-[80px] resize-none text-sm"
+                                    />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Input
+                                      placeholder="e.g., Finance, Legal (leave empty for 'any')"
+                                      value={prompt.topic}
+                                      onChange={(e) => updatePrompt(prompt.id, 'topic', e.target.value)}
+                                      className="text-sm"
+                                    />
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="flex items-center space-x-2">
+                                      <Switch
+                                        checked={prompt.userMarkedAdversarial}
+                                        onCheckedChange={(checked) => updatePrompt(prompt.id, 'userMarkedAdversarial', checked)}
+                                      />
+                                      <span className="text-xs text-muted-foreground">
+                                        {prompt.userMarkedAdversarial ? 'Blocked' : 'Passed'}
+                                      </span>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell>
+                                    {evaluationInput.prompts.length > 1 && (
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => removePrompt(prompt.id)}
+                                        className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    )}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                        
+                        <p className="text-xs text-muted-foreground">
+                          Add multiple prompts to evaluate them together. Each prompt will be processed individually and results will be shown collectively.
+                        </p>
                       </div>
 
                                               {/* Error Display */}
@@ -708,44 +822,38 @@ export function EvaluationSandbox() {
                           </div>
                         )}
 
-                        {/* Response Evaluation Result - Show in Input tab when results are available */}
+                                                {/* Response Evaluation Summary - Show in Input tab when results are available */}
                         {result && (
                           <>
                             <Separator />
                             <div className="space-y-3">
-                              <h3 className="font-semibold text-lg">Response Evaluation</h3>
-                              <div className="grid grid-cols-2 gap-4">
+                              <h3 className="font-semibold text-lg">Evaluation Summary</h3>
+                              <div className="grid grid-cols-3 gap-4">
                                 <div className="p-3 bg-muted rounded-md">
-                                  <p className="text-sm text-muted-foreground">User Expected</p>
-                                  <div className="flex items-center gap-2 mt-1">
-                                    {evaluationInput.userMarkedAdversarial ? (
-                                      <CheckCircle className="h-4 w-4 text-destructive" />
-                                    ) : (
-                                      <XCircle className="h-4 w-4 text-green-600" />
-                                    )}
-                                    <span className="font-medium">
-                                      {evaluationInput.userMarkedAdversarial ? 'Blocked Response' : 'Passed Response'}
-                                    </span>
-                                  </div>
-                                  <p className="text-xs text-muted-foreground mt-1">
-                                    Based on prompt analysis
-                                  </p>
+                                  <p className="text-sm text-muted-foreground">Total Prompts</p>
+                                  <p className="text-2xl font-bold">{result.overallMetrics.totalPrompts}</p>
                                 </div>
                                 <div className="p-3 bg-muted rounded-md">
-                                  <p className="text-sm text-muted-foreground">Judge Found</p>
-                                  <div className="flex items-center gap-2 mt-1">
-                                    {result.judgeDetectedAdversarial ? (
-                                      <CheckCircle className="h-4 w-4 text-destructive" />
-                                    ) : (
-                                      <XCircle className="h-4 w-4 text-green-600" />
-                                    )}
-                                                                      <span className="font-medium">
-                                    {result.judgeDetectedAdversarial ? 'Blocked Response' : 'Passed Response'}
-                                  </span>
-                                  </div>
-                                  <p className="text-xs text-muted-foreground mt-1">
-                                    Based on response evaluation
-                                  </p>
+                                  <p className="text-sm text-muted-foreground">Blocked</p>
+                                  <p className="text-2xl font-bold text-red-600">{result.overallMetrics.totalBlocked}</p>
+                                </div>
+                                <div className="p-3 bg-muted rounded-md">
+                                  <p className="text-sm text-muted-foreground">Passed</p>
+                                  <p className="text-2xl font-bold text-green-600">{result.overallMetrics.totalPassed}</p>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-3 gap-4">
+                                <div className="p-3 bg-muted rounded-md">
+                                  <p className="text-sm text-muted-foreground">Avg Accuracy</p>
+                                  <p className="text-2xl font-bold">{(result.overallMetrics.averageAccuracy * 100).toFixed(1)}%</p>
+                                </div>
+                                <div className="p-3 bg-muted rounded-md">
+                                  <p className="text-sm text-muted-foreground">Avg Precision</p>
+                                  <p className="text-2xl font-bold">{(result.overallMetrics.averagePrecision * 100).toFixed(1)}%</p>
+                                </div>
+                                <div className="p-3 bg-muted rounded-md">
+                                  <p className="text-sm text-muted-foreground">Avg Recall</p>
+                                  <p className="text-2xl font-bold">{(result.overallMetrics.averageRecall * 100).toFixed(1)}%</p>
                                 </div>
                               </div>
                             </div>
@@ -789,87 +897,7 @@ export function EvaluationSandbox() {
                           </>
                         )}
 
-{/* Guardrail Evaluation Results */}
-{result.guardrailResults && result.guardrailResults.length > 0 && (
-                          <>
-                            <Separator />
-                            <div className="space-y-3">
-                              <h3 className="font-semibold text-lg">Guardrail Policy Evaluation</h3>
-                              <p className="text-sm text-muted-foreground">
-                                Results from evaluating the prompt against each guardrail policy
-                              </p>
-                              <div className="grid grid-cols-1 gap-3">
-                                {result.guardrailResults.map((guardrailResult) => (
-                                  <div 
-                                    key={guardrailResult.guardrailId} 
-                                    className={`p-4 rounded-md border ${
-                                      guardrailResult.status === 'blocked' 
-                                        ? 'bg-red-50 border-red-200' 
-                                        : 'bg-green-50 border-green-200'
-                                    }`}
-                                  >
-                                    <div className="flex items-start justify-between">
-                                      <div className="space-y-2 flex-1">
-                                        <div className="flex items-center space-x-2">
-                                          <span className="font-medium text-sm">
-                                            {guardrailResult.guardrailName}
-                                          </span>
-                                          <Badge 
-                                            variant={guardrailResult.status === 'blocked' ? 'destructive' : 'default'}
-                                            className="text-xs"
-                                          >
-                                            {guardrailResult.status === 'blocked' ? 'BLOCKED' : 'PASSED'}
-                                          </Badge>
-                                        </div>
-                                        <div className="space-y-1">
-                                          <p className="text-xs font-medium text-muted-foreground">Policy:</p>
-                                          <p className="text-xs bg-white/50 p-2 rounded border">
-                                            {guardrailResult.policyDescription}
-                                          </p>
-                                        </div>
-                                        <div className="text-xs text-muted-foreground">
-                                          Evaluated at: {new Date(guardrailResult.timestamp).toLocaleTimeString()}
-                                        </div>
-                                      </div>
-                                      <div className="flex items-center space-x-2 ml-4">
-                                        {guardrailResult.status === 'blocked' ? (
-                                          <XCircle className="h-5 w-5 text-red-600" />
-                                        ) : (
-                                          <CheckCircle className="h-5 w-5 text-green-600" />
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                              
-                              {/* Summary */}
-                              <div className="p-3 bg-muted rounded-md">
-                                <div className="flex items-center justify-between text-sm">
-                                  <span className="font-medium">Summary:</span>
-                                  <div className="flex items-center space-x-4">
-                                    <span className="text-green-600">
-                                      Passed: {result.guardrailResults.filter(r => r.status === 'passed').length}
-                                    </span>
-                                    <span className="text-red-600">
-                                      Blocked: {result.guardrailResults.filter(r => r.status === 'blocked').length}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </>
-                        )}
 
-                        <Separator />
-
-                        {/* Model Response */}
-                        <div className="space-y-3">
-                          <h3 className="font-semibold text-lg">Model Response</h3>
-                          <div className="p-4 bg-muted rounded-md border">
-                            <pre className="whitespace-pre-wrap text-sm">{result.candidateResponse}</pre>
-                          </div>
-                        </div>
 
                       </CardContent>
                     </Card>
@@ -902,92 +930,217 @@ export function EvaluationSandbox() {
                             Analysis and metrics from the evaluation
                           </CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-6">
-
-                       
-                        
-
-                        <Separator />
-
-                        
-
-                        {/* Confusion Matrix */}
-                        <div className="space-y-3">
-                          <h3 className="font-semibold text-lg">Confusion Matrix</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Comparing user expectation vs judge evaluation of response blocking
-                          </p>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-                              <p className="text-sm text-green-700 font-medium">True Positive (TP)</p>
-                              <p className="text-xs text-green-600">Expected blocked, found blocked</p>
-                              <p className="text-2xl font-bold text-green-800">{result.confusionMatrix.tp}</p>
+                                                <CardContent className="space-y-6">
+                          {/* Overall Metrics Summary */}
+                          <div className="space-y-3">
+                            <h3 className="font-semibold text-lg">Overall Evaluation Summary</h3>
+                            <div className="grid grid-cols-3 gap-4">
+                              <div className="p-3 bg-muted rounded-md">
+                                <p className="text-sm text-muted-foreground">Total Prompts</p>
+                                <p className="text-2xl font-bold">{result.overallMetrics.totalPrompts}</p>
+                              </div>
+                              <div className="p-3 bg-muted rounded-md">
+                                <p className="text-sm text-muted-foreground">Blocked</p>
+                                <p className="text-2xl font-bold text-red-600">{result.overallMetrics.totalBlocked}</p>
+                              </div>
+                              <div className="p-3 bg-muted rounded-md">
+                                <p className="text-sm text-muted-foreground">Passed</p>
+                                <p className="text-2xl font-bold text-green-600">{result.overallMetrics.totalPassed}</p>
+                              </div>
                             </div>
-                            <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
-                              <p className="text-sm text-blue-700 font-medium">True Negative (TN)</p>
-                              <p className="text-xs text-blue-600">Expected passed, found passed</p>
-                              <p className="text-2xl font-bold text-blue-800">{result.confusionMatrix.tn}</p>
-                            </div>
-                            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                              <p className="text-sm text-yellow-700 font-medium">False Positive (FP)</p>
-                              <p className="text-xs text-yellow-600">Expected blocked, found passed</p>
-                              <p className="text-2xl font-bold text-yellow-800">{result.confusionMatrix.fp}</p>
-                            </div>
-                            <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-                              <p className="text-sm text-red-700 font-medium">False Negative (FN)</p>
-                              <p className="text-xs text-red-600">Expected passed, found blocked</p>
-                              <p className="text-2xl font-bold text-red-800">{result.confusionMatrix.fn}</p>
+                            <div className="grid grid-cols-3 gap-4">
+                              <div className="p-3 bg-muted rounded-md">
+                                <p className="text-sm text-muted-foreground">Avg Accuracy</p>
+                                <p className="text-2xl font-bold">{(result.overallMetrics.averageAccuracy * 100).toFixed(1)}%</p>
+                              </div>
+                              <div className="p-3 bg-muted rounded-md">
+                                <p className="text-sm text-muted-foreground">Avg Precision</p>
+                                <p className="text-2xl font-bold">{(result.overallMetrics.averagePrecision * 100).toFixed(1)}%</p>
+                              </div>
+                              <div className="p-3 bg-muted rounded-md">
+                                <p className="text-sm text-muted-foreground">Avg Recall</p>
+                                <p className="text-2xl font-bold">{(result.overallMetrics.averageRecall * 100).toFixed(1)}%</p>
+                              </div>
                             </div>
                           </div>
-                          
-                          {/* Debug Info */}
-                          <div className="p-3 bg-gray-50 border border-gray-200 rounded-md">
-                            <p className="text-xs text-gray-600 font-medium mb-2">Debug Information:</p>
-                            <div className="grid grid-cols-4 gap-2 text-xs">
-                              <div>TP: {result.confusionMatrix.tp}</div>
-                              <div>TN: {result.confusionMatrix.tn}</div>
-                              <div>FP: {result.confusionMatrix.fp}</div>
-                              <div>FN: {result.confusionMatrix.fn}</div>
-                            </div>
-                            <div className="text-xs text-gray-500 mt-2">
-                              Total: {result.confusionMatrix.tp + result.confusionMatrix.tn + result.confusionMatrix.fp + result.confusionMatrix.fn}
+
+                          <Separator />
+
+                          {/* Individual Prompt Results Table */}
+                          <div className="space-y-3">
+                            <h3 className="font-semibold text-lg">Individual Prompt Results</h3>
+                            <div className="border rounded-md">
+                              <Table>
+                                <TableHeader>
+                                  <TableRow>
+                                    <TableHead className="w-[20%]">Prompt</TableHead>
+                                    <TableHead className="w-[12%]">Topic</TableHead>
+                                    <TableHead className="w-[8%]">Expected</TableHead>
+                                    <TableHead className="w-[8%]">Result</TableHead>
+                                    <TableHead className="w-[8%]">Accuracy</TableHead>
+                                    <TableHead className="w-[8%]">Precision</TableHead>
+                                    <TableHead className="w-[8%]">Recall</TableHead>
+                                    <TableHead className="w-[28%]">Guardrails</TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {result.promptResults.map((promptResult) => (
+                                    <TableRow key={promptResult.promptId}>
+                                      <TableCell className="max-w-xs">
+                                        <div className="text-sm">
+                                          <p className="font-medium line-clamp-2">{promptResult.prompt}</p>
+                                        </div>
+                                      </TableCell>
+                                      <TableCell>
+                                        <span className="text-sm">{promptResult.topic || 'any'}</span>
+                                      </TableCell>
+                                      <TableCell>
+                                        <Badge variant={promptResult.userMarkedAdversarial ? 'destructive' : 'default'}>
+                                          {promptResult.userMarkedAdversarial ? 'Blocked' : 'Passed'}
+                                        </Badge>
+                                      </TableCell>
+                                      <TableCell>
+                                        <Badge variant={promptResult.judgeDetectedAdversarial ? 'destructive' : 'default'}>
+                                          {promptResult.judgeDetectedAdversarial ? 'Blocked' : 'Passed'}
+                                        </Badge>
+                                      </TableCell>
+                                      <TableCell>
+                                        <span className="text-sm">
+                                          {promptResult.localScores.accuracy !== undefined 
+                                            ? `${(promptResult.localScores.accuracy * 100).toFixed(1)}%`
+                                            : 'N/A'
+                                          }
+                                        </span>
+                                      </TableCell>
+                                      <TableCell>
+                                        <span className="text-sm">
+                                          {promptResult.localScores.precision !== undefined 
+                                            ? `${(promptResult.localScores.precision * 100).toFixed(1)}%`
+                                            : 'N/A'
+                                          }
+                                        </span>
+                                      </TableCell>
+                                      <TableCell>
+                                        <span className="text-sm">
+                                          {promptResult.localScores.recall !== undefined 
+                                            ? `${(promptResult.localScores.recall * 100).toFixed(1)}%`
+                                            : 'N/A'
+                                          }
+                                        </span>
+                                      </TableCell>
+                                      <TableCell>
+                                        {promptResult.guardrailResults && promptResult.guardrailResults.length > 0 ? (
+                                          <div className="space-y-1">
+                                            {promptResult.guardrailResults.map((guardrail, idx) => (
+                                              <div key={idx} className="flex items-center gap-2">
+                                                <Badge 
+                                                  variant={guardrail.status === 'blocked' ? 'destructive' : 'default'}
+                                                  className="text-xs"
+                                                >
+                                                  {guardrail.status === 'blocked' ? 'BLOCKED' : 'PASSED'}
+                                                </Badge>
+                                                <span className="text-xs text-muted-foreground">
+                                                  {guardrail.guardrailName}
+                                                </span>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        ) : (
+                                          <span className="text-xs text-muted-foreground">No guardrails</span>
+                                        )}
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </Table>
                             </div>
                           </div>
-                        </div>
 
-                        <Separator />
+                          {/* Detailed Guardrail Results */}
+                          {result.promptResults.some(pr => pr.guardrailResults && pr.guardrailResults.length > 0) && (
+                            <>
+                              <Separator />
+                              <div className="space-y-3">
+                                <h3 className="font-semibold text-lg">Detailed Guardrail Results</h3>
+                                {result.promptResults.map((promptResult) => (
+                                  promptResult.guardrailResults && promptResult.guardrailResults.length > 0 && (
+                                    <div key={promptResult.promptId} className="space-y-3">
+                                      <h4 className="font-medium text-md text-muted-foreground">
+                                        Prompt: {promptResult.prompt.substring(0, 50)}...
+                                      </h4>
+                                      <div className="grid grid-cols-1 gap-3">
+                                        {promptResult.guardrailResults.map((guardrail, idx) => (
+                                          <div 
+                                            key={idx} 
+                                            className={`p-4 rounded-md border ${
+                                              guardrail.status === 'blocked' 
+                                                ? 'bg-red-50 border-red-200' 
+                                                : 'bg-green-50 border-green-200'
+                                            }`}
+                                          >
+                                            <div className="flex items-start justify-between">
+                                              <div className="space-y-2 flex-1">
+                                                <div className="flex items-center space-x-2">
+                                                  <span className="font-medium text-sm">
+                                                    {guardrail.guardrailName}
+                                                  </span>
+                                                  <Badge 
+                                                    variant={guardrail.status === 'blocked' ? 'destructive' : 'default'}
+                                                    className="text-xs"
+                                                  >
+                                                    {guardrail.status === 'blocked' ? 'BLOCKED' : 'PASSED'}
+                                                  </Badge>
+                                                </div>
+                                                <div className="space-y-1">
+                                                  <p className="text-xs font-medium text-muted-foreground">Policy:</p>
+                                                  <p className="text-xs bg-white/50 p-2 rounded border">
+                                                    {guardrail.policyDescription}
+                                                  </p>
+                                                </div>
+                                                <div className="text-xs text-muted-foreground">
+                                                  Evaluated at: {new Date(guardrail.timestamp).toLocaleTimeString()}
+                                                </div>
+                                              </div>
+                                              <div className="flex items-center space-x-2 ml-4">
+                                                {guardrail.status === 'blocked' ? (
+                                                  <XCircle className="h-5 w-5 text-red-600" />
+                                                ) : (
+                                                  <CheckCircle className="h-5 w-5 text-green-600" />
+                                                )}
+                                              </div>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )
+                                ))}
+                              </div>
+                            </>
+                          )}
 
-                        {/* Metrics */}
-                        <div className="space-y-3">
-                          <h3 className="font-semibold text-lg">Evaluation Metrics</h3>
-                          <div className="grid grid-cols-3 gap-4">
-                            {result.localScores.accuracy !== undefined && (
-                              <div className="p-3 bg-muted rounded-md">
-                                <p className="text-sm text-muted-foreground">Accuracy</p>
-                                <p className="text-2xl font-bold">{(result.localScores.accuracy * 100).toFixed(1)}%</p>
+                          {/* Candidate Responses */}
+                          <Separator />
+                          <div className="space-y-3">
+                            <h3 className="font-semibold text-lg">Candidate Responses</h3>
+                            {result.promptResults.map((promptResult) => (
+                              <div key={promptResult.promptId} className="space-y-2">
+                                <h4 className="font-medium text-md text-muted-foreground">
+                                  Prompt: {promptResult.prompt.substring(0, 50)}...
+                                </h4>
+                                <div className="p-4 bg-muted rounded-md border">
+                                  <pre className="whitespace-pre-wrap text-sm">{promptResult.candidateResponse}</pre>
+                                </div>
                               </div>
-                            )}
-                            {result.localScores.precision !== undefined && (
-                              <div className="p-3 bg-muted rounded-md">
-                                <p className="text-sm text-muted-foreground">Precision</p>
-                                <p className="text-2xl font-bold">{(result.localScores.precision * 100).toFixed(1)}%</p>
-                              </div>
-                            )}
-                            {result.localScores.recall !== undefined && (
-                              <div className="p-3 bg-muted rounded-md">
-                                <p className="text-sm text-muted-foreground">Recall</p>
-                                <p className="text-2xl font-bold">{(result.localScores.recall * 100).toFixed(1)}%</p>
-                              </div>
-                              )}
+                            ))}
                           </div>
-                        </div>
 
-                        {/* Timestamp */}
-                        <div className="text-sm text-muted-foreground flex items-center gap-2">
-                          <Clock className="h-4 w-4" />
-                          Evaluated at {new Date(result.timestamp).toLocaleString()}
-                        </div>
-                      </CardContent>
+                          {/* Timestamp */}
+                          <div className="text-sm text-muted-foreground flex items-center gap-2">
+                            <Clock className="h-4 w-4" />
+                            Evaluated at {new Date(result.timestamp).toLocaleString()}
+                          </div>
+                        </CardContent>
                     </Card>
                   )}
                 </TabsContent>

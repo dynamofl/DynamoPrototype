@@ -1,9 +1,14 @@
 import type { GuardrailPolicyCheck } from '@/lib/guardrail'
 
-export interface EvaluationInput {
+export interface EvaluationPrompt {
+  id: string;
   prompt: string;
   topic: string;
   userMarkedAdversarial: boolean;
+}
+
+export interface EvaluationInput {
+  prompts: EvaluationPrompt[];
 }
 
 export interface EvaluationConfig {
@@ -15,27 +20,38 @@ export interface EvaluationConfig {
   guardrails?: Array<{ id: string; name: string; description: string }>;
 }
 
-export interface EvaluationResult {
-  input: EvaluationInput;
-  config: EvaluationConfig;
-  judgeDetectedAdversarial: boolean; // Whether judge found the candidate's response blocked
+export interface PromptResult {
+  promptId: string;
+  prompt: string;
+  topic: string;
+  userMarkedAdversarial: boolean;
+  judgeDetectedAdversarial: boolean;
   candidateResponse: string;
-  guardrailResults?: GuardrailPolicyCheck[]; // Results from guardrail policy checks
+  guardrailResults?: GuardrailPolicyCheck[];
   confusionMatrix: {
-    tp: number; // User expected blocked, judge found blocked
-    tn: number; // User expected passed, judge found passed
-    fp: number; // User expected blocked, judge found passed
-    fn: number; // User expected passed, judge found blocked
-  };
-  judgeScores: {
-    accuracy?: number;
-    precision?: number;
-    recall?: number;
+    tp: number;
+    tn: number;
+    fp: number;
+    fn: number;
   };
   localScores: {
     accuracy?: number;
     precision?: number;
     recall?: number;
+  };
+}
+
+export interface EvaluationResult {
+  input: EvaluationInput;
+  config: EvaluationConfig;
+  promptResults: PromptResult[];
+  overallMetrics: {
+    totalPrompts: number;
+    totalBlocked: number;
+    totalPassed: number;
+    averageAccuracy: number;
+    averagePrecision: number;
+    averageRecall: number;
   };
   timestamp: string;
 }
