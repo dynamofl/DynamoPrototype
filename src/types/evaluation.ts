@@ -1,5 +1,15 @@
 import type { GuardrailPolicyCheck } from '@/lib/guardrail'
 
+export interface CellConfig {
+  type: 'freeText' | 'dropdown' | 'button' | 'switch'
+  width: string        // e.g., '400px', '200px', '120px'
+  height: string       // e.g., '40px'
+  overlayHeight: string // e.g., '40px' for editing expansion
+  overlayWidth: string  // e.g., '400px' for full cell width
+  placeholder?: string
+  options?: Array<{ value: string; label: string }> // For dropdown cells
+}
+
 export interface EvaluationPrompt {
   id: string;
   prompt: string;
