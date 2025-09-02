@@ -1,0 +1,171 @@
+---
+title: Evaluation Setup Instructions
+---
+
+# Evaluation Setup Instructions (React + TypeScript + Vite)
+
+This guide explains how to integrate **GPT-4o** as a judge model to evaluate candidate model outputs in your React + TypeScript + Vite project.  
+It also includes metric calculations (**Accuracy, Precision, Recall**) based on the [Google ML Crash Course](https://developers.google.com/machine-learning/crash-course/classification/accuracy-precision-recall).
+
+---
+
+## 📐 Metric Formulas
+
+- **Accuracy** = (TP + TN) / (TP + TN + FP + FN)  
+- **Precision** = TP / (TP + FP)  
+- **Recall** = TP / (TP + FN)  
+
+---
+
+## 🛠 Metric Utility Code
+
+```ts
+// metrics.ts
+export function computeMetrics(
+  tp: number,
+  tn: number,
+  fp: number,
+  fn: number,
+  metricsEnabled: { accuracy: boolean; precision: boolean; recall: boolean }
+) {
+  const total = tp + tn + fp + fn;
+  const res: { accuracy?: number; precision?: number; recall?: number } = {};
+
+  if (metricsEnabled.accuracy) {
+    res.accuracy = total === 0 ? NaN : (tp + tn) / total;
+  }
+  if (metricsEnabled.precision) {
+    res.precision = (tp + fp) === 0 ? NaN : tp / (tp + fp);
+  }
+  if (metricsEnabled.recall) {
+    res.recall = (tp + fn) === 0 ? NaN : tp / (tp + fn);
+  }
+
+  return res;
+}
+```
+
+---
+
+## ⚡ Eval Runner Code
+
+```ts
+// evalRunner.ts
+import OpenAI from "openai";
+import { computeMetrics } from "./metrics";
+
+const client = new OpenAI({
+  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+});
+
+type Message = { role: "user" | "assistant" | "system"; content: string };
+
+type MetricToggles = {
+  accuracy: boolean;
+  precision: boolean;
+  recall: boolean;
+};
+
+export async function runEvalWithMetrics(
+  messages: Message[],
+  tp: number,
+  tn: number,
+  fp: number,
+  fn: number,
+  metricsEnabled: MetricToggles,
+  candidateModel = "gpt-4o-mini",
+  judgeModel = "gpt-4o"
+) {
+  const cand = await client.chat.completions.create({
+    model: candidateModel,
+    messages,
+  });
+  const candidateOutput = cand.choices[0].message?.content ?? "";
+
+  const judgePrompt = `
+You are evaluating a model's response.
+Here are the basic confusion matrix values:
+TP = ${tp}, TN = ${tn}, FP = ${fp}, FN = ${fn}.
+
+Compute only the enabled metrics as JSON:
+${JSON.stringify(metricsEnabled)}
+
+Use the standard formulas:
+- Accuracy = (TP + TN) / (TP + TN + FP + FN)
+- Precision = TP / (TP + FP)
+- Recall = TP / (TP + FN)
+`;
+
+  const judge = await client.chat.completions.create({
+    model: judgeModel,
+    messages: [{ role: "system", content: judgePrompt }],
+    response_format: { type: "json_object" },
+  });
+
+  const judgeScores = JSON.parse(judge.choices[0].message?.content ?? "{}");
+  const localScores = computeMetrics(tp, tn, fp, fn, metricsEnabled);
+
+  return {
+    candidateOutput,
+    judgeScores,
+    localScores,
+  };
+}
+```
+
+---
+
+## ⚛️ React Component Example
+
+```tsx
+// EvalDemo.tsx
+import { useState } from "react";
+import { runEvalWithMetrics } from "./evalRunner";
+
+export default function EvalDemo() {
+  const [result, setResult] = useState<any>(null);
+
+  async function handleRun() {
+    const messages = [
+      { role: "user", content: "Classify this as positive or negative: 'Great job!'" }
+    ];
+    const tp = 5, tn = 3, fp = 1, fn = 2;
+    const metricsEnabled = { accuracy: true, precision: true, recall: true };
+
+    const res = await runEvalWithMetrics(
+      messages,
+      tp, tn, fp, fn,
+      metricsEnabled,
+      "gpt-4o-mini",
+      "gpt-4o"
+    );
+
+    setResult(res);
+  }
+
+  return (
+    <div style={{ padding: "1rem" }}>
+      <button onClick={handleRun} style={{ marginBottom: "1rem" }}>
+        Run Evaluation
+      </button>
+
+      {result && (
+        <div>
+          <h2>Candidate Output</h2>
+          <pre>{result.candidateOutput}</pre>
+
+          <h2>Judge (GPT‑4o) Scores</h2>
+          <pre>{JSON.stringify(result.judgeScores, null, 2)}</pre>
+
+          <h2>Locally Computed Scores</h2>
+          <pre>{JSON.stringify(result.localScores, null, 2)}</pre>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+---
+
+✅ Now you have a complete **MDX instruction file** that you can drop into a Docusaurus/Next.js site.  

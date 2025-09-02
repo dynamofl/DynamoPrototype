@@ -1,0 +1,156 @@
+[
+  {
+    "id": "1",
+    "name": "Qwen2-0.5B-Instruct",
+    "project": "Atlas",
+    "owner": "xxx@paypal.com",
+    "createdAt": "Jan 24, 2024",
+    "status": "active",
+    "icon": "HuggingFace",
+    "hasGuardrails": true,
+    "isEvaluated": true
+  },
+  {
+    "id": "2",
+    "name": "openai-gpt-3.5-turbo-summarization",
+    "project": "-",
+    "owner": "xxx@paypal.com",
+    "createdAt": "Jan 24, 2024",
+    "status": "active",
+    "icon": "OpenAI",
+    "hasGuardrails": false,
+    "isEvaluated": true
+  },
+  {
+    "id": "3",
+    "name": "openai-gpt-3.5-turbo",
+    "project": "Athena",
+    "owner": "xxx@paypal.com",
+    "createdAt": "Jan 24, 2024",
+    "status": "active",
+    "icon": "OpenAI",
+    "hasGuardrails": true,
+    "isEvaluated": true
+  },
+  {
+    "id": "4",
+    "name": "Azure AI Customized",
+    "project": "Atlas",
+    "owner": "xxx@paypal.com",
+    "createdAt": "Jan 24, 2024",
+    "status": "active",
+    "icon": "Azure",
+    "hasGuardrails": true,
+    "isEvaluated": true
+  },
+  {
+    "id": "5",
+    "name": "openai-gpt-4.5",
+    "project": "Athena",
+    "owner": "xxx@paypal.com",
+    "createdAt": "Jan 24, 2024",
+    "status": "active",
+    "icon": "OpenAI",
+    "hasGuardrails": true,
+    "isEvaluated": true
+  },
+  {
+    "id": "6",
+    "name": "Azure Open AI",
+    "project": "-",
+    "owner": "xxx@paypal.com",
+    "createdAt": "Jan 24, 2024",
+    "status": "active",
+    "icon": "Azure",
+    "hasGuardrails": true,
+    "isEvaluated": true
+  },
+  {
+    "id": "7",
+    "name": "Mistral 3",
+    "project": "-",
+    "owner": "xxx@paypal.com",
+    "createdAt": "Jan 24, 2024",
+    "status": "active",
+    "icon": "Mistral",
+    "hasGuardrails": true,
+    "isEvaluated": true
+  },
+  {
+    "id": "8",
+    "name": "openai-gpt-4o",
+    "project": "-",
+    "owner": "xxx@paypal.com",
+    "createdAt": "Jan 24, 2024",
+    "status": "active",
+    "icon": "OpenAI",
+    "hasGuardrails": true,
+    "isEvaluated": true
+  },
+  {
+    "id": "9",
+    "name": "openai-gpt-4-o1",
+    "project": "Cerberus",
+    "owner": "xxx@paypal.com",
+    "createdAt": "Jan 24, 2024",
+    "status": "active",
+    "icon": "OpenAI",
+    "hasGuardrails": true,
+    "isEvaluated": true
+  },
+  {
+    "id": "10",
+    "name": "DeepSeek 3B",
+    "project": "Helios",
+    "owner": "xxx@paypal.com",
+    "createdAt": "Jan 24, 2024",
+    "status": "active",
+    "icon": "Anthropic",
+    "hasGuardrails": true,
+    "isEvaluated": true
+  },
+  {
+    "id": "11",
+    "name": "Qwen2-3B-Instruct",
+    "project": "Atlas",
+    "owner": "xxx@paypal.com",
+    "createdAt": "Jan 24, 2024",
+    "status": "active",
+    "icon": "HuggingFace",
+    "hasGuardrails": true,
+    "isEvaluated": true
+  },
+  {
+    "id": "12",
+    "name": "openai-gpt-4.5",
+    "project": "-",
+    "owner": "xxx@paypal.com",
+    "createdAt": "Jan 24, 2024",
+    "status": "active",
+    "icon": "OpenAI",
+    "hasGuardrails": true,
+    "isEvaluated": false
+  },
+  {
+    "id": "13",
+    "name": "Qwen2-0.5B-Instruct",
+    "project": "Gaia",
+    "owner": "xxx@paypal.com",
+    "createdAt": "Jan 24, 2024",
+    "status": "inactive",
+    "icon": "HuggingFace",
+    "hasGuardrails": true,
+    "isEvaluated": true
+  },
+  {
+    "id": "14",
+    "name": "Azure Open AI",
+    "project": "-",
+    "owner": "xxx@paypal.com",
+    "createdAt": "Jan 24, 2024",
+    "status": "active",
+    "icon": "Azure",
+    "hasGuardrails": true,
+    "isEvaluated": true
+  }
+]
