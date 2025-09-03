@@ -67,10 +67,10 @@ export async function customPolicyCheck({
         },
         {
           role: "user",
-          content: `Policy:
+          content: `Guardrail:
 ${policyDescription}
 
-Task: Decide if the message violates this policy.
+Task: Decide if the message violates this Guardrail.
 Message: """${text}"""
 
 Return JSON:
@@ -111,28 +111,28 @@ export async function evaluatePromptAgainstGuardrails(
 ): Promise<GuardrailPolicyCheck[]> {
   const results: GuardrailPolicyCheck[] = [];
 
-  for (const guardrail of guardrails) {
+  for (const Guardrail of guardrails) {
     try {
       const status = await customPolicyCheck({
         text: prompt,
-        policyDescription: guardrail.description,
+        policyDescription: Guardrail.description,
         apiKey,
       });
 
       results.push({
-        guardrailId: guardrail.id,
-        guardrailName: guardrail.name,
-        policyDescription: guardrail.description,
+        guardrailId: Guardrail.id,
+        guardrailName: Guardrail.name,
+        policyDescription: Guardrail.description,
         status,
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error(`Error evaluating guardrail ${guardrail.name}:`, error);
+      console.error(`Error evaluating Guardrail ${Guardrail.name}:`, error);
       // Add failed result
       results.push({
-        guardrailId: guardrail.id,
-        guardrailName: guardrail.name,
-        policyDescription: guardrail.description,
+        guardrailId: Guardrail.id,
+        guardrailName: Guardrail.name,
+        policyDescription: Guardrail.description,
         status: "blocked", // Default to blocked on error
         timestamp: new Date().toISOString(),
       });

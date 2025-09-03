@@ -328,9 +328,9 @@ export function EvaluationSandbox() {
   };
 
   // Guardrail management functions
-  const addGuardrail = (guardrail: Guardrail) => {
-    if (!selectedGuardrails.find((g) => g.id === guardrail.id)) {
-      setSelectedGuardrails([...selectedGuardrails, guardrail]);
+  const addGuardrail = (Guardrail: Guardrail) => {
+    if (!selectedGuardrails.find((g) => g.id === Guardrail.id)) {
+      setSelectedGuardrails([...selectedGuardrails, Guardrail]);
     }
     // Don't close the popover - let user select multiple guardrails
     // setIsAddingGuardrail(false)
@@ -344,13 +344,13 @@ export function EvaluationSandbox() {
 
   const getAvailableGuardrailsForSelection = () => {
     return availableGuardrails.filter(
-      (guardrail: Guardrail) => guardrail.status === "active"
+      (Guardrail: Guardrail) => Guardrail.status === "active"
     );
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto">
+    <div className="min-h-screen bg-gray-100 flex flex-col">
+      <div className="mx-auto flex-1 flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between  px-6 py-4">
           <div>
@@ -388,7 +388,7 @@ export function EvaluationSandbox() {
           </div>
         </div>
 
-        <div className="bg-background grid grid-cols-1 lg:grid-cols-3 rounded-t-lg">
+        <div className="bg-background grid grid-cols-1 lg:grid-cols-3 rounded-t-xl flex-1 border border-gray-200">
           {/* Configuration Panel */}
           <div className="lg:col-span-1 border-r border-gray-200">
             <div className="px-6 py-4 text-gray-900 border-b border-gray-200">
@@ -472,13 +472,13 @@ export function EvaluationSandbox() {
                                 </div>
                               ) : (
                                 getAvailableGuardrailsForSelection().map(
-                                  (guardrail: Guardrail) => {
+                                  (Guardrail: Guardrail) => {
                                     const isSelected = selectedGuardrails.some(
-                                      (g) => g.id === guardrail.id
+                                      (g) => g.id === Guardrail.id
                                     );
                                     return (
                                       <div
-                                        key={guardrail.id}
+                                        key={Guardrail.id}
                                         className={`flex items-start space-x-3 p-3 cursor-pointer rounded-md my-0.5 ${
                                           isSelected
                                             ? "bg-gray-100"
@@ -486,9 +486,9 @@ export function EvaluationSandbox() {
                                         }`}
                                         onClick={() => {
                                           if (isSelected) {
-                                            removeGuardrail(guardrail.id);
+                                            removeGuardrail(Guardrail.id);
                                           } else {
-                                            addGuardrail(guardrail);
+                                            addGuardrail(Guardrail);
                                           }
                                         }}
                                       >
@@ -508,14 +508,14 @@ export function EvaluationSandbox() {
                                                   : ""
                                               }`}
                                             >
-                                              {guardrail.name}
+                                              {Guardrail.name}
                                             </span>
-                                            {guardrail.category && (
+                                            {Guardrail.category && (
                                               <Badge
                                                 variant="outline"
                                                 className="text-xs shrink-0"
                                               >
-                                                {guardrail.category}
+                                                {Guardrail.category}
                                               </Badge>
                                             )}
                                           </div>
@@ -526,7 +526,7 @@ export function EvaluationSandbox() {
                                                 : "text-muted-foreground"
                                             }`}
                                           >
-                                            {guardrail.description}
+                                            {Guardrail.description}
                                           </p>
                                         </div>
                                         
@@ -541,7 +541,7 @@ export function EvaluationSandbox() {
                             <div className="p-3 border-t bg-muted/30">
                               <div className="flex items-center justify-between text-sm text-muted-foreground">
                                 <span>
-                                  {selectedGuardrails.length} guardrail
+                                  {selectedGuardrails.length} Guardrail
                                   {selectedGuardrails.length !== 1
                                     ? "s"
                                     : ""}{" "}
@@ -569,29 +569,29 @@ export function EvaluationSandbox() {
                   {/* Selected Guardrails */}
                   {selectedGuardrails.length > 0 && (
                     <div className="space-y-2">
-                      {selectedGuardrails.map((guardrail) => (
+                      {selectedGuardrails.map((Guardrail) => (
                         <div
-                          key={guardrail.id}
+                          key={Guardrail.id}
                           className="flex items-center justify-between p-2 px-3 bg-gray-100 rounded-md"
                         >
                           <div className="flex items-center space-x-2">
                           <Info className="h-4 w-4 text-gray-500" />
 
                             <span className="text-sm font-400">
-                              {guardrail.name}
+                              {Guardrail.name}
                             </span>
 
                           </div>
                           <div className="flex items-center space-x-3">
-                          {guardrail.category && (
+                          {Guardrail.category && (
                               <Badge variant="outline" className="text-xs">
-                                {guardrail.category}
+                                {Guardrail.category}
                               </Badge>
                             )}
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => removeGuardrail(guardrail.id)}
+                            onClick={() => removeGuardrail(Guardrail.id)}
                             className="h-6 w-6 p-0 hover:bg-gray-200 hover:text-gray-600"
                           >
                             <X className="h-3 w-3 text-gray-500" />
@@ -827,11 +827,7 @@ export function EvaluationSandbox() {
                       </div>
                     </div>
 
-                    <p className="text-xs text-muted-foreground">
-                      Add multiple prompts to evaluate them together. Each prompt
-                      will be processed individually and results will be shown
-                      collectively.
-                    </p>
+                   
 
                     {/* Error Display */}
                     {error && (
@@ -1019,25 +1015,25 @@ export function EvaluationSandbox() {
                                 </p>
                                 <div className="space-y-1">
                                   {promptResult.guardrailResults.map(
-                                    (guardrail, idx) => (
+                                    (Guardrail, idx) => (
                                       <div
                                         key={idx}
                                         className="flex items-center gap-2"
                                       >
                                         <Badge
                                           variant={
-                                            guardrail.status === "blocked"
+                                            Guardrail.status === "blocked"
                                               ? "destructive"
                                               : "default"
                                           }
                                           className="text-xs"
                                         >
-                                          {guardrail.status === "blocked"
+                                          {Guardrail.status === "blocked"
                                             ? "BLOCKED"
                                             : "PASSED"}
                                         </Badge>
                                         <span className="text-xs text-muted-foreground">
-                                          {guardrail.guardrailName}
+                                          {Guardrail.guardrailName}
                                         </span>
                                       </div>
                                     )
@@ -1075,11 +1071,11 @@ export function EvaluationSandbox() {
                                 </h4>
                                 <div className="grid grid-cols-1 gap-3">
                                   {promptResult.guardrailResults.map(
-                                    (guardrail, idx) => (
+                                    (Guardrail, idx) => (
                                       <div
                                         key={idx}
                                         className={`p-4 rounded-md border ${
-                                          guardrail.status === "blocked"
+                                          Guardrail.status === "blocked"
                                             ? "bg-red-50 border-red-200"
                                             : "bg-green-50 border-green-200"
                                         }`}
@@ -1088,38 +1084,38 @@ export function EvaluationSandbox() {
                                           <div className="space-y-2 flex-1">
                                             <div className="flex items-center space-x-2">
                                               <span className="font-medium text-sm">
-                                                {guardrail.guardrailName}
+                                                {Guardrail.guardrailName}
                                               </span>
                                               <Badge
                                                 variant={
-                                                  guardrail.status === "blocked"
+                                                  Guardrail.status === "blocked"
                                                     ? "destructive"
                                                     : "default"
                                                 }
                                                 className="text-xs"
                                               >
-                                                {guardrail.status === "blocked"
+                                                {Guardrail.status === "blocked"
                                                   ? "BLOCKED"
                                                   : "PASSED"}
                                               </Badge>
                                             </div>
                                             <div className="space-y-1">
                                               <p className="text-xs font-medium text-muted-foreground">
-                                                Policy:
+                                                Guardrail:
                                               </p>
                                               <p className="text-xs bg-white/50 p-2 rounded border">
-                                                {guardrail.policyDescription}
+                                                {Guardrail.policyDescription}
                                               </p>
                                             </div>
                                             <div className="text-xs text-muted-foreground">
                                               Evaluated at:{" "}
                                               {new Date(
-                                                guardrail.timestamp
+                                                Guardrail.timestamp
                                               ).toLocaleTimeString()}
                                             </div>
                                           </div>
                                           <div className="flex items-center space-x-2 ml-4">
-                                            {guardrail.status === "blocked" ? (
+                                            {Guardrail.status === "blocked" ? (
                                               <XCircle className="h-5 w-5 text-gray-600" />
                                             ) : (
                                               <Check className="h-5 w-5 text-green-600" />
@@ -1174,11 +1170,17 @@ export function EvaluationSandbox() {
               Test Data
             </div>
                   </div>
-                  <div className="space-y-4 p-6">
+                  <div className="space-y-4 px-6 py-4">
                     {/* Multiple Prompts Table */}
                     <div className="space-y-3">
                       
 
+
+                    <p className="text-xs text-muted-foreground">
+                      Add multiple prompts to evaluate them together. Each prompt
+                      will be processed individually and results will be shown
+                      collectively.
+                    </p>
                       <DynamoTable
                         data={evaluationInput.prompts}
                         columns={tableColumns.map((col) => ({
@@ -1222,11 +1224,6 @@ Upload from File                </Button>
                       </div>
                     </div>
 
-                    <p className="text-xs text-muted-foreground">
-                      Add multiple prompts to evaluate them together. Each prompt
-                      will be processed individually and results will be shown
-                      collectively.
-                    </p>
 
                     {/* Error Display */}
                     {error && (

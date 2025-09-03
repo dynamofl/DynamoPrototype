@@ -40,9 +40,9 @@ The application now uses React Router DOM for client-side routing, providing sep
 - **Component**: `Guardrails`
 - **Description**: Management interface for safety guardrails
 - **Features**:
-  - Create/edit guardrail policies
+  - Create/edit Guardrail policies
   - Guardrail status management
-  - Policy configuration
+  - Guardrail configuration
 
 ### 5. **404 Page** - `/*` (catch-all)
 - **Description**: Handles any unmatched routes
@@ -57,7 +57,7 @@ The top navigation bar provides easy access to all routes:
 - **AI Systems**: Main dashboard
 - **Evaluation Sandbox**: Model evaluation interface
 - **AI Providers**: Provider management
-- **Guardrails**: Safety policy management
+- **Guardrails**: Safety Guardrail management
 
 ### Active State
 - Current route is highlighted in the navigation

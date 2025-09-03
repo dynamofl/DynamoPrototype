@@ -1,7 +1,7 @@
 import { computeMetrics, calculateSingleEvaluationMetrics } from './metrics';
 import type { EvaluationInput, EvaluationConfig, EvaluationResult, PromptResult, Message } from '@/types/evaluation';
 import { APIKeyStorage } from './secure-storage';
-import { evaluatePromptAgainstGuardrails } from './guardrail';
+import { evaluatePromptAgainstGuardrails } from './Guardrail';
 
 // Define MetricToggles locally to avoid import issues
 interface MetricToggles {

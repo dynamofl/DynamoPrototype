@@ -50,15 +50,15 @@ function App() {
       <main className="mx-auto">
         <Breadcrumb />
         <Routes>
-          {/* Default redirect to AI Systems */}
-          <Route path="/" element={<Navigate to="/ai-systems" replace />} />
+          {/* Default redirect to Evaluation Sandbox */}
+          <Route path="/" element={<Navigate to="/evaluation-sandbox" replace />} />
           
           {/* AI Systems Route */}
           <Route path="/ai-systems" element={
             <>
               {/* Page Header */}
               <div className="px-6">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between my-4">
                   <h1 className="text-lg font-450 tracking-tight">AI Systems</h1>
                   <Button size="default" className="bg-primary hover:bg-primary/90 text-primary-foreground">
                     <Plus className="mr-1 h-4 w-4" />
@@ -94,8 +94,8 @@ function App() {
             <div className="flex flex-col items-center justify-center min-h-[60vh] px-6">
               <h1 className="text-4xl font-bold text-muted-foreground mb-4">404</h1>
               <p className="text-lg text-muted-foreground mb-6">Page not found</p>
-              <Button onClick={() => window.location.href = '/ai-systems'}>
-                Go to AI Systems
+              <Button onClick={() => window.location.href = '/evaluation-sandbox'}>
+                Go to Evaluation Sandbox
               </Button>
             </div>
           } />

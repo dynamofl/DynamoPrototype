@@ -1,4 +1,4 @@
-import type { GuardrailPolicyCheck } from '@/lib/guardrail'
+import type { GuardrailPolicyCheck } from '@/lib/Guardrail'
 
 export interface CellConfig {
   type: 'freeText' | 'dropdown' | 'button' | 'switch'

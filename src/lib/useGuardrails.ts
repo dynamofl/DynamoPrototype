@@ -37,13 +37,13 @@ export function useGuardrails() {
     localStorage.setItem('guardrails', JSON.stringify(guardrails))
   }, [guardrails])
 
-  const addGuardrail = (guardrail: Guardrail) => {
+  const addGuardrail = (Guardrail: Guardrail) => {
     const newGuardrail: Guardrail = {
       id: Date.now().toString(),
-      name: guardrail.name,
-      description: guardrail.description,
-      content: guardrail.content,
-      category: guardrail.category,
+      name: Guardrail.name,
+      description: Guardrail.description,
+      content: Guardrail.content,
+      category: Guardrail.category,
       createdAt: new Date().toISOString().split('T')[0],
       updatedAt: new Date().toISOString().split('T')[0],
       status: "active"
@@ -53,31 +53,31 @@ export function useGuardrails() {
   }
 
   const updateGuardrail = (id: string, updates: Partial<Guardrail>) => {
-    setGuardrails(guardrails.map(guardrail =>
-      guardrail.id === id
-        ? { ...guardrail, ...updates, updatedAt: new Date().toISOString().split('T')[0] }
-        : guardrail
+    setGuardrails(guardrails.map(Guardrail =>
+      Guardrail.id === id
+        ? { ...Guardrail, ...updates, updatedAt: new Date().toISOString().split('T')[0] }
+        : Guardrail
     ))
   }
 
   const deleteGuardrail = (id: string) => {
-    setGuardrails(guardrails.filter(guardrail => guardrail.id !== id))
+    setGuardrails(guardrails.filter(Guardrail => Guardrail.id !== id))
   }
 
   const toggleGuardrailStatus = (id: string) => {
-    setGuardrails(guardrails.map(guardrail =>
-      guardrail.id === id
-        ? { ...guardrail, status: guardrail.status === 'active' ? 'inactive' : 'active' }
-        : guardrail
+    setGuardrails(guardrails.map(Guardrail =>
+      Guardrail.id === id
+        ? { ...Guardrail, status: Guardrail.status === 'active' ? 'inactive' : 'active' }
+        : Guardrail
     ))
   }
 
   const getActiveGuardrails = () => {
-    return guardrails.filter(guardrail => guardrail.status === 'active')
+    return guardrails.filter(Guardrail => Guardrail.status === 'active')
   }
 
   const getGuardrailById = (id: string) => {
-    return guardrails.find(guardrail => guardrail.id === id)
+    return guardrails.find(Guardrail => Guardrail.id === id)
   }
 
   return {

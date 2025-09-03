@@ -15,7 +15,7 @@ export function Breadcrumb() {
     const pathSegments = location.pathname.split('/').filter(Boolean)
     
     if (pathSegments.length === 0) {
-      return [{ name: 'AI Systems', path: '/ai-systems', current: true }]
+      return [{ name: 'Evaluation Sandbox', path: '/evaluation-sandbox', current: true }]
     }
     
     const breadcrumbs: BreadcrumbItem[] = []
@@ -49,7 +49,7 @@ export function Breadcrumb() {
   return (
     <nav className="flex items-center space-x-1 text-sm text-muted-foreground px-6 py-2">
       <Link
-        to="/ai-systems"
+        to="/evaluation-sandbox"
         className="flex items-center hover:text-foreground transition-colors"
       >
         <Home className="h-4 w-4 mr-1" />
