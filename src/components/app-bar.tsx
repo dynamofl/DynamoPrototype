@@ -16,21 +16,17 @@ import {
   Monitor,
 } from "lucide-react"
 import { useTheme } from '@/components/theme-provider'
+import { NavLink } from 'react-router-dom'
 
 // Navigation items
 const navigationItems = [
-  { name: "AI Systems", value: "ai-systems" },
-  { name: "Evaluation Sandbox", value: "evaluation-sandbox" },
-  { name: "AI Providers", value: "ai-providers" },
-  { name: "Guardrails", value: "guardrails" },
+  { name: "AI Systems", path: "/ai-systems" },
+  { name: "Evaluation Sandbox", path: "/evaluation-sandbox" },
+  { name: "AI Providers", path: "/ai-providers" },
+  { name: "Guardrails", path: "/guardrails" },
 ]
 
-interface AppBarProps {
-  currentTab: 'ai-systems' | 'evaluation-sandbox' | 'ai-providers' | 'guardrails'
-  onTabChange: (tab: 'ai-systems' | 'evaluation-sandbox' | 'ai-providers' | 'guardrails') => void
-}
-
-export function AppBar({ currentTab, onTabChange }: AppBarProps) {
+export function AppBar() {
   const { setTheme } = useTheme()
 
   return (
@@ -47,20 +43,18 @@ export function AppBar({ currentTab, onTabChange }: AppBarProps) {
             {/* Navigation Links */}
             <nav className="hidden md:flex items-center gap-1">
               {navigationItems.map((item) => (
-                <Button
+                <NavLink
                   key={item.name}
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onTabChange(item.value as 'ai-systems' | 'evaluation-sandbox' | 'ai-providers' | 'guardrails')}
-                  className={cn(
-                    "text-[13px] font-450 transition-colors hover:text-foreground relative",
-                    currentTab === item.value
+                  to={item.path}
+                  className={({ isActive }) => cn(
+                    "inline-flex items-center px-3 py-2 text-[13px] font-450 transition-colors hover:text-foreground relative",
+                    isActive
                       ? "text-gray-800"
                       : "text-gray-600"
                   )}
                 >
                   {item.name}
-                </Button>
+                </NavLink>
               ))}
             </nav>
           </div>

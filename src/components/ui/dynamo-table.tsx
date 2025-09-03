@@ -73,13 +73,17 @@ export const DynamoTable: React.FC<DynamoTableProps> = ({
   // Calculate precise overlay position with dynamic height for text content
   const calculateOverlayPosition = (row: number, col: number, currentValue?: any, cellType?: string) => {
     const cellElement = document.querySelector(`[data-row="${row}"][data-col="${col}"]`)
-    if (!cellElement) return null
+    const tableElement = tableRef.current
+    if (!cellElement || !tableElement) return null
 
-    const rect = cellElement.getBoundingClientRect()
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop
-    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft
+    const cellRect = cellElement.getBoundingClientRect()
+    const tableRect = tableElement.getBoundingClientRect()
 
-    let dynamicHeight = rect.height
+    // Calculate position relative to the table container
+    const relativeTop = cellRect.top - tableRect.top
+    const relativeLeft = cellRect.left - tableRect.left
+
+    let dynamicHeight = cellRect.height
 
     // For text cells, calculate height based on content
     if (cellType === 'freeText' && currentValue) {
@@ -90,7 +94,7 @@ export const DynamoTable: React.FC<DynamoTableProps> = ({
       measureDiv.style.cssText = `
         position: absolute;
         visibility: hidden;
-        width: ${rect.width - 16}px;
+        width: ${cellRect.width - 16}px;
         font-size: 14px;
         line-height: 24px;
         font-family: inherit;
@@ -107,18 +111,18 @@ export const DynamoTable: React.FC<DynamoTableProps> = ({
       document.body.removeChild(measureDiv)
       
       // Use measured height with some padding, but ensure minimum height
-      const minHeight = rect.height
-      const maxHeight = Math.max(300, rect.height * 8)
+      const minHeight = cellRect.height
+      const maxHeight = Math.max(300, cellRect.height * 8)
       dynamicHeight = Math.max(minHeight, Math.min(measuredHeight + 16, maxHeight))
     }
 
     return {
-      top: rect.top + scrollTop,
-      left: rect.left + scrollLeft,
-      width: rect.width,
+      top: relativeTop,
+      left: relativeLeft,
+      width: cellRect.width,
       height: dynamicHeight,
-      minHeight: rect.height,
-      maxHeight: Math.max(300, rect.height * 8) // Allow more expansion
+      minHeight: cellRect.height,
+      maxHeight: Math.max(300, cellRect.height * 8) // Allow more expansion
     }
   }
 
@@ -411,7 +415,7 @@ export const DynamoTable: React.FC<DynamoTableProps> = ({
 
       case 'dropdown':
         return (
-          <div {...cellProps} style={{ ...cellProps.style, padding: '4px' }}>
+          <div {...cellProps} style={{ ...cellProps.style, border: 'none' }}>
             <Select
               value={value}
               onValueChange={(val) => {
@@ -423,7 +427,7 @@ export const DynamoTable: React.FC<DynamoTableProps> = ({
               }}
               disabled={!editable || column.readonly || column.disabled}
             >
-              <SelectTrigger className="w-full h-8">
+              <SelectTrigger className="w-full h-8 border-none focus:ring-0 focus:outline-none hover:bg-gray-200 hover:cursor-pointer hover:ring-0">
                 <SelectValue placeholder={column.placeholder} />
               </SelectTrigger>
               <SelectContent>
@@ -462,10 +466,10 @@ export const DynamoTable: React.FC<DynamoTableProps> = ({
   return (
     <div className="relative">
       {/* Main Table */}
-      <div className={`rounded-md overflow-visible border border-gray-200 ${className}`}>
+      <div className={` overflow-visible border-t border-b border-gray-200 ${className}`}>
         <Table ref={tableRef} className="enhanced-table">
           <TableHeader>
-            <TableRow className="h-10">
+            <TableRow className="h-8">
               {columns.map((column) => (
                 <TableHead 
                   key={column.key} 
@@ -479,11 +483,11 @@ export const DynamoTable: React.FC<DynamoTableProps> = ({
           </TableHeader>
           <TableBody>
             {data.map((row, rowIndex) => (
-              <TableRow key={getRowKey(row, rowIndex)} className="h-10">
+              <TableRow key={getRowKey(row, rowIndex)} className="h-8">
                 {columns.map((column, colIndex) => (
                   <TableCell 
                     key={column.key}
-                    className="p-0 h-10"
+                    className="p-0 h-8"
                     style={{ width: column.width }}
                   >
                     {renderCellContent(row, column, rowIndex, colIndex)}
@@ -501,8 +505,8 @@ export const DynamoTable: React.FC<DynamoTableProps> = ({
           ref={overlayRef}
           className="global-edit-overlay"
           style={{
-            position: 'fixed',
-            zIndex: 999999,
+            position: 'absolute',
+            zIndex: 1000,
             top: `${editState.overlayPosition.top}px`,
             left: `${editState.overlayPosition.left}px`,
             width: `${editState.overlayPosition.width}px`,

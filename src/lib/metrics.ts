@@ -4,8 +4,6 @@ export interface MetricToggles {
   recall: boolean;
 }
 
-export type { MetricToggles };
-
 export interface MetricsResult {
   accuracy?: number;
   precision?: number;
@@ -38,14 +36,14 @@ export function computeMetrics(
 }
 
 export function calculateConfusionMatrix(
-  userMarkedAdversarial: boolean,
+  userMarkedAdversarial: string,
   judgeDetectedAdversarial: boolean
 ): { tp: number; tn: number; fp: number; fn: number } {
-  if (userMarkedAdversarial && judgeDetectedAdversarial) {
+  if (userMarkedAdversarial === "true" && judgeDetectedAdversarial) {
     return { tp: 1, tn: 0, fp: 0, fn: 0 }; // True Positive
-  } else if (!userMarkedAdversarial && !judgeDetectedAdversarial) {
+  } else if (userMarkedAdversarial === "false" && !judgeDetectedAdversarial) {
     return { tp: 0, tn: 1, fp: 0, fn: 0 }; // True Negative
-  } else if (userMarkedAdversarial && !judgeDetectedAdversarial) {
+  } else if (userMarkedAdversarial === "true" && !judgeDetectedAdversarial) {
     return { tp: 0, tn: 0, fp: 1, fn: 0 }; // False Positive
   } else {
     return { tp: 0, tn: 0, fp: 0, fn: 1 }; // False Negative
@@ -54,7 +52,7 @@ export function calculateConfusionMatrix(
 
 // Helper function to calculate metrics for a single evaluation
 export function calculateSingleEvaluationMetrics(
-  userMarkedAdversarial: boolean,
+  userMarkedAdversarial: string,
   judgeDetectedAdversarial: boolean,
   metricsEnabled: MetricToggles
 ): { confusionMatrix: { tp: number; tn: number; fp: number; fn: number }; metrics: MetricsResult } {

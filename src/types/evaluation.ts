@@ -14,7 +14,7 @@ export interface EvaluationPrompt {
   id: string;
   prompt: string;
   topic: string;
-  userMarkedAdversarial: boolean;
+  userMarkedAdversarial: string;
 }
 
 export interface EvaluationInput {
@@ -34,7 +34,7 @@ export interface PromptResult {
   promptId: string;
   prompt: string;
   topic: string;
-  userMarkedAdversarial: boolean;
+  userMarkedAdversarial: string;
   judgeDetectedAdversarial: boolean;
   candidateResponse: string;
   guardrailResults?: GuardrailPolicyCheck[];
