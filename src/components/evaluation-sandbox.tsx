@@ -1,50 +1,28 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Play, History } from "lucide-react";
 
-import { Label } from "@/components/ui/label";
+// Modularized components
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  ConfigurationPanel,
+  InputDataSection,
+  ResultsSection,
+  LoadingState,
+} from "@/components/evaluation";
 
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-
+// Utilities
 import {
-  DynamoTable,
-  type DynamoColumnConfig,
-} from "@/components/ui/dynamo-table";
-import {
-  Play,
-  Save,
-  Share,
-  History,
-  FileUp,
-  Notebook,
-  Sparkles,
+  getPaginationHelpers,
+  validatePageBounds,
+  handleTableDataChange,
+  handleCellAction as handleCellActionUtil
+} from "@/utils/evaluation";
+import { processCSVImport } from "@/utils/evaluation";
 
-  Code,
-  Eye,
-  AlertTriangle,
-  Check,
-  XCircle,
-  Clock,
-  Plus,
-  X,
-  Info,
-  Trash2,
-} from "lucide-react";
+// Constants
+import { EVALUATION_CONSTANTS, INITIAL_PROMPTS } from "@/constants/evaluation";
+
+// Types and services
 import { APIKeyStorage } from "@/lib/secure-storage";
 import { runEvaluation, getAvailableModels } from "@/lib/evalRunner";
 import type {
@@ -54,18 +32,6 @@ import type {
 } from "@/types/evaluation";
 import type { Guardrail } from "@/types";
 import { useGuardrails } from "@/lib/useGuardrails";
-
-import {
-  Command,
-  CommandGroup,
-  CommandInput,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 
 // Define MetricToggles locally to avoid import issues
 interface MetricToggles {
@@ -103,33 +69,14 @@ export function EvaluationSandbox() {
   const [providers, setProviders] = useState<AIProvider[]>([]);
   const [config, setConfig] = useState<EvaluationConfig>({
     candidateModel: "",
-    judgeModel: "gpt-4o-mini",
-    temperature: 0.7,
-    maxLength: 500,
-    topP: 0.9,
+    judgeModel: EVALUATION_CONSTANTS.JUDGE_MODEL,
+    temperature: EVALUATION_CONSTANTS.DEFAULT_TEMPERATURE,
+    maxLength: EVALUATION_CONSTANTS.DEFAULT_MAX_LENGTH,
+    topP: EVALUATION_CONSTANTS.DEFAULT_TOP_P,
   });
 
   const [evaluationInput, setEvaluationInput] = useState<EvaluationInput>({
-    prompts: [
-      {
-        id: crypto.randomUUID(),
-        prompt: "",
-        topic: "",
-        userMarkedAdversarial: "",
-      },
-      {
-        id: crypto.randomUUID(),
-        prompt: "",
-        topic: "",
-        userMarkedAdversarial: "",
-      },
-      {
-        id: crypto.randomUUID(),
-        prompt: "",
-        topic: "",
-        userMarkedAdversarial: "",
-      },
-    ],
+    prompts: INITIAL_PROMPTS,
   });
 
   const [metricsEnabled, setMetricsEnabled] = useState<MetricToggles>({
@@ -145,6 +92,9 @@ export function EvaluationSandbox() {
   // Guardrail state
   const [selectedGuardrails, setSelectedGuardrails] = useState<Guardrail[]>([]);
   const [isAddingGuardrail, setIsAddingGuardrail] = useState(false);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Use shared guardrails hook
   const { guardrails: availableGuardrails } = useGuardrails();
@@ -173,42 +123,6 @@ export function EvaluationSandbox() {
   // Get available models for selection
   const availableModels = getAvailableModels();
 
-  // DynamoTable column configuration
-  const tableColumns: DynamoColumnConfig[] = [
-    {
-      key: "prompt",
-      title: "Prompt",
-      width: "400px",
-      type: "freeText",
-      placeholder: "",
-    },
-    {
-      key: "topic",
-      title: "Topic (optional)",
-      width: "200px",
-      type: "freeText",
-      placeholder: "",
-    },
-    {
-      key: "userMarkedAdversarial",
-      title: "Adversarial",
-      width: "120px",
-      type: "dropdown",
-      options: [
-        { value: "false", label: "Passed" },
-        { value: "true", label: "Blocked" }
-      ],
-      placeholder: "Select status",
-    },
-    {
-      key: "actions",
-      title: "Actions",
-      width: "80px",
-      type: "button",
-      buttonIcon: <Trash2 className="h-4 w-4" />,
-      buttonVariant: "ghost" as const,
-    },
-  ];
 
   // Helper functions to manage prompts
   const addPrompt = () => {
@@ -235,34 +149,75 @@ export function EvaluationSandbox() {
     }
   };
 
-  // Handle table data changes
-  const handleTableDataChange = (newData: any[]) => {
-    setEvaluationInput((prev) => ({
-      ...prev,
-      prompts: newData,
-    }));
+  // Bulk import function for CSV data
+  const handleCSVImport = (
+    rows: any[],
+    importType: "valid" | "invalid" | "all"
+  ) => {
+    setEvaluationInput((prev) => {
+      const { updatedPrompts, result } = processCSVImport(rows, prev.prompts, importType);
+      console.log(result.message); // You can replace this with a toast notification
+      return {
+        ...prev,
+        prompts: updatedPrompts,
+      };
+    });
   };
 
-  // Handle cell actions (like button clicks)
+  // Handle table data changes with pagination
+  const handleTableDataChangeFn = (newPageData: any[]) => {
+    const { startIndex } = getPaginationHelpers(evaluationInput.prompts, {
+      currentPage,
+      itemsPerPage: EVALUATION_CONSTANTS.ITEMS_PER_PAGE,
+    });
+
+    setEvaluationInput((prev) => {
+      const updatedPrompts = handleTableDataChange(
+        newPageData,
+        prev.prompts,
+        startIndex
+      );
+      return {
+      ...prev,
+        prompts: updatedPrompts,
+      };
+    });
+  };
+
+  // Handle cell actions (like button clicks) with pagination
   const handleCellAction = (
     action: string,
     rowIndex: number,
     columnKey: string
   ) => {
-    if (action === "button-click" && columnKey === "actions") {
-      const promptId = evaluationInput.prompts[rowIndex].id;
-      removePrompt(promptId);
-    }
+    const { startIndex } = getPaginationHelpers(evaluationInput.prompts, {
+      currentPage,
+      itemsPerPage: EVALUATION_CONSTANTS.ITEMS_PER_PAGE,
+    });
+
+    handleCellActionUtil(
+      action,
+      rowIndex,
+      columnKey,
+      startIndex,
+      evaluationInput.prompts,
+      removePrompt
+    );
   };
 
   const handleSubmit = async () => {
     // Check if at least one prompt is complete (has both prompt text and adversarial status)
-    const completePrompts = evaluationInput.prompts.filter((p) => 
-      p.prompt.trim() && p.userMarkedAdversarial && p.userMarkedAdversarial !== ""
+    const completePrompts = evaluationInput.prompts.filter(
+      (p) =>
+        p.prompt.trim() &&
+        p.userMarkedAdversarial &&
+        p.userMarkedAdversarial !== ""
     );
     
     if (completePrompts.length === 0) {
-      setError("Please provide at least one complete prompt with adversarial status selected");
+      setError(
+        "Please provide at least one complete prompt with adversarial status selected"
+      );
       return;
     }
 
@@ -301,7 +256,7 @@ export function EvaluationSandbox() {
       // Filter to only include complete prompts for evaluation
       const filteredEvaluationInput = {
         ...evaluationInput,
-        prompts: completePrompts
+        prompts: completePrompts,
       };
 
       const evaluationResult = await runEvaluation(
@@ -315,16 +270,6 @@ export function EvaluationSandbox() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleSave = () => {
-    // Save configuration logic
-    console.log("Saving configuration:", config);
-  };
-
-  const handleShare = () => {
-    // Share logic
-    console.log("Sharing configuration:", config);
   };
 
   // Guardrail management functions
@@ -342,11 +287,35 @@ export function EvaluationSandbox() {
     );
   };
 
-  const getAvailableGuardrailsForSelection = () => {
-    return availableGuardrails.filter(
-      (Guardrail: Guardrail) => Guardrail.status === "active"
-    );
+
+  // Pagination helpers using utility functions
+  const paginationHelpers = getPaginationHelpers(evaluationInput.prompts, {
+    currentPage,
+    itemsPerPage: EVALUATION_CONSTANTS.ITEMS_PER_PAGE,
+  });
+
+  const goToPage = (page: number) => {
+    setCurrentPage(validatePageBounds(page, paginationHelpers.totalPages));
   };
+
+  const goToPrevious = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const goToNext = () => {
+    if (currentPage < paginationHelpers.totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  // Reset to first page when prompts change significantly
+  useEffect(() => {
+    if (currentPage > paginationHelpers.totalPages && paginationHelpers.totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [evaluationInput.prompts.length, currentPage, paginationHelpers.totalPages]);
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
@@ -365,7 +334,12 @@ export function EvaluationSandbox() {
                   onClick={handleSubmit}
                   disabled={
                     isLoading ||
-                    !evaluationInput.prompts.some((p) => p.prompt.trim() && p.userMarkedAdversarial && p.userMarkedAdversarial !== "") ||
+                !evaluationInput.prompts.some(
+                  (p) =>
+                    p.prompt.trim() &&
+                    p.userMarkedAdversarial &&
+                    p.userMarkedAdversarial !== ""
+                ) ||
                     (availableModels.length === 1 &&
                       availableModels[0].id === "no-models")
                   }
@@ -390,870 +364,55 @@ export function EvaluationSandbox() {
 
         <div className="bg-background grid grid-cols-1 lg:grid-cols-3 rounded-t-xl flex-1 border border-gray-200">
           {/* Configuration Panel */}
-          <div className="lg:col-span-1 border-r border-gray-200">
-            <div className="px-6 py-4 text-gray-900 border-b border-gray-200">
-              Configuration
-            </div>
-            <div className="p-6 border-b space-y-6">
-              <div>
-                <div className="text-xs font-450 uppercase text-gray-400 flex items-center gap-2 tracking-wide">
-                  System Setup
-                </div>
-              </div>
-              <div className="space-y-4">
-                {/* Candidate Model Selection */}
-                <div className="space-y-2">
-                  <div>
-                    <Label htmlFor="candidateModel">AI System</Label>
-                  </div>
-
-                  <div className="flex items-center justify-center space-x-2">
-                    <Select
-                      value={config.candidateModel}
-                      onValueChange={(value) =>
-                        setConfig({ ...config, candidateModel: value })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select AI System" />
-                      </SelectTrigger>
-                      <SelectContent className="w-[calc(100vw/3-4rem)] mt-1">
-                        {availableModels.length === 1 &&
-                        availableModels[0].id === "no-models" ? (
-                          <div className="px-2 py-1.5 text-xs text-muted-foreground">
-                            {availableModels[0].name}
-                          </div>
-                        ) : (
-                          availableModels.map((model) => (
-                            <SelectItem
-                              key={model.id}
-                              value={model.id}
-                              disabled={model.id === "no-models"}
-                            >
-                              {model.name}
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
-
-                    <div className="flex-shrink-0">
-                    {/* Add Guardrail Button */}
-                    <Popover
-                      open={isAddingGuardrail}
-                      onOpenChange={setIsAddingGuardrail}
-                    >
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="new"
-                          size="default"
-                          className="w-fit space-x-1 rounded-full"
-                        >
-                          <Plus className="h-4 w-4" />
-                          <span>Add Guardrails</span>
-                          <div className="flex items-center space-x-1">
-                            {selectedGuardrails.length > 0 && (
-                              <Badge variant="secondary" className="text-xs">
-                                {selectedGuardrails.length}
-                              </Badge>
-                            )}
-                          </div>
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="min-w-[calc(100vw/3-4rem)]   p-0 mt-2" align="end">
-                        <Command>
-                          <CommandInput placeholder="Search guardrails..." />
-                          <CommandList className="max-h-64">
-                            <CommandGroup>
-                              {getAvailableGuardrailsForSelection().length ===
-                              0 ? (
-                                <div className="text-center py-8 text-muted-foreground">
-                                  <p>No guardrails available</p>
-                                </div>
-                              ) : (
-                                getAvailableGuardrailsForSelection().map(
-                                  (Guardrail: Guardrail) => {
-                                    const isSelected = selectedGuardrails.some(
-                                      (g) => g.id === Guardrail.id
-                                    );
-                                    return (
-                                      <div
-                                        key={Guardrail.id}
-                                        className={`flex items-start space-x-3 p-3 cursor-pointer rounded-md my-0.5 ${
-                                          isSelected
-                                            ? "bg-gray-100"
-                                            : "hover:bg-gray-50"
-                                        }`}
-                                        onClick={() => {
-                                          if (isSelected) {
-                                            removeGuardrail(Guardrail.id);
-                                          } else {
-                                            addGuardrail(Guardrail);
-                                          }
-                                        }}
-                                      >
-                                        <div className="flex items-center space-x-2 py-0.5">
-                                          {isSelected ? (
-                                            <Check className="h-4 w-4 text-green-600" />
-                                          ) : (
-                                            <Plus className="h-4 w-4 text-muted-foreground" />
-                                          )}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                          <div className="flex items-center space-x-2 mb-1">
-                                            <span
-                                              className={`text-sm font-400 ${
-                                                isSelected
-                                                  ? "text-gray-900"
-                                                  : ""
-                                              }`}
-                                            >
-                                              {Guardrail.name}
-                                            </span>
-                                            {Guardrail.category && (
-                                              <Badge
-                                                variant="outline"
-                                                className="text-xs shrink-0"
-                                              >
-                                                {Guardrail.category}
-                                              </Badge>
-                                            )}
-                                          </div>
-                                          <p
-                                            className={`text-xs line-clamp-2 ${
-                                              isSelected
-                                                ? "text-gray-600"
-                                                : "text-muted-foreground"
-                                            }`}
-                                          >
-                                            {Guardrail.description}
-                                          </p>
-                                        </div>
-                                        
-                                      </div>
-                                    );
-                                  }
-                                )
-                              )}
-                            </CommandGroup>
-                          </CommandList>
-                          {selectedGuardrails.length > 0 && (
-                            <div className="p-3 border-t bg-muted/30">
-                              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                                <span>
-                                  {selectedGuardrails.length} Guardrail
-                                  {selectedGuardrails.length !== 1
-                                    ? "s"
-                                    : ""}{" "}
-                                  selected
-                                </span>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setIsAddingGuardrail(false)}
-                                  className="h-7 px-2"
-                                >
-                                  Done
-                                </Button>
-                              </div>
-                            </div>
-                          )}
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                </div>
-              </div>
-
-                <div className="space-y-2">
-                  {/* Selected Guardrails */}
-                  {selectedGuardrails.length > 0 && (
-                    <div className="space-y-2">
-                      {selectedGuardrails.map((Guardrail) => (
-                        <div
-                          key={Guardrail.id}
-                          className="flex items-center justify-between p-2 px-3 bg-gray-100 rounded-md"
-                        >
-                          <div className="flex items-center space-x-2">
-                          <Info className="h-4 w-4 text-gray-500" />
-
-                            <span className="text-sm font-400">
-                              {Guardrail.name}
-                            </span>
-
-                          </div>
-                          <div className="flex items-center space-x-3">
-                          {Guardrail.category && (
-                              <Badge variant="outline" className="text-xs">
-                                {Guardrail.category}
-                              </Badge>
-                            )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeGuardrail(Guardrail.id)}
-                            className="h-6 w-6 p-0 hover:bg-gray-200 hover:text-gray-600"
-                          >
-                            <X className="h-3 w-3 text-gray-500" />
-                          </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Hyperparameter Settings - Hidden, using default values */}
-            {/* 
-            <Card className="border-none bg-none">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
-                  Hyperparameter Settings
-                </CardTitle>
-                <CardDescription>
-                  Fine-tune model generation parameters
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="temperature">Temperature</Label>
-                    <Badge variant="secondary">{config.temperature}</Badge>
-                  </div>
-                  <Input
-                    id="temperature"
-                    type="range"
-                    min="0"
-                    max="2"
-                    step="0.01"
-                    value={config.temperature}
-                    onChange={(e) =>
-                      setConfig({
-                        ...config,
-                        temperature: parseFloat(e.target.value),
-                      })
-                    }
-                    className="w-full"
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>Focused</span>
-                    <span>Creative</span>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="maxLength">Maximum Length</Label>
-                  <Input
-                    id="maxLength"
-                    type="number"
-                    min="1"
-                    max="4000"
-                    value={config.maxLength}
-                    onChange={(e) =>
-                      setConfig({
-                        ...config,
-                        maxLength: parseInt(e.target.value),
-                      })
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="topP">Top P</Label>
-                    <Badge variant="secondary">{config.topP}</Badge>
-                  </div>
-                  <Input
-                    id="topP"
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value={config.topP}
-                    onChange={(e) =>
-                      setConfig({ ...config, topP: parseFloat(e.target.value) })
-                    }
-                  />
-                </div>
-              </CardContent>
-            </Card>
-            */}
-
-            {/* Metrics Configuration */}
-            <div className="border-none bg-none shadow-none">
-              <div className="p-6">
-                <div className="text-xs font-450 uppercase text-gray-400 flex items-center gap-2 tracking-wide">
-                  Metrics
-                </div>
-                
-              </div>
-              <CardContent className="space-y-2">
-                <div className="flex items-center justify-between border border-gray-200 rounded-md p-2">
-                  <div className="flex items-center space-x-2">
-                  <Info className="h-4 w-4 text-gray-500" />
-                  <Label htmlFor="accuracy">Accuracy</Label>
-                  </div>
-                  <Switch
-                    id="accuracy"
-                    checked={metricsEnabled.accuracy}
-                    onCheckedChange={(checked) =>
-                      setMetricsEnabled({
-                        ...metricsEnabled,
-                        accuracy: checked,
-                      })
-                    }
-                  />
-                </div>
-                <div className="flex items-center justify-between border border-gray-200 rounded-md p-2">
-                  <div className="flex items-center space-x-2">
-                  <Info className="h-4 w-4 text-gray-500" />
-                  <Label htmlFor="precision">Precision</Label>
-                  </div>
-                  <Switch
-                    id="precision"
-                    checked={metricsEnabled.precision}
-                    onCheckedChange={(checked) =>
-                      setMetricsEnabled({
-                        ...metricsEnabled,
-                        precision: checked,
-                      })
-                    }
-                  />
-                </div>
-                <div className="flex items-center justify-between border border-gray-200 rounded-md p-2">
-                  <div className="flex items-center space-x-2">
-                  <Info className="h-4 w-4 text-gray-500" />
-                  <Label htmlFor="recall">Recall</Label>
-                  </div>
-                  <Switch
-                    id="recall"
-                    checked={metricsEnabled.recall}
-                    onCheckedChange={(checked) =>
-                      setMetricsEnabled({ ...metricsEnabled, recall: checked })
-                    }
-                  />
-                </div>
-              </CardContent>
-            </div>
-
-            {/* Actions */}
-            {/* <Card>
-              <CardHeader>
-                <CardTitle>Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button
-                  className="w-full"
-                  onClick={handleSubmit}
-                  disabled={
-                    isLoading ||
-                    !evaluationInput.prompts.some((p) => p.prompt.trim() && p.userMarkedAdversarial && p.userMarkedAdversarial !== "") ||
-                    (availableModels.length === 1 &&
-                      availableModels[0].id === "no-models")
-                  }
-                >
-                  <Play className="mr-2 h-4 w-4" />
-                  {isLoading ? "Generating..." : "Submit"}
-                </Button>
-
-                {availableModels.length === 1 &&
-                  availableModels[0].id === "no-models" && (
-                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
-                      <p className="text-sm text-amber-800">
-                        ⚠️ No AI models available. Please add AI providers in
-                        the AI Providers page and fetch their models first.
-                      </p>
-                    </div>
-                  )}
-                <Button variant="outline" className="w-full">
-                  <History className="mr-2 h-4 w-4" />
-                  Show History
-                </Button>
-              </CardContent>
-            </Card> */}
-          </div>
+          <ConfigurationPanel
+            config={config}
+            onConfigChange={setConfig}
+            availableModels={availableModels}
+            selectedGuardrails={selectedGuardrails}
+            onAddGuardrail={addGuardrail}
+            onRemoveGuardrail={removeGuardrail}
+            availableGuardrails={availableGuardrails}
+            isAddingGuardrail={isAddingGuardrail}
+            onIsAddingGuardrailChange={setIsAddingGuardrail}
+            metricsEnabled={metricsEnabled}
+            onMetricsChange={setMetricsEnabled}
+          />
 
           {/* Main Content Area */}
           <div className="lg:col-span-2">
             {result ? (
-              <div className="space-y-6">
-                {/* Input Data Section */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Code className="h-5 w-5" />
-                      Test Data
-                    </CardTitle>
-                    <CardDescription>
-                      Input prompts used for evaluation
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {/* Multiple Prompts Table */}
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <Label>Evaluation Prompts</Label>
-                      </div>
-
-                      <DynamoTable
-                        data={evaluationInput.prompts}
-                        columns={tableColumns.map((col) => ({
-                          ...col,
-                          disabled:
-                            col.key === "actions"
-                              ? evaluationInput.prompts.length <= 1
-                              : false,
-                        }))}
-                        onDataChange={handleTableDataChange}
+              <ResultsSection
+                result={result}
+                prompts={evaluationInput.prompts}
+                currentPagePrompts={paginationHelpers.currentPagePrompts}
+                totalPages={paginationHelpers.totalPages}
+                currentPage={currentPage}
+                startIndex={paginationHelpers.startIndex}
+                onAddPrompt={addPrompt}
+                onTableDataChange={handleTableDataChangeFn}
                         onCellAction={handleCellAction}
-                        editable={true}
-                        rowKey="id"
-                      />
-
-                      <div className="flex justify-end">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={addPrompt}
-                          className="flex items-center gap-2"
-                        >
-                          <Plus className="h-4 w-4" />
-                          Add New Row
-                        </Button>
-                      </div>
-                    </div>
-
-                   
-
-                    {/* Error Display */}
-                    {error && (
-                      <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
-                        <p className="text-sm text-destructive flex items-center gap-2">
-                          <AlertTriangle className="h-4 w-4" />
-                          {error}
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Results Section */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Eye className="h-5 w-5" />
-                      Test Results
-                    </CardTitle>
-                    <CardDescription>
-                      Analysis and metrics from the evaluation
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                  {/* Overall Metrics Summary */}
-                  <div className="space-y-3">
-                    <h3 className="font-semibold text-lg">
-                      Overall Evaluation Summary
-                    </h3>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="p-3 bg-muted rounded-md">
-                        <p className="text-sm text-muted-foreground">
-                          Total Prompts
-                        </p>
-                        <p className="text-2xl font-bold">
-                          {result.overallMetrics.totalPrompts}
-                        </p>
-                      </div>
-                      <div className="p-3 bg-muted rounded-md">
-                        <p className="text-sm text-muted-foreground">Blocked</p>
-                        <p className="text-2xl font-bold text-red-600">
-                          {result.overallMetrics.totalBlocked}
-                        </p>
-                      </div>
-                      <div className="p-3 bg-muted rounded-md">
-                        <p className="text-sm text-muted-foreground">Passed</p>
-                        <p className="text-2xl font-bold text-green-600">
-                          {result.overallMetrics.totalPassed}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="p-3 bg-muted rounded-md">
-                        <p className="text-sm text-muted-foreground">
-                          Avg Accuracy
-                        </p>
-                        <p className="text-2xl font-bold">
-                          {(
-                            result.overallMetrics.averageAccuracy * 100
-                          ).toFixed(1)}
-                          %
-                        </p>
-                      </div>
-                      <div className="p-3 bg-muted rounded-md">
-                        <p className="text-sm text-muted-foreground">
-                          Avg Precision
-                        </p>
-                        <p className="text-2xl font-bold">
-                          {(
-                            result.overallMetrics.averagePrecision * 100
-                          ).toFixed(1)}
-                          %
-                        </p>
-                      </div>
-                      <div className="p-3 bg-muted rounded-md">
-                        <p className="text-sm text-muted-foreground">
-                          Avg Recall
-                        </p>
-                        <p className="text-2xl font-bold">
-                          {(result.overallMetrics.averageRecall * 100).toFixed(
-                            1
-                          )}
-                          %
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  {/* Individual Prompt Results - using view-only DynamoTable */}
-                  <div className="space-y-3">
-                    <h3 className="font-semibold text-lg">
-                      Individual Prompt Results
-                    </h3>
-                    <div className="space-y-2">
-                      {result.promptResults.map((promptResult) => (
-                        <div
-                          key={promptResult.promptId}
-                          className="p-4 border rounded-md space-y-2"
-                        >
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <p className="text-sm font-medium text-muted-foreground">
-                                Prompt:
-                              </p>
-                              <p className="text-sm line-clamp-2">
-                                {promptResult.prompt}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-muted-foreground">
-                                Topic:
-                              </p>
-                              <p className="text-sm">
-                                {promptResult.topic || "any"}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-4 gap-4">
-                            <div>
-                              <p className="text-sm font-medium text-muted-foreground">
-                                Expected:
-                              </p>
-                              <Badge
-                                variant={
-                                  promptResult.userMarkedAdversarial === "true"
-                                    ? "destructive"
-                                    : "default"
-                                }
-                              >
-                                {promptResult.userMarkedAdversarial === "true"
-                                  ? "Blocked"
-                                  : "Passed"}
-                              </Badge>
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-muted-foreground">
-                                Result:
-                              </p>
-                              <Badge
-                                variant={
-                                  promptResult.judgeDetectedAdversarial
-                                    ? "destructive"
-                                    : "default"
-                                }
-                              >
-                                {promptResult.judgeDetectedAdversarial
-                                  ? "Blocked"
-                                  : "Passed"}
-                              </Badge>
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-muted-foreground">
-                                Accuracy:
-                              </p>
-                              <span className="text-sm">
-                                {promptResult.localScores.accuracy !== undefined
-                                  ? `${(
-                                      promptResult.localScores.accuracy * 100
-                                    ).toFixed(1)}%`
-                                  : "N/A"}
-                              </span>
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-muted-foreground">
-                                Precision:
-                              </p>
-                              <span className="text-sm">
-                                {promptResult.localScores.precision !==
-                                undefined
-                                  ? `${(
-                                      promptResult.localScores.precision * 100
-                                    ).toFixed(1)}%`
-                                  : "N/A"}
-                              </span>
-                            </div>
-                          </div>
-                          {promptResult.guardrailResults &&
-                            promptResult.guardrailResults.length > 0 && (
-                              <div>
-                                <p className="text-sm font-medium text-muted-foreground mb-2">
-                                  Guardrails:
-                                </p>
-                                <div className="space-y-1">
-                                  {promptResult.guardrailResults.map(
-                                    (Guardrail, idx) => (
-                                      <div
-                                        key={idx}
-                                        className="flex items-center gap-2"
-                                      >
-                                        <Badge
-                                          variant={
-                                            Guardrail.status === "blocked"
-                                              ? "destructive"
-                                              : "default"
-                                          }
-                                          className="text-xs"
-                                        >
-                                          {Guardrail.status === "blocked"
-                                            ? "BLOCKED"
-                                            : "PASSED"}
-                                        </Badge>
-                                        <span className="text-xs text-muted-foreground">
-                                          {Guardrail.guardrailName}
-                                        </span>
-                                      </div>
-                                    )
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Detailed Guardrail Results */}
-                  {result.promptResults.some(
-                    (pr) =>
-                      pr.guardrailResults && pr.guardrailResults.length > 0
-                  ) && (
-                    <>
-                      <Separator />
-                      <div className="space-y-3">
-                        <h3 className="font-semibold text-lg">
-                          Detailed Guardrail Results
-                        </h3>
-                        {result.promptResults.map(
-                          (promptResult) =>
-                            promptResult.guardrailResults &&
-                            promptResult.guardrailResults.length > 0 && (
-                              <div
-                                key={promptResult.promptId}
-                                className="space-y-3"
-                              >
-                                <h4 className="font-medium text-md text-muted-foreground">
-                                  Prompt: {promptResult.prompt.substring(0, 50)}
-                                  ...
-                                </h4>
-                                <div className="grid grid-cols-1 gap-3">
-                                  {promptResult.guardrailResults.map(
-                                    (Guardrail, idx) => (
-                                      <div
-                                        key={idx}
-                                        className={`p-4 rounded-md border ${
-                                          Guardrail.status === "blocked"
-                                            ? "bg-red-50 border-red-200"
-                                            : "bg-green-50 border-green-200"
-                                        }`}
-                                      >
-                                        <div className="flex items-start justify-between">
-                                          <div className="space-y-2 flex-1">
-                                            <div className="flex items-center space-x-2">
-                                              <span className="font-medium text-sm">
-                                                {Guardrail.guardrailName}
-                                              </span>
-                                              <Badge
-                                                variant={
-                                                  Guardrail.status === "blocked"
-                                                    ? "destructive"
-                                                    : "default"
-                                                }
-                                                className="text-xs"
-                                              >
-                                                {Guardrail.status === "blocked"
-                                                  ? "BLOCKED"
-                                                  : "PASSED"}
-                                              </Badge>
-                                            </div>
-                                            <div className="space-y-1">
-                                              <p className="text-xs font-medium text-muted-foreground">
-                                                Guardrail:
-                                              </p>
-                                              <p className="text-xs bg-white/50 p-2 rounded border">
-                                                {Guardrail.policyDescription}
-                                              </p>
-                                            </div>
-                                            <div className="text-xs text-muted-foreground">
-                                              Evaluated at:{" "}
-                                              {new Date(
-                                                Guardrail.timestamp
-                                              ).toLocaleTimeString()}
-                                            </div>
-                                          </div>
-                                          <div className="flex items-center space-x-2 ml-4">
-                                            {Guardrail.status === "blocked" ? (
-                                              <XCircle className="h-5 w-5 text-gray-600" />
-                                            ) : (
-                                              <Check className="h-5 w-5 text-green-600" />
-                                            )}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    )
-                                  )}
-                                </div>
-                              </div>
-                            )
-                        )}
-                      </div>
-                    </>
-                  )}
-
-                  {/* Candidate Responses */}
-                  <Separator />
-                  <div className="space-y-3">
-                    <h3 className="font-semibold text-lg">
-                      Candidate Responses
-                    </h3>
-                    {result.promptResults.map((promptResult) => (
-                      <div key={promptResult.promptId} className="space-y-2">
-                        <h4 className="font-medium text-md text-muted-foreground">
-                          Prompt: {promptResult.prompt.substring(0, 50)}...
-                        </h4>
-                        <div className="p-4 bg-muted rounded-md border">
-                          <pre className="whitespace-pre-wrap text-sm">
-                            {promptResult.candidateResponse}
-                          </pre>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Timestamp */}
-                  <div className="text-sm text-muted-foreground flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    Evaluated at {new Date(result.timestamp).toLocaleString()}
-                  </div>
-                </CardContent>
-              </Card>
-              </div>
+                onGoToPage={goToPage}
+                onGoToPrevious={goToPrevious}
+                onGoToNext={goToNext}
+              />
+            ) : isLoading ? (
+              <LoadingState />
             ) : (
-              <div className="space-y-6">
-                {/* Input Form */}
-                <div>
-                  <div>
-                  <div className="px-6 py-4 text-gray-900 border-b border-gray-200">
-              Test Data
-            </div>
-                  </div>
-                  <div className="space-y-4 px-6 py-4">
-                    {/* Multiple Prompts Table */}
-                    <div className="space-y-3">
-                      
-
-
-                    <p className="text-xs text-muted-foreground">
-                      Add multiple prompts to evaluate them together. Each prompt
-                      will be processed individually and results will be shown
-                      collectively.
-                    </p>
-                      <DynamoTable
-                        data={evaluationInput.prompts}
-                        columns={tableColumns.map((col) => ({
-                          ...col,
-                          disabled:
-                            col.key === "actions"
-                              ? evaluationInput.prompts.length <= 1
-                              : false,
-                        }))}
-                        onDataChange={handleTableDataChange}
+              <InputDataSection
+                prompts={evaluationInput.prompts}
+                currentPagePrompts={paginationHelpers.currentPagePrompts}
+                totalPages={paginationHelpers.totalPages}
+                currentPage={currentPage}
+                startIndex={paginationHelpers.startIndex}
+                onAddPrompt={addPrompt}
+                onCSVImport={handleCSVImport}
+                onTableDataChange={handleTableDataChangeFn}
                         onCellAction={handleCellAction}
-                        editable={true}
-                        rowKey="id"
-                      />
-
-                      <div className="flex justify-start gap-2 border-b pb-3">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="default"
-                          onClick={addPrompt}
-                          className="flex items-center gap-2"
-                        >
-                          <Plus className="h-4 w-4" />
-                          Add New Row
-                        </Button>
-                       
-                      <Button variant="ghost" className="w-fit">
-                  <FileUp className="mr-2 h-4 w-4" />
-Upload from File                </Button>
-                <Button variant="ghost" className="w-fit">
-                  <Notebook className="mr-2 h-4 w-4" />
-                  Select from Policy
-                </Button>
-                <Button variant="ghost" className="w-fit">
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Generate Rows
-                </Button>
-                
-                     
-                      </div>
-                    </div>
-
-
-                    {/* Error Display */}
-                    {error && (
-                      <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
-                        <p className="text-sm text-destructive flex items-center gap-2">
-                          <AlertTriangle className="h-4 w-4" />
-                          {error}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Loading State - Show when no results yet */}
-                {isLoading && (
-                  <Card>
-                    <CardContent className="p-8">
-                      <div className="flex items-center justify-center space-x-4">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                        <div>
-                          <p className="font-medium">Running Evaluation...</p>
-                          <p className="text-sm text-muted-foreground">
-                            Analyzing prompt and generating response
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
+                onGoToPage={goToPage}
+                onGoToPrevious={goToPrevious}
+                onGoToNext={goToNext}
+                error={error}
+              />
             )}
           </div>
         </div>
