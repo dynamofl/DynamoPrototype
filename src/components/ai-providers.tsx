@@ -500,11 +500,11 @@ export function AIProviders() {
     switch (type) {
       case 'OpenAI':
         return <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-          <span className="text-green-600 font-bold text-sm">O</span>
+          <span className="text-green-600 font-450 text-sm">O</span>
         </div>
       default:
         return <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-          <span className="text-gray-600 font-bold text-sm">?</span>
+          <span className="text-gray-600 font-450 text-sm">?</span>
         </div>
     }
   }
@@ -608,7 +608,7 @@ export function AIProviders() {
                               }}
                               className="rounded"
                             />
-                            <Label htmlFor="select-all-models" className="text-sm font-medium cursor-pointer">
+                            <Label htmlFor="select-all-models" className="text-sm font-450 cursor-pointer">
                               Select All Models
                             </Label>
                           </div>
@@ -628,7 +628,7 @@ export function AIProviders() {
                                 className="rounded"
                               />
                               <Label htmlFor={`model-${model.id}`} className="text-sm cursor-pointer flex-1">
-                                <div className="font-medium">{model.id}</div>
+                                <div className="font-450">{model.id}</div>
                                 <div className="text-xs text-muted-foreground">
                                   Created: {formatModelDate(model.created)}
                                 </div>
@@ -681,22 +681,22 @@ export function AIProviders() {
                     <div className="space-y-6 mt-6">
                       <div className="space-y-4">
                         <div className="space-y-2">
-                          <Label className="text-sm font-medium text-muted-foreground">Provider Name</Label>
+                          <Label className="text-sm font-450 text-muted-foreground">Provider Name</Label>
                           <p className="text-sm">{viewingProvider.name}</p>
                         </div>
                         
                         <div className="space-y-2">
-                          <Label className="text-sm font-medium text-muted-foreground">Type</Label>
+                          <Label className="text-sm font-450 text-muted-foreground">Type</Label>
                           <Badge variant="outline">{viewingProvider.type}</Badge>
                         </div>
                         
                         <div className="space-y-2">
-                          <Label className="text-sm font-medium text-muted-foreground">Status</Label>
+                          <Label className="text-sm font-450 text-muted-foreground">Status</Label>
                           {getStatusBadge(viewingProvider.status)}
                         </div>
                         
                         <div className="space-y-2">
-                          <Label className="text-sm font-medium text-muted-foreground">API Key</Label>
+                          <Label className="text-sm font-450 text-muted-foreground">API Key</Label>
                           <div className="flex items-center space-x-2">
                             <span className="font-mono text-sm bg-muted px-2 py-1 rounded">
                               {viewingProvider.apiKey.slice(0, 7)}...{viewingProvider.apiKey.slice(-4)}
@@ -721,19 +721,19 @@ export function AIProviders() {
                         </div>
                         
                         <div className="space-y-2">
-                          <Label className="text-sm font-medium text-muted-foreground">Created</Label>
+                          <Label className="text-sm font-450 text-muted-foreground">Created</Label>
                           <p className="text-sm">{viewingProvider.createdAt}</p>
                         </div>
                         
                         {viewingProvider.lastUsed && (
                           <div className="space-y-2">
-                            <Label className="text-sm font-medium text-muted-foreground">Last Used</Label>
+                            <Label className="text-sm font-450 text-muted-foreground">Last Used</Label>
                             <p className="text-sm">{viewingProvider.lastUsed}</p>
                           </div>
                         )}
                         
                         <div className="space-y-2">
-                          <Label className="text-sm font-medium text-muted-foreground">Usage Count</Label>
+                          <Label className="text-sm font-450 text-muted-foreground">Usage Count</Label>
                           <p className="text-sm">{viewingProvider.usageCount}</p>
                         </div>
                       </div>
@@ -741,7 +741,7 @@ export function AIProviders() {
                       {viewingProvider.models && viewingProvider.models.length > 0 && (
                         <div className="space-y-4">
                           <div className="space-y-2">
-                            <Label className="text-sm font-medium text-muted-foreground">
+                            <Label className="text-sm font-450 text-muted-foreground">
                               Available Models ({viewingProvider.models.length})
                             </Label>
                             <div className="max-h-48 overflow-y-auto border rounded-md p-3 space-y-2">
@@ -750,7 +750,7 @@ export function AIProviders() {
                                 .map((model) => (
                                 <div key={model.id} className="flex items-center justify-between py-2 border-b last:border-b-0">
                                   <div>
-                                    <div className="font-medium text-sm">{model.id}</div>
+                                    <div className="font-450 text-sm">{model.id}</div>
                                     <div className="text-xs text-muted-foreground">
                                       Created: {formatModelDate(model.created)}
                                     </div>
@@ -834,7 +834,7 @@ export function AIProviders() {
                       {/* Models Management */}
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm font-medium">Models Management</Label>
+                          <Label className="text-sm font-450">Models Management</Label>
                           <Button
                             variant="outline"
                             size="sm"
@@ -869,7 +869,7 @@ export function AIProviders() {
                                   <div className="flex items-center space-x-2">
                                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                                     <div>
-                                      <div className="font-medium text-sm">{model.id}</div>
+                                      <div className="font-450 text-sm">{model.id}</div>
                                       <div className="text-xs text-muted-foreground">
                                         Created: {formatModelDate(model.created)}
                                       </div>
@@ -902,7 +902,7 @@ export function AIProviders() {
                                   }}
                                   className="rounded"
                                 />
-                                <Label htmlFor="edit-select-all-models" className="text-sm font-medium cursor-pointer">
+                                <Label htmlFor="edit-select-all-models" className="text-sm font-450 cursor-pointer">
                                   Select All Models
                                 </Label>
                               </div>
@@ -927,7 +927,7 @@ export function AIProviders() {
                                       />
                                       <Label htmlFor={`edit-model-${model.id}`} className="text-sm cursor-pointer flex-1">
                                         <div className="flex items-center space-x-2">
-                                          <span className="font-medium">{model.id}</span>
+                                          <span className="font-450">{model.id}</span>
                                           {isCurrentlySelected && (
                                             <Badge variant="secondary" className="text-xs">
                                               Current
@@ -1064,7 +1064,7 @@ export function AIProviders() {
                   <>
                     {/* Provider Row */}
                     <TableRow key={provider.id}>
-                      <TableCell className="font-medium">
+                      <TableCell className="font-450">
                         <div className="flex items-center space-x-2">
                           <Button
                             variant="ghost"
@@ -1080,7 +1080,7 @@ export function AIProviders() {
                           </Button>
                         </div>
                       </TableCell>
-                      <TableCell className="font-medium">
+                      <TableCell className="font-450">
                         <div className="flex items-center space-x-1">
                           {getTypeIcon(provider.type)}
                           <span className="text-[13px] font-450 hover:underline cursor-pointer">{provider.name}</span>
@@ -1094,7 +1094,7 @@ export function AIProviders() {
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         <div className="flex items-center space-x-2">
-                          <span className="font-medium">
+                          <span className="font-450">
                             {provider.models ? provider.models.length : 0}
                           </span>
                           {provider.models && provider.models.length > 0 && (
@@ -1184,7 +1184,7 @@ export function AIProviders() {
                               <div className="flex items-center justify-between py-2">
                                 <div className="flex items-center space-x-4">
                                   <div className="flex items-center space-x-2">
-                                    <div className="font-medium text-sm">{model.id}</div>
+                                    <div className="font-450 text-sm">{model.id}</div>
                                     <div className="text-xs text-muted-foreground">
                                       Created: {formatModelDate(model.created)}
                                     </div>

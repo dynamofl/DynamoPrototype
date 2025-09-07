@@ -115,7 +115,10 @@ export function parseCSVFile(file: File): Promise<CSVParseResult> {
             invalidCount: 0,
             headers: [],
             hasRequiredColumns: false,
-            missingColumns: ['prompt', 'userMarkedAdversarial']
+            missingColumns: ['prompt', 'userMarkedAdversarial'],
+            fileName: file.name,
+            fileSize: file.size,
+            rows: []
           });
           return;
         }
@@ -166,7 +169,10 @@ export function parseCSVFile(file: File): Promise<CSVParseResult> {
           invalidCount: invalidRows.length,
           headers,
           hasRequiredColumns,
-          missingColumns
+          missingColumns,
+          fileName: file.name,
+          fileSize: file.size,
+          rows: validRows
         });
         
       } catch (error) {

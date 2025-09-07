@@ -436,7 +436,7 @@ export function Guardrails() {
               <TableBody>
                 {currentData.map((Guardrail) => (
                   <TableRow key={Guardrail.id}>
-                    <TableCell className="font-medium">
+                    <TableCell className="font-450">
                       <span className="text-[13px] font-450 hover:underline cursor-pointer">
                         {Guardrail.name}
                       </span>
@@ -483,7 +483,7 @@ export function Guardrails() {
                             </SheetHeader>
                             <div className="space-y-4 mt-6">
                               <div className="space-y-2">
-                                <Label className="text-sm font-medium">Category</Label>
+                                <Label className="text-sm font-450">Category</Label>
                                 <div>
                                   {Guardrail.category ? (
                                     <Badge variant="outline">{Guardrail.category}</Badge>
@@ -493,7 +493,7 @@ export function Guardrails() {
                                 </div>
                               </div>
                               <div className="space-y-2">
-                                <Label className="text-sm font-medium">Status</Label>
+                                <Label className="text-sm font-450">Status</Label>
                                 <div>
                                   <Badge 
                                     variant={Guardrail.status === 'active' ? 'default' : 'secondary'}
@@ -503,7 +503,7 @@ export function Guardrails() {
                                 </div>
                               </div>
                               <div className="space-y-2">
-                                <Label className="text-sm font-medium">Content</Label>
+                                <Label className="text-sm font-450">Content</Label>
                                 <div className="p-3 bg-muted rounded-md text-sm">
                                   {Guardrail.content}
                                 </div>

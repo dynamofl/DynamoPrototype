@@ -169,7 +169,7 @@ export function ResultsSection({
         <CardContent className="space-y-6">
           {/* Overall Metrics Summary */}
           <div className="space-y-3">
-            <h3 className="font-semibold text-lg">
+            <h3 className="font-450 text-lg">
               Overall Evaluation Summary
             </h3>
             <div className="grid grid-cols-3 gap-4">
@@ -177,19 +177,19 @@ export function ResultsSection({
                 <p className="text-sm text-muted-foreground">
                   Total Prompts
                 </p>
-                <p className="text-2xl font-bold">
+                <p className="text-2xl font-450">
                   {result.overallMetrics.totalPrompts}
                 </p>
               </div>
               <div className="p-3 bg-muted rounded-md">
                 <p className="text-sm text-muted-foreground">Blocked</p>
-                <p className="text-2xl font-bold text-red-600">
+                <p className="text-2xl font-450 text-red-600">
                   {result.overallMetrics.totalBlocked}
                 </p>
               </div>
               <div className="p-3 bg-muted rounded-md">
                 <p className="text-sm text-muted-foreground">Passed</p>
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-2xl font-450 text-green-600">
                   {result.overallMetrics.totalPassed}
                 </p>
               </div>
@@ -199,7 +199,7 @@ export function ResultsSection({
                 <p className="text-sm text-muted-foreground">
                   Avg Accuracy
                 </p>
-                <p className="text-2xl font-bold">
+                <p className="text-2xl font-450">
                   {(
                     result.overallMetrics.averageAccuracy * 100
                   ).toFixed(1)}
@@ -210,7 +210,7 @@ export function ResultsSection({
                 <p className="text-sm text-muted-foreground">
                   Avg Precision
                 </p>
-                <p className="text-2xl font-bold">
+                <p className="text-2xl font-450">
                   {(
                     result.overallMetrics.averagePrecision * 100
                   ).toFixed(1)}
@@ -221,7 +221,7 @@ export function ResultsSection({
                 <p className="text-sm text-muted-foreground">
                   Avg Recall
                 </p>
-                <p className="text-2xl font-bold">
+                <p className="text-2xl font-450">
                   {(
                     result.overallMetrics.averageRecall * 100
                   ).toFixed(1)}
@@ -235,7 +235,7 @@ export function ResultsSection({
 
           {/* Individual Prompt Results */}
           <div className="space-y-3">
-            <h3 className="font-semibold text-lg">
+            <h3 className="font-450 text-lg">
               Individual Prompt Results
             </h3>
             <div className="space-y-2">
@@ -246,7 +246,7 @@ export function ResultsSection({
                 >
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">
+                      <p className="text-sm font-450 text-muted-foreground">
                         Prompt:
                       </p>
                       <p className="text-sm line-clamp-2">
@@ -254,7 +254,7 @@ export function ResultsSection({
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">
+                      <p className="text-sm font-450 text-muted-foreground">
                         Topic:
                       </p>
                       <p className="text-sm">
@@ -264,7 +264,7 @@ export function ResultsSection({
                   </div>
                   <div className="grid grid-cols-4 gap-4">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">
+                      <p className="text-sm font-450 text-muted-foreground">
                         Expected:
                       </p>
                       <Badge
@@ -281,7 +281,7 @@ export function ResultsSection({
                       </Badge>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">
+                      <p className="text-sm font-450 text-muted-foreground">
                         Result:
                       </p>
                       <Badge
@@ -297,7 +297,7 @@ export function ResultsSection({
                       </Badge>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">
+                      <p className="text-sm font-450 text-muted-foreground">
                         Accuracy:
                       </p>
                       <span className="text-sm">
@@ -310,7 +310,7 @@ export function ResultsSection({
                       </span>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">
+                      <p className="text-sm font-450 text-muted-foreground">
                         Precision:
                       </p>
                       <span className="text-sm">
@@ -326,7 +326,7 @@ export function ResultsSection({
                   {promptResult.guardrailResults &&
                     promptResult.guardrailResults.length > 0 && (
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground mb-2">
+                        <p className="text-sm font-450 text-muted-foreground mb-2">
                           Guardrails:
                         </p>
                         <div className="space-y-1">
@@ -370,7 +370,7 @@ export function ResultsSection({
             <>
               <Separator />
               <div className="space-y-3">
-                <h3 className="font-semibold text-lg">
+                <h3 className="font-450 text-lg">
                   Detailed Guardrail Results
                 </h3>
                 {result.promptResults.map(
@@ -381,7 +381,7 @@ export function ResultsSection({
                         key={promptResult.promptId}
                         className="space-y-3"
                       >
-                        <h4 className="font-medium text-md text-muted-foreground">
+                        <h4 className="font-450 text-md text-muted-foreground">
                           Prompt:{" "}
                           {promptResult.prompt.substring(0, 50)}
                           ...
@@ -400,7 +400,7 @@ export function ResultsSection({
                                 <div className="flex items-start justify-between">
                                   <div className="space-y-2 flex-1">
                                     <div className="flex items-center space-x-2">
-                                      <span className="font-medium text-sm">
+                                      <span className="font-450 text-sm">
                                         {guardrail.guardrailName}
                                       </span>
                                       <Badge
@@ -419,7 +419,7 @@ export function ResultsSection({
                                       </Badge>
                                     </div>
                                     <div className="space-y-1">
-                                      <p className="text-xs font-medium text-muted-foreground">
+                                      <p className="text-xs font-450 text-muted-foreground">
                                         Guardrail:
                                       </p>
                                       <p className="text-xs bg-white/50 p-2 rounded border">
@@ -456,12 +456,12 @@ export function ResultsSection({
           {/* Candidate Responses */}
           <Separator />
           <div className="space-y-3">
-            <h3 className="font-semibold text-lg">
+            <h3 className="font-450 text-lg">
               Candidate Responses
             </h3>
             {result.promptResults.map((promptResult) => (
               <div key={promptResult.promptId} className="space-y-2">
-                <h4 className="font-medium text-md text-muted-foreground">
+                <h4 className="font-450 text-md text-muted-foreground">
                   Prompt: {promptResult.prompt.substring(0, 50)}...
                 </h4>
                 <div className="p-4 bg-muted rounded-md border">

@@ -8,7 +8,7 @@ export function LoadingState() {
         <div className="flex items-center justify-center space-x-4">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           <div>
-            <p className="font-medium">Running Evaluation...</p>
+            <p className="font-450">Running Evaluation...</p>
             <p className="text-sm text-muted-foreground">
               Analyzing prompt and generating response
             </p>
@@ -18,3 +18,4 @@ export function LoadingState() {
     </Card>
   );
 }
+

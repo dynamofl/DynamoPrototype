@@ -1,52 +1,48 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Upload, 
-  FileUp, 
-  CheckCircle, 
-  XCircle, 
-  AlertTriangle,
-  File
-} from 'lucide-react';
+import { Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { parseCSVFile, validateCSVFile } from '@/lib/csv-parser';
-import type { CSVUploadState, CSVParseResult } from '@/types/csv';
+import { FileItem } from './patterns';
+import type { CSVUploadState, CSVParseResult, FileState } from '@/types/csv';
 
 interface CSVUploadProps {
   onUploadComplete: (result: CSVParseResult) => void;
   onError: (error: string) => void;
+  onFilesChange?: (files: FileState[]) => void;
   className?: string;
 }
 
-export function CSVUpload({ onUploadComplete, onError, className }: CSVUploadProps) {
+export function CSVUpload({ onUploadComplete, onError, onFilesChange, className }: CSVUploadProps) {
   const [uploadState, setUploadState] = useState<CSVUploadState>({
-    file: null,
-    parseResult: null,
-    isUploading: false,
-    isParsing: false,
-    error: null,
+    files: [],
     showPreview: false,
     previewFilter: 'all'
   });
 
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    if (acceptedFiles.length === 0) return;
-    
-    const file = acceptedFiles[0];
-    
-    // Reset state
-    setUploadState(prev => ({
-      ...prev,
+  // Notify parent component when files change
+  useEffect(() => {
+    if (onFilesChange) {
+      onFilesChange(uploadState.files);
+    }
+  }, [uploadState.files, onFilesChange]);
+
+  const processFile = useCallback(async (file: File) => {
+    const fileId = crypto.randomUUID();
+    const fileState: FileState = {
+      id: fileId,
       file,
       parseResult: null,
-      error: null,
       isUploading: true,
-      isParsing: false
+      isParsing: false,
+      error: null,
+      uploadProgress: 0
+    };
+
+    // Add file to state
+    setUploadState(prev => ({
+      ...prev,
+      files: [...prev.files, fileState]
     }));
 
     // Validate file
@@ -54,28 +50,56 @@ export function CSVUpload({ onUploadComplete, onError, className }: CSVUploadPro
     if (!validation.isValid) {
       setUploadState(prev => ({
         ...prev,
-        isUploading: false,
-        error: validation.error || 'Invalid file'
+        files: prev.files.map(f => 
+          f.id === fileId ? {
+            ...f,
+            isUploading: false,
+            error: validation.error || 'Invalid file'
+          } : f
+        )
       }));
-      onError(validation.error || 'Invalid file');
       return;
     }
 
     try {
+      // Simulate upload progress
+      const interval = setInterval(() => {
+        setUploadState(prev => ({
+          ...prev,
+          files: prev.files.map(f => 
+            f.id === fileId ? {
+              ...f,
+              uploadProgress: Math.min(f.uploadProgress + 20, 90)
+            } : f
+          )
+        }));
+      }, 500);
+
       // Start parsing
       setUploadState(prev => ({
         ...prev,
-        isParsing: true
+        files: prev.files.map(f => 
+          f.id === fileId ? {
+            ...f,
+            isParsing: true
+          } : f
+        )
       }));
 
       const parseResult = await parseCSVFile(file);
+      clearInterval(interval);
       
       setUploadState(prev => ({
         ...prev,
-        isUploading: false,
-        isParsing: false,
-        parseResult,
-        showPreview: true
+        files: prev.files.map(f => 
+          f.id === fileId ? {
+            ...f,
+            isUploading: false,
+            isParsing: false,
+            parseResult,
+            uploadProgress: 100
+          } : f
+        )
       }));
 
       onUploadComplete(parseResult);
@@ -84,13 +108,25 @@ export function CSVUpload({ onUploadComplete, onError, className }: CSVUploadPro
       const errorMessage = error instanceof Error ? error.message : 'Failed to parse CSV file';
       setUploadState(prev => ({
         ...prev,
-        isUploading: false,
-        isParsing: false,
-        error: errorMessage
+        files: prev.files.map(f => 
+          f.id === fileId ? {
+            ...f,
+            isUploading: false,
+            isParsing: false,
+            error: errorMessage,
+            uploadProgress: 0
+          } : f
+        )
       }));
       onError(errorMessage);
     }
   }, [onUploadComplete, onError]);
+
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    acceptedFiles.forEach(file => {
+      processFile(file);
+    });
+  }, [processFile]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -101,175 +137,92 @@ export function CSVUpload({ onUploadComplete, onError, className }: CSVUploadPro
     maxSize: 5 * 1024 * 1024 // 5MB
   });
 
-  const resetUpload = () => {
-    setUploadState({
-      file: null,
-      parseResult: null,
-      isUploading: false,
-      isParsing: false,
-      error: null,
-      showPreview: false,
-      previewFilter: 'all'
-    });
+  const removeFile = (fileId: string) => {
+    setUploadState(prev => ({
+      ...prev,
+      files: prev.files.filter(f => f.id !== fileId)
+    }));
   };
 
   return (
     <div className={cn("space-y-4", className)}>
-      {/* Upload Area */}
-      {!uploadState.file && (
-        <Card>
-          <CardContent className="p-6">
-            <div
-              {...getRootProps()}
-              className={cn(
-                "border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors",
-                isDragActive 
-                  ? "border-primary bg-primary/5" 
-                  : "border-muted-foreground/25 hover:border-primary/50"
-              )}
-            >
-              <input {...getInputProps()} />
-              <div className="flex flex-col items-center gap-4">
-                <div className={cn(
-                  "rounded-full p-3",
-                  isDragActive ? "bg-primary text-primary-foreground" : "bg-muted"
-                )}>
-                  <Upload className="h-6 w-6" />
-                </div>
-                <div>
-                  <p className="text-lg font-medium">
-                    {isDragActive ? "Drop your CSV file here" : "Drag & drop your CSV file here"}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Or click to browse (max 5MB)
-                  </p>
-                </div>
-                <Button variant="outline" size="sm">
-                  <FileUp className="mr-2 h-4 w-4" />
-                  Browse Files
-                </Button>
+      {/* Upload Area - Always visible */}
+      <div className="bg-white h-[180px] relative rounded-lg">
+        <div
+          {...getRootProps()}
+          className={cn(
+            "h-full border border-dashed border-[rgba(9,28,66,0.14)] rounded-lg cursor-pointer transition-colors",
+            isDragActive ? "bg-[rgba(9,28,66,0.04)]" : "hover:bg-[rgba(9,28,66,0.02)]"
+          )}
+        >
+          <input {...getInputProps()} />
+          <div className="flex flex-col items-center justify-center h-full p-2">
+            <div className="bg-[#f1f2f4] rounded-full p-2 mb-2">
+              <Upload className="h-5 w-5 text-[#404b64]" />
+            </div>
+            <p className="text-[13px] font-450 text-[#192c4b] mb-1">
+              {isDragActive ? "Drop your .csv files here" : "Drag and drop your .csv files here"}
+            </p>
+            <div className="flex items-center gap-1">
+              <span className="text-[13px] text-[#6b7894]">Or</span>
+              <button className="text-[13px] font-450 text-blue-600 underline">Browse File</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* File Groups */}
+      {uploadState.files.length > 0 && (
+        <div className="space-y-4">
+          {/* In Progress Files */}
+          {uploadState.files.some(f => f.isUploading || f.isParsing) && (
+            <div className="space-y-2">
+              {uploadState.files
+                .filter(f => f.isUploading || f.isParsing)
+                .map(file => (
+                  <FileItem
+                    key={file.id}
+                    file={file}
+                    variant="in-progress"
+                    onRemove={removeFile}
+                  />
+                ))}
+            </div>
+          )}
+
+          {/* Files with all invalid rows (no section title) */}
+          {uploadState.files
+            .filter(f => f.parseResult && f.parseResult.validCount === 0)
+            .map(file => (
+              <FileItem
+                key={file.id}
+                file={file}
+                variant="invalid"
+                onRemove={removeFile}
+              />
+            ))}
+
+          {/* Validated Files (files with at least one valid row) */}
+          {uploadState.files.some(f => f.parseResult && f.parseResult.validCount > 0) && (
+            <div className="space-y-2">
+              <h3 className="text-xs font-450 text-[#192c4b] leading-4">
+                Validated Files ({uploadState.files.filter(f => f.parseResult && f.parseResult.validCount > 0).length})
+              </h3>
+              <div className="space-y-2">
+                {uploadState.files
+                  .filter(f => f.parseResult && f.parseResult.validCount > 0)
+                  .map(file => (
+                    <FileItem
+                      key={file.id}
+                      file={file}
+                      variant="validated"
+                      onRemove={removeFile}
+                    />
+                  ))}
               </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* File Processing State */}
-      {uploadState.file && (
-        <Card>
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              {/* File Info */}
-              <div className="flex items-center gap-3">
-                <File className="h-5 w-5 text-muted-foreground" />
-                <div className="flex-1">
-                  <p className="font-medium">{uploadState.file.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {(uploadState.file.size / 1024).toFixed(1)} KB
-                  </p>
-                </div>
-                {uploadState.parseResult && (
-                  <Button variant="ghost" size="sm" onClick={resetUpload}>
-                    Remove
-                  </Button>
-                )}
-              </div>
-
-              {/* Processing States */}
-              {uploadState.isUploading && !uploadState.isParsing && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                    <span className="text-sm">Uploading file...</span>
-                  </div>
-                  <Progress value={50} className="h-2" />
-                </div>
-              )}
-
-              {uploadState.isParsing && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                    <span className="text-sm">Parsing and validating CSV...</span>
-                  </div>
-                  <Progress value={75} className="h-2" />
-                </div>
-              )}
-
-              {/* Validation Results */}
-              {uploadState.parseResult && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                    <span className="font-medium">File processed successfully</span>
-                  </div>
-                  
-                  {/* Validation Summary */}
-                  <div className="grid grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg">
-                    <div className="text-center">
-                      <p className="text-2xl font-bold">{uploadState.parseResult.totalRows}</p>
-                      <p className="text-sm text-muted-foreground">Total Rows</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-green-600">{uploadState.parseResult.validCount}</p>
-                      <p className="text-sm text-muted-foreground">Valid Rows</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-red-600">{uploadState.parseResult.invalidCount}</p>
-                      <p className="text-sm text-muted-foreground">Invalid Rows</p>
-                    </div>
-                  </div>
-
-                  {/* Validation Status */}
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      {uploadState.parseResult.hasRequiredColumns ? (
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <XCircle className="h-4 w-4 text-red-500" />
-                      )}
-                      <span className="text-sm">Required columns present</span>
-                      {!uploadState.parseResult.hasRequiredColumns && (
-                        <Badge variant="destructive" className="text-xs">
-                          Missing: {uploadState.parseResult.missingColumns.join(', ')}
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-sm">File format valid (.csv)</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-sm">File size within limits</span>
-                    </div>
-                  </div>
-
-                  {/* Validation Warnings */}
-                  {uploadState.parseResult.invalidCount > 0 && (
-                    <Alert>
-                      <AlertTriangle className="h-4 w-4" />
-                      <AlertDescription>
-                        {uploadState.parseResult.invalidCount} row{uploadState.parseResult.invalidCount > 1 ? 's' : ''} failed validation. 
-                        You can choose to import only valid rows or review invalid rows for correction.
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                </div>
-              )}
-
-              {/* Error State */}
-              {uploadState.error && (
-                <Alert variant="destructive">
-                  <XCircle className="h-4 w-4" />
-                  <AlertDescription>{uploadState.error}</AlertDescription>
-                </Alert>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+          )}
+        </div>
       )}
     </div>
   );

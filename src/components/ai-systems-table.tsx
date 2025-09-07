@@ -119,7 +119,7 @@ export function AISystemsTable({ data, loading = false }: AISystemsTableProps) {
             ) : (
               currentData.map((system) => (
                 <TableRow key={system.id}>
-                <TableCell className="font-medium ">
+                <TableCell className="font-450 ">
                   <div className="flex items-center space-x-1">
                     <AISystemIcon type={system.icon} />
                     <span className="text-[13px] font-450 hover:underline cursor-pointer">{system.name}</span>

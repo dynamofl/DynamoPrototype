@@ -22,6 +22,9 @@ export interface CSVParseResult {
   headers: string[];
   hasRequiredColumns: boolean;
   missingColumns: string[];
+  fileName: string;
+  fileSize: number;
+  rows: EvaluationPrompt[];
 }
 
 export interface CSVValidationRule {
@@ -31,12 +34,18 @@ export interface CSVValidationRule {
   errorMessage?: string;
 }
 
-export interface CSVUploadState {
-  file: File | null;
+export interface FileState {
+  id: string;
+  file: File;
   parseResult: CSVParseResult | null;
   isUploading: boolean;
   isParsing: boolean;
   error: string | null;
+  uploadProgress: number;
+}
+
+export interface CSVUploadState {
+  files: FileState[];
   showPreview: boolean;
   previewFilter: 'all' | 'valid' | 'invalid';
 }

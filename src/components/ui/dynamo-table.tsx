@@ -473,7 +473,7 @@ export const DynamoTable: React.FC<DynamoTableProps> = ({
               {columns.map((column) => (
                 <TableHead 
                   key={column.key} 
-                  className="px-4 py-3 font-semibold"
+                  className="px-4 py-3 font-450"
                   style={{ width: column.width }}
                 >
                   {column.title}

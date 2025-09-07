@@ -109,15 +109,15 @@ export function CSVPreview({ parseResult, onImportRows, className }: CSVPreviewP
         <CardContent>
           <div className="grid grid-cols-3 gap-6 mb-6">
             <div className="text-center p-4 bg-muted/50 rounded-lg">
-              <p className="text-3xl font-bold">{parseResult.totalRows}</p>
+              <p className="text-3xl font-450">{parseResult.totalRows}</p>
               <p className="text-sm text-muted-foreground">Total Rows</p>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
-              <p className="text-3xl font-bold text-green-600">{parseResult.validCount}</p>
+              <p className="text-3xl font-450 text-green-600">{parseResult.validCount}</p>
               <p className="text-sm text-muted-foreground">Valid Rows</p>
             </div>
             <div className="text-center p-4 bg-red-50 rounded-lg">
-              <p className="text-3xl font-bold text-red-600">{parseResult.invalidCount}</p>
+              <p className="text-3xl font-450 text-red-600">{parseResult.invalidCount}</p>
               <p className="text-sm text-muted-foreground">Invalid Rows</p>
             </div>
           </div>

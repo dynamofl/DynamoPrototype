@@ -4,7 +4,7 @@
 export function ThemeDemo() {
   return (
     <div className="p-8 space-y-8">
-      <h1 className="text-3xl font-bold mb-8">Theme Variables & Font Weight Demo</h1>
+      <h1 className="text-3xl font-450 mb-8">Theme Variables & Font Weight Demo</h1>
       
       {/* Gray Color Scale Demo */}
       <section>

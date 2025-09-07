@@ -92,7 +92,7 @@ function App() {
           {/* 404 Route - Catch all unmatched routes */}
           <Route path="*" element={
             <div className="flex flex-col items-center justify-center min-h-[60vh] px-6">
-              <h1 className="text-4xl font-bold text-muted-foreground mb-4">404</h1>
+              <h1 className="text-4xl font-450 text-muted-foreground mb-4">404</h1>
               <p className="text-lg text-muted-foreground mb-6">Page not found</p>
               <Button onClick={() => window.location.href = '/evaluation-sandbox'}>
                 Go to Evaluation Sandbox
