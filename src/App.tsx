@@ -1,12 +1,10 @@
 import { useMemo } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { AppBar } from '@/components/app-bar'
-import { Breadcrumb } from '@/components/breadcrumb'
-import { HeaderStats } from '@/components/header-stats'
-import { AISystemsTable } from '@/components/ai-systems-table'
-import { EvaluationSandbox } from '@/components/evaluation-sandbox'
-import { AIProviders } from '@/components/ai-providers'
-import { Guardrails } from '@/components/guardrails'
+import { AppBar, Breadcrumb, HeaderStats, AISystemsTable } from '@/components/patterns'
+import { AIProvidersPage } from '@/features/ai-providers'
+import { EvaluationPage } from '@/features/evaluation'
+import { GuardrailsPage } from '@/features/guardrails'
+import { TablePatternDemo } from '@/components/table-pattern-demo'
 import aiSystemsData from '@/data/aiSystems.json'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
@@ -50,8 +48,8 @@ function App() {
       <main className="mx-auto">
         <Breadcrumb />
         <Routes>
-          {/* Default redirect to Evaluation Sandbox */}
-          <Route path="/" element={<Navigate to="/evaluation-sandbox" replace />} />
+          {/* Default redirect to Table Demo (for testing) */}
+          <Route path="/" element={<Navigate to="/table-demo" replace />} />
           
           {/* AI Systems Route */}
           <Route path="/ai-systems" element={
@@ -81,13 +79,16 @@ function App() {
           } />
           
           {/* Evaluation Sandbox Route */}
-          <Route path="/evaluation-sandbox" element={<EvaluationSandbox />} />
+          <Route path="/evaluation-sandbox" element={<EvaluationPage />} />
           
           {/* AI Providers Route */}
-          <Route path="/ai-providers" element={<AIProviders />} />
+          <Route path="/ai-providers" element={<AIProvidersPage />} />
           
           {/* Guardrails Route */}
-          <Route path="/guardrails" element={<Guardrails />} />
+          <Route path="/guardrails" element={<GuardrailsPage />} />
+          
+          {/* Table Pattern Demo Route */}
+          <Route path="/table-demo" element={<TablePatternDemo />} />
           
           {/* 404 Route - Catch all unmatched routes */}
           <Route path="*" element={
