@@ -5,6 +5,7 @@ export { ViewEditSheet } from './view-edit-sheet';
 export { ExampleGuardrails } from './example-guardrails';
 export { TablePattern } from './table-pattern';
 export { RowEditDialog } from './row-edit-dialog';
+export { StatCardSection } from './stat-card-section';
 export { Slot, ModelsListSlot, TableSlot } from './slot';
 
 // Shared components

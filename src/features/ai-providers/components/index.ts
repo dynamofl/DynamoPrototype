@@ -3,6 +3,7 @@
  */
 
 export { StatCard } from './stat-card'
+export { AIProvidersStats } from './ai-providers-stats'
 export { ProviderCreateDialog } from './provider-create-dialog'
 export { ProviderViewSheet } from './provider-view-sheet'
 export { ProviderEditSheet } from './provider-edit-sheet'

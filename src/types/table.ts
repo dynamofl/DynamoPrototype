@@ -3,6 +3,7 @@
  */
 
 import type { ReactNode } from 'react'
+import type { TableStorage } from '@/lib/storage/types'
 
 export type TableMode = 'view' | 'edit'
 
@@ -32,10 +33,16 @@ export type BadgeVariant =
   | 'destructive' 
   | 'outline'
 
+export type WidthValue = 
+  | 'w-auto' | 'w-fit' | 'w-full' | 'w-min' | 'w-max' | 'w-screen'
+  | 'w-0' | 'w-px' | 'w-0.5' | 'w-1' | 'w-1.5' | 'w-2' | 'w-2.5' | 'w-3' | 'w-3.5' | 'w-4' | 'w-5' | 'w-6' | 'w-7' | 'w-8' | 'w-9' | 'w-10' | 'w-11' | 'w-12' | 'w-14' | 'w-16' | 'w-20' | 'w-24' | 'w-28' | 'w-32' | 'w-36' | 'w-40' | 'w-44' | 'w-48' | 'w-52' | 'w-56' | 'w-60' | 'w-64' | 'w-72' | 'w-80' | 'w-96'
+  | 'w-1/2' | 'w-1/3' | 'w-2/3' | 'w-1/4' | 'w-2/4' | 'w-3/4' | 'w-1/5' | 'w-2/5' | 'w-3/5' | 'w-4/5' | 'w-1/6' | 'w-2/6' | 'w-3/6' | 'w-4/6' | 'w-5/6' | 'w-1/12' | 'w-2/12' | 'w-3/12' | 'w-4/12' | 'w-5/12' | 'w-6/12' | 'w-7/12' | 'w-8/12' | 'w-9/12' | 'w-10/12' | 'w-11/12'
+  | string // Fallback for custom CSS values like '200px', '50%', etc.
+
 export interface TableColumn {
   key: string
   title: string
-  width: string
+  width: WidthValue
   type: CellType
   placeholder?: string
   options?: Array<{ value: string; label: string }>
@@ -125,6 +132,8 @@ export interface TablePatternProps {
   emptyMessage?: string
   showHeader?: boolean
   stickyHeader?: boolean
+  // Table layout configuration
+  tableWidth?: string | 'auto' | 'full'
   // Global editing configuration
   defaultEditMode?: EditMode
   rowEditDialogTitle?: string
@@ -145,6 +154,8 @@ export interface CellProps {
   onEditStart?: () => void
   onEditEnd?: () => void
   editMode?: EditMode
+  onStartEditing?: (cellType: string, currentValue: any) => void
+  isCurrentlyEditing?: boolean
 }
 
 export interface ExpandCellProps extends CellProps {

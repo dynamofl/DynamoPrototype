@@ -28,7 +28,7 @@ export const aiProvidersColumns: TableColumn[] = [
   {
     key: 'expand',
     title: '',
-    width: '40px',
+    width: 'w-10', // 40px equivalent
     type: 'expand',
     expandIcon: undefined, // Will use default ChevronRight
     collapseIcon: undefined // Will use default ChevronDown
@@ -36,7 +36,7 @@ export const aiProvidersColumns: TableColumn[] = [
   {
     key: 'name',
     title: 'Provider',
-    width: '200px',
+    width: 'w-48', // 192px equivalent
     type: 'icon',
     iconSize: 'md',
     iconPosition: 'left',
@@ -49,14 +49,14 @@ export const aiProvidersColumns: TableColumn[] = [
   {
     key: 'type',
     title: 'Type',
-    width: '120px',
+    width: 'w-28', // 112px equivalent
     type: 'badge',
     format: (value) => value || 'Unknown'
   },
   {
     key: 'status',
     title: 'Status',
-    width: '120px',
+    width: 'w-28', // 112px equivalent
     type: 'badge',
     colorMap: {
       'active': { variant: 'default', className: 'bg-green-100 text-green-800' },
@@ -67,7 +67,7 @@ export const aiProvidersColumns: TableColumn[] = [
   {
     key: 'models',
     title: 'Models',
-    width: '100px',
+    width: 'w-24', // 96px equivalent
     type: 'badge',
     format: (value) => Array.isArray(value) ? `${value.length} models` : '0 models',
     colorMap: {
@@ -82,14 +82,14 @@ export const aiProvidersColumns: TableColumn[] = [
   {
     key: 'modelsLastFetched',
     title: 'Last Updated',
-    width: '140px',
+    width: 'w-32', // 128px equivalent
     type: 'date',
     format: (value) => value || 'Never'
   },
   {
     key: 'actions',
     title: 'Actions',
-    width: '120px',
+    width: 'w-28', // 112px equivalent
     type: 'button',
     buttonVariant: 'ghost',
     actions: [

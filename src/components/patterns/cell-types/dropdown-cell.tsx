@@ -1,16 +1,9 @@
 /**
- * Dropdown cell component for selectable options
+ * Dropdown cell component matching DynamoTable styling and behavior
  */
 
-import React, { useState, useRef, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Check, ChevronDown, Edit2 } from 'lucide-react'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import React, { useState, type KeyboardEvent } from 'react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { CellProps } from '@/types/table'
 
 interface DropdownCellProps extends CellProps {
@@ -29,35 +22,43 @@ export function DropdownCell({
   options = [],
   editMode = 'inline'
 }: DropdownCellProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [isEditing, setIsEditing] = useState(false)
-
   // Get current option
   const currentOption = options.find(option => option.value === value)
 
-  // Handle option select
-  const handleOptionSelect = (optionValue: string) => {
-    onChange?.(optionValue)
-    setIsOpen(false)
-    setIsEditing(false)
-  }
-
-  // Handle edit start
-  const handleEditStart = () => {
-    if (mode === 'edit' && !disabled && !column.readonly) {
-      if (editMode === 'dialog' || (editMode === 'both' && column.rowEditTrigger)) {
-        onRowEdit?.(row)
-      } else {
-        setIsEditing(true)
-        setIsOpen(true)
-      }
+  // Handle keyboard events
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      // Let the Select component handle the interaction
     }
   }
 
-  // View mode - display selected value
+  // Handle value change
+  const handleValueChange = (newValue: string) => {
+    if (mode === 'edit' && !disabled && !column.readonly) {
+      onChange?.(newValue)
+    }
+  }
+
+  // View mode - display selected value (matches DynamoTable styling)
   if (mode === 'view' || disabled || column.readonly) {
     return (
-      <div className={`min-h-[32px] flex items-center ${className}`}>
+      <div 
+        className={`cell-content ${className}`}
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          padding: '8px',
+          cursor: 'default',
+          outline: 'none',
+          border: '1px solid transparent',
+          borderRadius: '4px',
+          backgroundColor: 'transparent',
+          transition: 'all 0.2s ease-in-out'
+        }}
+      >
         <span className="text-sm">
           {currentOption?.label || value || column.placeholder || 'Select...'}
         </span>
@@ -65,80 +66,69 @@ export function DropdownCell({
     )
   }
 
-  // Edit mode - dropdown
-  if (isEditing) {
-    return (
-      <div className={`min-h-[32px] flex items-center ${className}`}>
-        <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 w-full justify-between"
-              disabled={disabled}
-            >
-              <span className="truncate">
-                {currentOption?.label || column.placeholder || 'Select...'}
-              </span>
-              <ChevronDown className="h-4 w-4 opacity-50" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-full min-w-[200px]">
-            {options.map((option) => (
-              <DropdownMenuItem
-                key={option.value}
-                onClick={() => handleOptionSelect(option.value)}
-                className="flex items-center justify-between"
-              >
-                <span>{option.label}</span>
-                {value === option.value && (
-                  <Check className="h-4 w-4" />
-                )}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    )
-  }
-
   // Dialog mode - display with row edit trigger
-  if (editMode === 'dialog' || (editMode === 'both' && column.rowEditTrigger)) {
+  if (editMode === 'dialog') {
     return (
-      <div className={`min-h-[32px] flex items-center justify-between group ${className}`}>
-        <div className="flex-1 min-w-0">
-          <span className="text-sm truncate">
-            {currentOption?.label || value || column.placeholder || 'Select...'}
-          </span>
-        </div>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={handleEditStart}
-          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-        >
-          <Edit2 className="h-3 w-3" />
-        </Button>
-      </div>
-    )
-  }
-
-  // Edit mode - display with edit button
-  return (
-    <div className={`min-h-[32px] flex items-center justify-between group ${className}`}>
-      <div className="flex-1 min-w-0">
-        <span className="text-sm truncate">
+      <div 
+        className={`cell-content ${className}`}
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          padding: '8px',
+          cursor: 'pointer',
+          outline: 'none',
+          border: '1px solid transparent',
+          borderRadius: '4px',
+          backgroundColor: 'transparent',
+          transition: 'all 0.2s ease-in-out'
+        }}
+        onClick={() => onRowEdit?.(row)}
+      >
+        <span className="text-sm">
           {currentOption?.label || value || column.placeholder || 'Select...'}
         </span>
       </div>
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={handleEditStart}
-        className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+    )
+  }
+
+  // Edit mode - inline Select (matches DynamoTable styling)
+  return (
+    <div 
+      className={`cell-content ${className}`}
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        padding: '8px',
+        cursor: 'pointer',
+        outline: 'none',
+        border: '1px solid transparent',
+        borderRadius: '4px',
+        backgroundColor: 'transparent',
+        transition: 'all 0.2s ease-in-out'
+      }}
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+    >
+      <Select
+        value={value}
+        onValueChange={handleValueChange}
+        disabled={disabled || column.readonly}
       >
-        <Edit2 className="h-3 w-3" />
-      </Button>
+        <SelectTrigger className="w-full h-8 border-none focus:ring-0 focus:outline-none hover:bg-gray-200 hover:cursor-pointer hover:ring-0">
+          <SelectValue placeholder={column.placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   )
 }

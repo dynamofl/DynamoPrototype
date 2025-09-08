@@ -1,18 +1,16 @@
 /**
- * Free text cell component for editable text input
+ * Free text cell component using table-level overlay system (like DynamoTable)
  */
 
-import React, { useState, useRef, useEffect } from 'react'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Button } from '@/components/ui/button'
-import { Check, X, Edit2 } from 'lucide-react'
+import React, { type KeyboardEvent } from 'react'
 import type { CellProps } from '@/types/table'
 
 interface FreeTextCellProps extends CellProps {
   multiline?: boolean
   maxLength?: number
   validation?: (value: string) => boolean
+  onStartEditing?: (cellType: string, currentValue: any) => void
+  isCurrentlyEditing?: boolean
 }
 
 export function FreeTextCell({
@@ -27,202 +25,102 @@ export function FreeTextCell({
   multiline = false,
   maxLength,
   validation,
-  editMode = 'inline'
+  editMode = 'inline',
+  onStartEditing,
+  isCurrentlyEditing = false
 }: FreeTextCellProps) {
-  const [isEditing, setIsEditing] = useState(false)
-  const [editValue, setEditValue] = useState(value || '')
-  const [error, setError] = useState<string | null>(null)
-  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null)
 
-  // Focus input when editing starts
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus()
-      if (multiline) {
-        inputRef.current.select()
+  // Handle keyboard events
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      if (mode === 'edit' && !disabled && !column.readonly && editMode === 'inline') {
+        onStartEditing?.('freeText', value)
       }
     }
-  }, [isEditing, multiline])
+  }
 
-  // Handle edit start
-  const handleEditStart = () => {
+  // Start editing
+  const startEditing = () => {
     if (mode === 'edit' && !disabled && !column.readonly) {
-      if (editMode === 'dialog' || (editMode === 'both' && column.rowEditTrigger)) {
+      if (editMode === 'dialog') {
         onRowEdit?.(row)
-      } else {
-        setEditValue(value || '')
-        setError(null)
-        setIsEditing(true)
+        return
       }
+      
+      onStartEditing?.('freeText', value)
     }
   }
 
-  // Handle edit cancel
-  const handleEditCancel = () => {
-    setEditValue(value || '')
-    setError(null)
-    setIsEditing(false)
-  }
-
-  // Handle edit save
-  const handleEditSave = () => {
-    // Validate if validation function provided
-    if (validation && !validation(editValue)) {
-      setError('Invalid value')
-      return
-    }
-
-    // Check max length
-    if (maxLength && editValue.length > maxLength) {
-      setError(`Maximum length is ${maxLength} characters`)
-      return
-    }
-
-    // Save the value
-    onChange?.(editValue)
-    setError(null)
-    setIsEditing(false)
-  }
-
-  // Handle key press
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !multiline) {
-      e.preventDefault()
-      handleEditSave()
-    } else if (e.key === 'Escape') {
-      e.preventDefault()
-      handleEditCancel()
-    }
-  }
-
-  // Handle blur
-  const handleBlur = () => {
-    if (isEditing) {
-      handleEditSave()
-    }
-  }
-
-  // View mode - display value
+  // View mode - display value (matches DynamoTable styling)
   if (mode === 'view' || disabled || column.readonly) {
+    const hasOverflowingText = value && String(value).length > 50
+    
     return (
-      <div className={`min-h-[32px] flex items-center ${className}`}>
-        {multiline ? (
-          <div className="whitespace-pre-wrap text-sm">
-            {value || column.placeholder || ''}
+      <div 
+        className={`cell-content ${className}`}
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          padding: '8px',
+          cursor: 'default',
+          outline: 'none',
+          border: '1px solid transparent',
+          borderRadius: '4px',
+          backgroundColor: 'transparent',
+          transition: 'all 0.2s ease-in-out'
+        }}
+      >
+        <div className="w-full overflow-hidden">
+          <div className="whitespace-pre-line line-clamp-1 text-ellipsis overflow-hidden text-sm">
+            {value || (
+              <span className="text-gray-400 italic">
+                {column.placeholder}
+              </span>
+            )}
+            {hasOverflowingText && (
+              <span className="text-blue-500 text-xs ml-1" title="Click to expand">
+                ...
+              </span>
+            )}
           </div>
-        ) : (
-          <span className="text-sm truncate">
-            {value || column.placeholder || ''}
-          </span>
-        )}
-      </div>
-    )
-  }
-
-  // Edit mode - inline editing
-  if (isEditing) {
-    return (
-      <div className={`min-h-[32px] flex items-center gap-1 ${className}`}>
-        {multiline ? (
-          <Textarea
-            ref={inputRef as React.RefObject<HTMLTextAreaElement>}
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
-            onKeyDown={handleKeyPress}
-            onBlur={handleBlur}
-            placeholder={column.placeholder}
-            maxLength={maxLength}
-            className="min-h-[60px] resize-none"
-            rows={3}
-          />
-        ) : (
-          <Input
-            ref={inputRef as React.RefObject<HTMLInputElement>}
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
-            onKeyDown={handleKeyPress}
-            onBlur={handleBlur}
-            placeholder={column.placeholder}
-            maxLength={maxLength}
-            className="h-8"
-          />
-        )}
-        <div className="flex gap-1">
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={handleEditSave}
-            className="h-6 w-6 p-0"
-          >
-            <Check className="h-3 w-3" />
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={handleEditCancel}
-            className="h-6 w-6 p-0"
-          >
-            <X className="h-3 w-3" />
-          </Button>
         </div>
-        {error && (
-          <div className="text-xs text-red-500 mt-1">
-            {error}
-          </div>
-        )}
       </div>
     )
   }
 
-  // Dialog mode - display with row edit trigger
-  if (editMode === 'dialog' || (editMode === 'both' && column.rowEditTrigger)) {
-    return (
-      <div className={`min-h-[32px] flex items-center justify-between group ${className}`}>
-        <div className="flex-1 min-w-0">
-          {multiline ? (
-            <div className="whitespace-pre-wrap text-sm">
-              {value || column.placeholder || ''}
-            </div>
-          ) : (
-            <span className="text-sm truncate">
-              {value || column.placeholder || ''}
+  // Edit mode - clickable cell
+  return (
+    <div 
+      className={`cell-content ${className}`}
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      onClick={startEditing}
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        padding: '8px',
+        cursor: 'pointer',
+        outline: 'none',
+        border: isCurrentlyEditing ? '2px solid #3b82f6' : '1px solid transparent',
+        borderRadius: '4px',
+        backgroundColor: isCurrentlyEditing ? '#f8fafc' : 'transparent',
+        transition: 'all 0.2s ease-in-out'
+      }}
+    >
+      <div className="w-full overflow-hidden">
+        <div className="whitespace-pre-line line-clamp-1 text-ellipsis overflow-hidden text-sm">
+          {value || (
+            <span className="text-gray-400 italic">
+              {column.placeholder}
             </span>
           )}
         </div>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={handleEditStart}
-          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-        >
-          <Edit2 className="h-3 w-3" />
-        </Button>
       </div>
-    )
-  }
-
-  // Edit mode - display with edit button
-  return (
-    <div className={`min-h-[32px] flex items-center justify-between group ${className}`}>
-      <div className="flex-1 min-w-0">
-        {multiline ? (
-          <div className="whitespace-pre-wrap text-sm">
-            {value || column.placeholder || ''}
-          </div>
-        ) : (
-          <span className="text-sm truncate">
-            {value || column.placeholder || ''}
-          </span>
-        )}
-      </div>
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={handleEditStart}
-        className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-      >
-        <Edit2 className="h-3 w-3" />
-      </Button>
     </div>
   )
 }

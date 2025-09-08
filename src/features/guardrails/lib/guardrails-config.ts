@@ -24,7 +24,7 @@ export const guardrailsColumns: TableColumn[] = [
   {
     key: 'name',
     title: 'Name',
-    width: '200px',
+    width: 'w-48',
     type: 'freeText',
     placeholder: 'Enter guardrail name...',
     validation: (value) => value && value.trim().length > 0,
@@ -36,7 +36,7 @@ export const guardrailsColumns: TableColumn[] = [
   {
     key: 'description',
     title: 'Description',
-    width: '300px',
+    width: 'w-64',
     type: 'freeText',
     placeholder: 'Enter description...',
     multiline: true,
@@ -45,7 +45,7 @@ export const guardrailsColumns: TableColumn[] = [
   {
     key: 'category',
     title: 'Category',
-    width: '150px',
+    width: 'w-32',
     type: 'dropdown',
     options: [
       { value: 'Safety', label: 'Safety' },
@@ -61,7 +61,7 @@ export const guardrailsColumns: TableColumn[] = [
   {
     key: 'status',
     title: 'Status',
-    width: '100px',
+    width: 'w-24',
     type: 'switch',
     switchLabel: (value) => value ? 'Active' : 'Inactive',
     editMode: 'inline'
@@ -69,14 +69,14 @@ export const guardrailsColumns: TableColumn[] = [
   {
     key: 'createdAt',
     title: 'Created',
-    width: '120px',
+    width: 'w-28',
     type: 'date',
     format: (value) => value ? new Date(value).toLocaleDateString() : 'N/A'
   },
   {
     key: 'actions',
     title: 'Actions',
-    width: '120px',
+    width: 'w-28',
     type: 'button',
     buttonVariant: 'ghost'
   }

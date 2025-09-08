@@ -3,7 +3,7 @@ import { APIKeyStorage } from '@/lib/storage/secure-storage'
 import type { TableRow } from '@/types/table'
 import type { AIProvider } from './types'
 import {
-  StatCard,
+  AIProvidersStats,
   ProviderCreateDialog,
   ProviderViewSheet,
   ProviderEditSheet
@@ -72,6 +72,7 @@ export function AIProviders() {
   const handleRowExpand = (rowId: string, expanded: boolean) => {
     console.log('Row expanded:', rowId, expanded)
   }
+
 
   // Handle data changes from TablePattern
   const handleDataChange = (data: TableRow[]) => {
@@ -163,32 +164,7 @@ export function AIProviders() {
             </div>
             
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 mb-6">
-              <StatCard 
-                title="Total Providers" 
-                value="Loading..."
-                info="Total number of AI service providers configured in your system. This includes all active, inactive, and testing providers."
-                variant="default"
-              />
-              <StatCard 
-                title="Active Providers" 
-                value="Loading..."
-                info="AI service providers that are currently active and available for use. These providers have valid API keys and are ready to process requests."
-                variant="success"
-              />
-              <StatCard 
-                title="Total Text Models" 
-                value="Loading..."
-                info="Total number of text generation models available across all providers. These models can be used for various AI tasks and evaluations."
-                variant="default"
-              />
-              <StatCard 
-                title="Last Added" 
-                value="Loading..."
-                info="Date when the most recent AI provider was added to your system. Keep track of when new providers were configured."
-                variant="default"
-              />
-            </div>
+            <AIProvidersStats />
           </div>
 
           {/* Provider Table */}

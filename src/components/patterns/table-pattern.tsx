@@ -3,12 +3,13 @@
  * Supports view/edit modes, pagination, expandable rows, and various cell types
  */
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow as UITableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Textarea } from '@/components/ui/textarea'
 import { ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react'
 import type { 
   TablePatternProps, 
@@ -31,6 +32,22 @@ import { IconCell } from './cell-types/icon-cell'
 import { ExpandCell } from './cell-types/expand-cell'
 import { RowEditDialog } from './row-edit-dialog'
 
+// Utility function to convert Tailwind width classes to CSS values
+const getWidthValue = (width: string): string => {
+  // If it's already a CSS value (contains px, %, em, rem, etc.), return as is
+  if (width.includes('px') || width.includes('%') || width.includes('em') || width.includes('rem') || width.includes('vw') || width.includes('vh')) {
+    return width
+  }
+  
+  // If it's a Tailwind class, return it as a class name
+  if (width.startsWith('w-')) {
+    return width
+  }
+  
+  // Fallback to the original value
+  return width
+}
+
 export function TablePattern({
   mode,
   columns,
@@ -48,6 +65,7 @@ export function TablePattern({
   emptyMessage = 'No data available',
   showHeader = true,
   stickyHeader = false,
+  tableWidth = 'full',
   defaultEditMode = 'inline',
   rowEditDialogTitle = 'Edit Row',
   rowEditDialogDescription = 'Edit the row data below'
@@ -75,6 +93,168 @@ export function TablePattern({
     editingCell: null,
     pagination: null
   })
+
+  // Edit state for overlay (like DynamoTable)
+  const [editState, setEditState] = useState<{
+    isEditing: boolean
+    editingCell: { row: number; col: number } | null
+    editValue: any
+    editType: string
+    overlayPosition: {
+      top: number
+      left: number
+      width: number
+      height: number
+      minHeight: number
+      maxHeight: number
+    } | null
+  }>({
+    isEditing: false,
+    editingCell: null,
+    editValue: null,
+    editType: 'freeText',
+    overlayPosition: null
+  })
+
+  const tableRef = useRef<HTMLTableElement>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
+
+  // Calculate overlay position (exactly like DynamoTable)
+  const calculateOverlayPosition = (row: number, col: number, currentValue?: any, cellType?: string) => {
+    const cellElement = document.querySelector(`[data-row="${row}"][data-col="${col}"]`)
+    if (!cellElement) return null
+
+    // Find the relative container (the div with className="relative")
+    const relativeContainer = cellElement.closest('.relative')
+    if (!relativeContainer) return null
+
+    const cellRect = cellElement.getBoundingClientRect()
+    const containerRect = relativeContainer.getBoundingClientRect()
+
+    // Calculate position relative to the relative container
+    const relativeTop = cellRect.top - containerRect.top
+    const relativeLeft = cellRect.left - containerRect.left
+
+    let dynamicHeight = cellRect.height
+
+    // For text cells, calculate height based on content
+    if (cellType === 'freeText' && currentValue) {
+      const textContent = String(currentValue)
+      
+      // Create a temporary div to measure actual text height
+      const measureDiv = document.createElement('div')
+      measureDiv.style.cssText = `
+        position: absolute;
+        visibility: hidden;
+        width: ${cellRect.width - 16}px;
+        font-size: 14px;
+        line-height: 24px;
+        font-family: inherit;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        padding: 8px;
+        border: none;
+        outline: none;
+      `
+      measureDiv.textContent = textContent || 'A' // Ensure minimum height
+      document.body.appendChild(measureDiv)
+      
+      const measuredHeight = measureDiv.scrollHeight
+      document.body.removeChild(measureDiv)
+      
+      // Use measured height with some padding, but ensure minimum height
+      const minHeight = cellRect.height
+      const maxHeight = Math.max(300, cellRect.height * 8)
+      dynamicHeight = Math.max(minHeight, Math.min(measuredHeight + 16, maxHeight))
+    }
+
+    return {
+      top: relativeTop,
+      left: relativeLeft,
+      width: cellRect.width,
+      height: dynamicHeight,
+      minHeight: cellRect.height,
+      maxHeight: Math.max(300, cellRect.height * 8)
+    }
+  }
+
+  // Start editing a cell
+  const startEditing = (row: number, col: number, cellType: string, currentValue: any) => {
+    if (mode !== 'edit') return
+
+    const overlayPosition = calculateOverlayPosition(row, col, currentValue, cellType)
+    if (!overlayPosition) return
+
+    setEditState({
+      isEditing: true,
+      editingCell: { row, col },
+      editValue: currentValue,
+      editType: cellType,
+      overlayPosition
+    })
+  }
+
+  // Stop editing and commit changes
+  const stopEditing = (commit: boolean = true) => {
+    if (!editState.editingCell) return
+
+    if (commit && editState.editingCell) {
+      const { row, col } = editState.editingCell
+      const columnKey = columns[col].key
+      const rowData = currentPageData[row]
+      
+      if (rowData) {
+        handleCellChange(rowData.id, columnKey, editState.editValue)
+      }
+    }
+
+    setEditState({
+      isEditing: false,
+      editingCell: null,
+      editValue: null,
+      editType: 'freeText',
+      overlayPosition: null
+    })
+  }
+
+  // Handle edit value changes with dynamic height
+  const handleEditValueChange = (newValue: any) => {
+    setEditState(prev => ({ ...prev, editValue: newValue }))
+
+    // For text inputs, dynamically adjust height based on content
+    if (editState.editType === 'freeText' && editState.overlayPosition) {
+      const textContent = String(newValue)
+      const lines = textContent.split('\n').length
+      const estimatedLineHeight = 24
+      const padding = 16
+      
+      // Calculate height based on line breaks
+      const lineBasedHeight = lines * estimatedLineHeight + padding
+      
+      // Calculate height based on text wrapping
+      const avgCharsPerLine = Math.floor(editState.overlayPosition.width / 8)
+      const wrappedLines = textContent.split('\n').reduce((total, line) => {
+        return total + Math.max(1, Math.ceil(line.length / avgCharsPerLine))
+      }, 0)
+      const wrappedHeight = wrappedLines * estimatedLineHeight + padding
+      
+      // Use the larger of the two calculations
+      const contentHeight = Math.max(lineBasedHeight, wrappedHeight)
+      
+      const newHeight = Math.max(
+        editState.overlayPosition.minHeight,
+        Math.min(contentHeight, editState.overlayPosition.maxHeight)
+      )
+
+      setEditState(prev => ({
+        ...prev,
+        overlayPosition: prev.overlayPosition ? {
+          ...prev.overlayPosition,
+          height: newHeight
+        } : null
+      }))
+    }
+  }
 
   // Row edit dialog state
   const [rowEditDialog, setRowEditDialog] = useState<{
@@ -130,6 +310,19 @@ export function TablePattern({
       saveData()
     }
   }, [state.data, storage, storageConfig.autoSave, state.loading])
+
+  // Auto-focus overlay when editing starts (exactly like DynamoTable)
+  useEffect(() => {
+    if (editState.isEditing && overlayRef.current) {
+      const input = overlayRef.current.querySelector('textarea, input, select')
+      if (input && input instanceof HTMLElement) {
+        input.focus()
+        if (input instanceof HTMLTextAreaElement || input instanceof HTMLInputElement) {
+          input.select()
+        }
+      }
+    }
+  }, [editState.isEditing])
 
   // Calculate pagination
   const calculatePagination = useCallback((
@@ -277,7 +470,10 @@ export function TablePattern({
       onRowEdit: (row) => handleRowEdit(row, index),
       disabled: column.disabled,
       className: column.className,
-      editMode
+      editMode,
+      // Add editing functions for FreeTextCell
+      onStartEditing: (cellType: string, currentValue: any) => startEditing(index, columns.findIndex(c => c.key === column.key), cellType, currentValue),
+      isCurrentlyEditing: editState.editingCell?.row === index && editState.editingCell?.col === columns.findIndex(c => c.key === column.key)
     }
 
     switch (column.type) {
@@ -415,35 +611,138 @@ export function TablePattern({
 
   return (
     <div className={`border rounded-lg ${className}`}>
-      <ScrollArea className="h-full">
-        <Table>
-          {showHeader && (
-            <TableHeader className={stickyHeader ? 'sticky top-0 bg-background z-10' : ''}>
-              <UITableRow>
-                {columns.map((column) => (
-                  <TableHead key={column.key} style={{ width: column.width }}>
-                    {column.title}
-                  </TableHead>
+      <div className="relative">
+        <ScrollArea className="h-full">
+          <div className="relative overflow-visible border-t border-b border-gray-200" style={{ position: 'relative' }}>
+            <Table 
+              ref={tableRef} 
+              className={`enhanced-table ${mode === 'edit' ? 'edit-mode' : ''}`}
+              style={{ 
+                width: tableWidth === 'full' ? '100%' : tableWidth === 'auto' ? 'auto' : tableWidth 
+              }}
+            >
+              {showHeader && (
+                <TableHeader className={stickyHeader ? 'sticky top-0 bg-background z-10' : ''}>
+                  <UITableRow className="h-8">
+                    {columns.map((column) => {
+                      const widthValue = getWidthValue(column.width)
+                      const isTailwindClass = widthValue.startsWith('w-')
+                      
+                      return (
+                        <TableHead 
+                          key={column.key} 
+                          className={`py-3 font-450 ${isTailwindClass ? widthValue : ''}`}
+                          style={isTailwindClass ? {} : { 
+                            width: widthValue,
+                            minWidth: widthValue,
+                            maxWidth: widthValue
+                          }}
+                        >
+                          {column.title}
+                        </TableHead>
+                      )
+                    })}
+                  </UITableRow>
+                </TableHeader>
+              )}
+              <TableBody>
+                {currentPageData.map((row, index) => (
+                  <React.Fragment key={row.id}>
+                    <UITableRow className="h-8">
+                      {columns.map((column, colIndex) => {
+                        const widthValue = getWidthValue(column.width)
+                        const isTailwindClass = widthValue.startsWith('w-')
+                        
+                        return (
+                          <TableCell 
+                            key={column.key}
+                            className={`p-0 h-8 ${isTailwindClass ? widthValue : ''}`}
+                            style={isTailwindClass ? {} : { 
+                              width: widthValue,
+                              minWidth: widthValue,
+                              maxWidth: widthValue
+                            }}
+                          >
+                            <div data-row={index} data-col={colIndex}>
+                              {renderCell(column, row, index)}
+                            </div>
+                          </TableCell>
+                        )
+                      })}
+                    </UITableRow>
+                    {renderExpandableContent(row)}
+                  </React.Fragment>
                 ))}
-              </UITableRow>
-            </TableHeader>
-          )}
-          <TableBody>
-            {currentPageData.map((row, index) => (
-              <React.Fragment key={row.id}>
-                <UITableRow>
-                  {columns.map((column) => (
-                    <TableCell key={column.key}>
-                      {renderCell(column, row, index)}
-                    </TableCell>
-                  ))}
-                </UITableRow>
-                {renderExpandableContent(row)}
-              </React.Fragment>
-            ))}
-          </TableBody>
-        </Table>
-      </ScrollArea>
+              </TableBody>
+            </Table>
+          </div>
+        </ScrollArea>
+
+        {/* Global Edit Overlay - Only for text cells (exactly like DynamoTable) */}
+        {editState.isEditing && editState.editType === 'freeText' && editState.overlayPosition && (
+          <div 
+            ref={overlayRef}
+            className="global-edit-overlay"
+            style={{
+              position: 'absolute',
+              zIndex: 1000,
+              top: `${editState.overlayPosition.top}px`,
+              left: `${editState.overlayPosition.left}px`,
+              width: `${editState.overlayPosition.width}px`,
+              height: `${editState.overlayPosition.height}px`,
+              backgroundColor: 'white',
+              border: '2px solid #3b82f6',
+              borderRadius: '6px',
+              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+              overflow: 'visible'
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                e.preventDefault()
+                stopEditing(false)
+              }
+              if (e.key === 'Tab') {
+                e.preventDefault()
+                stopEditing(true)
+              }
+            }}
+          >
+            <Textarea
+              value={editState.editValue || ''}
+              onChange={(e) => handleEditValueChange(e.target.value)}
+              onBlur={() => stopEditing(true)}
+              placeholder={columns[editState.editingCell?.col || 0]?.placeholder}
+              className="w-full h-full resize-none border-0 focus:ring-0 focus:outline-none p-2 whitespace-pre-wrap overflow-y-auto"
+              style={{ 
+                minHeight: `${editState.overlayPosition.minHeight - 4}px`,
+                height: `${editState.overlayPosition.height - 4}px`,
+                lineHeight: '24px',
+                fontSize: '14px'
+              }}
+              onInput={(e) => {
+                // Auto-adjust height based on scroll height for more precise sizing
+                const target = e.target as HTMLTextAreaElement
+                if (target.scrollHeight > target.clientHeight) {
+                  const newHeight = Math.min(
+                    target.scrollHeight + 8, // Add some padding
+                    editState.overlayPosition?.maxHeight || 300
+                  )
+                  
+                  if (newHeight !== editState.overlayPosition?.height) {
+                    setEditState(prev => ({
+                      ...prev,
+                      overlayPosition: prev.overlayPosition ? {
+                        ...prev.overlayPosition,
+                        height: newHeight
+                      } : null
+                    }))
+                  }
+                }
+              }}
+            />
+          </div>
+        )}
+      </div>
       {renderPagination()}
 
       {/* Row Edit Dialog */}
@@ -457,6 +756,94 @@ export function TablePattern({
         onSave={handleRowEditSave}
         onCancel={handleRowEditCancel}
       />
+
+      {/* Enhanced Table Styles */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        .enhanced-table {
+          border-collapse: separate;
+          border-spacing: 0;
+          border: none;
+          table-layout: fixed;
+          overflow: visible !important;
+        }
+        
+        .enhanced-table th,
+        .enhanced-table td {
+          overflow: visible !important;
+          position: relative;
+        }
+        
+        .enhanced-table th {
+          border-bottom: 1px solid #e5e7eb;
+          background-color: #f9fafb;
+          height: 40px;
+          padding-left: 16px;
+          padding-right: 16px;
+        }
+        
+        .enhanced-table td {
+          border-bottom: 1px solid #e5e7eb;
+          height: 40px;
+          padding-left: 16px;
+          padding-right: 16px;
+        }
+        
+        .enhanced-table tr:last-child td {
+          border-bottom: none;
+        }
+        
+        /* Column separators only in edit mode */
+        .enhanced-table.edit-mode th {
+          border-right: 1px solid #e5e7eb;
+          padding-left: 0;
+          padding-right: 0;
+        }
+        
+        .enhanced-table.edit-mode th:last-child {
+          border-right: none;
+        }
+        
+        .enhanced-table.edit-mode td {
+          border-right: 1px solid #e5e7eb;
+          padding-left: 0;
+          padding-right: 0;
+        }
+        
+        .enhanced-table.edit-mode td:last-child {
+          border-right: none;
+        }
+        
+        .cell-content:hover {
+          background-color: #f9fafb !important;
+        }
+        
+        .cell-content:focus {
+          outline: none;
+          background-color: #f8fafc !important;
+          border-color: #d1d5db !important;
+        }
+        
+        .cell-content.switch:hover,
+        .cell-content.button:hover {
+          background-color: #f1f5f9 !important;
+          border-color: #cbd5e1 !important;
+        }
+        
+        .cell-content.switch:focus,
+        .cell-content.button:focus {
+          background-color: #e2e8f0 !important;
+          border-color: #94a3b8 !important;
+        }
+        
+        .line-clamp-1 {
+          display: -webkit-box;
+          -webkit-line-clamp: 1;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      `}} />
     </div>
   )
 }

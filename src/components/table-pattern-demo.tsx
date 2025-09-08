@@ -14,17 +14,122 @@ import {
   aiProvidersExpandableConfig,
   aiProvidersPaginationConfig
 } from '@/features/ai-providers/lib'
+import type { TableColumn } from '@/types/table'
 import { ModelsListSlot } from '@/components/patterns/slot'
 import { GuardrailsTable } from '@/features/guardrails/components/guardrails-table'
 import { EvaluationTable } from '@/features/evaluation/components/evaluation-table'
 
 export function TablePatternDemo() {
-  const [activeTab, setActiveTab] = useState('ai-providers')
+  const [activeTab, setActiveTab] = useState('ai-providers-view')
   
   // Create custom storage instance for AI providers
   const aiProvidersStorage = useMemo(() => {
     return new AIProvidersTableStorage(aiProvidersStorageConfig)
   }, [])
+  
+  // Editable columns for AI providers
+  const editableAIProvidersColumns: TableColumn[] = useMemo(() => [
+    {
+      key: 'expand',
+      title: '',
+      width: '40px',
+      type: 'expand',
+      expandIcon: undefined,
+      collapseIcon: undefined
+    },
+    {
+      key: 'name',
+      title: 'Provider',
+      width: '200px',
+      type: 'freeText',
+      placeholder: 'Enter provider name',
+      editMode: 'inline',
+      validation: (value) => value && value.trim().length > 0
+    },
+    {
+      key: 'type',
+      title: 'Type',
+      width: '120px',
+      type: 'dropdown',
+      options: [
+        { value: 'openai', label: 'OpenAI' },
+        { value: 'anthropic', label: 'Anthropic' },
+        { value: 'google', label: 'Google' },
+        { value: 'azure', label: 'Azure' },
+        { value: 'aws', label: 'AWS' },
+        { value: 'local', label: 'Local' }
+      ],
+      editMode: 'inline'
+    },
+    {
+      key: 'status',
+      title: 'Status',
+      width: '120px',
+      type: 'dropdown',
+      options: [
+        { value: 'active', label: 'Active' },
+        { value: 'inactive', label: 'Inactive' },
+        { value: 'testing', label: 'Testing' }
+      ],
+      editMode: 'inline'
+    },
+    {
+      key: 'apiKey',
+      title: 'API Key',
+      width: '200px',
+      type: 'freeText',
+      placeholder: 'Enter API key',
+      editMode: 'dialog',
+      validation: (value) => value && value.trim().length > 0
+    },
+    {
+      key: 'models',
+      title: 'Models',
+      width: '100px',
+      type: 'badge',
+      format: (value) => Array.isArray(value) ? `${value.length} models` : '0 models'
+    },
+    {
+      key: 'modelsLastFetched',
+      title: 'Last Updated',
+      width: '140px',
+      type: 'date',
+      format: (value) => value || 'Never'
+    },
+    {
+      key: 'actions',
+      title: 'Actions',
+      width: '120px',
+      type: 'button',
+      buttonVariant: 'ghost',
+      actions: [
+        {
+          key: 'view',
+          label: 'View',
+          icon: '👁️',
+          variant: 'outline'
+        },
+        {
+          key: 'edit',
+          label: 'Edit',
+          icon: '✏️',
+          variant: 'outline'
+        },
+        {
+          key: 'fetch',
+          label: 'Fetch Models',
+          icon: '🔄',
+          variant: 'outline'
+        },
+        {
+          key: 'delete',
+          label: 'Delete',
+          icon: '🗑️',
+          variant: 'destructive'
+        }
+      ]
+    }
+  ], [])
   
   // Custom expandable content renderer for AI providers
   const renderAIProvidersExpandableContent = (row: any) => {
@@ -45,8 +150,15 @@ export function TablePatternDemo() {
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-bold">Table Pattern System Demo</h1>
         <p className="text-gray-600">
-          Showcasing the new reusable table pattern with storage, pagination, and expandable rows
+          Showcasing the new reusable table pattern with storage, pagination, expandable rows, and inline editing
         </p>
+        <div className="flex justify-center gap-4 mt-4">
+          <Badge variant="outline">View Mode</Badge>
+          <Badge variant="outline">Edit Mode</Badge>
+          <Badge variant="outline">Inline Editing</Badge>
+          <Badge variant="outline">Dialog Editing</Badge>
+          <Badge variant="outline">Validation</Badge>
+        </div>
       </div>
 
       {/* Features Overview */}
@@ -108,16 +220,17 @@ export function TablePatternDemo() {
 
       {/* Table Examples */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="ai-providers">AI Providers</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="ai-providers-view">AI Providers (View)</TabsTrigger>
+          <TabsTrigger value="ai-providers-edit">AI Providers (Edit)</TabsTrigger>
           <TabsTrigger value="guardrails">Guardrails</TabsTrigger>
           <TabsTrigger value="evaluation">Evaluation</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="ai-providers" className="space-y-4">
+        <TabsContent value="ai-providers-view" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>AI Providers Table</CardTitle>
+              <CardTitle>AI Providers Table (View Mode)</CardTitle>
               <CardDescription>
                 View mode with expandable rows showing model details. Uses secure storage for API keys.
               </CardDescription>
@@ -136,6 +249,41 @@ export function TablePatternDemo() {
                 onDataChange={(data) => console.log('Data changed:', data.length)}
                 onCellAction={(action, row) => console.log('Action:', action, row)}
                 onRowExpand={(rowId, expanded) => console.log('Expand:', rowId, expanded)}
+                className="border rounded-lg"
+                emptyMessage="No AI providers configured. Add your first provider to get started."
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="ai-providers-edit" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>AI Providers Table (Edit Mode)</CardTitle>
+              <CardDescription>
+                Edit mode with inline editing for provider name, type, and status. API key editing opens in a dialog for security.
+                <br />
+                <strong>Try it:</strong> Click on any cell in the Provider, Type, or Status columns to edit inline. Click on API Key to edit in a dialog.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TablePattern
+                mode="edit"
+                columns={editableAIProvidersColumns}
+                storageConfig={aiProvidersStorageConfig}
+                customStorage={aiProvidersStorage}
+                pagination={aiProvidersPaginationConfig}
+                expandable={{
+                  ...aiProvidersExpandableConfig,
+                  renderContent: renderAIProvidersExpandableContent
+                }}
+                defaultEditMode="inline"
+                rowEditDialogTitle="Edit AI Provider"
+                rowEditDialogDescription="Update the provider configuration below"
+                onDataChange={(data) => console.log('Data changed:', data.length)}
+                onCellAction={(action, row) => console.log('Action:', action, row)}
+                onRowExpand={(rowId, expanded) => console.log('Expand:', rowId, expanded)}
+                onRowEdit={(row, index) => console.log('Edit row:', row, index)}
                 className="border rounded-lg"
                 emptyMessage="No AI providers configured. Add your first provider to get started."
               />
