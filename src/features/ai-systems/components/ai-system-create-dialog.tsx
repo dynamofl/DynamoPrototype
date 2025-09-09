@@ -12,11 +12,9 @@ import { Eye, EyeOff, RefreshCw } from 'lucide-react'
 import { AISystemIcon } from '@/components/patterns'
 import { ViewEditSheet } from '@/components/patterns'
 import type { AISystemFormData, ProviderOption, APIKeyOption, AIModel } from '../types'
-// import { defaultProjects, defaultOwners } from '../constants'
 import { 
   getProvidersWithAPIKeys, 
   fetchModelsFromOpenAI, 
-  // validateOpenAIKey,
   createAndStoreAPIKey,
   formatModelDate
 } from '../lib'

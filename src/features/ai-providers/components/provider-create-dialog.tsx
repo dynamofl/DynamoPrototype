@@ -164,11 +164,7 @@ export function ProviderCreateDialog({
 
   return (
     <CreateDialog
-      trigger={
-        <Button size="default" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-          Add Provider
-        </Button>
-      }
+      trigger={<div />} // Empty trigger since we handle it externally
       title={currentStep === 'select' ? 'Add AI Provider' : `Configure ${selectedProviderType?.name}`}
       description={currentStep === 'select' 
         ? 'Select an AI service provider to add to your system' 

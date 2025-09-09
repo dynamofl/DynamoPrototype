@@ -98,11 +98,7 @@ export function GuardrailCreateDialog({
 
   return (
     <CreateDialog
-      trigger={
-        <Button size="default" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-          Create Guardrail
-        </Button>
-      }
+      trigger={<div />} // Empty trigger since we handle it externally
       title="Create New Guardrail"
       description="Define a new guardrail to ensure your AI systems follow specific rules and guidelines."
       open={open}

@@ -8,6 +8,8 @@ import {
   ProviderViewSheet,
   ProviderEditSheet
 } from './components'
+import { Button } from '@/components/ui/button'
+import { Plus } from 'lucide-react'
 import {
   createDefaultProvider,
   fetchModelsForProvider,
@@ -156,11 +158,13 @@ export function AIProviders() {
           <div className="px-6">
             <div className="flex items-center justify-between my-4">
               <h1 className="text-lg font-450 tracking-tight">AI Providers</h1>
-              <ProviderCreateDialog
-                open={isAddingProvider}
-                onOpenChange={setIsAddingProvider}
-                onProviderCreated={handleProviderCreated}
-              />
+              <Button
+                onClick={() => setIsAddingProvider(true)}
+                className="flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Add Provider
+              </Button>
             </div>
             
             {/* Stats Cards */}
@@ -201,6 +205,13 @@ export function AIProviders() {
             onOpenChange={setIsEditingProvider}
             provider={editingProvider as AIProvider | null}
             onProviderUpdated={handleProviderUpdated}
+          />
+
+          {/* Create Provider Dialog */}
+          <ProviderCreateDialog
+            open={isAddingProvider}
+            onOpenChange={setIsAddingProvider}
+            onProviderCreated={handleProviderCreated}
           />
         </div>
       </main>

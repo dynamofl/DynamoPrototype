@@ -3,6 +3,7 @@
  */
 
 import { TableStorageFactory } from '@/lib/storage'
+import type { TableStorage, TableStorageConfig, TableRow } from '@/types/table'
 import type { AISystem } from '../types'
 import { AI_SYSTEMS_STORAGE_KEY } from '../constants'
 
@@ -90,5 +91,42 @@ export class AISystemsStorage {
       console.error('Failed to clear AI systems:', error)
       throw error
     }
+  }
+}
+
+// TableStorage implementation for AI Systems
+export class AISystemsTableStorage implements TableStorage {
+  private storage: TableStorage
+
+  constructor(config: TableStorageConfig) {
+    this.storage = TableStorageFactory.create(config)
+  }
+
+  async load(): Promise<TableRow[]> {
+    return await this.storage.load()
+  }
+
+  async save(data: TableRow[]): Promise<boolean> {
+    return await this.storage.save(data)
+  }
+
+  async add(row: Omit<TableRow, 'id'>): Promise<TableRow> {
+    return await this.storage.add(row)
+  }
+
+  async update(id: string, updates: Partial<TableRow>): Promise<boolean> {
+    return await this.storage.update(id, updates)
+  }
+
+  async delete(id: string): Promise<boolean> {
+    return await this.storage.delete(id)
+  }
+
+  async clear(): Promise<boolean> {
+    return await this.storage.clear()
+  }
+
+  validate(data: TableRow[]): boolean {
+    return this.storage.validate(data)
   }
 }

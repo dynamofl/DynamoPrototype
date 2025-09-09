@@ -8,6 +8,9 @@ import {
 } from './lib/guardrails-config'
 import type { TableRow } from '@/types/table'
 import type { TableStorage } from '@/lib/storage/types'
+import { Button } from '@/components/ui/button'
+import { Plus } from 'lucide-react'
+import { useExperimentsToggle } from '@/hooks/useExperimentsToggle'
 
 // Custom storage for guardrails using localStorage
 class GuardrailsTableStorage implements TableStorage {
@@ -84,6 +87,8 @@ export function Guardrails() {
   const [isEditingGuardrail, setIsEditingGuardrail] = useState(false)
   const [viewingGuardrail, setViewingGuardrail] = useState<TableRow | null>(null)
   const [editingGuardrail, setEditingGuardrail] = useState<TableRow | null>(null)
+  const { experimentsEnabled, setExperiments } = useExperimentsToggle()
+
 
   // Create custom storage instance
   const customStorage = useMemo(() => new GuardrailsTableStorage(), [])
@@ -148,15 +153,17 @@ export function Guardrails() {
           <div className="px-6">
             <div className="flex items-center justify-between my-4">
               <h1 className="text-lg font-450 tracking-tight">Guardrails</h1>
-              <GuardrailCreateDialog
-                open={isAddingGuardrail}
-                onOpenChange={setIsAddingGuardrail}
-                onGuardrailCreated={handleGuardrailCreated}
-              />
+              <Button
+                onClick={() => setIsAddingGuardrail(true)}
+                className="flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Add Guardrail
+              </Button>
             </div>
 
             {/* Stats Cards */}
-            <GuardrailsStats />
+            {experimentsEnabled && <GuardrailsStats />}
           </div>
 
           {/* Table */}
@@ -189,6 +196,13 @@ export function Guardrails() {
             onOpenChange={setIsEditingGuardrail}
             guardrail={editingGuardrail}
             onGuardrailUpdated={handleGuardrailUpdated}
+          />
+
+          {/* Create Guardrail Dialog */}
+          <GuardrailCreateDialog
+            open={isAddingGuardrail}
+            onOpenChange={setIsAddingGuardrail}
+            onGuardrailCreated={handleGuardrailCreated}
           />
         </div>
       </main>
