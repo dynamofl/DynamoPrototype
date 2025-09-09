@@ -142,7 +142,7 @@ export function APIKeyCreateSheet({
             className="w-8 h-8" 
           />
           <div>
-            <h3 className="font-medium text-gray-900">{provider.provider}</h3>
+            <h3 className="font-450 text-gray-900">{provider.provider}</h3>
             <p className="text-sm text-gray-600">API Provider</p>
           </div>
         </div>

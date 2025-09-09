@@ -74,7 +74,7 @@ export function GuardrailViewSheet({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label className="text-sm font-450 text-muted-foreground">Guardrail Name</Label>
-            <p className="text-sm font-medium">{guardrail.name}</p>
+            <p className="text-sm font-450">{guardrail.name}</p>
           </div>
           
           <div className="space-y-2">

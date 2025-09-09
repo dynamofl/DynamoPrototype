@@ -7,6 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import {
   Settings,
@@ -14,21 +15,29 @@ import {
   Sun,
   Moon,
   Monitor,
-  ChevronDown,
 } from "lucide-react"
 import { useTheme } from '@/components/patterns/theme-provider'
 import { NavLink, useNavigate } from 'react-router-dom'
-
-// Resources submenu items
-const resourceItems = [
-  { name: "AI Systems", path: "/ai-systems" },
-  { name: "AI Providers", path: "/ai-providers" },
-  { name: "Guardrails", path: "/guardrails" },
-]
+import { useExperimentsToggle } from '@/hooks/useExperimentsToggle'
 
 export function AppBar() {
   const { setTheme } = useTheme()
   const navigate = useNavigate()
+  const { experimentsEnabled, setExperiments } = useExperimentsToggle()
+
+  // Navigation items based on experiments toggle
+  const experimentNavItems = [
+    { name: "Evaluation Sandbox", path: "/evaluation-sandbox" },
+    { name: "AI Providers", path: "/ai-providers" },
+    { name: "Guardrails", path: "/guardrails" },
+  ]
+
+  const standardNavItems = [
+    { name: "AI Systems", path: "/ai-systems" },
+    { name: "Guardrails", path: "/guardrails" },
+  ]
+
+  const currentNavItems = experimentsEnabled ? experimentNavItems : standardNavItems
 
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -43,47 +52,34 @@ export function AppBar() {
 
             {/* Navigation Links */}
             <nav className="hidden md:flex items-center gap-1">
-              {/* Evaluation Sandbox Link */}
-              <NavLink
-                to="/evaluation-sandbox"
-                className={({ isActive }) => cn(
-                  "inline-flex items-center px-3 py-2 text-[13px] font-450 transition-colors hover:text-foreground relative",
-                  isActive
-                    ? "text-gray-800"
-                    : "text-gray-600"
-                )}
-              >
-                Evaluation Sandbox
-              </NavLink>
-
-              {/* Resources Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="inline-flex items-center px-3 py-2 text-[13px] font-450 transition-colors hover:text-foreground text-gray-600 h-auto"
-                  >
-                    Resources
-                    <ChevronDown className="ml-1 h-3 w-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-48">
-                  {resourceItems.map((item) => (
-                    <DropdownMenuItem
-                      key={item.name}
-                      onClick={() => navigate(item.path)}
-                      className="cursor-pointer"
-                    >
-                      {item.name}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {currentNavItems.map((item) => (
+                <NavLink
+                  key={item.name}
+                  to={item.path}
+                  className={({ isActive }) => cn(
+                    "inline-flex items-center px-3 py-2 text-[13px] font-450 transition-colors hover:text-foreground relative",
+                    isActive
+                      ? "text-gray-800"
+                      : "text-gray-600"
+                  )}
+                >
+                  {item.name}
+                </NavLink>
+              ))}
             </nav>
           </div>
 
-          {/* Right side - Profile Dropdown */}
-          <div className="flex items-center">
+          {/* Right side - Experiments Toggle and Profile Dropdown */}
+          <div className="flex items-center gap-4">
+            {/* Experiments Toggle */}
+            <div className="hidden md:flex items-center gap-2">
+              <span className="text-[13px] font-450 text-gray-600">Experiments</span>
+              <Switch
+                checked={experimentsEnabled}
+                onCheckedChange={setExperiments}
+              />
+            </div>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button

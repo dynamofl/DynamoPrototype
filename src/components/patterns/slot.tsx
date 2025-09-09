@@ -26,7 +26,7 @@ export function Slot({
   // If children are provided, render them directly
   if (children) {
     return (
-      <div className={cn('w-full', className)}>
+      <div className={cn('w-full max-h-96 overflow-y-auto', className)}>
         {children}
       </div>
     )
@@ -35,7 +35,7 @@ export function Slot({
   // If a render function is provided, use it
   if (render) {
     return (
-      <div className={cn('w-full', className)}>
+      <div className={cn('w-full max-h-96 overflow-y-auto', className)}>
         {render(componentProps)}
       </div>
     )
@@ -44,7 +44,7 @@ export function Slot({
   // If a component is provided, render it with props
   if (Component) {
     return (
-      <div className={cn('w-full', className)}>
+      <div className={cn('w-full max-h-96 overflow-y-auto', className)}>
         <Component {...componentProps} />
       </div>
     )
@@ -52,7 +52,7 @@ export function Slot({
 
   // Fallback to provided fallback or null
   return fallback ? (
-    <div className={cn('w-full', className)}>
+    <div className={cn('w-full max-h-96 overflow-y-auto', className)}>
       {fallback}
     </div>
   ) : null
@@ -108,7 +108,7 @@ export function ModelsListSlot({
   return (
     <div className={cn('p-4', className)}>
       <div className="space-y-2">
-        <h4 className="font-medium text-sm">Available Models ({models.length})</h4>
+        <h4 className="font-450 text-sm">Available Models ({models.length})</h4>
         <div className="grid grid-cols-1 gap-2">
           {models
             .sort((a: any, b: any) => new Date(b.created).getTime() - new Date(a.created).getTime())
@@ -117,7 +117,7 @@ export function ModelsListSlot({
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                   <div>
-                    <div className="font-medium text-sm">{model.id}</div>
+                    <div className="font-450 text-sm">{model.id}</div>
                     <div className="text-xs text-muted-foreground">
                       Created: {formatModelDate(model.created)}
                     </div>
@@ -166,7 +166,7 @@ export function TableSlot({ data = [], columns, className = '' }: TableSlotProps
           <thead>
             <tr className="border-b">
               {columns.map((column) => (
-                <th key={column.key} className="text-left py-2 px-3 font-medium">
+                <th key={column.key} className="text-left py-2 px-3 font-450">
                   {column.title}
                 </th>
               ))}

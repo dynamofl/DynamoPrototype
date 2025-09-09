@@ -66,7 +66,7 @@ export function FreeTextCell({
           height: '100%',
           display: 'flex',
           alignItems: 'center',
-          padding: '8px',
+          padding: '0px',
           cursor: 'default',
           outline: 'none',
           border: '1px solid transparent',
@@ -76,7 +76,7 @@ export function FreeTextCell({
         }}
       >
         <div className="w-full overflow-hidden">
-          <div className="whitespace-pre-line line-clamp-1 text-ellipsis overflow-hidden text-sm">
+          <div className="whitespace-pre-line line-clamp-1 text-ellipsis overflow-hidden text-[13px]">
             {displayValue || (
               <span className="text-gray-400 italic">
                 {column.placeholder}
@@ -118,7 +118,7 @@ export function FreeTextCell({
       }}
     >
       <div className="w-full overflow-hidden">
-        <div className="whitespace-pre-line line-clamp-1 text-ellipsis overflow-hidden text-sm">
+        <div className="whitespace-pre-line line-clamp-1 text-ellipsis overflow-hidden text-[13px]">
           {displayValue || (
             <span className="text-gray-400 italic">
               {column.placeholder}

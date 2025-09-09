@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { TablePattern } from '@/components/patterns/table-pattern'
-import { Plus, Edit, Send } from 'lucide-react'
+import { Plus, Edit, Send, Search, Filter, Download } from 'lucide-react'
+import { Input } from '@/components/ui/input'
 import teamMembersData from '@/data/teamMembers.json'
 
 export function TeamMembersContent() {
@@ -32,7 +33,7 @@ export function TeamMembersContent() {
       key: 'roles',
       title: 'Role',
       type: 'multiBadge' as const,
-      width: 'auto',
+      width: 'fit',
       maxVisible: 2,
       showOverflowCount: true,
       overflowLabel: '+{count} more',
@@ -54,10 +55,11 @@ export function TeamMembersContent() {
       key: 'status',
       title: 'Status',
       type: 'badge' as const,
-      width: '160px',
+      width: 'auto',
+      minWidth: '180px',
       readonly: true,
       colorMap: {
-        'onboarded': { variant: 'default' as const, className: 'bg-green-50 text-green-700 border border-green-200' },
+        'onboarded': { variant: 'success' as const, className: 'bg-green-100 text-green-700 border border-green-200' },
         'pending onboarding': { variant: 'secondary' as const, className: 'bg-yellow-50 text-yellow-700 border border-yellow-200' }
       }
     },
@@ -110,24 +112,53 @@ export function TeamMembersContent() {
   return (
     <>
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200">
+      <div className="px-6 py-3 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-base font-medium text-gray-900 tracking-tight">Team Members</h1>
-            <p className="text-sm text-gray-600 mt-1">
+            <h1 className="text-base font-450 text-gray-900 tracking-tight">Team Members</h1>
+            {/* <p className="text-sm text-gray-600 mt-1">
               View and update your team members and their access across the product.
-            </p>
+            </p> */}
           </div>
-          <Button variant="default" size="default">
+          <Button variant="default" size="default" className="bg-blue-600 hover:bg-blue-700 text-white">
             <Plus className="h-4 w-4 mr-2" />
             Add Members
           </Button>
         </div>
       </div>
 
+      <div className="space-y-2 py-4">
+
+      {/* Header Actions */}
+      <div className="flex items-center justify-between px-6">
+        <div className="flex items-center space-x-2">
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search Members..."
+              className="pl-8 w-[300px]"
+            />
+          </div>
+          <Button variant="outline" size="sm">
+            <Filter className="mr-2 h-4 w-4" />
+            Filter
+          </Button>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button variant="outline" size="sm">
+            Edit Columns
+          </Button>
+          <Button variant="outline" size="sm">
+            <Download className="mr-2 h-4 w-4" />
+            Export
+          </Button>
+          
+        </div>
+      </div>
+
       {/* Table Content */}
       <div className="flex-1 px-3 py-2">
-        <div className="bg-white border rounded-lg overflow-hidden">
+        <div className="bg-white overflow-hidden">
           <TablePattern
             mode="view"
             columns={columns}
@@ -138,6 +169,7 @@ export function TeamMembersContent() {
             stickyHeader={true}
           />
         </div>
+      </div>
       </div>
     </>
   )

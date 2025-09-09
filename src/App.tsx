@@ -1,45 +1,17 @@
-import { useMemo } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
-import { AppBar, Breadcrumb, HeaderStats, AISystemsTable } from '@/components/patterns'
+import { Routes, Route } from 'react-router-dom'
+import { AppBar, Breadcrumb, SmartRedirect } from '@/components/patterns'
+import { ExperimentsGuard } from '@/components/patterns/experiments-guard'
+import { Button } from '@/components/ui/button'
 import { AIProvidersPage } from '@/features/ai-providers'
+import { AISystemsPage } from '@/features/ai-systems'
 import { EvaluationPage } from '@/features/evaluation'
 import { GuardrailsPage } from '@/features/guardrails'
 import { SettingsPage } from '@/features/settings'
 import { TablePatternDemo } from '@/components/table-pattern-demo'
-import aiSystemsData from '@/data/aiSystems.json'
-import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
 import { usePageTitle } from '@/hooks/usePageTitle'
-
-interface AISystem {
-  id: string;
-  name: string;
-  project: string;
-  owner: string;
-  createdAt: string;
-  status: 'active' | 'inactive';
-  icon: 'HuggingFace' | 'OpenAI' | 'Azure' | 'Mistral' | 'Anthropic' | 'Databricks' | 'Remote' | 'Local';
-  hasGuardrails: boolean;
-  isEvaluated: boolean;
-}
 
 function App() {
   usePageTitle()
-  const data: AISystem[] = aiSystemsData as AISystem[]
-
-  const stats = useMemo(() => {
-    const totalSystems = data.length
-    const evaluatedSystems = data.filter(system => system.isEvaluated).length
-    const systemsWithGuardrails = data.filter(system => system.hasGuardrails).length
-    const inactiveSystems = data.filter(system => system.status === 'inactive').length
-
-    return {
-      totalSystems,
-      evaluatedSystems,
-      systemsWithGuardrails,
-      inactiveSystems
-    }
-  }, [data])
 
   return (
     <Routes>
@@ -50,40 +22,17 @@ function App() {
       <Route path="*" element={
         <div className="min-h-screen bg-background">
           <AppBar />
+          <ExperimentsGuard />
 
           {/* Main Content */}
           <main className="mx-auto">
             <Breadcrumb />
             <Routes>
-              {/* Default redirect to Table Demo (for testing) */}
-              <Route path="/" element={<Navigate to="/table-demo" replace />} />
+              {/* Smart redirect based on experiments toggle state */}
+              <Route path="/" element={<SmartRedirect />} />
               
               {/* AI Systems Route */}
-              <Route path="/ai-systems" element={
-                <>
-                  {/* Page Header */}
-                  <div className="px-6">
-                    <div className="flex items-center justify-between my-4">
-                      <h1 className="text-lg font-450 tracking-tight">AI Systems</h1>
-                      <Button size="default" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                        <Plus className="mr-1 h-4 w-4" />
-                        Connect Your AI System
-                      </Button>
-                    </div>
-                    
-                    {/* Stats Cards */}
-                    <HeaderStats
-                      totalSystems={stats.totalSystems}
-                      evaluatedSystems={stats.evaluatedSystems}
-                      systemsWithGuardrails={stats.systemsWithGuardrails}
-                      inactiveSystems={stats.inactiveSystems}
-                    />
-                  </div>
-
-                  {/* Data Table */}
-                  <AISystemsTable data={data} />
-                </>
-              } />
+              <Route path="/ai-systems" element={<AISystemsPage />} />
               
               {/* Evaluation Sandbox Route */}
               <Route path="/evaluation-sandbox" element={<EvaluationPage />} />

@@ -77,7 +77,7 @@ export function AvatarCell({
             className="w-full h-full rounded-lg object-cover"
           />
         ) : showInitials && initials ? (
-          <span className="font-medium text-gray-900">
+          <span className="font-450 text-gray-900">
             {initials}
           </span>
         ) : fallbackIcon ? (
@@ -92,11 +92,11 @@ export function AvatarCell({
       {/* Name */}
       <div className="flex-1 min-w-0">
         {isPendingMember ? (
-          <span className="text-sm font-medium italic text-gray-500">
+          <span className="text-[13px] font-450 italic text-gray-500">
             Pending Member
           </span>
         ) : (
-          <span className="text-sm font-medium text-gray-900 truncate">
+          <span className="text-[13px] font-450 text-gray-900 truncate">
             {displayName}
           </span>
         )}

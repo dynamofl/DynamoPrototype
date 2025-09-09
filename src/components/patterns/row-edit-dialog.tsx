@@ -245,7 +245,7 @@ export function RowEditDialog({
           <div className="space-y-4">
             {editableColumns.map((column) => (
               <div key={column.key} className="space-y-2">
-                <Label htmlFor={column.key} className="text-sm font-medium">
+                <Label htmlFor={column.key} className="text-sm font-450">
                   {column.title}
                   {column.validation && <span className="text-red-500 ml-1">*</span>}
                 </Label>

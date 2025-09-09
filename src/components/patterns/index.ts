@@ -13,6 +13,8 @@ export { AISystemIcon } from './ai-system-icon';
 export { AISystemsTable } from './ai-systems-table';
 export { AppBar } from './app-bar';
 export { Breadcrumb } from './breadcrumb';
+export { SmartRedirect } from './smart-redirect';
+export { ExperimentsGuard } from './experiments-guard';
 export { CSVPreview } from './csv-preview';
 export { CSVUpload } from './csv-upload';
 export { HeaderStats } from './header-stats';

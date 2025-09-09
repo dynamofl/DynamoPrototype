@@ -2,129 +2,139 @@
  * APIKeyCreateSheet component for adding new API keys
  */
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { ViewEditSheet } from '@/components/patterns'
-import { AISystemIcon } from '@/components/patterns/ai-system-icon'
-import { Loader2, CheckCircle, XCircle } from 'lucide-react'
-import type { TableRow } from '@/types/table'
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ViewEditSheet } from "@/components/patterns";
+import { AISystemIcon } from "@/components/patterns/ai-system-icon";
+import { Loader2, CheckCircle, XCircle } from "lucide-react";
+import type { TableRow } from "@/types/table";
 
 export interface APIKeyCreateSheetProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  provider: TableRow | null
-  onAPIKeyCreated: (provider: TableRow, name: string, apiKey: string) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  provider: TableRow | null;
+  onAPIKeyCreated: (provider: TableRow, name: string, apiKey: string) => void;
 }
 
 // API validation functions for different providers
-const validateAPIKey = async (provider: string, apiKey: string): Promise<boolean> => {
+const validateAPIKey = async (
+  provider: string,
+  apiKey: string
+): Promise<boolean> => {
   // Simulate API validation - in real implementation, you would make actual API calls
   return new Promise((resolve) => {
     setTimeout(() => {
       // Mock validation logic
-      if (provider === 'OpenAI' && apiKey.startsWith('sk-')) {
-        resolve(true)
-      } else if (provider === 'Azure OpenAI' && apiKey.length > 20) {
-        resolve(true)
-      } else if (provider === 'Anthropic' && apiKey.startsWith('sk-ant-')) {
-        resolve(true)
-      } else if (provider === 'Mistral' && apiKey.length > 30) {
-        resolve(true)
-      } else if (provider === 'AWS Bedrock' && apiKey.length > 20) {
-        resolve(true)
-      } else if (provider === 'Databricks' && apiKey.length > 20) {
-        resolve(true)
+      if (provider === "OpenAI" && apiKey.startsWith("sk-")) {
+        resolve(true);
+      } else if (provider === "Azure OpenAI" && apiKey.length > 20) {
+        resolve(true);
+      } else if (provider === "Anthropic" && apiKey.startsWith("sk-ant-")) {
+        resolve(true);
+      } else if (provider === "Mistral" && apiKey.length > 30) {
+        resolve(true);
+      } else if (provider === "AWS Bedrock" && apiKey.length > 20) {
+        resolve(true);
+      } else if (provider === "Databricks" && apiKey.length > 20) {
+        resolve(true);
       } else {
-        resolve(false)
+        resolve(false);
       }
-    }, 2000) // Simulate network delay
-  })
-}
+    }, 2000); // Simulate network delay
+  });
+};
 
-export function APIKeyCreateSheet({ 
-  open, 
-  onOpenChange, 
+export function APIKeyCreateSheet({
+  open,
+  onOpenChange,
   provider,
-  onAPIKeyCreated 
+  onAPIKeyCreated,
 }: APIKeyCreateSheetProps) {
   const [formData, setFormData] = useState({
-    name: '',
-    apiKey: ''
-  })
-  const [validationError, setValidationError] = useState('')
-  const [isValidating, setIsValidating] = useState(false)
-  const [validationStatus, setValidationStatus] = useState<'idle' | 'success' | 'error'>('idle')
+    name: "",
+    apiKey: "",
+  });
+  const [validationError, setValidationError] = useState("");
+  const [isValidating, setIsValidating] = useState(false);
+  const [validationStatus, setValidationStatus] = useState<
+    "idle" | "success" | "error"
+  >("idle");
 
   const resetForm = () => {
     setFormData({
-      name: '',
-      apiKey: ''
-    })
-    setValidationError('')
-    setValidationStatus('idle')
-    setIsValidating(false)
-  }
+      name: "",
+      apiKey: "",
+    });
+    setValidationError("");
+    setValidationStatus("idle");
+    setIsValidating(false);
+  };
 
   const handleDialogOpenChange = (open: boolean) => {
-    onOpenChange(open)
+    onOpenChange(open);
     if (!open) {
-      resetForm()
+      resetForm();
     }
-  }
+  };
 
   const handleValidateAndSave = async () => {
-    if (!provider) return
+    if (!provider) return;
 
     // Validation
     if (!formData.name.trim()) {
-      setValidationError('API key name is required')
-      return
+      setValidationError("API key name is required");
+      return;
     }
 
     if (!formData.apiKey.trim()) {
-      setValidationError('API key is required')
-      return
+      setValidationError("API key is required");
+      return;
     }
 
-    setValidationError('')
-    setIsValidating(true)
-    setValidationStatus('idle')
+    setValidationError("");
+    setIsValidating(true);
+    setValidationStatus("idle");
 
     try {
-      const isValid = await validateAPIKey(provider.provider, formData.apiKey.trim())
-      
+      const isValid = await validateAPIKey(
+        provider.provider,
+        formData.apiKey.trim()
+      );
+
       if (isValid) {
-        setValidationStatus('success')
+        setValidationStatus("success");
         // Save the API key
-        onAPIKeyCreated(provider, formData.name.trim(), formData.apiKey.trim())
-        handleDialogOpenChange(false)
+        onAPIKeyCreated(provider, formData.name.trim(), formData.apiKey.trim());
+        handleDialogOpenChange(false);
       } else {
-        setValidationStatus('error')
-        setValidationError('Invalid API key. Please check your key and try again.')
+        setValidationStatus("error");
+        setValidationError(
+          "Invalid API key. Please check your key and try again."
+        );
       }
     } catch (error) {
-      setValidationStatus('error')
-      setValidationError('Failed to validate API key. Please try again.')
+      setValidationStatus("error");
+      setValidationError("Failed to validate API key. Please try again.");
     } finally {
-      setIsValidating(false)
+      setIsValidating(false);
     }
-  }
+  };
 
-  if (!provider) return null
+  if (!provider) return null;
 
   const getProviderIconType = (providerName: string) => {
     const iconMap: Record<string, any> = {
-      'OpenAI': 'OpenAI',
-      'Azure OpenAI': 'Azure',
-      'Databricks': 'Databricks',
-      'Mistral': 'Mistral',
-      'AWS Bedrock': 'AWS',
-      'Anthropic': 'Anthropic'
-    }
-    return iconMap[providerName] || 'Remote'
-  }
+      OpenAI: "OpenAI",
+      "Azure OpenAI": "Azure",
+      Databricks: "Databricks",
+      Mistral: "Mistral",
+      "AWS Bedrock": "AWS",
+      Anthropic: "Anthropic",
+    };
+    return iconMap[providerName] || "Remote";
+  };
 
   return (
     <ViewEditSheet
@@ -145,7 +155,7 @@ export function APIKeyCreateSheet({
                 Validating...
               </>
             ) : (
-              'Validate & Save'
+              "Validate & Save"
             )}
           </Button>
           <Button
@@ -161,17 +171,19 @@ export function APIKeyCreateSheet({
       <div className="space-y-4">
         {/* Provider Info */}
         <div className="space-y-2">
-        <Label htmlFor="api-key-name">API Provider</Label>
+          <Label htmlFor="api-key-name">API Provider</Label>
 
-        <div className="flex items-center space-x-1 p-1 bg-gray-50 rounded-lg border border-gray-200">
-          <AISystemIcon 
-            type={getProviderIconType(provider.provider)} 
-            className="w-8 h-8" 
-          />
-          <div>
-            <p className="text-sm font-450 text-gray-900">{provider.provider}</p>
+          <div className="flex items-center space-x-1 p-1 bg-gray-50 rounded-lg border border-gray-200">
+            <AISystemIcon
+              type={getProviderIconType(provider.provider)}
+              className="w-8 h-8"
+            />
+            <div>
+              <p className="text-sm font-450 text-gray-900">
+                {provider.provider}
+              </p>
+            </div>
           </div>
-        </div>
         </div>
 
         {/* Form Fields */}
@@ -182,10 +194,11 @@ export function APIKeyCreateSheet({
               id="api-key-name"
               placeholder="Enter a nickname for this API key"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
               required
             />
-        
           </div>
 
           <div className="space-y-2">
@@ -195,7 +208,9 @@ export function APIKeyCreateSheet({
               type="password"
               placeholder="Enter your API key"
               value={formData.apiKey}
-              onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, apiKey: e.target.value })
+              }
               required
             />
             <p className="text-xs text-gray-500">
@@ -205,17 +220,21 @@ export function APIKeyCreateSheet({
         </div>
 
         {/* Validation Status */}
-        {validationStatus === 'success' && (
+        {validationStatus === "success" && (
           <div className="flex items-center space-x-2 p-3 bg-green-50 border border-green-200 rounded-md">
             <CheckCircle className="h-4 w-4 text-green-600" />
-            <span className="text-sm text-green-800">API key validated successfully!</span>
+            <span className="text-sm text-green-800">
+              API key validated successfully!
+            </span>
           </div>
         )}
 
-        {validationStatus === 'error' && (
+        {validationStatus === "error" && (
           <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-md">
             <XCircle className="h-4 w-4 text-red-600" />
-            <span className="text-sm text-red-800">API key validation failed</span>
+            <span className="text-sm text-red-800">
+              API key validation failed
+            </span>
           </div>
         )}
 
@@ -224,8 +243,7 @@ export function APIKeyCreateSheet({
             {validationError}
           </div>
         )}
-
       </div>
     </ViewEditSheet>
-  )
+  );
 }

@@ -60,7 +60,7 @@ export function Breadcrumb() {
         <div key={breadcrumb.path} className="flex items-center">
           <ChevronRight className="h-4 w-4 mx-1" />
           {breadcrumb.current ? (
-            <span className="text-foreground font-medium">
+            <span className="text-foreground font-450">
               {breadcrumb.name}
             </span>
           ) : (

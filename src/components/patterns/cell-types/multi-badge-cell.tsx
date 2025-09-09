@@ -62,7 +62,7 @@ export function MultiBadgeCell({
 
   // Get badge styling
   const getBadgeClasses = (variant: string = 'default') => {
-    const baseClasses = 'inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium'
+    const baseClasses = 'inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-450'
     
     switch (variant) {
       case 'primary':

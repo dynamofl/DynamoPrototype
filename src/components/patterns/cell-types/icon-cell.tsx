@@ -100,7 +100,7 @@ export function IconCell({
     // If iconFormat is provided, use the original value for text (not the formatted JSX)
     const textValue = iconFormat ? value : (column.format ? column.format(value, row) : value)
     return (
-      <span className="text-sm truncate">
+      <span className="text-[13px] truncate">
         {textValue || column.placeholder || ''}
       </span>
     )

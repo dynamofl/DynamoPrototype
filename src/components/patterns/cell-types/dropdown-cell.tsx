@@ -59,7 +59,7 @@ export function DropdownCell({
           transition: 'all 0.2s ease-in-out'
         }}
       >
-        <span className="text-sm">
+        <span className="text-[13px]">
           {currentOption?.label || value || column.placeholder || 'Select...'}
         </span>
       </div>
@@ -86,7 +86,7 @@ export function DropdownCell({
         }}
         onClick={() => onRowEdit?.(row)}
       >
-        <span className="text-sm">
+        <span className="text-[13px]">
           {currentOption?.label || value || column.placeholder || 'Select...'}
         </span>
       </div>
