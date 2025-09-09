@@ -26,10 +26,13 @@ import { FreeTextCell } from './cell-types/free-text-cell'
 import { DropdownCell } from './cell-types/dropdown-cell'
 import { SwitchCell } from './cell-types/switch-cell'
 import { ButtonCell } from './cell-types/button-cell'
+import { MultiButtonCell } from './cell-types/multi-button-cell'
 import { BadgeCell } from './cell-types/badge-cell'
 import { DateCell } from './cell-types/date-cell'
 import { IconCell } from './cell-types/icon-cell'
 import { ExpandCell } from './cell-types/expand-cell'
+import { AvatarCell } from './cell-types/avatar-cell'
+import { MultiBadgeCell } from './cell-types/multi-badge-cell'
 import { RowEditDialog } from './row-edit-dialog'
 
 // Utility function to convert Tailwind width classes to CSS values
@@ -485,6 +488,13 @@ export function TablePattern({
         return <SwitchCell {...cellProps} />
       case 'button':
         return <ButtonCell {...cellProps} />
+      case 'multiButton':
+        return (
+          <MultiButtonCell
+            {...cellProps}
+            buttonConfig={column.multiButtonConfig}
+          />
+        )
       case 'badge':
         return <BadgeCell {...cellProps} />
       case 'date':
@@ -499,6 +509,7 @@ export function TablePattern({
             iconSize={column.iconSize}
             iconPosition={column.iconPosition}
             showText={column.showText}
+            iconFormat={column.iconFormat}
           />
         )
       case 'expand':
@@ -509,6 +520,30 @@ export function TablePattern({
             onToggle={() => handleRowExpand(row.id)}
             expandIcon={column.expandIcon}
             collapseIcon={column.collapseIcon}
+          />
+        )
+      case 'avatar':
+        return (
+          <AvatarCell
+            {...cellProps}
+            showInitials={column.showInitials}
+            showAvatar={column.showAvatar}
+            avatarSize={column.avatarSize}
+            fallbackIcon={column.fallbackIcon}
+            getInitials={column.getInitials}
+            getAvatarSrc={column.getAvatarSrc}
+            getDisplayName={column.getDisplayName}
+          />
+        )
+      case 'multiBadge':
+        return (
+          <MultiBadgeCell
+            {...cellProps}
+            maxVisible={column.maxVisible}
+            showOverflowCount={column.showOverflowCount}
+            overflowLabel={column.overflowLabel}
+            getBadges={column.getBadges}
+            badgeVariant={column.badgeVariant}
           />
         )
       default:

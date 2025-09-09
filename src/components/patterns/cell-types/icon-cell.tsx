@@ -14,22 +14,24 @@ interface IconCellProps extends CellProps {
   showText?: boolean
   iconPosition?: 'left' | 'right' | 'top' | 'bottom'
   iconSize?: 'sm' | 'md' | 'lg'
+  iconFormat?: (value: any, row: any) => React.ReactElement | null
 }
 
 export function IconCell({
   value,
   row,
   column,
-  mode,
-  onChange,
-  disabled = false,
+  mode: _mode,
+  onChange: _onChange,
+  disabled: _disabled = false,
   className = '',
   iconComponent: IconComponent,
   iconSrc,
   iconAlt = '',
   showText = true,
   iconPosition = 'left',
-  iconSize = 'md'
+  iconSize = 'md',
+  iconFormat
 }: IconCellProps) {
   // Get icon size classes
   const getIconSizeClass = () => {
@@ -61,6 +63,11 @@ export function IconCell({
 
   // Render icon
   const renderIcon = () => {
+    // Use iconFormat if provided (for custom icon rendering)
+    if (iconFormat) {
+      return iconFormat(value, row)
+    }
+
     if (IconComponent) {
       return <IconComponent className={getIconSizeClass()} />
     }
@@ -83,14 +90,6 @@ export function IconCell({
       }
     }
 
-    // Fallback to column format function if available
-    if (column.format && typeof column.format === 'function') {
-      const formatted = column.format(value, row)
-      if (React.isValidElement(formatted)) {
-        return formatted
-      }
-    }
-
     return null
   }
 
@@ -98,7 +97,8 @@ export function IconCell({
   const renderText = () => {
     if (!showText) return null
 
-    const textValue = column.format ? column.format(value, row) : value
+    // If iconFormat is provided, use the original value for text (not the formatted JSX)
+    const textValue = iconFormat ? value : (column.format ? column.format(value, row) : value)
     return (
       <span className="text-sm truncate">
         {textValue || column.placeholder || ''}

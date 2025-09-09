@@ -7,6 +7,7 @@ import type { TableStorage, TableStorageConfig } from './types'
 import { SessionTableStorage } from './session-storage'
 import { PersistentTableStorage } from './persistent-storage'
 import { SecureTableStorage } from './secure-storage'
+import { StaticTableStorage } from './static-storage'
 import { TableStorageError } from './types'
 
 export class TableStorageFactory {
@@ -22,10 +23,12 @@ export class TableStorageFactory {
           return new PersistentTableStorage(config)
         case 'secure':
           return new SecureTableStorage(config)
+        case 'static':
+          return new StaticTableStorage(config)
         default:
           throw new TableStorageError(
             'UNKNOWN_STORAGE_TYPE',
-            `Unknown storage type: ${config.type}. Supported types: session, persistent, secure`
+            `Unknown storage type: ${config.type}. Supported types: session, persistent, secure, static`
           )
       }
     } catch (error) {
@@ -51,7 +54,7 @@ export class TableStorageFactory {
       }
 
       // Validate storage type
-      if (!['session', 'persistent', 'secure'].includes(config.type)) {
+      if (!['session', 'persistent', 'secure', 'static'].includes(config.type)) {
         return false
       }
 

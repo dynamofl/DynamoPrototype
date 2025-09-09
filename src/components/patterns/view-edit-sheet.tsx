@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -15,6 +15,7 @@ interface ViewEditSheetProps {
   children: ReactNode;
   side?: 'left' | 'right' | 'top' | 'bottom';
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  footer?: ReactNode;
 }
 
 const sizeClasses = {
@@ -32,12 +33,14 @@ export function ViewEditSheet({
   description,
   children,
   side = 'right',
-  size = 'lg'
+  size = 'lg',
+  footer
 }: ViewEditSheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side={side} className={sizeClasses[size]}>
-        <SheetHeader>
+      <SheetContent side={side} className={`${sizeClasses[size]} flex flex-col h-full`}>
+        {/* Fixed Header */}
+        <SheetHeader className="flex-shrink-0 border-b border-gray-200">
           <SheetTitle>{title}</SheetTitle>
           {description && (
             <SheetDescription>
@@ -45,9 +48,18 @@ export function ViewEditSheet({
             </SheetDescription>
           )}
         </SheetHeader>
-        <div className="mt-6">
+        
+        {/* Scrollable Content Slot */}
+        <div className="flex-1 overflow-y-auto p-4">
           {children}
         </div>
+        
+        {/* Fixed Footer with Actions */}
+        {footer && (
+          <div className="flex-shrink-0 border-t border-gray-200 p-4">
+            {footer}
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );

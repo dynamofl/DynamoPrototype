@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { MoreHorizontal, Trash2, Edit, Eye, Copy } from 'lucide-react'
+import { MoreHorizontal, Trash2, Edit, Eye } from 'lucide-react'
 import type { CellProps } from '@/types/table'
 
 interface ButtonCellProps extends CellProps {
@@ -26,10 +26,10 @@ interface ButtonCellProps extends CellProps {
 }
 
 export function ButtonCell({
-  value,
+  value: _value,
   row,
-  column,
-  mode,
+  column: _column,
+  mode: _mode,
   onAction,
   disabled = false,
   className = '',
@@ -78,7 +78,6 @@ export function ButtonCell({
           variant={action.variant || buttonVariant}
           onClick={() => handleActionClick(action.key)}
           disabled={disabled}
-          className="h-8"
         >
           {action.icon || buttonIcon}
           <span className="ml-1">{action.label}</span>
@@ -96,7 +95,6 @@ export function ButtonCell({
             size="sm"
             variant={buttonVariant}
             disabled={disabled}
-            className="h-8 w-8 p-0"
           >
             {buttonIcon || <MoreHorizontal className="h-4 w-4" />}
           </Button>

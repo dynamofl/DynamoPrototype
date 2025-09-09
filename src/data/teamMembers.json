@@ -1,0 +1,56 @@
+[
+  {
+    "id": "1",
+    "name": "Saksham Aurora",
+    "email": "saksham2@dynamofl.com",
+    "roles": ["IAM Viewer", "DynamoGuard Developer"],
+    "addedOn": "2024-01-24",
+    "status": "Onboarded",
+    "avatar": null
+  },
+  {
+    "id": "2",
+    "name": "Pending Member",
+    "email": "pratheeptest@dynamofl.com",
+    "roles": ["DynamoGuard Extension User"],
+    "addedOn": "2024-02-27",
+    "status": "Pending Onboarding",
+    "avatar": null
+  },
+  {
+    "id": "3",
+    "name": "Subhodip Roy",
+    "email": "subhodip@dynamofl.com",
+    "roles": ["DynamoGuard Member", "DynamoGuard Extension User"],
+    "addedOn": "2024-01-29",
+    "status": "Onboarded",
+    "avatar": null
+  },
+  {
+    "id": "4",
+    "name": "Viswak Hanumanth",
+    "email": "viswak@dynamofl.com",
+    "roles": ["DynamoGuard Member"],
+    "addedOn": "2024-01-21",
+    "status": "Onboarded",
+    "avatar": null
+  },
+  {
+    "id": "5",
+    "name": "Yacer Saoud",
+    "email": "yacer@dynamofl.com",
+    "roles": ["DynamoGuard Member"],
+    "addedOn": "2024-02-15",
+    "status": "Onboarded",
+    "avatar": null
+  },
+  {
+    "id": "6",
+    "name": "Pending Member",
+    "email": "006befb5-de7a-4673-940f-f35a63fa2fc3@test.com",
+    "roles": ["DynamoEval Developer", "IAM Editor"],
+    "addedOn": "2024-01-23",
+    "status": "Pending Onboarding",
+    "avatar": null
+  }
+]

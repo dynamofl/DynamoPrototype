@@ -3,7 +3,7 @@
  */
 
 export interface TableStorageConfig {
-  type: 'session' | 'persistent' | 'secure'
+  type: 'session' | 'persistent' | 'secure' | 'static'
   storageKey?: string
   autoSave?: boolean
   encryption?: boolean
@@ -16,6 +16,8 @@ export interface TableStorageConfig {
   }
   minRows?: number
   maxRows?: number
+  // Static data configuration
+  data?: TableRow[]
 }
 
 export interface TableRow {

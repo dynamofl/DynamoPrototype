@@ -14,10 +14,13 @@ export type CellType =
   | 'dropdown' 
   | 'switch' 
   | 'button' 
+  | 'multiButton'
   | 'badge' 
   | 'date' 
   | 'icon' 
   | 'expand'
+  | 'avatar'
+  | 'multiBadge'
 
 export type ButtonVariant = 
   | 'default' 
@@ -64,6 +67,19 @@ export interface TableColumn {
     variant?: ButtonVariant
     onClick?: (row: any) => void
   }>
+  // Multi-button cell configuration
+  multiButtonConfig?: {
+    getActions: (row: any) => Array<{
+      key: string
+      label: string
+      icon?: ReactNode
+      variant?: ButtonVariant
+      className?: string
+      onClick?: () => void
+    }>
+    maxButtons?: number
+    showMoreButton?: boolean
+  }
   // Row editing configuration
   editMode?: EditMode
   rowEditTrigger?: boolean
@@ -76,6 +92,27 @@ export interface TableColumn {
   iconSize?: 'sm' | 'md' | 'lg'
   iconPosition?: 'left' | 'right' | 'top' | 'bottom'
   showText?: boolean
+  iconFormat?: (value: any, row: any) => ReactNode
+  // Avatar-related props
+  showInitials?: boolean
+  showAvatar?: boolean
+  avatarSize?: 'sm' | 'md' | 'lg'
+  fallbackIcon?: ReactNode
+  getInitials?: (value: any, row: any) => string
+  getAvatarSrc?: (value: any, row: any) => string
+  getDisplayName?: (value: any, row: any) => string
+  // Multi-badge-related props
+  maxVisible?: number
+  showOverflowCount?: boolean
+  overflowLabel?: string
+  getBadges?: (value: any, row: any) => Array<{
+    label: string
+    variant?: 'default' | 'primary' | 'success' | 'warning' | 'error'
+    className?: string
+  }>
+  badgeVariant?: 'default' | 'primary' | 'success' | 'warning' | 'error'
+  // Badge color mapping
+  colorMap?: Record<string, { variant: BadgeVariant; className?: string }>
 }
 
 export interface ExpandableConfig {
@@ -100,7 +137,7 @@ export interface TableRow {
 }
 
 export interface TableStorageConfig {
-  type: 'session' | 'persistent' | 'secure'
+  type: 'session' | 'persistent' | 'secure' | 'static'
   storageKey?: string
   autoSave?: boolean
   encryption?: boolean
@@ -113,6 +150,8 @@ export interface TableStorageConfig {
   }
   minRows?: number
   maxRows?: number
+  // Static data configuration
+  data?: TableRow[]
 }
 
 export interface TablePatternProps {

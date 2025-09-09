@@ -2,7 +2,7 @@
  * Free text cell component using table-level overlay system (like DynamoTable)
  */
 
-import React, { type KeyboardEvent } from 'react'
+import { type KeyboardEvent } from 'react'
 import type { CellProps } from '@/types/table'
 
 interface FreeTextCellProps extends CellProps {
@@ -18,13 +18,13 @@ export function FreeTextCell({
   row,
   column,
   mode,
-  onChange,
+  onChange: _onChange,
   onRowEdit,
   disabled = false,
   className = '',
-  multiline = false,
-  maxLength,
-  validation,
+  multiline: _multiline = false,
+  maxLength: _maxLength,
+  validation: _validation,
   editMode = 'inline',
   onStartEditing,
   isCurrentlyEditing = false
@@ -54,7 +54,9 @@ export function FreeTextCell({
 
   // View mode - display value (matches DynamoTable styling)
   if (mode === 'view' || disabled || column.readonly) {
-    const hasOverflowingText = value && String(value).length > 50
+    // Apply format function if available
+    const displayValue = column.format ? column.format(value, row) : value
+    const hasOverflowingText = displayValue && String(displayValue).length > 50
     
     return (
       <div 
@@ -75,7 +77,7 @@ export function FreeTextCell({
       >
         <div className="w-full overflow-hidden">
           <div className="whitespace-pre-line line-clamp-1 text-ellipsis overflow-hidden text-sm">
-            {value || (
+            {displayValue || (
               <span className="text-gray-400 italic">
                 {column.placeholder}
               </span>
@@ -92,6 +94,9 @@ export function FreeTextCell({
   }
 
   // Edit mode - clickable cell
+  // Apply format function if available
+  const displayValue = column.format ? column.format(value, row) : value
+  
   return (
     <div 
       className={`cell-content ${className}`}
@@ -114,7 +119,7 @@ export function FreeTextCell({
     >
       <div className="w-full overflow-hidden">
         <div className="whitespace-pre-line line-clamp-1 text-ellipsis overflow-hidden text-sm">
-          {value || (
+          {displayValue || (
             <span className="text-gray-400 italic">
               {column.placeholder}
             </span>

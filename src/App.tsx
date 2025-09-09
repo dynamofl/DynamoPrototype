@@ -4,6 +4,7 @@ import { AppBar, Breadcrumb, HeaderStats, AISystemsTable } from '@/components/pa
 import { AIProvidersPage } from '@/features/ai-providers'
 import { EvaluationPage } from '@/features/evaluation'
 import { GuardrailsPage } from '@/features/guardrails'
+import { SettingsPage } from '@/features/settings'
 import { TablePatternDemo } from '@/components/table-pattern-demo'
 import aiSystemsData from '@/data/aiSystems.json'
 import { Button } from '@/components/ui/button'
@@ -41,68 +42,76 @@ function App() {
   }, [data])
 
   return (
-    <div className="min-h-screen bg-background">
-      <AppBar />
+    <Routes>
+      {/* Settings Route - Separate layout without AppBar */}
+      <Route path="/settings" element={<SettingsPage />} />
+      
+      {/* All other routes with default layout */}
+      <Route path="*" element={
+        <div className="min-h-screen bg-background">
+          <AppBar />
 
-      {/* Main Content */}
-      <main className="mx-auto">
-        <Breadcrumb />
-        <Routes>
-          {/* Default redirect to Table Demo (for testing) */}
-          <Route path="/" element={<Navigate to="/table-demo" replace />} />
-          
-          {/* AI Systems Route */}
-          <Route path="/ai-systems" element={
-            <>
-              {/* Page Header */}
-              <div className="px-6">
-                <div className="flex items-center justify-between my-4">
-                  <h1 className="text-lg font-450 tracking-tight">AI Systems</h1>
-                  <Button size="default" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                    <Plus className="mr-1 h-4 w-4" />
-                    Connect Your AI System
+          {/* Main Content */}
+          <main className="mx-auto">
+            <Breadcrumb />
+            <Routes>
+              {/* Default redirect to Table Demo (for testing) */}
+              <Route path="/" element={<Navigate to="/table-demo" replace />} />
+              
+              {/* AI Systems Route */}
+              <Route path="/ai-systems" element={
+                <>
+                  {/* Page Header */}
+                  <div className="px-6">
+                    <div className="flex items-center justify-between my-4">
+                      <h1 className="text-lg font-450 tracking-tight">AI Systems</h1>
+                      <Button size="default" className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                        <Plus className="mr-1 h-4 w-4" />
+                        Connect Your AI System
+                      </Button>
+                    </div>
+                    
+                    {/* Stats Cards */}
+                    <HeaderStats
+                      totalSystems={stats.totalSystems}
+                      evaluatedSystems={stats.evaluatedSystems}
+                      systemsWithGuardrails={stats.systemsWithGuardrails}
+                      inactiveSystems={stats.inactiveSystems}
+                    />
+                  </div>
+
+                  {/* Data Table */}
+                  <AISystemsTable data={data} />
+                </>
+              } />
+              
+              {/* Evaluation Sandbox Route */}
+              <Route path="/evaluation-sandbox" element={<EvaluationPage />} />
+              
+              {/* AI Providers Route */}
+              <Route path="/ai-providers" element={<AIProvidersPage />} />
+              
+              {/* Guardrails Route */}
+              <Route path="/guardrails" element={<GuardrailsPage />} />
+              
+              {/* Table Pattern Demo Route */}
+              <Route path="/table-demo" element={<TablePatternDemo />} />
+              
+              {/* 404 Route - Catch all unmatched routes */}
+              <Route path="*" element={
+                <div className="flex flex-col items-center justify-center min-h-[60vh] px-6">
+                  <h1 className="text-4xl font-450 text-muted-foreground mb-4">404</h1>
+                  <p className="text-lg text-muted-foreground mb-6">Page not found</p>
+                  <Button onClick={() => window.location.href = '/evaluation-sandbox'}>
+                    Go to Evaluation Sandbox
                   </Button>
                 </div>
-                
-                {/* Stats Cards */}
-                <HeaderStats
-                  totalSystems={stats.totalSystems}
-                  evaluatedSystems={stats.evaluatedSystems}
-                  systemsWithGuardrails={stats.systemsWithGuardrails}
-                  inactiveSystems={stats.inactiveSystems}
-                />
-              </div>
-
-              {/* Data Table */}
-              <AISystemsTable data={data} />
-            </>
-          } />
-          
-          {/* Evaluation Sandbox Route */}
-          <Route path="/evaluation-sandbox" element={<EvaluationPage />} />
-          
-          {/* AI Providers Route */}
-          <Route path="/ai-providers" element={<AIProvidersPage />} />
-          
-          {/* Guardrails Route */}
-          <Route path="/guardrails" element={<GuardrailsPage />} />
-          
-          {/* Table Pattern Demo Route */}
-          <Route path="/table-demo" element={<TablePatternDemo />} />
-          
-          {/* 404 Route - Catch all unmatched routes */}
-          <Route path="*" element={
-            <div className="flex flex-col items-center justify-center min-h-[60vh] px-6">
-              <h1 className="text-4xl font-450 text-muted-foreground mb-4">404</h1>
-              <p className="text-lg text-muted-foreground mb-6">Page not found</p>
-              <Button onClick={() => window.location.href = '/evaluation-sandbox'}>
-                Go to Evaluation Sandbox
-              </Button>
-            </div>
-          } />
-        </Routes>
-      </main>
-    </div>
+              } />
+            </Routes>
+          </main>
+        </div>
+      } />
+    </Routes>
   )
 }
 

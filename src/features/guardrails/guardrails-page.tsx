@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { TablePattern } from '@/components/patterns'
 import { GuardrailsStats, GuardrailCreateDialog, GuardrailViewSheet, GuardrailEditSheet } from './components'
-import { 
+import {
   guardrailsStorageConfig,
   guardrailsColumns,
   guardrailsPaginationConfig
@@ -97,7 +97,7 @@ export function Guardrails() {
         break
       case 'edit':
         setEditingGuardrail(row)
-        setIsEditingGuardrail(true)
+    setIsEditingGuardrail(true)
         break
       case 'copy':
         // Handle copy action
