@@ -72,8 +72,9 @@ export function AccessTokenContent() {
         <div className="bg-blue-50 rounded-lg p-3">
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-gray-900">Your DynamoAI Access Token</h3>
-            <p className="text-sm text-gray-600 leading-5">
-              Access tokens authenticate your identity and grant authorization when interacting with Dynamo AI via the API or SDK. Only one access token can remain valid at a given time. Generating a new access token will automatically revoke the existing token.
+            <p className="text-xs text-gray-600 leading-5">
+              Access tokens authenticate your identity and grant authorization when interacting with Dynamo AI via the API or SDK. Only one access token can remain valid at a given time. 
+              Generating a new access token will automatically revoke the existing token.
             </p>
             <Button variant="default" size="default" className="bg-blue-600 hover:bg-blue-700 text-white">
               Generate New Token
@@ -84,17 +85,19 @@ export function AccessTokenContent() {
 
       {/* API Providers Table */}
       <div className="flex-1 px-3 pb-2">
-        <TablePattern
-          key={refreshTrigger} // Force re-render when API keys change
-          mode="view"
-          columns={accessTokenColumns}
-          storageConfig={accessTokenStorageConfig}
-          customStorage={customStorage}
-          onDataChange={handleDataChange}
-          onCellAction={handleCellAction}
-          className="border-0 rounded-lg"
-          emptyMessage="No API providers configured"
-        />
+        <div className="overflow-x-auto">
+          <TablePattern
+            key={refreshTrigger} // Force re-render when API keys change
+            mode="view"
+            columns={accessTokenColumns}
+            storageConfig={accessTokenStorageConfig}
+            customStorage={customStorage}
+            onDataChange={handleDataChange}
+            onCellAction={handleCellAction}
+            className="border-0 rounded-lg min-w-full"
+            emptyMessage="No API providers configured"
+          />
+        </div>
       </div>
 
       {/* API Key Create Sheet */}

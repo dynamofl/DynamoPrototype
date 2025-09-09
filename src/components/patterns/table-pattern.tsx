@@ -647,7 +647,7 @@ export function TablePattern({
   return (
     <div className={`border rounded-lg ${className}`}>
       <div className="relative">
-        <ScrollArea className="h-full">
+        <ScrollArea className="h-full w-full">
           <div className="relative overflow-visible border-t border-b border-gray-200" style={{ position: 'relative' }}>
             <Table 
               ref={tableRef} 
@@ -661,16 +661,18 @@ export function TablePattern({
                   <UITableRow className="h-8">
                     {columns.map((column) => {
                       const widthValue = getWidthValue(column.width)
+                      const minWidthValue = column.minWidth ? getWidthValue(column.minWidth) : widthValue
                       const isTailwindClass = widthValue.startsWith('w-')
+                      const isAutoWidth = widthValue === 'auto'
                       
                       return (
                         <TableHead 
                           key={column.key} 
                           className={`py-3 font-450 ${isTailwindClass ? widthValue : ''}`}
                           style={isTailwindClass ? {} : { 
-                            width: widthValue,
-                            minWidth: widthValue,
-                            maxWidth: widthValue
+                            width: isAutoWidth ? 'auto' : widthValue,
+                            minWidth: minWidthValue,
+                            maxWidth: isAutoWidth ? 'none' : widthValue
                           }}
                         >
                           {column.title}
@@ -686,16 +688,18 @@ export function TablePattern({
                     <UITableRow className="h-8">
                       {columns.map((column, colIndex) => {
                         const widthValue = getWidthValue(column.width)
+                        const minWidthValue = column.minWidth ? getWidthValue(column.minWidth) : widthValue
                         const isTailwindClass = widthValue.startsWith('w-')
+                        const isAutoWidth = widthValue === 'auto'
                         
                         return (
                           <TableCell 
                             key={column.key}
                             className={`p-0 h-8 ${isTailwindClass ? widthValue : ''}`}
                             style={isTailwindClass ? {} : { 
-                              width: widthValue,
-                              minWidth: widthValue,
-                              maxWidth: widthValue
+                              width: isAutoWidth ? 'auto' : widthValue,
+                              minWidth: minWidthValue,
+                              maxWidth: isAutoWidth ? 'none' : widthValue
                             }}
                           >
                             <div data-row={index} data-col={colIndex}>
@@ -799,8 +803,9 @@ export function TablePattern({
           border-collapse: separate;
           border-spacing: 0;
           border: none;
-          table-layout: fixed;
+          table-layout: auto;
           overflow: visible !important;
+          min-width: 100%;
         }
         
         .enhanced-table th,

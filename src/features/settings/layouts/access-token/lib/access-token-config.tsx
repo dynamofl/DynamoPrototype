@@ -71,36 +71,45 @@ export const accessTokenColumns: TableColumn[] = [
     title: 'Supported API Providers',
     type: 'icon',
     width: 'auto',
+    minWidth: '320px',
     iconFormat: (_value: string, row: any) => {
       const iconType = providerIconMap[row.provider] || 'Remote'
       return (
-        <AISystemIcon 
-          type={iconType} 
-          className="w-7 h-7 rounded-lg border border-gray-200 bg-white p-1.5" 
-        />
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <AISystemIcon 
+            type={iconType} 
+            className="w-7 h-7 rounded-lg border border-gray-200 bg-white p-1.5 flex-shrink-0" 
+          />
+          <span className="text-sm font-medium text-gray-900 truncate">
+            {row.provider}
+          </span>
+        </div>
       )
     },
-    showText: true,
+    showText: false,
     iconPosition: 'left'
   },
   {
     key: 'availableKeys',
     title: 'Available API Keys',
     type: 'freeText',
-    width: '280px',
+    width: 'auto',
+    minWidth: '160px',
     format: (value: number) => value === 0 ? '-' : value.toString()
   },
   {
     key: 'aiSystemUsage',
     title: 'AI System Usage',
     type: 'freeText',
-    width: '280px'
+    width: 'auto',
+    minWidth: '160px',
   },
   {
     key: 'lastUpdated',
     title: 'Last Updated On',
     type: 'freeText',
-    width: '280px'
+    width: 'auto',
+    minWidth: '160px',
   },
   {
     key: 'actions',

@@ -46,6 +46,7 @@ export interface TableColumn {
   key: string
   title: string
   width: WidthValue
+  minWidth?: WidthValue
   type: CellType
   placeholder?: string
   options?: Array<{ value: string; label: string }>
