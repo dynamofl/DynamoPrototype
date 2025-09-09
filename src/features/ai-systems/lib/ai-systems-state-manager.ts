@@ -27,10 +27,13 @@ export class AISystemsStateManager {
   private async validateAPIKey(apiKeyId: string, providerId: string): Promise<boolean> {
     try {
       const allAPIKeys = await accessTokenStorage.getAllAPIKeys()
-      return allAPIKeys.some(apiKey => 
+      
+      const matchingKey = allAPIKeys.find(apiKey => 
         apiKey.id === apiKeyId && 
-        apiKey.provider === providerId
+        apiKey.provider.toLowerCase() === providerId.toLowerCase()
       )
+      
+      return !!matchingKey
     } catch (error) {
       console.error('Failed to validate API key:', error)
       return false

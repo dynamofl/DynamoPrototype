@@ -1,7 +1,6 @@
 import { Button } from '@/components/ui/button'
-import { TablePattern } from '@/components/patterns/table-pattern'
-import { Plus, Edit, Send, Search, Filter, Download } from 'lucide-react'
-import { Input } from '@/components/ui/input'
+import { TablePattern, TableActions } from '@/components/patterns'
+import { Plus, Edit, Send } from 'lucide-react'
 import teamMembersData from '@/data/teamMembers.json'
 
 export function TeamMembersContent() {
@@ -109,6 +108,27 @@ export function TeamMembersContent() {
     // Handle manage user, resend invite, etc.
   }
 
+  // Handle table actions
+  const handleSearch = (value: string) => {
+    console.log('Search:', value)
+    // TODO: Implement search functionality
+  }
+
+  const handleFilter = () => {
+    console.log('Filter clicked')
+    // TODO: Implement filter functionality
+  }
+
+  const handleEditColumns = () => {
+    console.log('Edit columns clicked')
+    // TODO: Implement column management
+  }
+
+  const handleExport = () => {
+    console.log('Export clicked')
+    // TODO: Implement export functionality
+  }
+
   return (
     <>
       {/* Header */}
@@ -129,32 +149,14 @@ export function TeamMembersContent() {
 
       <div className="space-y-2 py-4">
 
-      {/* Header Actions */}
-      <div className="flex items-center justify-between px-6">
-        <div className="flex items-center space-x-2">
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search Members..."
-              className="pl-8 w-[300px]"
-            />
-          </div>
-          <Button variant="outline" size="sm">
-            <Filter className="mr-2 h-4 w-4" />
-            Filter
-          </Button>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm">
-            Edit Columns
-          </Button>
-          <Button variant="outline" size="sm">
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-          
-        </div>
-      </div>
+      {/* Table Actions */}
+      <TableActions
+        searchPlaceholder="Search Members..."
+        onSearch={handleSearch}
+        onFilter={handleFilter}
+        onEditColumns={handleEditColumns}
+        onExport={handleExport}
+      />
 
       {/* Table Content */}
       <div className="flex-1 px-3 py-2">

@@ -2,8 +2,51 @@
  * AI Systems table configuration
  */
 
+import React from 'react'
+import { AISystemIcon } from '@/components/patterns/ai-system-icon'
+import { CheckCircle, AlertCircle, Edit, Trash2 } from 'lucide-react'
 import type { TableColumn, ExpandableConfig, TableStorageConfig } from '@/types/table'
 import { AI_SYSTEMS_STORAGE_KEY, AI_SYSTEMS_ITEMS_PER_PAGE } from '../constants'
+
+// Map provider names to AISystemIcon types
+const providerIconMap: Record<string, 'OpenAI' | 'Azure' | 'Mistral' | 'Databricks' | 'HuggingFace' | 'Anthropic' | 'Remote' | 'Local' | 'AWS' | 'DynamoAI'> = {
+  'openai': 'OpenAI',
+  'OpenAI': 'OpenAI',
+  'azure': 'Azure',
+  'Azure': 'Azure',
+  'Azure OpenAI': 'Azure',
+  'databricks': 'Databricks',
+  'Databricks': 'Databricks',
+  'mistral': 'Mistral',
+  'Mistral': 'Mistral',
+  'aws': 'AWS',
+  'AWS': 'AWS',
+  'AWS Bedrock': 'AWS',
+  'anthropic': 'Anthropic',
+  'Anthropic': 'Anthropic',
+  'huggingface': 'HuggingFace',
+  'HuggingFace': 'HuggingFace',
+  'dynamoai': 'DynamoAI',
+  'DynamoAI': 'DynamoAI'
+}
+
+// Function to render AI system name with provider icon
+const renderAISystemName = (_value: string, row: any) => {
+  const iconType = providerIconMap[row.providerId] || providerIconMap[row.providerName] || 'Remote'
+  return React.createElement('div', {
+    className: 'flex items-center gap-3 min-w-0 flex-1'
+  }, [
+    React.createElement(AISystemIcon, {
+      key: 'icon',
+      type: iconType,
+      className: 'w-7 h-7 rounded-lg border border-gray-200 bg-white p-1 flex-shrink-0'
+    }),
+    React.createElement('span', {
+      key: 'text',
+      className: 'text-[13px] font-450 text-gray-900 truncate'
+    }, row.name)
+  ])
+}
 
 // Storage configuration for AI systems
 export const aiSystemsStorageConfig: TableStorageConfig = {
@@ -32,9 +75,43 @@ export const aiSystemsColumns: TableColumn[] = [
     type: 'icon',
     iconSize: 'md',
     iconPosition: 'left',
-    showText: true,
-    format: (value: string) => {
-      return value
+    showText: false,
+    iconFormat: renderAISystemName
+  },
+  {
+    key: 'selectedModel',
+    title: 'Model',
+    width: 'w-48', // 192px equivalent
+    type: 'freeText',
+    format: (value: string, row: any) => {
+      // Use modelDetails.name if available, otherwise fall back to selectedModel
+      return row.modelDetails?.name || value || 'No model selected'
+    }
+  },
+  {
+    key: 'owner',
+    title: 'Owner',
+    width: 'w-48', // 192px equivalent
+    type: 'freeText',
+    format: (value: string, row: any) => {
+      // Return random email address for now
+      const randomEmails = [
+        'john.doe@company.com',
+        'jane.smith@company.com',
+        'mike.wilson@company.com',
+        'sarah.johnson@company.com',
+        'alex.brown@company.com',
+        'emma.davis@company.com',
+        'david.miller@company.com',
+        'lisa.garcia@company.com'
+      ]
+      // Use a simple hash of the system ID to get consistent email for each system
+      const hash = row.id.split('').reduce((a, b) => {
+        a = ((a << 5) - a) + b.charCodeAt(0)
+        return a & a
+      }, 0)
+      const emailIndex = Math.abs(hash) % randomEmails.length
+      return randomEmails[emailIndex]
     }
   },
   {
@@ -50,12 +127,18 @@ export const aiSystemsColumns: TableColumn[] = [
     width: 'w-24', // 96px equivalent
     type: 'badge',
     colorMap: {
-      'active': { variant: 'default', className: 'bg-green-100 text-green-800' },
-      'inactive': { variant: 'destructive', className: 'bg-red-100 text-red-800' }
+      'Active': { 
+        variant: 'default', 
+        className: 'bg-green-100 text-green-800 border border-green-200',
+      },
+      'Disabled': { 
+        variant: 'destructive', 
+        className: 'bg-red-50 text-red-800 border border-red-100',
+      }
     },
     format: (value: string, row: any) => {
       // Use the stored validation state
-      return row.hasValidAPIKey ? 'active' : 'inactive'
+      return row.hasValidAPIKey ? 'Active' : 'Disabled'
     },
     tooltip: (value: string, row: any) => {
       return row.hasValidAPIKey ? '' : 'No valid API keys are available'
@@ -63,10 +146,24 @@ export const aiSystemsColumns: TableColumn[] = [
   },
   {
     key: 'actions',
-    title: 'Actions',
-    width: 'w-28',
+    title: '',
+    width: 'w-[48px]',
     type: 'button',
-    buttonVariant: 'ghost'
+    buttonVariant: 'ghost',
+    actions: [
+      {
+        key: 'edit',
+        label: 'Edit',
+        icon: React.createElement(Edit, { className: 'h-4 w-4' }),
+        variant: 'ghost' as const
+      },
+      {
+        key: 'delete',
+        label: 'Delete',
+        icon: React.createElement(Trash2, { className: 'h-4 w-4' }),
+        variant: 'destructive' as const
+      }
+    ]
   }
 ]
 

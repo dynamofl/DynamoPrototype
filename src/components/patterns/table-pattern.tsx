@@ -488,7 +488,7 @@ export function TablePattern({
       case 'switch':
         return <SwitchCell {...cellProps} />
       case 'button':
-        return <ButtonCell {...cellProps} />
+        return <ButtonCell {...cellProps} actions={column.actions} />
       case 'multiButton':
         return (
           <MultiButtonCell
@@ -498,7 +498,7 @@ export function TablePattern({
           />
         )
       case 'badge':
-        return <BadgeCell {...cellProps} />
+        return <BadgeCell {...cellProps} colorMap={column.colorMap} />
       case 'date':
         return <DateCell {...cellProps} />
       case 'icon':

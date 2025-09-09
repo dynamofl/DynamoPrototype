@@ -4,6 +4,7 @@ export { CreateDialog } from './create-dialog';
 export { ViewEditSheet } from './view-edit-sheet';
 export { ExampleGuardrails } from './example-guardrails';
 export { TablePattern } from './table-pattern';
+export { TableActions } from './table-actions';
 export { RowEditDialog } from './row-edit-dialog';
 export { StatCardSection } from './stat-card-section';
 export { Slot, ModelsListSlot, TableSlot } from './slot';

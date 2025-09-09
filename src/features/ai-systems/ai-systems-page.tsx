@@ -13,8 +13,18 @@ import {
   aiSystemsPaginationConfig,
   aiSystemsStateManager
 } from './lib'
-import { TablePattern } from '@/components/patterns'
+import { TablePattern, TableActions } from '@/components/patterns'
 import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Plus } from 'lucide-react'
 
 /**
@@ -26,6 +36,13 @@ export function AISystemsPage() {
   const [isAddingSystem, setIsAddingSystem] = useState(false)
   const [isEditingSystem, setIsEditingSystem] = useState(false)
   const [editingSystem, setEditingSystem] = useState<AISystem | null>(null)
+  
+  // Delete confirmation dialog state
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [systemToDelete, setSystemToDelete] = useState<AISystem | null>(null)
+  
+  // Refresh trigger for table
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
   
   // Create custom storage instance for AI systems
   const customStorage = useMemo(() => {
@@ -41,7 +58,8 @@ export function AISystemsPage() {
         setIsEditingSystem(true)
         break
       case 'delete':
-        handleDeleteSystem(row.id)
+        setSystemToDelete(row as AISystem)
+        setIsDeleteDialogOpen(true)
         break
       default:
         console.log('Unknown action:', action)
@@ -61,9 +79,11 @@ export function AISystemsPage() {
   // Handle system creation
   const handleSystemCreated = async (system: AISystem) => {
     try {
-      await customStorage.add(system)
-      // Invalidate cache for this provider since API keys might have changed
+      // Invalidate cache for this provider BEFORE adding to ensure fresh validation
       aiSystemsStateManager.notifyAPIKeyModified(system.providerId)
+      await customStorage.add(system)
+      // Trigger table refresh
+      setRefreshTrigger(prev => prev + 1)
     } catch (error) {
       console.error('Failed to create system:', error)
     }
@@ -72,9 +92,11 @@ export function AISystemsPage() {
   // Handle system update
   const handleSystemUpdated = async (system: AISystem) => {
     try {
-      await customStorage.update(system.id, system)
-      // Invalidate cache for this provider since API keys might have changed
+      // Invalidate cache for this provider BEFORE updating to ensure fresh validation
       aiSystemsStateManager.notifyAPIKeyModified(system.providerId)
+      await customStorage.update(system.id, system)
+      // Trigger table refresh
+      setRefreshTrigger(prev => prev + 1)
     } catch (error) {
       console.error('Failed to update system:', error)
     }
@@ -82,12 +104,46 @@ export function AISystemsPage() {
 
 
   // Handle delete system
-  const handleDeleteSystem = async (id: string) => {
+  const handleDeleteSystem = async () => {
+    if (!systemToDelete) return
+    
     try {
-      await customStorage.delete(id)
+      await customStorage.delete(systemToDelete.id)
+      // Trigger table refresh
+      setRefreshTrigger(prev => prev + 1)
+      // Close dialog and reset state
+      setIsDeleteDialogOpen(false)
+      setSystemToDelete(null)
     } catch (error) {
       console.error('Failed to delete system:', error)
     }
+  }
+
+  // Handle delete dialog cancel
+  const handleDeleteCancel = () => {
+    setIsDeleteDialogOpen(false)
+    setSystemToDelete(null)
+  }
+
+  // Handle table actions
+  const handleSearch = (value: string) => {
+    console.log('Search:', value)
+    // TODO: Implement search functionality
+  }
+
+  const handleFilter = () => {
+    console.log('Filter clicked')
+    // TODO: Implement filter functionality
+  }
+
+  const handleEditColumns = () => {
+    console.log('Edit columns clicked')
+    // TODO: Implement column management
+  }
+
+  const handleExport = () => {
+    console.log('Export clicked')
+    // TODO: Implement export functionality
   }
 
   return (
@@ -108,9 +164,19 @@ export function AISystemsPage() {
             </div>
           </div>
 
+          {/* Table Actions */}
+          <TableActions
+            searchPlaceholder="Search AI Systems..."
+            onSearch={handleSearch}
+            onFilter={handleFilter}
+            onEditColumns={handleEditColumns}
+            onExport={handleExport}
+          />
+
           {/* Systems Table */}
           <div className="px-6">
             <TablePattern
+              key={refreshTrigger}
               mode="view"
               columns={aiSystemsColumns}
               storageConfig={aiSystemsStorageConfig}
@@ -139,6 +205,29 @@ export function AISystemsPage() {
             aiSystem={editingSystem}
             onAISystemUpdated={handleSystemUpdated}
           />
+
+          {/* Delete Confirmation Dialog */}
+          <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete AI System</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete "{systemToDelete?.name}"? This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={handleDeleteCancel}>
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDeleteSystem}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
 
           
         </div>

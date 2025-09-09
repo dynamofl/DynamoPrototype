@@ -9,7 +9,7 @@ import type { CellProps } from '@/types/table'
 
 interface BadgeCellProps extends CellProps {
   variant?: 'default' | 'secondary' | 'destructive' | 'outline'
-  colorMap?: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; className?: string }>
+  colorMap?: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; className?: string; icon?: React.ReactNode }>
   tooltip?: string
 }
 
@@ -54,8 +54,15 @@ export function BadgeCell({
 
   // Get badge configuration
   const getBadgeConfig = (val: any) => {
-    const stringValue = formatValue(val).toLowerCase()
+    const originalValue = formatValue(val)
+    const stringValue = originalValue.toLowerCase()
     
+    // Try exact match first (case-sensitive)
+    if (colorMap[originalValue]) {
+      return colorMap[originalValue]
+    }
+    
+    // Try case-insensitive match
     if (colorMap[stringValue]) {
       return colorMap[stringValue]
     }
@@ -111,6 +118,11 @@ export function BadgeCell({
         variant={badgeConfig.variant}
         className={badgeConfig.className}
       >
+        {badgeConfig.icon && (
+          <span className="mr-1 flex-shrink-0">
+            {badgeConfig.icon}
+          </span>
+        )}
         {formatValue(value)}
       </Badge>
     )
@@ -143,6 +155,11 @@ export function BadgeCell({
         className={`cursor-pointer hover:opacity-80 transition-opacity ${badgeConfig.className}`}
         onClick={handleBadgeClick}
       >
+        {badgeConfig.icon && (
+          <span className="mr-1 flex-shrink-0">
+            {badgeConfig.icon}
+          </span>
+        )}
         {formatValue(value)}
       </Badge>
     </div>
