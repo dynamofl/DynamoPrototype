@@ -4,11 +4,13 @@
 
 import React from 'react'
 import { Badge } from '@/components/ui/badge'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import type { CellProps } from '@/types/table'
 
 interface BadgeCellProps extends CellProps {
   variant?: 'default' | 'secondary' | 'destructive' | 'outline'
   colorMap?: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; className?: string }>
+  tooltip?: string
 }
 
 export function BadgeCell({
@@ -20,7 +22,8 @@ export function BadgeCell({
   disabled = false,
   className = '',
   variant = 'default',
-  colorMap = {}
+  colorMap = {},
+  tooltip
 }: BadgeCellProps) {
   // Format value for display
   const formatValue = (val: any): string => {
@@ -103,14 +106,31 @@ export function BadgeCell({
 
   // View mode - display badge
   if (mode === 'view' || disabled || column.readonly) {
+    const badgeElement = (
+      <Badge
+        variant={badgeConfig.variant}
+        className={badgeConfig.className}
+      >
+        {formatValue(value)}
+      </Badge>
+    )
+
     return (
       <div className={`min-h-[32px] flex items-center ${className}`}>
-        <Badge
-          variant={badgeConfig.variant}
-          className={badgeConfig.className}
-        >
-          {formatValue(value)}
-        </Badge>
+        {tooltip ? (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                {badgeElement}
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{tooltip}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : (
+          badgeElement
+        )}
       </div>
     )
   }

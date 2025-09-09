@@ -7,7 +7,7 @@ import type { APIKeyOption, ProviderOption, AIModel } from '../types'
 import { availableProviderTypes } from '../constants'
 
 // Initialize access token storage
-const accessTokenStorage = new AccessTokenStorage()
+export const accessTokenStorage = new AccessTokenStorage()
 
 /**
  * Get available API keys for a specific provider
@@ -131,10 +131,36 @@ export async function validateOpenAIKey(apiKey: string): Promise<boolean> {
 export async function createAndStoreAPIKey(
   provider: string, 
   name: string, 
-  apiKey: string
+  apiKey: string,
+  skipDuplicateChecks: boolean = false
 ): Promise<{ success: boolean; apiKeyId?: string; error?: string }> {
   try {
-    // Validate the API key first
+    const allAPIKeys = await accessTokenStorage.getAllAPIKeys()
+    
+    // Step 1: Check for duplicate API key (only if not skipping checks)
+    if (!skipDuplicateChecks) {
+      const duplicateKey = allAPIKeys.find(key => key.key === apiKey)
+      
+      if (duplicateKey) {
+        return {
+          success: false,
+          error: `This API key is already in use by "${duplicateKey.name}" for ${duplicateKey.provider}.`
+        }
+      }
+
+      // Step 2: Check for unique nickname within the same provider
+      const providerAPIKeys = allAPIKeys.filter(key => key.provider === provider)
+      const duplicateName = providerAPIKeys.find(key => key.name.toLowerCase() === name.toLowerCase())
+      
+      if (duplicateName) {
+        return {
+          success: false,
+          error: `A key with the name "${name}" already exists for ${provider}. Please choose a different name.`
+        }
+      }
+    }
+
+    // Step 3: Validate the API key with the provider
     const isValid = await validateOpenAIKey(apiKey)
     
     if (!isValid) {
@@ -144,12 +170,12 @@ export async function createAndStoreAPIKey(
       }
     }
 
-    // Store the API key
+    // Step 4: Store the API key
     await accessTokenStorage.addAPIKey(provider, name, apiKey)
     
     // Get the stored API key to return its ID
-    const allAPIKeys = await accessTokenStorage.getAllAPIKeys()
-    const storedAPIKey = allAPIKeys.find(key => 
+    const updatedAPIKeys = await accessTokenStorage.getAllAPIKeys()
+    const storedAPIKey = updatedAPIKeys.find(key => 
       key.provider === provider && 
       key.name === name && 
       key.key === apiKey

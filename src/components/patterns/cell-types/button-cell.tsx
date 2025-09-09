@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { MoreHorizontal, Trash2, Edit, Eye } from 'lucide-react'
+import { MoreHorizontal, Edit } from 'lucide-react'
 import type { CellProps } from '@/types/table'
 
 interface ButtonCellProps extends CellProps {
@@ -40,22 +40,10 @@ export function ButtonCell({
   // Default actions if none provided
   const defaultActions = [
     {
-      key: 'view',
-      label: 'View',
-      icon: <Eye className="h-4 w-4" />,
-      variant: 'ghost' as const
-    },
-    {
       key: 'edit',
       label: 'Edit',
       icon: <Edit className="h-4 w-4" />,
       variant: 'ghost' as const
-    },
-    {
-      key: 'delete',
-      label: 'Delete',
-      icon: <Trash2 className="h-4 w-4" />,
-      variant: 'destructive' as const
     }
   ]
 

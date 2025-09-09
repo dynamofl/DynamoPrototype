@@ -10,6 +10,7 @@ import { ViewEditSheet } from "@/components/patterns";
 import { AISystemIcon } from "@/components/patterns/ai-system-icon";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
 import type { TableRow } from "@/types/table";
+import { createAndStoreAPIKey } from "@/features/ai-systems/lib/api-integration";
 
 export interface APIKeyCreateSheetProps {
   open: boolean;
@@ -18,32 +19,22 @@ export interface APIKeyCreateSheetProps {
   onAPIKeyCreated: (provider: TableRow, name: string, apiKey: string) => void;
 }
 
-// API validation functions for different providers
-const validateAPIKey = async (
-  provider: string,
-  apiKey: string
-): Promise<boolean> => {
-  // Simulate API validation - in real implementation, you would make actual API calls
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // Mock validation logic
-      if (provider === "OpenAI" && apiKey.startsWith("sk-")) {
-        resolve(true);
-      } else if (provider === "Azure OpenAI" && apiKey.length > 20) {
-        resolve(true);
-      } else if (provider === "Anthropic" && apiKey.startsWith("sk-ant-")) {
-        resolve(true);
-      } else if (provider === "Mistral" && apiKey.length > 30) {
-        resolve(true);
-      } else if (provider === "AWS Bedrock" && apiKey.length > 20) {
-        resolve(true);
-      } else if (provider === "Databricks" && apiKey.length > 20) {
-        resolve(true);
-      } else {
-        resolve(false);
-      }
-    }, 2000); // Simulate network delay
-  });
+// Provider-specific format validation
+const getProviderFormatError = (provider: string, apiKey: string): string | null => {
+  if (provider === "OpenAI" && !apiKey.startsWith("sk-")) {
+    return 'OpenAI API keys must start with "sk-"';
+  } else if (provider === "Anthropic" && !apiKey.startsWith("sk-ant-")) {
+    return 'Anthropic API keys must start with "sk-ant-"';
+  } else if (provider === "Azure OpenAI" && apiKey.length < 20) {
+    return "Azure OpenAI API keys must be at least 20 characters long";
+  } else if (provider === "Mistral" && apiKey.length < 30) {
+    return "Mistral API keys must be at least 30 characters long";
+  } else if (provider === "AWS Bedrock" && apiKey.length < 20) {
+    return "AWS Bedrock API keys must be at least 20 characters long";
+  } else if (provider === "Databricks" && apiKey.length < 20) {
+    return "Databricks API keys must be at least 20 characters long";
+  }
+  return null;
 };
 
 export function APIKeyCreateSheet({
@@ -62,6 +53,12 @@ export function APIKeyCreateSheet({
     "idle" | "success" | "error"
   >("idle");
 
+  // Field-specific error states
+  const [fieldErrors, setFieldErrors] = useState({
+    apiKeyName: "",
+    apiKeyValue: "",
+  });
+
   const resetForm = () => {
     setFormData({
       name: "",
@@ -70,6 +67,7 @@ export function APIKeyCreateSheet({
     setValidationError("");
     setValidationStatus("idle");
     setIsValidating(false);
+    setFieldErrors({ apiKeyName: "", apiKeyValue: "" });
   };
 
   const handleDialogOpenChange = (open: boolean) => {
@@ -82,37 +80,56 @@ export function APIKeyCreateSheet({
   const handleValidateAndSave = async () => {
     if (!provider) return;
 
-    // Validation
+    // Clear previous field errors
+    setFieldErrors({ apiKeyName: "", apiKeyValue: "" });
+    setValidationError("");
+
+    // Basic validation
     if (!formData.name.trim()) {
-      setValidationError("API key name is required");
+      setFieldErrors(prev => ({ ...prev, apiKeyName: "API key name is required" }));
       return;
     }
 
     if (!formData.apiKey.trim()) {
-      setValidationError("API key is required");
+      setFieldErrors(prev => ({ ...prev, apiKeyValue: "API key is required" }));
       return;
     }
 
-    setValidationError("");
+    // Provider-specific format validation
+    const formatError = getProviderFormatError(provider.provider, formData.apiKey.trim());
+    if (formatError) {
+      setFieldErrors(prev => ({ ...prev, apiKeyValue: formatError }));
+      return;
+    }
+
     setIsValidating(true);
     setValidationStatus("idle");
 
     try {
-      const isValid = await validateAPIKey(
+      // Use the comprehensive validation from AI Systems
+      const result = await createAndStoreAPIKey(
         provider.provider,
+        formData.name.trim(),
         formData.apiKey.trim()
       );
 
-      if (isValid) {
+      if (result.success) {
         setValidationStatus("success");
         // Save the API key
         onAPIKeyCreated(provider, formData.name.trim(), formData.apiKey.trim());
         handleDialogOpenChange(false);
       } else {
         setValidationStatus("error");
-        setValidationError(
-          "Invalid API key. Please check your key and try again."
-        );
+        // Handle specific error types
+        const error = result.error || "Failed to create API key";
+        
+        if (error.includes("already exists") && error.includes("name")) {
+          setFieldErrors(prev => ({ ...prev, apiKeyName: error }));
+        } else if (error.includes("already in use") || error.includes("Invalid API key")) {
+          setFieldErrors(prev => ({ ...prev, apiKeyValue: error }));
+        } else {
+          setValidationError(error);
+        }
       }
     } catch (error) {
       setValidationStatus("error");
@@ -194,9 +211,14 @@ export function APIKeyCreateSheet({
               id="api-key-name"
               placeholder="Enter a nickname for this API key"
               value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
+              onChange={(e) => {
+                setFormData({ ...formData, name: e.target.value });
+                // Clear error when user starts typing
+                if (fieldErrors.apiKeyName) {
+                  setFieldErrors(prev => ({ ...prev, apiKeyName: "" }));
+                }
+              }}
+              error={fieldErrors.apiKeyName}
               required
             />
           </div>
@@ -208,9 +230,14 @@ export function APIKeyCreateSheet({
               type="password"
               placeholder="Enter your API key"
               value={formData.apiKey}
-              onChange={(e) =>
-                setFormData({ ...formData, apiKey: e.target.value })
-              }
+              onChange={(e) => {
+                setFormData({ ...formData, apiKey: e.target.value });
+                // Clear error when user starts typing
+                if (fieldErrors.apiKeyValue) {
+                  setFieldErrors(prev => ({ ...prev, apiKeyValue: "" }));
+                }
+              }}
+              error={fieldErrors.apiKeyValue}
               required
             />
             <p className="text-xs text-gray-500">

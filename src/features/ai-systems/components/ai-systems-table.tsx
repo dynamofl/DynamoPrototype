@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Search, Filter, Download, Plus } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { TablePattern } from '@/components/patterns'
-import { AISystemCreateSheet, AISystemViewSheet } from './'
+import { AISystemCreateSheet, AISystemEditSheet } from './'
 import { AISystemsStorage } from '../lib'
 import { 
   aiSystemsColumns,
@@ -25,9 +25,8 @@ interface AISystemsTableProps {
 
 export function AISystemsTable({ className = '' }: AISystemsTableProps) {
   const [isAddingSystem, setIsAddingSystem] = useState(false)
-  const [isViewingSystem, setIsViewingSystem] = useState(false)
-  const [viewingSystem, setViewingSystem] = useState<AISystem | null>(null)
-  const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [isEditingSystem, setIsEditingSystem] = useState(false)
+  const [editingSystem, setEditingSystem] = useState<AISystem | null>(null)
 
   // Create custom storage instance
   const customStorage = new AISystemsStorage()
@@ -35,13 +34,9 @@ export function AISystemsTable({ className = '' }: AISystemsTableProps) {
   // Handle cell actions
   const handleCellAction = (action: string, row: TableRow) => {
     switch (action) {
-      case 'view':
-        setViewingSystem(row as AISystem)
-        setIsViewingSystem(true)
-        break
       case 'edit':
-        setViewingSystem(row as AISystem)
-        setIsViewingSystem(true)
+        setEditingSystem(row as AISystem)
+        setIsEditingSystem(true)
         break
       case 'delete':
         handleDeleteSystem(row.id)
@@ -56,7 +51,7 @@ export function AISystemsTable({ className = '' }: AISystemsTableProps) {
   const handleSystemCreated = async (system: AISystem) => {
     try {
       await customStorage.addAISystem(system)
-      setRefreshTrigger(prev => prev + 1)
+      // Table will automatically refresh due to storage changes
     } catch (error) {
       console.error('Failed to create AI system:', error)
     }
@@ -66,7 +61,7 @@ export function AISystemsTable({ className = '' }: AISystemsTableProps) {
   const handleSystemUpdate = async (system: AISystem) => {
     try {
       await customStorage.updateAISystem(system.id, system)
-      setRefreshTrigger(prev => prev + 1)
+      // Table will automatically refresh due to storage changes
     } catch (error) {
       console.error('Failed to update AI system:', error)
     }
@@ -76,7 +71,7 @@ export function AISystemsTable({ className = '' }: AISystemsTableProps) {
   const handleDeleteSystem = async (systemId: string) => {
     try {
       await customStorage.deleteAISystem(systemId)
-      setRefreshTrigger(prev => prev + 1)
+      // Table will automatically refresh due to storage changes
     } catch (error) {
       console.error('Failed to delete AI system:', error)
     }
@@ -121,12 +116,12 @@ export function AISystemsTable({ className = '' }: AISystemsTableProps) {
       {/* Table */}
       <div className="border-t border-b">
         <TablePattern
+          mode="view"
           columns={aiSystemsColumns}
           storageConfig={aiSystemsStorageConfig}
           pagination={aiSystemsPaginationConfig}
           expandable={aiSystemsExpandableConfig}
           onCellAction={handleCellAction}
-          refreshTrigger={refreshTrigger}
         />
       </div>
 
@@ -137,13 +132,12 @@ export function AISystemsTable({ className = '' }: AISystemsTableProps) {
         onAISystemCreated={handleSystemCreated}
       />
 
-      {/* View/Edit System Sheet */}
-      <AISystemViewSheet
-        open={isViewingSystem}
-        onOpenChange={setIsViewingSystem}
-        system={viewingSystem}
-        onSystemUpdate={handleSystemUpdate}
-        onSystemDelete={handleDeleteSystem}
+      {/* Edit System Sheet */}
+      <AISystemEditSheet
+        open={isEditingSystem}
+        onOpenChange={setIsEditingSystem}
+        aiSystem={editingSystem}
+        onAISystemUpdated={handleSystemUpdate}
       />
     </div>
   )

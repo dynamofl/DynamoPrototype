@@ -469,11 +469,12 @@ export function TablePattern({
       column,
       mode,
       onChange: (value) => handleCellChange(row.id, column.key, value),
-      onAction: (action) => handleCellAction(action, row, index),
+      onAction: (action, rowData) => handleCellAction(action, rowData || row, index),
       onRowEdit: (row) => handleRowEdit(row, index),
       disabled: column.disabled,
       className: column.className,
       editMode,
+      tooltip: typeof column.tooltip === 'function' ? column.tooltip(row[column.key], row) : column.tooltip,
       // Add editing functions for FreeTextCell
       onStartEditing: (cellType: string, currentValue: any) => startEditing(index, columns.findIndex(c => c.key === column.key), cellType, currentValue),
       isCurrentlyEditing: editState.editingCell?.row === index && editState.editingCell?.col === columns.findIndex(c => c.key === column.key)
@@ -492,6 +493,7 @@ export function TablePattern({
         return (
           <MultiButtonCell
             {...cellProps}
+            actions={column.actions}
             buttonConfig={column.multiButtonConfig}
           />
         )
@@ -645,10 +647,10 @@ export function TablePattern({
   }
 
   return (
-    <div className={`border rounded-lg ${className}`}>
+    <div className={` ${className}`}>
       <div className="relative">
         <ScrollArea className="h-full w-full">
-          <div className="relative overflow-visible border-t border-b border-gray-200" style={{ position: 'relative' }}>
+          <div className="relative overflow-visible  border-gray-200" style={{ position: 'relative' }}>
             <Table 
               ref={tableRef} 
               className={`enhanced-table ${mode === 'edit' ? 'edit-mode' : ''}`}

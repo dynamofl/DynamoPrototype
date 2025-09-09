@@ -51,31 +51,22 @@ export const aiSystemsColumns: TableColumn[] = [
     type: 'badge',
     colorMap: {
       'active': { variant: 'default', className: 'bg-green-100 text-green-800' },
-      'inactive': { variant: 'secondary' }
+      'inactive': { variant: 'destructive', className: 'bg-red-100 text-red-800' }
+    },
+    format: (value: string, row: any) => {
+      // Use the stored validation state
+      return row.hasValidAPIKey ? 'active' : 'inactive'
+    },
+    tooltip: (value: string, row: any) => {
+      return row.hasValidAPIKey ? '' : 'No valid API keys are available'
     }
   },
   {
     key: 'actions',
     title: 'Actions',
-    width: 'w-32', // 128px equivalent
-    type: 'multiButton',
-    actions: [
-      {
-        key: 'view',
-        label: 'View',
-        variant: 'outline'
-      },
-      {
-        key: 'edit',
-        label: 'Edit',
-        variant: 'outline'
-      },
-      {
-        key: 'delete',
-        label: 'Delete',
-        variant: 'destructive'
-      }
-    ]
+    width: 'w-28',
+    type: 'button',
+    buttonVariant: 'ghost'
   }
 ]
 
@@ -114,7 +105,9 @@ export const createDefaultAISystem = (data: {
     day: 'numeric', 
     year: 'numeric' 
   }),
-  status: 'active' as const,
+  status: 'active', // Will be validated and updated by state manager
+  hasValidAPIKey: false, // Will be validated by state manager
+  lastValidated: 0, // Will be set by state manager
   icon: data.providerName as any, // This will be mapped to the correct icon
   hasGuardrails: false,
   isEvaluated: false,

@@ -3,570 +3,811 @@
  * Handles the creation of new AI systems with provider selection and model picking
  */
 
-import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
-import { Eye, EyeOff, RefreshCw } from 'lucide-react'
-import { AISystemIcon } from '@/components/patterns'
-import { ViewEditSheet } from '@/components/patterns'
-import type { AISystemFormData, ProviderOption, APIKeyOption, AIModel } from '../types'
-import { 
-  getProvidersWithAPIKeys, 
-  fetchModelsFromOpenAI, 
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ChevronRight, Eye, EyeOff, KeyRound, Plus, RefreshCw } from "lucide-react";
+import { AISystemIcon } from "@/components/patterns";
+import { ViewEditSheet } from "@/components/patterns";
+import type {
+  AISystemFormData,
+  ProviderOption,
+  AIModel,
+} from "../types";
+import {
+  getProvidersWithAPIKeys,
+  fetchModelsFromOpenAI,
   createAndStoreAPIKey,
-  formatModelDate
-} from '../lib'
+} from "../lib";
 
 export interface AISystemCreateSheetProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onAISystemCreated: (system: any) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onAISystemCreated: (system: any) => void;
 }
 
-export function AISystemCreateSheet({ 
-  open, 
-  onOpenChange, 
-  onAISystemCreated 
+export function AISystemCreateSheet({
+  open,
+  onOpenChange,
+  onAISystemCreated,
 }: AISystemCreateSheetProps) {
-  const [currentStep, setCurrentStep] = useState<'select' | 'configure'>('select')
-  const [selectedProvider, setSelectedProvider] = useState<ProviderOption | null>(null)
-  const [selectedAPIKey, setSelectedAPIKey] = useState<APIKeyOption | null>(null)
-  const [availableModels, setAvailableModels] = useState<AIModel[]>([])
-  const [selectedModel, setSelectedModel] = useState<string>('')
-  const [isFetchingModels, setIsFetchingModels] = useState(false)
-  const [validationError, setValidationError] = useState('')
-  const [isValidating, setIsValidating] = useState(false)
-  
+  const [currentStep, setCurrentStep] = useState<"select" | "configure">(
+    "select"
+  );
+  const [selectedProvider, setSelectedProvider] =
+    useState<ProviderOption | null>(null);
+  const [selectedAPIKeys, setSelectedAPIKeys] = useState<string[]>([]);
+  const [primaryAPIKey, setPrimaryAPIKey] = useState<string | null>(null);
+  const [availableModels, setAvailableModels] = useState<AIModel[]>([]);
+  const [selectedModel, setSelectedModel] = useState<string>("");
+  const [isFetchingModels, setIsFetchingModels] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
+
   // Form data
   const [formData, setFormData] = useState<AISystemFormData>({
-    name: '',
-    provider: { id: '', name: '', type: '' },
-    apiKey: { id: '', name: '', key: '' },
-    selectedModel: '',
-    availableModels: []
-  })
+    name: "",
+    provider: { id: "", name: "", type: "" },
+    apiKey: { id: "", name: "", key: "" },
+    selectedModel: "",
+    availableModels: [],
+  });
 
   // New API key form (when creating a new API key)
   const [newAPIKey, setNewAPIKey] = useState({
-    name: '',
-    key: '',
-    showKey: false
-  })
+    name: "",
+    key: "",
+    showKey: false,
+  });
+  
+  // State to track if "Add Key" form is expanded
+  const [showAddKeyForm, setShowAddKeyForm] = useState(false);
+
+  // Field-specific error states
+  const [fieldErrors, setFieldErrors] = useState({
+    apiKeyName: "",
+    apiKeyValue: "",
+  });
 
   // Available providers with API keys
-  const [providers, setProviders] = useState<ProviderOption[]>([])
+  const [providers, setProviders] = useState<ProviderOption[]>([]);
 
   // Load providers when dialog opens
   useEffect(() => {
     if (open) {
-      loadProviders()
+      loadProviders();
     }
-  }, [open])
+  }, [open]);
 
   const loadProviders = async () => {
     try {
-      const providersWithKeys = await getProvidersWithAPIKeys()
-      setProviders(providersWithKeys)
+      const providersWithKeys = await getProvidersWithAPIKeys();
+      setProviders(providersWithKeys);
     } catch (error) {
-      console.error('Failed to load providers:', error)
+      console.error("Failed to load providers:", error);
     }
-  }
+  };
 
   const handleProviderSelect = (provider: ProviderOption) => {
-    setSelectedProvider(provider)
-    setCurrentStep('configure')
-    setSelectedAPIKey(null)
-    setAvailableModels([])
-    setSelectedModel('')
-    setValidationError('')
-    
-    setFormData(prev => ({
+    setSelectedProvider(provider);
+    setCurrentStep("configure");
+    setSelectedAPIKeys([]);
+    setPrimaryAPIKey(null);
+    setAvailableModels([]);
+    setSelectedModel("");
+
+    setFormData((prev) => ({
       ...prev,
       provider: {
         id: provider.id,
         name: provider.name,
-        type: provider.type
-      }
-    }))
-  }
+        type: provider.type,
+      },
+    }));
+  };
 
-  const handleAPIKeySelect = async (apiKey: APIKeyOption) => {
-    setSelectedAPIKey(apiKey)
-    setAvailableModels([])
-    setSelectedModel('')
-    setIsFetchingModels(true)
-    
-    setFormData(prev => ({
-      ...prev,
-      apiKey: {
-        id: apiKey.id,
-        name: apiKey.name,
-        key: apiKey.key
+  const handleAPIKeyToggle = async (apiKeyId: string, checked: boolean) => {
+    if (checked) {
+      const newSelectedKeys = [...selectedAPIKeys, apiKeyId];
+      setSelectedAPIKeys(newSelectedKeys);
+      
+      // If this is the first key selected, make it primary and fetch models
+      if (selectedAPIKeys.length === 0) {
+        setPrimaryAPIKey(apiKeyId);
+        await fetchModelsWithKey(apiKeyId);
       }
-    }))
+    } else {
+      const newSelectedKeys = selectedAPIKeys.filter(id => id !== apiKeyId);
+      setSelectedAPIKeys(newSelectedKeys);
+      
+      // If the unchecked key was the primary key, handle primary key change
+      if (primaryAPIKey === apiKeyId) {
+        if (newSelectedKeys.length > 0) {
+          // Set the first remaining key as primary and fetch models
+          const newPrimaryKey = newSelectedKeys[0];
+          setPrimaryAPIKey(newPrimaryKey);
+          await fetchModelsWithKey(newPrimaryKey);
+        } else {
+          // No keys selected, clear everything
+          setPrimaryAPIKey(null);
+          setAvailableModels([]);
+          setSelectedModel("");
+        }
+      }
+    }
+  };
+
+  const fetchModelsWithKey = async (apiKeyId: string, provider?: ProviderOption) => {
+    setIsFetchingModels(true);
 
     try {
-      const models = await fetchModelsFromOpenAI(apiKey.key)
-      setAvailableModels(models)
+      const currentProvider = provider || selectedProvider;
+      const apiKey = currentProvider?.apiKeys.find(ak => ak.id === apiKeyId);
+      if (apiKey) {
+        const models = await fetchModelsFromOpenAI(apiKey.key);
+        setAvailableModels(models);
+      }
     } catch (error) {
-      console.error('Failed to fetch models:', error)
-      setValidationError('Failed to fetch models. Please check your API key.')
+      console.error("Failed to fetch models:", error);
+      setValidationError("Failed to fetch models. Please check your API key.");
     } finally {
-      setIsFetchingModels(false)
+      setIsFetchingModels(false);
     }
-  }
+  };
+
+  const handleSetPrimaryKey = async (apiKeyId: string) => {
+    if (primaryAPIKey === apiKeyId) return; // Already primary
+    
+    setPrimaryAPIKey(apiKeyId);
+    await fetchModelsWithKey(apiKeyId);
+  };
 
   const handleCreateNewAPIKey = async () => {
-    if (!newAPIKey.name.trim() || !newAPIKey.key.trim()) {
-      setValidationError('Please fill in API key name and key')
-      return
+    // Clear previous field errors
+    setFieldErrors({ apiKeyName: "", apiKeyValue: "" });
+
+    // Basic validation
+    if (!newAPIKey.name.trim()) {
+      setFieldErrors(prev => ({ ...prev, apiKeyName: "API key name is required" }));
+      return;
     }
 
-    if (!newAPIKey.key.startsWith('sk-')) {
-      setValidationError('OpenAI API keys must start with "sk-"')
-      return
+    if (!newAPIKey.key.trim()) {
+      setFieldErrors(prev => ({ ...prev, apiKeyValue: "API key is required" }));
+      return;
     }
 
-    setIsValidating(true)
-    setValidationError('')
+    if (!newAPIKey.key.startsWith("sk-")) {
+      setFieldErrors(prev => ({ ...prev, apiKeyValue: 'OpenAI API keys must start with "sk-"' }));
+      return;
+    }
+
+    setIsValidating(true);
 
     try {
       const result = await createAndStoreAPIKey(
         selectedProvider!.type,
         newAPIKey.name.trim(),
-        newAPIKey.key.trim()
-      )
+        newAPIKey.key.trim(),
+        selectedProvider!.apiKeys.length === 0 // Skip duplicate checks when no existing keys
+      );
 
       if (result.success) {
         // Reload providers to get the new API key
-        await loadProviders()
-        
+        await loadProviders();
+
         // Find the newly created API key
-        const updatedProviders = await getProvidersWithAPIKeys()
-        const updatedProvider = updatedProviders.find(p => p.id === selectedProvider!.id)
-        const newAPIKeyOption = updatedProvider?.apiKeys.find(ak => ak.name === newAPIKey.name.trim())
-        
+        const updatedProviders = await getProvidersWithAPIKeys();
+        const updatedProvider = updatedProviders.find(
+          (p) => p.id === selectedProvider!.id
+        );
+        const newAPIKeyOption = updatedProvider?.apiKeys.find(
+          (ak) => ak.name === newAPIKey.name.trim()
+        );
+
         if (newAPIKeyOption) {
-          await handleAPIKeySelect(newAPIKeyOption)
+          // Update the selected provider to reflect the new API key
+          setSelectedProvider(updatedProvider!);
+          
+          // Auto-select the newly created key
+          setSelectedAPIKeys([newAPIKeyOption.id]);
+          setPrimaryAPIKey(newAPIKeyOption.id);
+          
+          // Fetch models with the new primary key using the updated provider
+          await fetchModelsWithKey(newAPIKeyOption.id, updatedProvider!);
         }
-        
+
         // Reset new API key form
-        setNewAPIKey({ name: '', key: '', showKey: false })
+        setNewAPIKey({ name: "", key: "", showKey: false });
+        setShowAddKeyForm(false);
+        setFieldErrors({ apiKeyName: "", apiKeyValue: "" });
       } else {
-        setValidationError(result.error || 'Failed to create API key')
+        // Handle specific error types
+        const error = result.error || "Failed to create API key";
+        
+        if (error.includes("already exists") && error.includes("name")) {
+          setFieldErrors(prev => ({ ...prev, apiKeyName: error }));
+        } else if (error.includes("already in use") || error.includes("Invalid API key")) {
+          setFieldErrors(prev => ({ ...prev, apiKeyValue: error }));
+        } else {
+          setValidationError(error);
+        }
       }
     } catch (error) {
-      setValidationError('Failed to create API key. Please try again.')
+      setValidationError("Failed to create API key. Please try again.");
     } finally {
-      setIsValidating(false)
+      setIsValidating(false);
     }
-  }
+  };
 
   const handleBackToSelection = () => {
-    setCurrentStep('select')
-    setSelectedProvider(null)
-    setSelectedAPIKey(null)
-    setAvailableModels([])
-    setSelectedModel('')
-    setValidationError('')
-    setNewAPIKey({ name: '', key: '', showKey: false })
-  }
+    setCurrentStep("select");
+    setSelectedProvider(null);
+    setSelectedAPIKeys([]);
+    setPrimaryAPIKey(null);
+    setAvailableModels([]);
+    setSelectedModel("");
+    setNewAPIKey({ name: "", key: "", showKey: false });
+    setShowAddKeyForm(false);
+  };
 
   const resetDialogState = () => {
-    setCurrentStep('select')
-    setSelectedProvider(null)
-    setSelectedAPIKey(null)
-    setAvailableModels([])
-    setSelectedModel('')
-    setValidationError('')
-    setNewAPIKey({ name: '', key: '', showKey: false })
+    setCurrentStep("select");
+    setSelectedProvider(null);
+    setSelectedAPIKeys([]);
+    setPrimaryAPIKey(null);
+    setAvailableModels([]);
+    setSelectedModel("");
+    setNewAPIKey({ name: "", key: "", showKey: false });
+    setShowAddKeyForm(false);
+    setFieldErrors({ apiKeyName: "", apiKeyValue: "" });
     setFormData({
-      name: '',
-      provider: { id: '', name: '', type: '' },
-      apiKey: { id: '', name: '', key: '' },
-      selectedModel: '',
-      availableModels: []
-    })
-  }
+      name: "",
+      provider: { id: "", name: "", type: "" },
+      apiKey: { id: "", name: "", key: "" },
+      selectedModel: "",
+      availableModels: [],
+    });
+  };
 
   const handleDialogOpenChange = (open: boolean) => {
-    onOpenChange(open)
+    onOpenChange(open);
     if (!open) {
-      resetDialogState()
+      resetDialogState();
     }
-  }
+  };
 
   const handleCreateAISystem = () => {
     if (!formData.name.trim()) {
-      setValidationError('Please fill in the system name')
-      return
+      setValidationError("Please fill in the system name");
+      return;
     }
 
-    if (!selectedAPIKey) {
-      setValidationError('Please select an API key')
-      return
+    if (!primaryAPIKey) {
+      setValidationError("Please select at least one API key");
+      return;
     }
 
     if (!selectedModel) {
-      setValidationError('Please select a model')
-      return
+      setValidationError("Please select a model");
+      return;
     }
 
-    const selectedModelDetails = availableModels.find(m => m.id === selectedModel)
-    
+    const selectedModelDetails = availableModels.find(
+      (m) => m.id === selectedModel
+    );
+
+    // Get the primary API key for the system
+    const primaryKey = selectedProvider!.apiKeys.find(ak => ak.id === primaryAPIKey);
+
     const newSystem = {
       id: Date.now().toString(),
       name: formData.name.trim(),
-      createdAt: new Date().toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric', 
-        year: 'numeric' 
+      createdAt: new Date().toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
       }),
-      status: 'active' as const,
+      status: "active" as const,
       icon: selectedProvider!.type as any,
       hasGuardrails: false,
       isEvaluated: false,
       providerId: selectedProvider!.id,
       providerName: selectedProvider!.name,
-      apiKeyId: selectedAPIKey.id,
-      apiKeyName: selectedAPIKey.name,
+      apiKeyId: primaryKey?.id || "",
+      apiKeyName: primaryKey?.name || "",
+      selectedAPIKeys: selectedAPIKeys, // Store all selected API keys
       selectedModel: selectedModel,
       modelDetails: selectedModelDetails,
-      isExpanded: false
-    }
+      isExpanded: false,
+    };
 
-    onAISystemCreated(newSystem)
-    handleDialogOpenChange(false)
-  }
+    onAISystemCreated(newSystem);
+    handleDialogOpenChange(false);
+  };
 
   return (
     <ViewEditSheet
       open={open}
       onOpenChange={handleDialogOpenChange}
-      title={currentStep === 'select' ? 'Add AI System' : `Configure ${selectedProvider?.name}`}
+      title={
+        currentStep === "select"
+          ? "Add AI System"
+          : `Configure ${selectedProvider?.name}`
+      }
       size="lg"
-      footer={currentStep === 'configure' ? (
-        <div className="flex justify-between items-center">
-          <Button
-            variant="outline"
-            onClick={handleBackToSelection}
-            disabled={isValidating}
-          >
-            Back
-          </Button>
-          <Button
-            onClick={handleCreateAISystem}
-            disabled={!selectedAPIKey || !selectedModel || !formData.name.trim()}
-            className="bg-blue-600 text-white hover:bg-blue-700"
-          >
-            Create AI System
-          </Button>
-        </div>
-      ) : undefined}
-    >
-      {currentStep === 'select' ? (
-        // Provider Selection Screen
-        <div className="space-y-4">
-          <div className="text-center py-4">
-            <h3 className="text-lg font-450 text-[#192c4b] mb-2">Choose AI Provider</h3>
-            <p className="text-sm text-[#4b5976]">Select the AI service provider for your new system</p>
+      footer={
+        currentStep === "configure" ? (
+          <div className="flex justify-between items-center">
+            <Button
+              variant="outline"
+              onClick={handleBackToSelection}
+              disabled={isValidating}
+            >
+              Back
+            </Button>
+             <Button
+               onClick={handleCreateAISystem}
+               disabled={
+                 !primaryAPIKey || !selectedModel || !formData.name.trim()
+               }
+               className="bg-blue-600 text-white hover:bg-blue-700"
+             >
+               Create AI System
+             </Button>
           </div>
-          
-          <div className="grid grid-cols-1 gap-3">
-            {providers.map((provider) => (
-              <div
-                key={provider.id}
-                onClick={() => handleProviderSelect(provider)}
-                className="p-3 border rounded-lg cursor-pointer transition-all border-gray-200 hover:border-blue-300 hover:bg-blue-50"
-              >
-                <div className="flex items-start space-x-3">
-                  <AISystemIcon type={provider.icon as any} className="w-6 h-6 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-2">
-                      <h4 className="font-450 text-[#192c4b]">{provider.name}</h4>
-                      {provider.hasApiKeys && (
-                        <Badge variant="secondary" className="text-xs">
-                          {provider.apiKeys.length} API Key{provider.apiKeys.length !== 1 ? 's' : ''}
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-[#4b5976] mt-1">
-                      {provider.hasApiKeys 
-                        ? `${provider.apiKeys.length} API key${provider.apiKeys.length !== 1 ? 's' : ''} available`
-                        : 'No API keys configured'
-                      }
-                    </p>
+        ) : undefined
+      }
+    >
+      {currentStep === "select" ? (
+        // Provider Selection Screen
+        <div className="space-y-3">
+          <div className=" border-gray-100">
+            <p className="text-sm text-[#4b5976]">Select AI System Provider</p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-1">
+              {providers.map((provider) => (
+                <div
+                  key={provider.id}
+                  onClick={() => handleProviderSelect(provider)}
+                  className="p-2 border-b flex flex-row items-center justify-between cursor-pointer transition-all border-gray-200 hover:bg-gray-50 hover:shadow-sm"
+                >
+                  <div className="flex flex-row items-center space-x-1 text-center align-middle">
+                      <AISystemIcon
+                        type={provider.icon as any}
+                        className="w-8 h-8"
+                      />
+                      <p className="font-450 text-[#192c4b] text-sm">
+                        {provider.name}
+                      </p>
                   </div>
+                  <ChevronRight className="w-4 h-4 text-gray-500" />
+                </div>
+              ))}
+            </div>
+
+            {providers.length === 0 && (
+              <div className="text-center py-8">
+                <div className="text-gray-500 mb-2">
+                  No AI providers available
+                </div>
+                <div className="text-sm text-gray-400">
+                  Please configure API keys in Settings first
                 </div>
               </div>
-            ))}
+            )}
           </div>
         </div>
       ) : (
         // Configuration Screen
-        <div className="max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+        <div className="flex-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
           <div className="space-y-6">
-            <div className="text-center py-4 border-b border-gray-100">
-              <div className="flex items-center justify-center space-x-3 mb-2">
-                <AISystemIcon type={selectedProvider!.icon as any} className="w-6 h-6" />
-                <h3 className="text-lg font-450 text-[#192c4b]">Configure {selectedProvider!.name}</h3>
-              </div>
-              <p className="text-sm text-[#4b5976]">Enter system details and select API key and model</p>
+
+            {/* Provider Configuration */}
+
+            <div className="space-y-2">
+          <Label htmlFor="api-key-name">API Provider</Label>
+
+          <div className="flex items-center space-x-1 p-1 bg-gray-50 rounded-lg border border-gray-200">
+            <AISystemIcon
+              type={selectedProvider!.icon as any}
+              className="w-8 h-8"
+            />
+            <div className="flex-1">
+              <p className="text-sm font-450 text-gray-900">
+                {selectedProvider!.name}
+              </p>
             </div>
+            <Button
+                  variant="link"
+                  size="sm"
+                  onClick={handleBackToSelection}
+                  className="underline"
+                >
+                  Change
+                </Button>
+          </div>
+        </div>
+
 
             <div className="space-y-6">
-            {/* System Details */}
-            <div className="border border-gray-200 rounded-lg">
-              <div className="p-3 border-b border-gray-100 bg-gray-50">
-                <h4 className="text-sm font-450 text-gray-900">System Details</h4>
-                <p className="text-xs text-gray-600 mt-1">Basic information about your AI system</p>
-              </div>
-              <div className="p-4">
-                <div className="space-y-2">
-                  <Label htmlFor="system-name" className="text-xs font-450 text-gray-700">System Name *</Label>
-                  <Input
-                    id="system-name"
-                    placeholder="e.g., Production Chatbot, Dev Assistant"
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  />
-                </div>
-              </div>
-            </div>
+              {/* System Details */}
+              <div className="space-y-2">
+                    <Label
+                      htmlFor="system-name"
+                    >
+                      System Name
+                    </Label>
+                    <Input
+                      id="system-name"
+                      placeholder="Enter Name (e.g., Production Chatbot, Dev Assistant)"
+                      value={formData.name}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
 
-            {/* API Key Selection */}
-            <div className="space-y-3">
-              <Label className="text-sm font-450 text-gray-900">API Key *</Label>
-              {selectedProvider!.hasApiKeys ? (
-                <div className="space-y-3">
-                  {/* Available API Keys List */}
-                  <div className="border border-gray-200 rounded-lg">
-                    <div className="p-3 border-b border-gray-100 bg-gray-50">
-                      <h4 className="text-sm font-450 text-gray-900">Available API Keys</h4>
-                      <p className="text-xs text-gray-600 mt-1">Select an API key to use for this system</p>
-                    </div>
-                    <div className="max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                      {selectedProvider!.apiKeys.map((apiKey) => (
-                        <div
-                          key={apiKey.id}
-                          onClick={() => handleAPIKeySelect(apiKey)}
-                          className={`p-3 border-b border-gray-100 last:border-b-0 cursor-pointer transition-colors ${
-                            selectedAPIKey?.id === apiKey.id
-                              ? 'bg-blue-50 border-l-4 border-l-blue-500'
-                              : 'hover:bg-gray-50'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <div className="font-450 text-sm text-gray-900">{apiKey.name}</div>
-                              <div className="text-xs text-gray-500 mt-1">
-                                {apiKey.key.substring(0, 12)}...{apiKey.key.substring(apiKey.key.length - 4)}
+              {/* API Key Selection */}
+              <div className="space-y-2">
+                <Label>
+                  API Key
+                </Label>
+                {selectedProvider!.hasApiKeys ? (
+                  <div className="space-y-3">
+                      {/* Available API Keys List */}
+                      <div className="">
+                        <div className="space-y-2">
+                          {selectedProvider!.apiKeys.map((apiKey) => (
+                            <div
+                              key={apiKey.id}
+                              className="flex space-x-3 px-3 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                             
+                              <div className="flex space-x-3 flex-1">
+                                  <KeyRound className="w-4 h-4 text-gray-500 mt-1.5" />
+                                <div className="flex-1">
+                                  <Label htmlFor={apiKey.id} className="font-450 text-[13px] text-gray-900 cursor-pointer">
+                                    {apiKey.name}
+                                  </Label>
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    {apiKey.key.substring(0,4)}•••••••{apiKey.key.substring(apiKey.key.length - 2)}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-start pt-0.5 space-x-3">
+                                {selectedAPIKeys.includes(apiKey.id) && (
+                                  <Button
+                                    onClick={() => handleSetPrimaryKey(apiKey.id)}
+                                    variant={primaryAPIKey === apiKey.id ? "subtle" : "outline"}
+                                    size="sm"
+                                    className="text-xs"
+                                  >
+                                    {primaryAPIKey === apiKey.id ? "Primary Key" : "Mark as Primary Key"}
+                                  </Button>
+                                )}
+                                <Checkbox
+                                  id={apiKey.id}
+                                  checked={selectedAPIKeys.includes(apiKey.id)}
+                                  onCheckedChange={(checked: boolean) => handleAPIKeyToggle(apiKey.id, checked)}
+                                  className="mt-1"
+                                />
                               </div>
                             </div>
-                            {selectedAPIKey?.id === apiKey.id && (
-                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                            )}
-                          </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {/* Create New API Key Section */}
-                  <div className="border border-gray-200 rounded-lg">
-                    <div className="p-3 border-b border-gray-100 bg-gray-50">
-                      <h4 className="text-sm font-450 text-gray-900">Create New API Key</h4>
-                      <p className="text-xs text-gray-600 mt-1">Add a new API key for this provider</p>
-                    </div>
-                    <div className="p-3 space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label htmlFor="new-api-key-name" className="text-xs font-450 text-gray-700">API Key Name</Label>
-                          <Input
-                            id="new-api-key-name"
-                            placeholder="e.g., Production Key, Dev Key"
-                            value={newAPIKey.name}
-                            onChange={(e) => setNewAPIKey(prev => ({ ...prev, name: e.target.value }))}
-                            className="mt-1"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="new-api-key-value" className="text-xs font-450 text-gray-700">API Key</Label>
-                          <div className="relative mt-1">
-                            <Input
-                              id="new-api-key-value"
-                              type={newAPIKey.showKey ? "text" : "password"}
-                              placeholder="sk-..."
-                              value={newAPIKey.key}
-                              onChange={(e) => setNewAPIKey(prev => ({ ...prev, key: e.target.value }))}
-                              className="pr-10"
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                              onClick={() => setNewAPIKey(prev => ({ ...prev, showKey: !prev.showKey }))}
-                            >
-                              {newAPIKey.showKey ? (
-                                <EyeOff className="h-4 w-4" />
-                              ) : (
-                                <Eye className="h-4 w-4" />
-                              )}
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                      <Button
-                        onClick={handleCreateNewAPIKey}
-                        disabled={!newAPIKey.name.trim() || !newAPIKey.key.trim() || isValidating}
-                        size="sm"
-                        className="w-full"
-                      >
-                        {isValidating ? 'Creating...' : 'Create API Key'}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="border border-gray-200 rounded-lg">
-                  <div className="p-3 border-b border-gray-100 bg-gray-50">
-                    <h4 className="text-sm font-450 text-gray-900">No API Keys Available</h4>
-                    <p className="text-xs text-gray-600 mt-1">Create your first API key for this provider</p>
-                  </div>
-                  <div className="p-3 space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label htmlFor="new-api-key-name" className="text-xs font-450 text-gray-700">API Key Name</Label>
-                        <Input
-                          id="new-api-key-name"
-                          placeholder="e.g., Production Key, Dev Key"
-                          value={newAPIKey.name}
-                          onChange={(e) => setNewAPIKey(prev => ({ ...prev, name: e.target.value }))}
-                          className="mt-1"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="new-api-key-value" className="text-xs font-450 text-gray-700">API Key</Label>
-                        <div className="relative mt-1">
-                          <Input
-                            id="new-api-key-value"
-                            type={newAPIKey.showKey ? "text" : "password"}
-                            placeholder="sk-..."
-                            value={newAPIKey.key}
-                            onChange={(e) => setNewAPIKey(prev => ({ ...prev, key: e.target.value }))}
-                            className="pr-10"
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                            onClick={() => setNewAPIKey(prev => ({ ...prev, showKey: !prev.showKey }))}
-                          >
-                            {newAPIKey.showKey ? (
-                              <EyeOff className="h-4 w-4" />
-                            ) : (
-                              <Eye className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                    <Button
-                      onClick={handleCreateNewAPIKey}
-                      disabled={!newAPIKey.name.trim() || !newAPIKey.key.trim() || isValidating}
-                      size="sm"
-                      className="w-full"
-                    >
-                      {isValidating ? 'Creating...' : 'Create API Key'}
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Model Selection */}
-            <div className="space-y-3">
-              <Label className="text-sm font-450 text-gray-900">Model *</Label>
-              
-              {isFetchingModels ? (
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center space-x-3">
-                    <RefreshCw className="h-5 w-5 animate-spin text-blue-500" />
-                    <div>
-                      <div className="text-sm font-450 text-gray-900">Fetching Models</div>
-                      <div className="text-xs text-gray-600">Loading available models from OpenAI...</div>
-                    </div>
-                  </div>
-                </div>
-              ) : availableModels.length > 0 ? (
-                <div className="border border-gray-200 rounded-lg">
-                  <div className="p-3 border-b border-gray-100 bg-gray-50">
-                    <h4 className="text-sm font-450 text-gray-900">Available Models</h4>
-                    <p className="text-xs text-gray-600 mt-1">Select a model for your AI system</p>
-                  </div>
-                  <div className="max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                    {availableModels.map((model) => (
-                      <div
-                        key={model.id}
-                        onClick={() => setSelectedModel(model.id)}
-                        className={`p-3 border-b border-gray-100 last:border-b-0 cursor-pointer transition-colors ${
-                          selectedModel === model.id
-                            ? 'bg-blue-50 border-l-4 border-l-blue-500'
-                            : 'hover:bg-gray-50'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="font-450 text-sm text-gray-900">{model.id}</div>
-                            <div className="text-xs text-gray-500 mt-1">
-                              Created: {formatModelDate(model.created)} • Owned by: {model.owned_by}
+                        
+                        {/* {isFetchingModels && (
+                          <div className="mt-4 pt-3 border-t border-gray-200">
+                            <div className="flex items-center justify-center space-x-2 text-sm text-gray-600">
+                              <RefreshCw className="h-4 w-4 animate-spin" />
+                              <span>Fetching models...</span>
                             </div>
                           </div>
-                          {selectedModel === model.id && (
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          )}
-                        </div>
+                        )} */}
                       </div>
-                    ))}
+
+                     {/* Create New API Key Section */}
+                     {!showAddKeyForm ? (
+                       <div>
+                         <Button
+                           onClick={() => setShowAddKeyForm(true)}
+                           variant="secondary"
+                           size="default"
+                           className="w-fit"
+                         >
+                            <Plus className="h-4 w-4 mr-1" />
+                           Add New Key
+                         </Button>
+                       </div>
+                     ) : (
+                       <div className="">
+                         
+                         <div className="flex space-x-3 px-3 py-2 border border-gray-200 rounded-lg">
+                         <KeyRound className="w-4 h-4 text-gray-500 mt-1.5" />
+
+                           <div className="grid grid-cols-1 gap-3 flex-1 pb-3">
+                             <div>
+                               <Label
+                                 htmlFor="new-api-key-name"
+                                 className="text-xs font-450 text-gray-700"
+                               >
+                                 API Key Name
+                               </Label>
+                               <Input
+                                 id="new-api-key-name"
+                                 placeholder="e.g., Production Key, Dev Key"
+                                 value={newAPIKey.name}
+                                 onChange={(e) => {
+                                   setNewAPIKey((prev) => ({
+                                     ...prev,
+                                     name: e.target.value,
+                                   }));
+                                   // Clear error when user starts typing
+                                   if (fieldErrors.apiKeyName) {
+                                     setFieldErrors(prev => ({ ...prev, apiKeyName: "" }));
+                                   }
+                                 }}
+                                 error={fieldErrors.apiKeyName}
+                                 className="mt-1"
+                               />
+                             </div>
+                             <div>
+                               <Label
+                                 htmlFor="new-api-key-value"
+                                 className="text-xs font-450 text-gray-700"
+                               >
+                                 API Key
+                               </Label>
+                               <div className="relative mt-1">
+                                 <Input
+                                   id="new-api-key-value"
+                                   type={newAPIKey.showKey ? "text" : "password"}
+                                   placeholder="sk-..."
+                                   value={newAPIKey.key}
+                                   onChange={(e) => {
+                                     setNewAPIKey((prev) => ({
+                                       ...prev,
+                                       key: e.target.value,
+                                     }));
+                                     // Clear error when user starts typing
+                                     if (fieldErrors.apiKeyValue) {
+                                       setFieldErrors(prev => ({ ...prev, apiKeyValue: "" }));
+                                     }
+                                   }}
+                                   error={fieldErrors.apiKeyValue}
+                                   className="pr-10"
+                                 />
+                                 <Button
+                                   type="button"
+                                   variant="ghost"
+                                   size="sm"
+                                   className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                                   onClick={() =>
+                                     setNewAPIKey((prev) => ({
+                                       ...prev,
+                                       showKey: !prev.showKey,
+                                     }))
+                                   }
+                                 >
+                                   {newAPIKey.showKey ? (
+                                     <Eye className="h-4 w-4" />
+                                   ) : (
+                                     <EyeOff className="h-4 w-4" />
+                                   )}
+                                 </Button>
+                               </div>
+                             </div>
+                             <div className="flex space-x-2 pt-2">
+                             <Button
+                               onClick={handleCreateNewAPIKey}
+                               disabled={
+                                 !newAPIKey.name.trim() ||
+                                 !newAPIKey.key.trim() ||
+                                 isValidating
+                               }
+                               size="sm"
+                               className="w-fit"
+                             >
+                               {isValidating ? "Validating..." : "Validate and Save"}
+                             </Button>
+                             <Button
+                               onClick={() => {
+                                 setShowAddKeyForm(false);
+                                 setNewAPIKey({ name: "", key: "", showKey: false });
+                               }}
+                               variant="outline"
+                               size="sm"
+                               className="w-fit"
+                             >
+                               Cancel
+                             </Button>
+                          
+                           </div>
+                           </div>
+                           
+                         </div>
+                       </div>
+                     )}
                   </div>
-                  {selectedModel && (
-                    <div className="p-3 bg-blue-50 border-t border-blue-200">
-                      <div className="text-xs text-blue-700">
-                        <span className="font-450">Selected:</span> {selectedModel}
+                ) : (
+                   
+                    <div className="">
+                      
+                      <div className="flex space-x-3 px-3 py-2 border border-gray-200 rounded-lg">
+                      <KeyRound className="w-4 h-4 text-gray-500 mt-1.5" />
+
+                        <div className="grid grid-cols-1 gap-3 flex-1 pb-3">
+                          <div>
+                            <Label
+                              htmlFor="new-api-key-name"
+                              className="text-xs font-450 text-gray-700"
+                            >
+                              API Key Name
+                            </Label>
+                            <Input
+                              id="new-api-key-name"
+                              placeholder="e.g., Production Key, Dev Key"
+                              value={newAPIKey.name}
+                              onChange={(e) => {
+                                setNewAPIKey((prev) => ({
+                                  ...prev,
+                                  name: e.target.value,
+                                }));
+                                // Clear error when user starts typing
+                                if (fieldErrors.apiKeyName) {
+                                  setFieldErrors(prev => ({ ...prev, apiKeyName: "" }));
+                                }
+                              }}
+                              error={fieldErrors.apiKeyName}
+                              className="mt-1"
+                            />
+                          </div>
+                          <div>
+                            <Label
+                              htmlFor="new-api-key-value"
+                              className="text-xs font-450 text-gray-700"
+                            >
+                              API Key
+                            </Label>
+                            <div className="mt-1">
+                              <div className="relative">
+                                <Input
+                                  id="new-api-key-value"
+                                  type={newAPIKey.showKey ? "text" : "password"}
+                                  placeholder="sk-..."
+                                  value={newAPIKey.key}
+                                  onChange={(e) => {
+                                    setNewAPIKey((prev) => ({
+                                      ...prev,
+                                      key: e.target.value,
+                                    }));
+                                    // Clear error when user starts typing
+                                    if (fieldErrors.apiKeyValue) {
+                                      setFieldErrors(prev => ({ ...prev, apiKeyValue: "" }));
+                                    }
+                                  }}
+                                  error={fieldErrors.apiKeyValue}
+                                  className="pr-10"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                                  onClick={() =>
+                                    setNewAPIKey((prev) => ({
+                                      ...prev,
+                                      showKey: !prev.showKey,
+                                    }))
+                                  }
+                                >
+                                  {newAPIKey.showKey ? (
+                                    <EyeOff className="h-4 w-4" />
+                                  ) : (
+                                    <Eye className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex space-x-2 pt-2">
+                          <Button
+                            onClick={handleCreateNewAPIKey}
+                            disabled={
+                              !newAPIKey.name.trim() ||
+                              !newAPIKey.key.trim() ||
+                              isValidating
+                            }
+                            size="sm"
+                            className="w-fit"
+                          >
+                            {isValidating ? "Validating..." : "Validate and Save"}
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              setNewAPIKey({ name: "", key: "", showKey: false });
+                            }}
+                            variant="outline"
+                            size="sm"
+                            className="w-fit"
+                          >
+                            Reset
+                          </Button>
+                        
+                        </div>
+                        </div>
+                        
                       </div>
                     </div>
-                  )}
-                </div>
-              ) : selectedAPIKey ? (
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <div className="text-center">
-                    <div className="text-sm text-gray-500">No models available</div>
-                    <div className="text-xs text-gray-400 mt-1">Please check your API key or try again</div>
-                  </div>
-                </div>
-              ) : (
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <div className="text-center">
-                    <div className="text-sm text-gray-500">Select an API key first</div>
-                    <div className="text-xs text-gray-400 mt-1">Choose an API key to load available models</div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {validationError && (
-              <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
-                {validationError}
+                )}
               </div>
-            )}
+
+              {/* Model Selection */}
+              <div className="space-y-2">
+                <Label>
+                  Model
+                </Label>
+                <Select
+                  value={selectedModel}
+                  onValueChange={setSelectedModel}
+                  disabled={availableModels.length === 0 || isFetchingModels}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue 
+                      placeholder={
+                        isFetchingModels
+                          ? "Fetching models..."
+                          : availableModels.length === 0 
+                            ? "Select API key first to fetch models" 
+                            : "Select a model"
+                      } 
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {isFetchingModels ? (
+                      <div className="flex items-center justify-center py-4">
+                        <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                        <span className="text-sm text-gray-600">Loading models...</span>
+                      </div>
+                    ) : (
+                      availableModels.map((model) => (
+                        <SelectItem key={model.id} value={model.id}>
+                          {model.id}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                {availableModels.length === 0 && !primaryAPIKey && !isFetchingModels && (
+                  <p className="text-xs text-gray-500">
+                    Select an API key to automatically fetch available models
+                  </p>
+                )}
+                {availableModels.length === 0 && primaryAPIKey && !isFetchingModels && (
+                  <p className="text-xs text-gray-500">
+                    No models available for the selected primary key
+                  </p>
+                )}
+                {isFetchingModels && (
+                  <p className="text-xs text-gray-500">
+                    Fetching models from the primary API key...
+                  </p>
+                )}
+              </div>
+
             </div>
           </div>
         </div>
       )}
     </ViewEditSheet>
-  )
+  );
 }
+

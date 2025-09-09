@@ -18,8 +18,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { KeyRound,Loader2, CheckCircle, XCircle, Trash2, Plus } from 'lucide-react'
+import { KeyRound, Loader2, CheckCircle, XCircle, Trash2, Plus } from 'lucide-react'
 import type { TableRow } from '@/types/table'
+import { createAndStoreAPIKey } from '@/features/ai-systems/lib/api-integration'
 
 export interface APIKeyEditSheetProps {
   open: boolean
@@ -29,6 +30,24 @@ export interface APIKeyEditSheetProps {
   onAPIKeyUpdated: (provider: TableRow, apiKey: string) => void
   onAPIKeyDeleted: (provider: TableRow) => void
 }
+
+// Provider-specific format validation
+const getProviderFormatError = (provider: string, apiKey: string): string | null => {
+  if (provider === "OpenAI" && !apiKey.startsWith("sk-")) {
+    return 'OpenAI API keys must start with "sk-"';
+  } else if (provider === "Anthropic" && !apiKey.startsWith("sk-ant-")) {
+    return 'Anthropic API keys must start with "sk-ant-"';
+  } else if (provider === "Azure OpenAI" && apiKey.length < 20) {
+    return "Azure OpenAI API keys must be at least 20 characters long";
+  } else if (provider === "Mistral" && apiKey.length < 30) {
+    return "Mistral API keys must be at least 30 characters long";
+  } else if (provider === "AWS Bedrock" && apiKey.length < 20) {
+    return "AWS Bedrock API keys must be at least 20 characters long";
+  } else if (provider === "Databricks" && apiKey.length < 20) {
+    return "Databricks API keys must be at least 20 characters long";
+  }
+  return null;
+};
 
 
 export function APIKeyEditSheet({ 
@@ -44,12 +63,16 @@ export function APIKeyEditSheet({
   const [_showKeys, _setShowKeys] = useState<Record<string, boolean>>({})
   const [isValidating, setIsValidating] = useState(false)
   const [validationStatus, setValidationStatus] = useState<'idle' | 'success' | 'error'>('idle')
-  const [validationError, setValidationError] = useState('')
   const [isAddingNewKey, setIsAddingNewKey] = useState(false)
   const [newKeyForm, setNewKeyForm] = useState({ name: '', key: '' })
   const [isValidatingNewKey, setIsValidatingNewKey] = useState(false)
   const [newKeyValidationStatus, setNewKeyValidationStatus] = useState<'idle' | 'success' | 'error'>('idle')
-  const [newKeyValidationError, setNewKeyValidationError] = useState('')
+  
+  // Field-specific error states for new key form
+  const [newKeyFieldErrors, setNewKeyFieldErrors] = useState({
+    apiKeyName: '',
+    apiKeyValue: '',
+  })
   const [deleteConfirmDialog, setDeleteConfirmDialog] = useState<{
     open: boolean
     keyId: string | null
@@ -67,7 +90,6 @@ export function APIKeyEditSheet({
         const keys = await storage.getAPIKeys(provider.provider)
         setApiKeys(keys)
         setEditingKey(null)
-        setValidationError('')
         setValidationStatus('idle')
       }
       loadKeys()
@@ -83,7 +105,6 @@ export function APIKeyEditSheet({
 
   const _handleEditKey = (key: { id: string; name: string; key: string }) => {
     setEditingKey({ ...key })
-    setValidationError('')
     setValidationStatus('idle')
   }
 
@@ -100,7 +121,6 @@ export function APIKeyEditSheet({
       return
     }
 
-    setValidationError('')
     setIsValidating(true)
     setValidationStatus('idle')
 
@@ -169,63 +189,92 @@ export function APIKeyEditSheet({
 
   const handleCancelEdit = () => {
     setEditingKey(null)
-    setValidationError('')
     setValidationStatus('idle')
   }
 
   const handleAddNewKey = () => {
     setIsAddingNewKey(true)
     setNewKeyForm({ name: '', key: '' })
-    setNewKeyValidationError('')
     setNewKeyValidationStatus('idle')
+    setNewKeyFieldErrors({ apiKeyName: '', apiKeyValue: '' })
   }
 
   const handleCancelAddNewKey = () => {
-    setIsAddingNewKey(false)
+    // Only close add mode if there are existing API keys
+    if (apiKeys.length > 0) {
+      setIsAddingNewKey(false)
+    }
     setNewKeyForm({ name: '', key: '' })
-    setNewKeyValidationError('')
     setNewKeyValidationStatus('idle')
+    setNewKeyFieldErrors({ apiKeyName: '', apiKeyValue: '' })
   }
 
   const handleSaveNewKey = async () => {
     if (!provider || !storage) return
 
+    // Clear previous field errors
+    setNewKeyFieldErrors({ apiKeyName: '', apiKeyValue: '' })
+
+    // Basic validation
     if (!newKeyForm.name.trim()) {
-      setNewKeyValidationError('API key name is required')
+      setNewKeyFieldErrors(prev => ({ ...prev, apiKeyName: 'API key name is required' }))
       return
     }
 
     if (!newKeyForm.key.trim()) {
-      setNewKeyValidationError('API key is required')
+      setNewKeyFieldErrors(prev => ({ ...prev, apiKeyValue: 'API key is required' }))
       return
     }
 
-    setNewKeyValidationError('')
+    // Provider-specific format validation
+    const formatError = getProviderFormatError(provider.provider, newKeyForm.key.trim())
+    if (formatError) {
+      setNewKeyFieldErrors(prev => ({ ...prev, apiKeyValue: formatError }))
+      return
+    }
+
     setIsValidatingNewKey(true)
     setNewKeyValidationStatus('idle')
 
     try {
-      // Simulate API validation
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
-      // Mock validation - in real implementation, validate the key
-      const isValid = newKeyForm.key.length > 10
-      
-      if (isValid) {
+      // Use the comprehensive validation from AI Systems
+      // Skip duplicate checks if there are no existing API keys
+      const result = await createAndStoreAPIKey(
+        provider.provider,
+        newKeyForm.name.trim(),
+        newKeyForm.key.trim(),
+        apiKeys.length === 0 // Skip duplicate checks when no existing keys
+      )
+
+      if (result.success) {
         setNewKeyValidationStatus('success')
-        // Add the new key to storage
-        await storage.addAPIKey(provider.provider, newKeyForm.name.trim(), newKeyForm.key.trim())
-        
         // Reload keys to show the new one
         const updatedKeys = await storage.getAPIKeys(provider.provider)
         setApiKeys(updatedKeys)
         
-        // Reset form and close add mode
+        // Reset form and close add mode (if there were existing keys)
         handleCancelAddNewKey()
         onAPIKeyUpdated(provider, newKeyForm.key.trim())
+        
+        // If there were no existing keys, close the sheet after successful creation
+        if (apiKeys.length === 0) {
+          // Small delay to show success message before closing
+          setTimeout(() => {
+            onOpenChange(false)
+          }, 1000)
+        }
       } else {
         setNewKeyValidationStatus('error')
-        setNewKeyValidationError('Invalid API key. Please check your key and try again.')
+        // Handle specific error types
+        const error = result.error || 'Failed to create API key'
+        
+        if (error.includes('already exists') && error.includes('name')) {
+          setNewKeyFieldErrors(prev => ({ ...prev, apiKeyName: error }))
+        } else if (error.includes('already in use') || error.includes('Invalid API key')) {
+          setNewKeyFieldErrors(prev => ({ ...prev, apiKeyValue: error }))
+        } else {
+          setNewKeyValidationError(error)
+        }
       }
     } catch (error) {
       setNewKeyValidationStatus('error')
@@ -256,12 +305,12 @@ export function APIKeyEditSheet({
 
   // Determine footer content based on current state
   const getFooterContent = () => {
-    if (isAddingNewKey) {
+    if (isAddingNewKey || (apiKeys.length === 0 && !isAddingNewKey)) {
       return (
         <div className="flex gap-2">
           <Button
             onClick={handleSaveNewKey}
-            disabled={isValidatingNewKey}
+            disabled={isValidatingNewKey || !newKeyForm.name.trim() || !newKeyForm.key.trim()}
             className="w-fit bg-blue-600 text-white hover:bg-blue-700"
           >
             {isValidatingNewKey ? (
@@ -346,14 +395,75 @@ export function APIKeyEditSheet({
 
         {/* API Keys List */}
         <div className="space-y-2">
-          <Label htmlFor="api-key-name">API Keys</Label>
           
           {apiKeys.length === 0 && !isAddingNewKey ? (
-            <div className="text-center py-8 text-gray-500">
-              <p>No API keys configured for this provider.</p>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-key-name">API Key Name</Label>
+                <Input
+                  id="new-key-name"
+                  placeholder="Enter a nickname for this API key"
+                  value={newKeyForm.name}
+                  onChange={(e) => {
+                    setNewKeyForm({ ...newKeyForm, name: e.target.value })
+                    // Clear error when user starts typing
+                    if (newKeyFieldErrors.apiKeyName) {
+                      setNewKeyFieldErrors(prev => ({ ...prev, apiKeyName: '' }))
+                    }
+                  }}
+                  error={newKeyFieldErrors.apiKeyName}
+                  disabled={isValidatingNewKey}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="new-key-value">API Key</Label>
+                <Input
+                  id="new-key-value"
+                  type="password"
+                  placeholder="Enter your API key"
+                  value={newKeyForm.key}
+                  onChange={(e) => {
+                    setNewKeyForm({ ...newKeyForm, key: e.target.value })
+                    // Clear error when user starts typing
+                    if (newKeyFieldErrors.apiKeyValue) {
+                      setNewKeyFieldErrors(prev => ({ ...prev, apiKeyValue: '' }))
+                    }
+                  }}
+                  error={newKeyFieldErrors.apiKeyValue}
+                  disabled={isValidatingNewKey}
+                  required
+                />
+                <p className="text-xs text-gray-500">
+                  Your API key will be encrypted and stored securely.
+                </p>
+              </div>
+
+              {/* Validation Status */}
+              {newKeyValidationStatus === "success" && (
+                <div className="flex items-center space-x-2 p-3 bg-green-50 border border-green-200 rounded-md">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <span className="text-sm text-green-800">
+                    API key validated successfully!
+                  </span>
+                </div>
+              )}
+
+              {newKeyValidationStatus === "error" && (
+                <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-md">
+                  <XCircle className="h-4 w-4 text-red-600" />
+                  <span className="text-sm text-red-800">
+                    API key validation failed
+                  </span>
+                </div>
+              )}
             </div>
           ) : (
+            
             <div className="space-y-3">
+                        <Label htmlFor="api-key-name">API Keys</Label>
+
               {/* Existing API Keys */}
               {apiKeys.map((key) => (
                 <div key={key.id} className="border border-gray-200 rounded-lg p-3">
@@ -379,24 +489,11 @@ export function APIKeyEditSheet({
                         />
                       </div>
 
-                      {/* Validation Status */}
+                      {/* Success Status */}
                       {validationStatus === 'success' && (
                         <div className="flex items-center space-x-2 p-3 bg-green-50 border border-green-200 rounded-md">
                           <CheckCircle className="h-4 w-4 text-green-600" />
                           <span className="text-sm text-green-800">API key updated successfully!</span>
-                        </div>
-                      )}
-
-                      {validationStatus === 'error' && (
-                        <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-md">
-                          <XCircle className="h-4 w-4 text-red-600" />
-                          <span className="text-sm text-red-800">API key validation failed</span>
-                        </div>
-                      )}
-
-                      {validationError && (
-                        <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
-                          {validationError}
                         </div>
                       )}
                     </div>
@@ -445,20 +542,21 @@ export function APIKeyEditSheet({
             </div>
           )}
 
-          {/* Add New Key Section - positioned below existing keys */}
-          <div className="space-y-4 ">
-            {!isAddingNewKey ? (
-              <div className="flex">
-                <Button
-                  onClick={handleAddNewKey}
-                  size="default"
-                  variant="secondary"
-                >
-                  <Plus className="h-3 w-3 mr-1" />
-                  Add New Key
-                </Button>
-              </div>
-            ) : (
+          {/* Add New Key Section - only show when there are existing keys */}
+          {apiKeys.length > 0 && (
+            <div className="space-y-4 ">
+              {!isAddingNewKey ? (
+                <div className="flex">
+                  <Button
+                    onClick={handleAddNewKey}
+                    size="default"
+                    variant="secondary"
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Add New Key
+                  </Button>
+                </div>
+              ) : (
               <div className="border p-3 rounded-lg">
                 <div className="flex items-start justify-between gap-3">
                  
@@ -472,7 +570,14 @@ export function APIKeyEditSheet({
                         id="new-key-name"
                         placeholder="Enter a name for this API key"
                         value={newKeyForm.name}
-                        onChange={(e) => setNewKeyForm({ ...newKeyForm, name: e.target.value })}
+                        onChange={(e) => {
+                          setNewKeyForm({ ...newKeyForm, name: e.target.value })
+                          // Clear error when user starts typing
+                          if (newKeyFieldErrors.apiKeyName) {
+                            setNewKeyFieldErrors(prev => ({ ...prev, apiKeyName: '' }))
+                          }
+                        }}
+                        error={newKeyFieldErrors.apiKeyName}
                         disabled={isValidatingNewKey}
                       />
                     </div>
@@ -484,7 +589,14 @@ export function APIKeyEditSheet({
                         type="password"
                         placeholder="Enter your API key"
                         value={newKeyForm.key}
-                        onChange={(e) => setNewKeyForm({ ...newKeyForm, key: e.target.value })}
+                        onChange={(e) => {
+                          setNewKeyForm({ ...newKeyForm, key: e.target.value })
+                          // Clear error when user starts typing
+                          if (newKeyFieldErrors.apiKeyValue) {
+                            setNewKeyFieldErrors(prev => ({ ...prev, apiKeyValue: '' }))
+                          }
+                        }}
+                        error={newKeyFieldErrors.apiKeyValue}
                         disabled={isValidatingNewKey}
                       />
                     </div>
@@ -500,30 +612,18 @@ export function APIKeyEditSheet({
                     </Button>
                   </div>
 
-                  {/* Validation Status */}
+                  {/* Success Status */}
                   {newKeyValidationStatus === 'success' && (
                     <div className="flex items-center space-x-2 p-3 bg-green-50 border border-green-200 rounded-md">
                       <CheckCircle className="h-4 w-4 text-green-600" />
                       <span className="text-sm text-green-800">API key added successfully!</span>
                     </div>
                   )}
-
-                  {newKeyValidationStatus === 'error' && (
-                    <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-md">
-                      <XCircle className="h-4 w-4 text-red-600" />
-                      <span className="text-sm text-red-800">API key validation failed</span>
-                    </div>
-                  )}
-
-                  {newKeyValidationError && (
-                    <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
-                      {newKeyValidationError}
-                    </div>
-                  )}
                 </div>
               </div>
             )}
           </div>
+          )}
         </div>
       </div>
 

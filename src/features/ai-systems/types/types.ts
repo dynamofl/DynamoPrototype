@@ -23,6 +23,9 @@ export interface AISystem {
     owned_by: string
   }
   isExpanded?: boolean
+  // Computed fields for state tracking
+  hasValidAPIKey: boolean // Whether the API key actually exists and is valid
+  lastValidated: number // Timestamp of last validation
 }
 
 export interface NewAISystem {

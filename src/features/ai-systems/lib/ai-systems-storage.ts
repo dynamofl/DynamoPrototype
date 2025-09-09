@@ -6,6 +6,7 @@ import { TableStorageFactory } from '@/lib/storage'
 import type { TableStorage, TableStorageConfig, TableRow } from '@/types/table'
 import type { AISystem } from '../types'
 import { AI_SYSTEMS_STORAGE_KEY } from '../constants'
+import { aiSystemsStateManager } from './ai-systems-state-manager'
 
 export class AISystemsStorage {
   private storage: any
@@ -19,11 +20,14 @@ export class AISystemsStorage {
     })
   }
 
-  // Get all AI systems
+  // Get all AI systems with enhanced state
   async getAISystems(): Promise<AISystem[]> {
     try {
       const data = await this.storage.load()
-      return data || []
+      const systems = data || []
+      
+      // Enhance systems with validation state
+      return await aiSystemsStateManager.enhanceAISystems(systems)
     } catch (error) {
       console.error('Failed to get AI systems:', error)
       return []
@@ -33,7 +37,9 @@ export class AISystemsStorage {
   // Add a new AI system
   async addAISystem(system: AISystem): Promise<void> {
     try {
-      await this.storage.add(system)
+      // Enhance system with validation state before saving
+      const enhancedSystem = await aiSystemsStateManager.enhanceAISystem(system)
+      await this.storage.add(enhancedSystem)
     } catch (error) {
       console.error('Failed to add AI system:', error)
       throw error
@@ -43,7 +49,18 @@ export class AISystemsStorage {
   // Update an AI system
   async updateAISystem(id: string, updates: Partial<AISystem>): Promise<void> {
     try {
-      await this.storage.update(id, updates)
+      // Get current system to merge with updates
+      const currentSystems = await this.storage.load()
+      const currentSystem = currentSystems.find((s: AISystem) => s.id === id)
+      
+      if (currentSystem) {
+        const updatedSystem = { ...currentSystem, ...updates }
+        // Enhance system with validation state before saving
+        const enhancedSystem = await aiSystemsStateManager.enhanceAISystem(updatedSystem)
+        await this.storage.update(id, enhancedSystem)
+      } else {
+        await this.storage.update(id, updates)
+      }
     } catch (error) {
       console.error('Failed to update AI system:', error)
       throw error
@@ -70,28 +87,6 @@ export class AISystemsStorage {
       return null
     }
   }
-
-
-  // Get AI systems by status
-  async getAISystemsByStatus(status: 'active' | 'inactive'): Promise<AISystem[]> {
-    try {
-      const systems = await this.getAISystems()
-      return systems.filter(system => system.status === status)
-    } catch (error) {
-      console.error('Failed to get AI systems by status:', error)
-      return []
-    }
-  }
-
-  // Clear all AI systems
-  async clearAllAISystems(): Promise<void> {
-    try {
-      await this.storage.save([])
-    } catch (error) {
-      console.error('Failed to clear AI systems:', error)
-      throw error
-    }
-  }
 }
 
 // TableStorage implementation for AI Systems
@@ -103,7 +98,11 @@ export class AISystemsTableStorage implements TableStorage {
   }
 
   async load(): Promise<TableRow[]> {
-    return await this.storage.load()
+    const data = await this.storage.load()
+    const systems = data || []
+    
+    // Enhance systems with validation state
+    return await aiSystemsStateManager.enhanceAISystems(systems)
   }
 
   async save(data: TableRow[]): Promise<boolean> {
@@ -111,7 +110,9 @@ export class AISystemsTableStorage implements TableStorage {
   }
 
   async add(row: Omit<TableRow, 'id'>): Promise<TableRow> {
-    return await this.storage.add(row)
+    // Enhance system with validation state before adding
+    const enhancedSystem = await aiSystemsStateManager.enhanceAISystem(row as AISystem)
+    return await this.storage.add(enhancedSystem)
   }
 
   async update(id: string, updates: Partial<TableRow>): Promise<boolean> {
@@ -129,4 +130,5 @@ export class AISystemsTableStorage implements TableStorage {
   validate(data: TableRow[]): boolean {
     return this.storage.validate(data)
   }
+
 }

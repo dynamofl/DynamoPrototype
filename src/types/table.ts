@@ -114,6 +114,8 @@ export interface TableColumn {
   badgeVariant?: 'default' | 'primary' | 'success' | 'warning' | 'error'
   // Badge color mapping
   colorMap?: Record<string, { variant: BadgeVariant; className?: string }>
+  // Tooltip for cells
+  tooltip?: string | ((value: any, row: any) => string)
 }
 
 export interface ExpandableConfig {
@@ -196,6 +198,7 @@ export interface CellProps {
   editMode?: EditMode
   onStartEditing?: (cellType: string, currentValue: any) => void
   isCurrentlyEditing?: boolean
+  tooltip?: string
 }
 
 export interface ExpandCellProps extends CellProps {

@@ -1,3 +1,3 @@
 export { AISystemCreateSheet } from './ai-system-create-dialog'
-export * from './ai-system-view-sheet'
+export { AISystemEditSheet } from './ai-system-edit-sheet'
 export * from './ai-systems-table'
