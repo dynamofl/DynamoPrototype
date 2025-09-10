@@ -36,10 +36,18 @@ export class AccessTokenStorage implements TableStorage {
       console.error('Failed to load API keys:', error)
     }
 
-    // Update availableKeys count based on stored API keys
+    // Calculate AI system usage dynamically
+    const aiSystemUsage = await this.calculateAISystemUsage()
+
+    // Calculate last updated dates for each provider
+    const lastUpdatedDates = this.calculateLastUpdatedDates()
+
+    // Update availableKeys count based on stored API keys and AI system usage
     return this.data.map(provider => ({
       ...provider,
       availableKeys: this.apiKeys[provider.provider]?.length || 0,
+      aiSystemUsage: aiSystemUsage[provider.provider] || 0,
+      lastUpdated: lastUpdatedDates[provider.provider] || '-',
       hasKeys: (this.apiKeys[provider.provider]?.length || 0) > 0
     }))
   }
@@ -86,6 +94,58 @@ export class AccessTokenStorage implements TableStorage {
 
   validate(data: TableRow[]): boolean {
     return Array.isArray(data) && data.every(item => typeof item.id === 'string')
+  }
+
+  // Calculate AI system usage for each provider
+  private async calculateAISystemUsage(): Promise<Record<string, number>> {
+    try {
+      // Lazy initialization to avoid circular dependency
+      const { AISystemsStorage } = await import('@/features/ai-systems/lib/ai-systems-storage')
+      const aiSystemsStorage = new AISystemsStorage()
+
+      const aiSystems = await aiSystemsStorage.getAISystems()
+      const usageCount: Record<string, number> = {}
+
+      // Count AI systems per provider
+      aiSystems.forEach(system => {
+        const providerName = system.providerName || system.providerId
+        usageCount[providerName] = (usageCount[providerName] || 0) + 1
+      })
+
+      return usageCount
+    } catch (error) {
+      console.error('Failed to calculate AI system usage:', error)
+      return {}
+    }
+  }
+
+  // Calculate last updated date for each provider based on most recent API key
+  private calculateLastUpdatedDates(): Record<string, string> {
+    const lastUpdated: Record<string, string> = {}
+
+    Object.entries(this.apiKeys).forEach(([provider, keys]) => {
+      if (keys.length === 0) {
+        lastUpdated[provider] = '-'
+      } else {
+        // Find the most recent key creation date
+        const mostRecentKey = keys.reduce((latest, current) => {
+          const latestDate = new Date(latest.createdAt)
+          const currentDate = new Date(current.createdAt)
+          return currentDate > latestDate ? current : latest
+        })
+
+        // Format the date as "MMM DD, YYYY" (e.g., "Jan 24, 2024")
+        const date = new Date(mostRecentKey.createdAt)
+        const formattedDate = date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        })
+        lastUpdated[provider] = formattedDate
+      }
+    })
+
+    return lastUpdated
   }
 
   // API Key management methods

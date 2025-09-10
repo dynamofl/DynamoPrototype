@@ -4,6 +4,7 @@ import { TablePattern } from '@/components/patterns'
 import { accessTokenColumns, accessTokenStorageConfig } from './lib/access-token-config'
 import { AccessTokenStorage } from './lib/access-token-storage'
 import { APIKeyCreateSheet, APIKeyEditSheet } from './components'
+import { TokenDialog } from './components/token-dialog'
 import type { TableRow } from '@/types/table'
 
 export function AccessTokenContent() {
@@ -76,9 +77,11 @@ export function AccessTokenContent() {
               Access tokens authenticate your identity and grant authorization when interacting with Dynamo AI via the API or SDK. Only one access token can remain valid at a given time. 
               Generating a new access token will automatically revoke the existing token.
             </p>
-            <Button variant="default" size="default" className="bg-blue-600 hover:bg-blue-700 text-white">
-              Generate New Token
-            </Button>
+            <TokenDialog>
+              <Button variant="default" size="default" className="bg-blue-600 hover:bg-blue-700 text-white">
+                Generate New Token
+              </Button>
+            </TokenDialog>
           </div>
         </div>
       </div>

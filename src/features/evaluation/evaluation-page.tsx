@@ -32,7 +32,7 @@ import type {
   EvaluationConfig,
   EvaluationResult,
 } from "@/features/evaluation/types/evaluation";
-import type { Guardrail } from "@/features/guardrails/types";
+import type { Guardrail } from "@/types";
 import { useGuardrails } from "@/features/guardrails/lib/useGuardrails";
 
 // Define MetricToggles locally to avoid import issues
@@ -71,7 +71,7 @@ export function EvaluationSandbox() {
   const [providers, setProviders] = useState<AIProvider[]>([]);
   const [config, setConfig] = useState<EvaluationConfig>({
     candidateModel: "",
-    judgeModel: EVALUATION_CONSTANTS.JUDGE_MODEL,
+    judgeModel: "",
     temperature: EVALUATION_CONSTANTS.DEFAULT_TEMPERATURE,
     maxLength: EVALUATION_CONSTANTS.DEFAULT_MAX_LENGTH,
     topP: EVALUATION_CONSTANTS.DEFAULT_TOP_P,
@@ -111,16 +111,25 @@ export function EvaluationSandbox() {
   useEffect(() => {
     const availableModels = getAvailableModels();
     if (availableModels.length > 0 && availableModels[0].id !== "no-models") {
-      // Set default models if not already set
+      // Set default judge model if not already set
+      if (!config.judgeModel) {
+        const judgeModel =
+          availableModels.find(
+            (m) => m.id.includes("gpt-4o-mini") || m.id.includes("gpt-4")
+          )?.id || availableModels[0].id;
+        setConfig((prev) => ({ ...prev, judgeModel }));
+      }
+
+      // Set default candidate model if not already set
       if (!config.candidateModel) {
         const candidateModel =
           availableModels.find(
-            (m) => m.id.includes("gpt-4o-mini") || m.id.includes("gpt-3.5")
+            (m) => m.id.includes("gpt-3.5") || m.id.includes("gpt-4o-mini")
           )?.id || availableModels[0].id;
         setConfig((prev) => ({ ...prev, candidateModel }));
       }
     }
-  }, [providers, config.candidateModel]);
+  }, [providers, config.candidateModel, config.judgeModel]);
 
   // Get available models for selection
   const availableModels = getAvailableModels();
@@ -233,14 +242,20 @@ export function EvaluationSandbox() {
     }
 
     // Check if selected models exist
-    // Judge model is hardcoded to gpt-4o-mini, so we only validate the candidate model
+    const judgeModelExists = availableModels.some(
+      (m) => m.id === config.judgeModel
+    );
     const candidateModelExists = availableModels.some(
       (m) => m.id === config.candidateModel
     );
 
-    if (!candidateModelExists) {
+    if (!judgeModelExists || !candidateModelExists) {
+      const missingModels = [];
+      if (!judgeModelExists) missingModels.push(`Judge model "${config.judgeModel}"`);
+      if (!candidateModelExists) missingModels.push(`Candidate model "${config.candidateModel}"`);
+
       setError(
-        "Selected candidate model not found. Please ensure you have added AI providers and fetched their models."
+        `${missingModels.join(" and ")} not found. Please ensure you have added AI providers and fetched their models.`
       );
       return;
     }

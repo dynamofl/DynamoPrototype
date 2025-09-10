@@ -6,7 +6,7 @@ export interface AISystem {
   id: string
   name: string
   createdAt: string
-  status: 'active' | 'inactive'
+  status: 'connected' | 'disconnected'
   icon: 'OpenAI' | 'Azure' | 'Mistral' | 'Databricks' | 'HuggingFace' | 'Anthropic' | 'Remote' | 'Local' | 'AWS' | 'DynamoAI'
   hasGuardrails: boolean
   isEvaluated: boolean

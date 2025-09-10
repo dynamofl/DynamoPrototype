@@ -73,7 +73,7 @@ export class AISystemsStateManager {
       ...system,
       hasValidAPIKey,
       lastValidated: Date.now(),
-      status: hasValidAPIKey ? 'active' : 'inactive'
+      status: hasValidAPIKey ? 'connected' : 'disconnected'
     }
   }
 

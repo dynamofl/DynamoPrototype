@@ -1,5 +1,5 @@
 import { computeMetrics, calculateSingleEvaluationMetrics } from './metrics';
-import type { EvaluationInput, EvaluationConfig, EvaluationResult, PromptResult, Message } from '@/types/evaluation';
+import type { EvaluationInput, EvaluationConfig, EvaluationResult, PromptResult, Message } from '@/features/evaluation/types/evaluation';
 import { APIKeyStorage } from '@/lib/storage/secure-storage';
 import { evaluatePromptAgainstGuardrails } from '@/features/guardrails/lib/guardrail';
 
@@ -72,19 +72,46 @@ export async function runEvaluation(
   try {
     // Get stored providers and find the one with the required models
     const providers = APIKeyStorage.loadProviders();
-    
+
+    console.log('🔍 Debug: Loaded providers:', providers.map(p => ({
+      id: p.id,
+      name: p.name,
+      type: p.type,
+      status: p.status,
+      hasModels: !!p.models,
+      modelCount: p.models?.length || 0,
+      models: p.models?.map((m: AIModel) => m.id) || []
+    })));
+
+    console.log('🔍 Debug: Config - Judge model:', config.judgeModel, 'Candidate model:', config.candidateModel);
+
     // Find provider that has the judge model
-    const judgeProvider = providers.find(p => 
+    const judgeProvider = providers.find(p =>
       p.models?.some((m: AIModel) => m.id === config.judgeModel)
     );
-    
+
     // Find provider that has the candidate model
-    const candidateProvider = providers.find(p => 
+    const candidateProvider = providers.find(p =>
       p.models?.some((m: AIModel) => m.id === config.candidateModel)
     );
 
+    console.log('🔍 Debug: Judge provider found:', !!judgeProvider, judgeProvider?.name);
+    console.log('🔍 Debug: Candidate provider found:', !!candidateProvider, candidateProvider?.name);
+
     if (!judgeProvider || !candidateProvider) {
-      throw new Error('Selected models not found in any configured provider. Please add AI providers and fetch their models first.');
+      const errorMsg = !judgeProvider && !candidateProvider
+        ? `Both judge model "${config.judgeModel}" and candidate model "${config.candidateModel}" not found in any configured provider.`
+        : !judgeProvider
+        ? `Judge model "${config.judgeModel}" not found in any configured provider.`
+        : `Candidate model "${config.candidateModel}" not found in any configured provider.`;
+
+      console.error('❌ Debug: Provider validation failed:', errorMsg);
+      console.error('❌ Debug: Available providers and models:', providers.map(p => ({
+        provider: p.name,
+        models: p.models?.map((m: AIModel) => m.id) || []
+      })));
+
+      throw new Error(errorMsg + ' Please add AI providers and fetch their models first.');
     }
 
     // Create OpenAI clients for both providers
@@ -217,6 +244,36 @@ Respond with a JSON object containing only the "blocked" field as a boolean:
     console.error('Evaluation failed:', error);
     throw new Error(`Evaluation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
+}
+
+// Debug utility function to check provider configuration
+export function debugProviderConfiguration() {
+  const providers = APIKeyStorage.loadProviders();
+
+  console.log('🔧 Provider Configuration Debug:');
+  console.log('Total providers:', providers.length);
+
+  providers.forEach((provider, index) => {
+    console.log(`Provider ${index + 1}:`);
+    console.log(`  Name: ${provider.name}`);
+    console.log(`  Type: ${provider.type}`);
+    console.log(`  Status: ${provider.status}`);
+    console.log(`  Has API Key: ${!!provider.apiKey && provider.apiKey.length > 0}`);
+    console.log(`  Has Models: ${!!provider.models}`);
+    console.log(`  Model Count: ${provider.models?.length || 0}`);
+    if (provider.models?.length > 0) {
+      console.log(`  Models: ${provider.models.map((m: AIModel) => m.id).join(', ')}`);
+    }
+    console.log('---');
+  });
+
+  return providers;
+}
+
+// Global debug function - available immediately
+if (typeof window !== 'undefined') {
+  (window as any).debugProviders = debugProviderConfiguration;
+  console.log('🔧 Debug function ready: window.debugProviders()');
 }
 
 // Helper function to get available models from stored providers

@@ -103,6 +103,7 @@ export const accessTokenColumns: TableColumn[] = [
     type: 'freeText',
     width: 'auto',
     minWidth: '160px',
+    format: (value: number) => value === 0 ? '-' : value.toString()
   },
   {
     key: 'lastUpdated',
@@ -110,6 +111,7 @@ export const accessTokenColumns: TableColumn[] = [
     type: 'freeText',
     width: 'auto',
     minWidth: '160px',
+    format: (value: string) => value || '-'
   },
   {
     key: 'actions',

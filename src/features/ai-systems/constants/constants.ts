@@ -100,8 +100,8 @@ export const defaultOwners = [
 
 // Status options
 export const statusOptions = [
-  { value: 'active', label: 'Active' },
-  { value: 'inactive', label: 'Inactive' }
+  { value: 'connected', label: 'Connected' },
+  { value: 'disconnected', label: 'Disconnected' }
 ]
 
 // Table configuration constants

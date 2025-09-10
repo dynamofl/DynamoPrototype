@@ -4,7 +4,7 @@
 
 import React from 'react'
 import { AISystemIcon } from '@/components/patterns/ai-system-icon'
-import { CheckCircle, AlertCircle, Edit, Trash2 } from 'lucide-react'
+import { Edit, Trash2, Squircle, Square } from 'lucide-react'
 import type { TableColumn, ExpandableConfig, TableStorageConfig } from '@/types/table'
 import { AI_SYSTEMS_STORAGE_KEY, AI_SYSTEMS_ITEMS_PER_PAGE } from '../constants'
 
@@ -127,21 +127,27 @@ export const aiSystemsColumns: TableColumn[] = [
     width: 'w-24', // 96px equivalent
     type: 'badge',
     colorMap: {
-      'Active': { 
-        variant: 'default', 
+      'Connected': {
+        variant: 'success',
         className: 'bg-green-100 text-green-800 border border-green-200',
+        icon: React.createElement(Squircle, {
+          className: 'w-2 h-2 fill-green-600 text-green-600'
+        })
       },
-      'Disabled': { 
-        variant: 'destructive', 
-        className: 'bg-red-50 text-red-800 border border-red-100',
+      'Disconnected': {
+        variant: 'secondary',
+        className: 'bg-gray-100 text-gray-600 border border-gray-200',
+        icon: React.createElement(Squircle, {
+          className: 'w-2 h-2 text-gray-600'
+        })
       }
     },
     format: (value: string, row: any) => {
       // Use the stored validation state
-      return row.hasValidAPIKey ? 'Active' : 'Disabled'
+      return row.hasValidAPIKey ? 'Connected' : 'Disconnected'
     },
     tooltip: (value: string, row: any) => {
-      return row.hasValidAPIKey ? '' : 'No valid API keys are available'
+      return row.hasValidAPIKey ? 'Ready to Use' : 'No valid API keys available'
     }
   },
   {
@@ -202,7 +208,7 @@ export const createDefaultAISystem = (data: {
     day: 'numeric', 
     year: 'numeric' 
   }),
-  status: 'active', // Will be validated and updated by state manager
+  status: 'connected', // Will be validated and updated by state manager
   hasValidAPIKey: false, // Will be validated by state manager
   lastValidated: 0, // Will be set by state manager
   icon: data.providerName as any, // This will be mapped to the correct icon

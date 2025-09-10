@@ -11,6 +11,9 @@ interface AIModel {
   id: string;
   name: string;
   provider: string;
+  object?: string;
+  created?: number;
+  owned_by?: string;
 }
 
 interface AIProvider {
@@ -31,6 +34,7 @@ import type { Guardrail } from '@/types';
 interface ConfigurationPanelProps {
   config: {
     candidateModel: string;
+    judgeModel: string;
     temperature: number;
     maxLength: number;
     topP: number;
@@ -80,6 +84,42 @@ export function ConfigurationPanel({
           </div>
         </div>
         <div className="space-y-4">
+          {/* Judge Model Selection */}
+          <div className="space-y-2">
+            <div>
+              <Label htmlFor="judgeModel">Judge Model</Label>
+            </div>
+
+            <Select
+              value={config.judgeModel}
+              onValueChange={(value) =>
+                onConfigChange({ ...config, judgeModel: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select Judge Model" />
+              </SelectTrigger>
+              <SelectContent className="w-[calc(100vw/3-4rem)] mt-1">
+                {availableModels.length === 1 &&
+                availableModels[0].id === "no-models" ? (
+                  <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                    {availableModels[0].name}
+                  </div>
+                ) : (
+                  availableModels.map((model) => (
+                    <SelectItem
+                      key={model.id}
+                      value={model.id}
+                      disabled={model.id === "no-models"}
+                    >
+                      {model.name}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Candidate Model Selection */}
           <div className="space-y-2">
             <div>

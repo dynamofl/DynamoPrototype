@@ -29,12 +29,12 @@ export function AppBar() {
   const experimentNavItems = [
     { name: "Evaluation Sandbox", path: "/evaluation-sandbox" },
     { name: "AI Providers", path: "/ai-providers" },
-    { name: "Guardrails", path: "/guardrails" },
+    { name: "Policies", path: "/guardrails" },
   ]
 
   const standardNavItems = [
     { name: "AI Systems", path: "/ai-systems" },
-    { name: "Guardrails", path: "/guardrails" },
+    { name: "Policies", path: "/guardrails" },
   ]
 
   const currentNavItems = experimentsEnabled ? experimentNavItems : standardNavItems
@@ -57,10 +57,10 @@ export function AppBar() {
                   key={item.name}
                   to={item.path}
                   className={({ isActive }) => cn(
-                    "inline-flex items-center px-3 py-2 text-[13px] font-450 transition-colors hover:text-foreground relative",
+                    "inline-flex items-center px-2 py-1 rounded-md text-[13px] font-450 transition-colors hover:text-foreground relative",
                     isActive
-                      ? "text-gray-800"
-                      : "text-gray-600"
+                      ? "text-gray-800 bg-gray-100"
+                      : "text-gray-600 hover:bg-gray-50"
                   )}
                 >
                   {item.name}

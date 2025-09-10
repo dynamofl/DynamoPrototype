@@ -113,7 +113,7 @@ export interface TableColumn {
   }>
   badgeVariant?: 'default' | 'primary' | 'success' | 'warning' | 'error'
   // Badge color mapping
-  colorMap?: Record<string, { variant: BadgeVariant; className?: string }>
+  colorMap?: Record<string, { variant: BadgeVariant; className?: string; icon?: ReactNode }>
   // Tooltip for cells
   tooltip?: string | ((value: any, row: any) => string)
 }

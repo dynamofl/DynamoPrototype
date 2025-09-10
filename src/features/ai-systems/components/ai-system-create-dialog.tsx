@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ChevronRight, Eye, EyeOff, KeyRound, Plus, RefreshCw } from "lucide-react";
+import { ChevronRight, Eye, EyeOff, KeyRound, Plus, RefreshCw, CheckCircle, FolderOpen, Shield, CircleGauge } from "lucide-react";
 import { AISystemIcon } from "@/components/patterns";
 import { ViewEditSheet } from "@/components/patterns";
 import type {
@@ -34,7 +34,7 @@ export function AISystemCreateSheet({
   onOpenChange,
   onAISystemCreated,
 }: AISystemCreateSheetProps) {
-  const [currentStep, setCurrentStep] = useState<"select" | "configure">(
+  const [currentStep, setCurrentStep] = useState<"select" | "configure" | "success">(
     "select"
   );
   const [selectedProvider, setSelectedProvider] =
@@ -45,6 +45,7 @@ export function AISystemCreateSheet({
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [isFetchingModels, setIsFetchingModels] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
+  const [createdSystem, setCreatedSystem] = useState<any>(null);
 
   // Form data
   const [formData, setFormData] = useState<AISystemFormData>({
@@ -70,6 +71,9 @@ export function AISystemCreateSheet({
     apiKeyName: "",
     apiKeyValue: "",
   });
+
+  // General validation error state
+  const [validationError, setValidationError] = useState("");
 
   // Available providers with API keys
   const [providers, setProviders] = useState<ProviderOption[]>([]);
@@ -263,6 +267,8 @@ export function AISystemCreateSheet({
     setNewAPIKey({ name: "", key: "", showKey: false });
     setShowAddKeyForm(false);
     setFieldErrors({ apiKeyName: "", apiKeyValue: "" });
+    setValidationError("");
+    setCreatedSystem(null);
     setFormData({
       name: "",
       provider: { id: "", name: "", type: "" },
@@ -277,6 +283,10 @@ export function AISystemCreateSheet({
     if (!open) {
       resetDialogState();
     }
+  };
+
+  const handleDismiss = () => {
+    handleDialogOpenChange(false);
   };
 
   const handleCreateAISystem = () => {
@@ -310,7 +320,7 @@ export function AISystemCreateSheet({
         day: "numeric",
         year: "numeric",
       }),
-      status: "active" as const,
+      status: "connected" as const,
       icon: selectedProvider!.type as any,
       hasGuardrails: false,
       isEvaluated: false,
@@ -324,8 +334,10 @@ export function AISystemCreateSheet({
       isExpanded: false,
     };
 
+    // Store the created system and show success screen
+    setCreatedSystem(newSystem);
+    setCurrentStep("success");
     onAISystemCreated(newSystem);
-    handleDialogOpenChange(false);
   };
 
   return (
@@ -335,7 +347,9 @@ export function AISystemCreateSheet({
       title={
         currentStep === "select"
           ? "Add AI System"
-          : `Configure ${selectedProvider?.name}`
+          : currentStep === "configure"
+          ? `Configure ${selectedProvider?.name}`
+          : "Connect AI System"
       }
       size="lg"
       footer={
@@ -358,6 +372,16 @@ export function AISystemCreateSheet({
                Create AI System
              </Button>
           </div>
+        ) : currentStep === "success" ? (
+          <div className="flex justify-start items-center">
+            <Button
+              variant="outline"
+              onClick={handleDismiss}
+              className="bg-gray-50 text-gray-700 hover:bg-gray-100"
+            >
+              Dismiss
+            </Button>
+          </div>
         ) : undefined
       }
     >
@@ -365,7 +389,7 @@ export function AISystemCreateSheet({
         // Provider Selection Screen
         <div className="space-y-3">
           <div className=" border-gray-100">
-            <p className="text-sm text-[#4b5976]">Select AI System Provider</p>
+            <p className="text-[13px] text-[#4b5976]">Select AI System Provider</p>
           </div>
 
           <div className="space-y-4">
@@ -381,7 +405,7 @@ export function AISystemCreateSheet({
                         type={provider.icon as any}
                         className="w-8 h-8"
                       />
-                      <p className="font-450 text-[#192c4b] text-sm">
+                      <p className="font-450 text-[#192c4b] text-[13px]">
                         {provider.name}
                       </p>
                   </div>
@@ -395,17 +419,24 @@ export function AISystemCreateSheet({
                 <div className="text-gray-500 mb-2">
                   No AI providers available
                 </div>
-                <div className="text-sm text-gray-400">
+                <div className="text-[13px] text-gray-400">
                   Please configure API keys in Settings first
                 </div>
               </div>
             )}
           </div>
         </div>
-      ) : (
+      ) : currentStep === "configure" ? (
         // Configuration Screen
         <div className="flex-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
           <div className="space-y-6">
+
+            {/* Validation Error Display */}
+            {validationError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-[13px] text-red-600">{validationError}</p>
+              </div>
+            )}
 
             {/* Provider Configuration */}
 
@@ -418,7 +449,7 @@ export function AISystemCreateSheet({
               className="w-8 h-8"
             />
             <div className="flex-1">
-              <p className="text-sm font-450 text-gray-900">
+              <p className="text-[13px] font-450 text-gray-900">
                 {selectedProvider!.name}
               </p>
             </div>
@@ -506,7 +537,7 @@ export function AISystemCreateSheet({
                         
                         {/* {isFetchingModels && (
                           <div className="mt-4 pt-3 border-t border-gray-200">
-                            <div className="flex items-center justify-center space-x-2 text-sm text-gray-600">
+                            <div className="flex items-center justify-center space-x-2 text-[13px] text-gray-600">
                               <RefreshCw className="h-4 w-4 animate-spin" />
                               <span>Fetching models...</span>
                             </div>
@@ -775,7 +806,7 @@ export function AISystemCreateSheet({
                     {isFetchingModels ? (
                       <div className="flex items-center justify-center py-4">
                         <RefreshCw className="h-4 w-4 animate-spin mr-2" />
-                        <span className="text-sm text-gray-600">Loading models...</span>
+                        <span className="text-[13px] text-gray-600">Loading models...</span>
                       </div>
                     ) : (
                       availableModels.map((model) => (
@@ -803,6 +834,93 @@ export function AISystemCreateSheet({
                 )}
               </div>
 
+            </div>
+          </div>
+        </div>
+      ) : (
+        // Success Screen
+        <div className="flex-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+          <div className="space-y-6 p-1">
+            {/* Success Header */}
+            <div className="space-y-3 py-2">
+              <div className="flex items-center justify-center w-12 h-12 bg-white border border-gray-200 rounded-xl">
+                <AISystemIcon
+                  type={createdSystem?.icon as any}
+                  className="w-12 h-12"
+                />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-450 text-gray-900">
+                  AI System Connection Successful
+                </h3>
+                <div className="flex items-center gap-2">
+                  <span className="text-[13px] text-gray-700">
+                    {createdSystem?.name}
+                  </span>
+                  <div className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 border border-green-200 rounded-full">
+                    <CheckCircle className="w-3 h-3 text-green-600" />
+                    <span className="text-xs font-450 text-green-700">
+                      Connected
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Next Steps */}
+            <div className="space-y-3">
+              <p className="text-[13px] font-400 text-gray-600">
+                You can start doing following tasks with your AI System
+              </p>
+              <div className="bg-white border border-gray-200 rounded-lg">
+                {/* Add to Project */}
+                <div className="flex items-start gap-3 p-4 border-b border-gray-200">
+                  <div className="flex items-center justify-center w-5 h-5">
+                    <FolderOpen className="w-4 h-4 text-gray-500" />
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <h4 className="text-[13px] font-450 text-gray-900">
+                      Add Your AI System to a Project
+                    </h4>
+                    <p className="text-[13px] text-gray-500">
+                      Integrate the connected AI system into your project
+                    </p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </div>
+
+                {/* Run Evaluation */}
+                <div className="flex items-start gap-3 p-4 border-b border-gray-200">
+                  <div className="flex items-center justify-center w-5 h-5">
+                    <CircleGauge className="w-4 h-4 text-gray-500" />
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <h4 className="text-[13px] font-450 text-gray-900">
+                      Evaluate Your AI System
+                    </h4>
+                    <p className="text-[13px] text-gray-500">
+                      Run evaluations to check compliance, uncover vulnerabilities, and autogenerates documentation needed for regulatory and risk audits
+                    </p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </div>
+
+                {/* Add Guardrails */}
+                <div className="flex items-start gap-3 p-4">
+                  <div className="flex items-center justify-center w-5 h-5">
+                    <Shield className="w-4 h-4 text-gray-500" />
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <h4 className="text-[13px] font-450 text-gray-900">
+                      Add Guardrails to Your AI System
+                    </h4>
+                    <p className="text-[13px] text-gray-500">
+                      Set up rules and safeguards to keep your AI System safe, controlled, and aligned with your goals.
+                    </p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -3,7 +3,7 @@ import { type IconProps, ICON_SIZES } from '@/types'
 
 export function DynamoLogoTypeface({
   className = "",
-  size = ICON_SIZES.md,
+  size = ICON_SIZES.sm,
   color = "currentColor",
   ...props
 }: IconProps) {
