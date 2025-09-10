@@ -42,7 +42,6 @@ export function AISystemCreateSheet({
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [isFetchingModels, setIsFetchingModels] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
   const [createdSystem, setCreatedSystem] = useState<any>(null);
 
   // Form data
@@ -267,7 +266,6 @@ export function AISystemCreateSheet({
     setFieldErrors({ apiKeyName: "", apiKeyValue: "" });
     setValidationError("");
     setCreatedSystem(null);
-    setIsConnecting(false);
     setFormData({
       name: "",
       provider: { id: "", name: "", type: "" },
@@ -304,53 +302,52 @@ export function AISystemCreateSheet({
       return;
     }
 
-    // Set connecting state and start timeout
-    setIsConnecting(true);
-    
-    // Simulate connection process with 2-second timeout
-    setTimeout(() => {
-      const selectedModelDetails = availableModels.find(
-        (m) => m.id === selectedModel
-      );
+    const selectedModelDetails = availableModels.find(
+      (m) => m.id === selectedModel
+    );
 
-      // Get the primary API key for the system
-      const primaryKey = selectedProvider!.apiKeys.find(ak => ak.id === primaryAPIKey);
+    // Get the primary API key for the system
+    const primaryKey = selectedProvider!.apiKeys.find(ak => ak.id === primaryAPIKey);
 
-      const newSystem = {
-        id: Date.now().toString(),
-        name: formData.name.trim(),
-        createdAt: new Date().toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        }),
-        status: "connected" as const,
-        icon: selectedProvider!.type as any,
-        hasGuardrails: false,
-        isEvaluated: false,
-        providerId: selectedProvider!.id,
-        providerName: selectedProvider!.name,
-        apiKeyId: primaryKey?.id || "",
-        apiKeyName: primaryKey?.name || "",
-        selectedAPIKeys: selectedAPIKeys, // Store all selected API keys
-        selectedModel: selectedModel,
-        modelDetails: selectedModelDetails,
-        isExpanded: false,
-      };
+    const newSystem = {
+      id: Date.now().toString(),
+      name: formData.name.trim(),
+      createdAt: new Date().toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+      status: "connected" as const,
+      icon: selectedProvider!.type as any,
+      hasGuardrails: false,
+      isEvaluated: false,
+      providerId: selectedProvider!.id,
+      providerName: selectedProvider!.name,
+      apiKeyId: primaryKey?.id || "",
+      apiKeyName: primaryKey?.name || "",
+      selectedAPIKeys: selectedAPIKeys, // Store all selected API keys
+      selectedModel: selectedModel,
+      modelDetails: selectedModelDetails,
+      isExpanded: false,
+    };
 
-      // Store the created system and show success screen
-      setCreatedSystem(newSystem);
-      setCurrentStep("success");
-      setIsConnecting(false);
-      onAISystemCreated(newSystem);
-    }, 2000);
+    // Store the created system and show success screen
+    setCreatedSystem(newSystem);
+    setCurrentStep("success");
+    onAISystemCreated(newSystem);
   };
 
   return (
     <ViewEditSheet
       open={open}
       onOpenChange={handleDialogOpenChange}
-      title="Connect AI System"
+      title={
+        currentStep === "select"
+          ? "Add AI System"
+          : currentStep === "configure"
+          ? `Configure ${selectedProvider?.name}`
+          : "Connect AI System"
+      }
       size="lg"
       footer={
         currentStep === "configure" ? (
@@ -365,11 +362,11 @@ export function AISystemCreateSheet({
              <Button
                onClick={handleCreateAISystem}
                disabled={
-                 !primaryAPIKey || !selectedModel || !formData.name.trim() || isConnecting
+                 !primaryAPIKey || !selectedModel || !formData.name.trim()
                }
                className="bg-blue-600 text-white hover:bg-blue-700"
              >
-               {isConnecting ? "Connecting..." : "Validate & Connect"}
+               Create AI System
              </Button>
           </div>
         ) : currentStep === "success" ? (
@@ -380,7 +377,7 @@ export function AISystemCreateSheet({
               className="bg-gray-50 text-gray-700 hover:bg-gray-100"
             >
               Dismiss
-             </Button>
+            </Button>
           </div>
         ) : undefined
       }
@@ -418,7 +415,6 @@ export function AISystemCreateSheet({
           onShowAddKeyFormChange={setShowAddKeyForm}
           fieldErrors={fieldErrors}
           isValidating={isValidating}
-          isConnecting={isConnecting}
         />
       ) : (
         <SuccessStep createdSystem={createdSystem} />
