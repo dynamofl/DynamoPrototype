@@ -2,7 +2,7 @@
  * Dropdown cell component matching DynamoTable styling and behavior
  */
 
-import React, { useState, type KeyboardEvent } from 'react'
+import { type KeyboardEvent } from 'react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { CellProps } from '@/types/table'
 
@@ -43,21 +43,8 @@ export function DropdownCell({
   // View mode - display selected value (matches DynamoTable styling)
   if (mode === 'view' || disabled || column.readonly) {
     return (
-      <div 
-        className={`cell-content ${className}`}
-        style={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          padding: '8px',
-          cursor: 'default',
-          outline: 'none',
-          border: '1px solid transparent',
-          borderRadius: '4px',
-          backgroundColor: 'transparent',
-          transition: 'all 0.2s ease-in-out'
-        }}
+      <div
+        className={`cell-content w-full h-full flex items-center p-2 cursor-default outline-none border border-transparent rounded bg-transparent transition-all duration-200 ease-in-out ${className}`}
       >
         <span className="text-[13px]">
           {currentOption?.label || value || column.placeholder || 'Select...'}
@@ -69,21 +56,8 @@ export function DropdownCell({
   // Dialog mode - display with row edit trigger
   if (editMode === 'dialog') {
     return (
-      <div 
-        className={`cell-content ${className}`}
-        style={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          padding: '8px',
-          cursor: 'pointer',
-          outline: 'none',
-          border: '1px solid transparent',
-          borderRadius: '4px',
-          backgroundColor: 'transparent',
-          transition: 'all 0.2s ease-in-out'
-        }}
+      <div
+        className={`cell-content w-full h-full flex items-center p-2 cursor-pointer outline-none border border-transparent rounded bg-transparent transition-all duration-200 ease-in-out ${className}`}
         onClick={() => onRowEdit?.(row)}
       >
         <span className="text-[13px]">
@@ -95,21 +69,8 @@ export function DropdownCell({
 
   // Edit mode - inline Select (matches DynamoTable styling)
   return (
-    <div 
-      className={`cell-content ${className}`}
-      style={{
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        padding: '8px',
-        cursor: 'pointer',
-        outline: 'none',
-        border: '1px solid transparent',
-        borderRadius: '4px',
-        backgroundColor: 'transparent',
-        transition: 'all 0.2s ease-in-out'
-      }}
+    <div
+      className={`cell-content w-full h-full flex items-center p-2 cursor-pointer outline-none border border-transparent rounded bg-transparent transition-all duration-200 ease-in-out ${className}`}
       tabIndex={0}
       onKeyDown={handleKeyDown}
     >

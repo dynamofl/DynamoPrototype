@@ -186,7 +186,7 @@ export function RowEditDialog({
             <Badge variant="outline">
               {value || 'N/A'}
             </Badge>
-            <span className="text-sm text-gray-500">
+            <span className="text-[13px] text-gray-600">
               (Display only)
             </span>
           </div>
@@ -245,13 +245,13 @@ export function RowEditDialog({
           <div className="space-y-4">
             {editableColumns.map((column) => (
               <div key={column.key} className="space-y-2">
-                <Label htmlFor={column.key} className="text-sm font-450">
+                <Label htmlFor={column.key} className="text-[13px] font-450">
                   {column.title}
                   {column.validation && <span className="text-red-500 ml-1">*</span>}
                 </Label>
                 {renderField(column)}
                 {errors[column.key] && (
-                  <p className="text-sm text-red-500">{errors[column.key]}</p>
+                  <p className="text-[13px] text-red-500">{errors[column.key]}</p>
                 )}
               </div>
             ))}

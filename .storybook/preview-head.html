@@ -1,0 +1,89 @@
+<style>
+/* Custom styles for enhanced Storybook layout */
+
+/* Improve the overall layout spacing */
+#storybook-root {
+  min-height: 100vh;
+}
+
+/* Better spacing for components */
+#storybook-root > * {
+  margin: 0;
+  padding: 1rem;
+}
+
+/* Enhanced panel styling */
+.sidebar-item[data-selected="true"] {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-left: 3px solid #3b82f6;
+}
+
+/* Better button styling in panels */
+button[role="tab"] {
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+button[role="tab"]:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+button[role="tab"][aria-selected="true"] {
+  background-color: #3b82f6;
+  color: white;
+}
+
+/* Improved controls styling */
+.control-label {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+/* Better action logger styling */
+.action-logger {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+}
+
+/* Enhanced component canvas styling */
+#storybook-preview-wrapper {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark theme support */
+[data-theme="dark"] #storybook-preview-wrapper {
+  background-color: #0f0f0f;
+  color: #ffffff;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  #storybook-root > * {
+    padding: 0.5rem;
+  }
+}
+
+/* Custom toolbar styling */
+.storybook-toolbar {
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+/* Better docs page styling */
+.docs-story {
+  max-width: none;
+}
+
+/* Enhanced addon panel styling */
+.addon-panel {
+  background-color: #ffffff;
+  border-left: 1px solid #e5e7eb;
+}
+
+[data-theme="dark"] .addon-panel {
+  background-color: #1f2937;
+  border-left-color: #374151;
+}
+</style>

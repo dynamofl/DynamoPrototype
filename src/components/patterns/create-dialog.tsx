@@ -1,4 +1,4 @@
-import React, { useState, ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,7 +8,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Button } from '@/components/ui/button';
 import { X, ArrowLeft } from 'lucide-react';
 
 interface CreateDialogProps {
@@ -52,26 +51,27 @@ export function CreateDialog({
       <DialogTrigger asChild>
         {trigger}
       </DialogTrigger>
-      <DialogContent 
-        className={`p-0 flex flex-col overflow-hidden ${maxWidthClasses[maxWidth]} max-h-[${maxHeight}]`}
+      <DialogContent
+        className={`p-0 flex flex-col overflow-hidden ${maxWidthClasses[maxWidth]}`}
+        style={{ maxHeight }}
       >
         <DialogHeader className="bg-gray-100 p-3 flex flex-row items-center justify-between">
           <div className="flex items-center gap-2">
             {showBackButton && onBack && (
-              <button 
+              <button
                 onClick={onBack}
-                className="text-[#404b64] hover:text-[#192c4b] transition-colors"
+                className="text-gray-700 hover:text-gray-900 transition-colors"
               >
                 <ArrowLeft className="h-4 w-4" />
               </button>
             )}
-            <button 
-              onClick={() => onOpenChange(false)} 
-              className="text-[#404b64] hover:text-[#192c4b] transition-colors"
+            <button
+              onClick={() => onOpenChange(false)}
+              className="text-gray-700 hover:text-gray-900 transition-colors"
             >
               <X className="h-4 w-4" />
             </button>
-            <DialogTitle className="text-sm font-450 text-[#192c4b] leading-5">
+            <DialogTitle className="text-[13px] font-450 text-gray-900 leading-5">
               {title}
             </DialogTitle>
           </div>
@@ -90,7 +90,7 @@ export function CreateDialog({
         </ScrollArea>
 
         {actionFooter && (
-          <div className="border-t border-[rgba(9,28,66,0.1)] p-4">
+          <div className="border-t border-gray-200 p-4">
             {actionFooter}
           </div>
         )}

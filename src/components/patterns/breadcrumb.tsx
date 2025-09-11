@@ -1,6 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
 import { ChevronRight, Home } from 'lucide-react'
-import { cn } from '@/lib/utils'
 
 interface BreadcrumbItem {
   name: string
@@ -47,26 +46,26 @@ export function Breadcrumb() {
   }
   
   return (
-    <nav className="flex items-center space-x-1 text-sm text-muted-foreground px-6 py-2">
+    <nav className="flex items-center space-x-1 text-[13px] text-gray-600 px-6 py-2">
       <Link
         to="/ai-systems"
-        className="flex items-center hover:text-foreground transition-colors"
+        className="flex items-center hover:text-gray-900 transition-colors"
       >
         <Home className="h-4 w-4 mr-1" />
         Home
       </Link>
       
-      {breadcrumbs.map((breadcrumb, index) => (
+      {breadcrumbs.map((breadcrumb) => (
         <div key={breadcrumb.path} className="flex items-center">
           <ChevronRight className="h-4 w-4 mx-1" />
           {breadcrumb.current ? (
-            <span className="text-foreground font-450">
+            <span className="text-gray-900 font-450">
               {breadcrumb.name}
             </span>
           ) : (
             <Link
               to={breadcrumb.path}
-              className="hover:text-foreground transition-colors"
+              className="hover:text-gray-900 transition-colors"
             >
               {breadcrumb.name}
             </Link>

@@ -110,15 +110,15 @@ export function CSVPreview({ parseResult, onImportRows, className }: CSVPreviewP
           <div className="grid grid-cols-3 gap-6 mb-6">
             <div className="text-center p-4 bg-muted/50 rounded-lg">
               <p className="text-3xl font-450">{parseResult.totalRows}</p>
-              <p className="text-sm text-muted-foreground">Total Rows</p>
+              <p className="text-[13px] text-gray-600">Total Rows</p>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
               <p className="text-3xl font-450 text-green-600">{parseResult.validCount}</p>
-              <p className="text-sm text-muted-foreground">Valid Rows</p>
+              <p className="text-[13px] text-gray-600">Valid Rows</p>
             </div>
             <div className="text-center p-4 bg-red-50 rounded-lg">
               <p className="text-3xl font-450 text-red-600">{parseResult.invalidCount}</p>
-              <p className="text-sm text-muted-foreground">Invalid Rows</p>
+              <p className="text-[13px] text-gray-600">Invalid Rows</p>
             </div>
           </div>
 
@@ -212,13 +212,13 @@ export function CSVPreview({ parseResult, onImportRows, className }: CSVPreviewP
                           <TableCell className="max-w-xs">
                             <div className="truncate" title={row.prompt}>
                               {row.prompt || (
-                                <span className="text-muted-foreground italic">Empty</span>
+                                <span className="text-gray-600 italic">Empty</span>
                               )}
                             </div>
                           </TableCell>
                           <TableCell>
                             {row.topic || (
-                              <span className="text-muted-foreground italic">Empty</span>
+                              <span className="text-gray-600 italic">Empty</span>
                             )}
                           </TableCell>
                           <TableCell>
@@ -227,7 +227,7 @@ export function CSVPreview({ parseResult, onImportRows, className }: CSVPreviewP
                                 {row.userMarkedAdversarial === 'true' ? 'Blocked' : 'Passed'}
                               </Badge>
                             ) : (
-                              <span className="text-muted-foreground italic">Not set</span>
+                              <span className="text-gray-600 italic">Not set</span>
                             )}
                           </TableCell>
                           <TableCell>
@@ -249,7 +249,7 @@ export function CSVPreview({ parseResult, onImportRows, className }: CSVPreviewP
                                 )}
                               </div>
                             ) : (
-                              <span className="text-green-600 text-sm">✓ Valid</span>
+                              <span className="text-green-600 text-[13px]">✓ Valid</span>
                             )}
                           </TableCell>
                         </TableRow>
@@ -258,7 +258,7 @@ export function CSVPreview({ parseResult, onImportRows, className }: CSVPreviewP
                   </Table>
                 </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
+                <div className="text-center py-8 text-gray-600">
                   <EyeOff className="h-8 w-8 mx-auto mb-2" />
                   <p>No rows to display in this category</p>
                 </div>
@@ -274,7 +274,7 @@ export function CSVPreview({ parseResult, onImportRows, className }: CSVPreviewP
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
             <strong>Validation Issues Found:</strong>
-            <ul className="mt-2 space-y-1 text-sm">
+            <ul className="mt-2 space-y-1 text-[13px]">
               {!parseResult.hasRequiredColumns && (
                 <li>• Missing required columns: {parseResult.missingColumns.join(', ')}</li>
               )}

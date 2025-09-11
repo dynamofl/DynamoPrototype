@@ -576,7 +576,7 @@ export function TablePattern({
 
     return (
       <div className="flex items-center justify-between px-4 py-3 border-t">
-        <div className="text-sm text-gray-600">
+        <div className="text-[13px] text-gray-600">
           Showing {startIndex + 1} to {endIndex} of {totalItems} entries
         </div>
         <div className="flex items-center gap-2">
@@ -589,7 +589,7 @@ export function TablePattern({
             <ChevronLeft className="h-4 w-4" />
             Previous
           </Button>
-          <span className="text-sm">
+          <span className="text-[13px]">
             Page {currentPage} of {totalPages}
           </span>
           <Button

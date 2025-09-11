@@ -59,21 +59,8 @@ export function FreeTextCell({
     const hasOverflowingText = displayValue && String(displayValue).length > 50
     
     return (
-      <div 
-        className={`cell-content ${className}`}
-        style={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0px',
-          cursor: 'default',
-          outline: 'none',
-          border: '1px solid transparent',
-          borderRadius: '4px',
-          backgroundColor: 'transparent',
-          transition: 'all 0.2s ease-in-out'
-        }}
+      <div
+        className={`cell-content w-full h-full flex items-center p-0 cursor-default outline-none border border-transparent rounded border-gray-200 bg-transparent transition-all duration-200 ease-in-out ${className}`}
       >
         <div className="w-full overflow-hidden">
           <div className="whitespace-pre-line line-clamp-1 text-ellipsis overflow-hidden text-[13px]">
@@ -98,24 +85,11 @@ export function FreeTextCell({
   const displayValue = column.format ? column.format(value, row) : value
   
   return (
-    <div 
-      className={`cell-content ${className}`}
+    <div
+      className={`cell-content w-full h-full flex items-center p-2 cursor-pointer outline-none ${isCurrentlyEditing ? 'border-2 border-blue-500 bg-gray-50' : 'border border-transparent'} rounded bg-transparent transition-all duration-200 ease-in-out ${className}`}
       tabIndex={0}
       onKeyDown={handleKeyDown}
       onClick={startEditing}
-      style={{
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        padding: '8px',
-        cursor: 'pointer',
-        outline: 'none',
-        border: isCurrentlyEditing ? '2px solid #3b82f6' : '1px solid transparent',
-        borderRadius: '4px',
-        backgroundColor: isCurrentlyEditing ? '#f8fafc' : 'transparent',
-        transition: 'all 0.2s ease-in-out'
-      }}
     >
       <div className="w-full overflow-hidden">
         <div className="whitespace-pre-line line-clamp-1 text-ellipsis overflow-hidden text-[13px]">

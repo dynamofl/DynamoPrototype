@@ -57,22 +57,8 @@ export function SwitchCell({
   // View mode - display value (matches DynamoTable styling)
   if (mode === 'view' || disabled || column.readonly) {
     return (
-      <div 
-        className={`cell-content ${className}`}
-        style={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '8px',
-          cursor: 'default',
-          outline: 'none',
-          border: '1px solid transparent',
-          borderRadius: '4px',
-          backgroundColor: 'transparent',
-          transition: 'all 0.2s ease-in-out'
-        }}
+      <div
+        className={`cell-content w-full h-full flex items-center justify-center p-2 cursor-default outline-none border border-transparent rounded bg-transparent transition-all duration-200 ease-in-out ${className}`}
       >
         <div className="flex items-center space-x-2">
           <Switch
@@ -81,7 +67,7 @@ export function SwitchCell({
             disabled={true}
           />
           {switchLabel && (
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-gray-600">
               {label}
             </span>
           )}
@@ -93,22 +79,8 @@ export function SwitchCell({
   // Dialog mode - display with row edit trigger
   if (editMode === 'dialog') {
     return (
-      <div 
-        className={`cell-content ${className}`}
-        style={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '8px',
-          cursor: 'pointer',
-          outline: 'none',
-          border: '1px solid transparent',
-          borderRadius: '4px',
-          backgroundColor: 'transparent',
-          transition: 'all 0.2s ease-in-out'
-        }}
+      <div
+        className={`cell-content w-full h-full flex items-center justify-center p-2 cursor-pointer outline-none border border-transparent rounded bg-transparent transition-all duration-200 ease-in-out ${className}`}
         onClick={() => onRowEdit?.(row)}
       >
         <div className="flex items-center space-x-2">
@@ -118,7 +90,7 @@ export function SwitchCell({
             disabled={true}
           />
           {switchLabel && (
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-gray-600">
               {label}
             </span>
           )}
@@ -129,22 +101,8 @@ export function SwitchCell({
 
   // Edit mode - interactive switch (matches DynamoTable styling)
   return (
-    <div 
-      className={`cell-content ${className}`}
-      style={{
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '8px',
-        cursor: 'pointer',
-        outline: 'none',
-        border: '1px solid transparent',
-        borderRadius: '4px',
-        backgroundColor: 'transparent',
-        transition: 'all 0.2s ease-in-out'
-      }}
+    <div
+      className={`cell-content w-full h-full flex items-center justify-center p-2 cursor-pointer outline-none border border-transparent rounded bg-transparent transition-all duration-200 ease-in-out ${className}`}
       tabIndex={0}
       onKeyDown={handleKeyDown}
       onClick={handleCellClick}
@@ -156,7 +114,7 @@ export function SwitchCell({
           disabled={disabled || column.readonly}
         />
         {switchLabel && (
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs text-gray-600">
             {label}
           </span>
         )}

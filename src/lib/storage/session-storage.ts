@@ -13,6 +13,11 @@ export class SessionTableStorage implements TableStorage {
   constructor(config: TableStorageConfig) {
     this.config = config
     this.validateConfig()
+
+    // Initialize with provided data if available
+    if (config.data && config.data.length > 0) {
+      this.data = [...config.data]
+    }
   }
 
   private validateConfig(): void {

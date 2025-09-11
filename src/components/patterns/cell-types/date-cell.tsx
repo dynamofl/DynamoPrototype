@@ -2,8 +2,7 @@
  * Date cell component for date display and editing
  */
 
-import React, { useState } from 'react'
-import { Input } from '@/components/ui/input'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import {
@@ -23,7 +22,7 @@ interface DateCellProps extends CellProps {
 
 export function DateCell({
   value,
-  row,
+  row: _row,
   column,
   mode,
   onChange,
@@ -107,7 +106,7 @@ export function DateCell({
               size="sm"
               className={cn(
                 "h-8 w-full justify-start text-left font-normal",
-                !dateValue && "text-muted-foreground"
+                !dateValue && "text-gray-600"
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />

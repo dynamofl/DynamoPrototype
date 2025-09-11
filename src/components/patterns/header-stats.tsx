@@ -25,7 +25,7 @@ function StatCard({ title, value, info, variant = 'default' }: StatCardProps) {
 
   const getValueColor = () => {
     switch (variant) {
-      default: return 'text-foreground'
+      default: return 'text-gray-900'
     }
   }
 
@@ -39,7 +39,7 @@ function StatCard({ title, value, info, variant = 'default' }: StatCardProps) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button className="text-[13px] font-450 text-muted-foreground border-b border-dashed border-gray-300 hover:text-foreground transition-colors cursor-help">
+                      <button className="text-[13px] font-450 text-gray-600 border-b border-dashed border-gray-300 hover:text-gray-900 transition-colors cursor-help">
                         {title}
                       </button>
                     </TooltipTrigger>
@@ -49,7 +49,7 @@ function StatCard({ title, value, info, variant = 'default' }: StatCardProps) {
                   </Tooltip>
                 </TooltipProvider>
               ) : (
-                <p className="text-[13px] font-450 text-muted-foreground border-b border-dashed border-gray-300">{title}</p>
+                <p className="text-[13px] font-450 text-gray-600 border-b border-dashed border-gray-300">{title}</p>
               )}
             </div>
             <p className={cn("text-lg font-450", getValueColor())}>{value}</p>

@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { MoreHorizontal, Search, Filter, Download, Plus } from "lucide-react"
+import { MoreHorizontal, Search, Filter, Download } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -52,7 +52,7 @@ export function AISystemsTable({ data, loading = false }: AISystemsTableProps) {
       <div className="flex items-center justify-between px-6">
         <div className="flex items-center space-x-2">
           <div className="relative">
-            <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-600" />
             <Input
               placeholder="Search AI systems..."
               className="pl-8 w-[300px]"
@@ -125,15 +125,15 @@ export function AISystemsTable({ data, loading = false }: AISystemsTableProps) {
                     <span className="text-[13px] font-450 hover:underline cursor-pointer">{system.name}</span>
                   </div>
                 </TableCell>
-                <TableCell className="text-sm">
+                <TableCell className="text-[13px]">
                   {system.project === "-" ? (
-                    <span className="text-muted-foreground">-</span>
+                    <span className="text-gray-600">-</span>
                   ) : (
                     <Badge variant="outline">{system.project}</Badge>
                   )}
                 </TableCell>
-                <TableCell className="text-sm text-muted-foreground">{system.owner}</TableCell>
-                <TableCell className="text-sm text-muted-foreground">{system.createdAt}</TableCell>
+                <TableCell className="text-[13px] text-gray-600">{system.owner}</TableCell>
+                <TableCell className="text-[13px] text-gray-600">{system.createdAt}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end space-x-2">
                     {/* <div className="flex items-center space-x-1">
@@ -183,11 +183,11 @@ export function AISystemsTable({ data, loading = false }: AISystemsTableProps) {
 
       {/* Pagination */}
       <div className="flex items-center justify-between px-6">
-        <p className="text-[13px] text-muted-foreground">
+        <p className="text-[13px] text-gray-600">
           Rows per page: 20
         </p>
         <div className="flex items-center space-x-2">
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-[13px] text-gray-600">
             {startIndex + 1} - {endIndex} of {data.length}
           </p>
           <div className="flex items-center space-x-1">

@@ -2,7 +2,6 @@
  * Multi-badge cell component for displaying multiple badges with overflow handling
  */
 
-import React from 'react'
 import { cn } from '@/lib/utils'
 import type { CellProps } from '@/types/table'
 
@@ -23,7 +22,7 @@ interface MultiBadgeCellProps extends CellProps {
 export function MultiBadgeCell({
   value,
   row,
-  column,
+  column: _column,
   mode: _mode,
   onChange: _onChange,
   disabled: _disabled = false,
@@ -81,7 +80,7 @@ export function MultiBadgeCell({
   if (badges.length === 0) {
     return (
       <div className={cn('min-h-[32px] flex items-center', className)}>
-        <span className="text-sm text-gray-400">No roles</span>
+        <span className="text-[13px] text-gray-400">No roles</span>
       </div>
     )
   }

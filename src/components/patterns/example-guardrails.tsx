@@ -102,7 +102,7 @@ export function ExampleGuardrails() {
                   console.log('Creating guardrail:', newGuardrail);
                   handleDialogOpenChange(false);
                 }}
-                className="bg-blue-600 text-[#ebf1fd] hover:bg-blue-700"
+                className="bg-blue-600 text-blue-50 hover:bg-blue-700"
               >
                 Add Guardrail
               </Button>
@@ -113,8 +113,8 @@ export function ExampleGuardrails() {
             // Guardrail Type Selection Screen
             <div className="space-y-4">
               <div className="text-center py-4">
-                <h3 className="text-lg font-450 text-[#192c4b] mb-2">Choose Guardrail Type</h3>
-                <p className="text-sm text-[#4b5976]">Select the type of guardrail you want to add</p>
+                <h3 className="text-lg font-450 text-gray-900 mb-2">Choose Guardrail Type</h3>
+                <p className="text-[13px] text-gray-600">Select the type of guardrail you want to add</p>
               </div>
               
               <div className="grid grid-cols-1 gap-3">
@@ -134,12 +134,12 @@ export function ExampleGuardrails() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center space-x-2">
-                          <h4 className="font-450 text-[#192c4b]">{type.name}</h4>
+                          <h4 className="font-450 text-gray-900">{type.name}</h4>
                           {!type.isAvailable && (
-                            <Badge variant="secondary" className="text-xs">Coming Soon</Badge>
+                            <Badge variant="secondary" className="text-[13px]">Coming Soon</Badge>
                           )}
                         </div>
-                        <p className="text-sm text-[#4b5976] mt-1">{type.description}</p>
+                        <p className="text-[13px] text-gray-600 mt-1">{type.description}</p>
                       </div>
                     </div>
                   </div>
@@ -150,8 +150,8 @@ export function ExampleGuardrails() {
             // Configuration Screen
             <div className="space-y-4">
               <div className="text-center py-4">
-                <h3 className="text-lg font-450 text-[#192c4b]">Configure {selectedGuardrailType}</h3>
-                <p className="text-sm text-[#4b5976]">Set up your guardrail configuration</p>
+                <h3 className="text-lg font-450 text-gray-900">Configure {selectedGuardrailType}</h3>
+                <p className="text-[13px] text-gray-600">Set up your guardrail configuration</p>
               </div>
 
               <div className="space-y-4">
@@ -201,23 +201,23 @@ export function ExampleGuardrails() {
       >
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label className="text-sm font-450 text-muted-foreground">Guardrail Name</Label>
-            <p className="text-sm">Content Filter for Production</p>
+            <Label className="text-[13px] font-450 text-gray-600">Guardrail Name</Label>
+            <p className="text-[13px]">Content Filter for Production</p>
           </div>
-          
+
           <div className="space-y-2">
-            <Label className="text-sm font-450 text-muted-foreground">Type</Label>
+            <Label className="text-[13px] font-450 text-gray-600">Type</Label>
             <Badge variant="outline">Content Filter</Badge>
           </div>
-          
+
           <div className="space-y-2">
-            <Label className="text-sm font-450 text-muted-foreground">Status</Label>
+            <Label className="text-[13px] font-450 text-gray-600">Status</Label>
             <Badge variant="default" className="bg-green-100 text-green-800">Active</Badge>
           </div>
-          
+
           <div className="space-y-2">
-            <Label className="text-sm font-450 text-muted-foreground">Description</Label>
-            <p className="text-sm">Filters inappropriate or harmful content from AI responses</p>
+            <Label className="text-[13px] font-450 text-gray-600">Description</Label>
+            <p className="text-[13px]">Filters inappropriate or harmful content from AI responses</p>
           </div>
           
           <div className="flex gap-2 pt-4">
