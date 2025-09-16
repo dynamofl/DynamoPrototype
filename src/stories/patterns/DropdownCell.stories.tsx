@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import React from 'react';
-import { DropdownCell } from '../../components/patterns/cell-types/dropdown-cell';
+import { DropdownCell } from '../../components/patterns/ui-patterns/cell-types/dropdown-cell';
 
 const meta: Meta<typeof DropdownCell> = {
   title: 'Patterns/CellTypes/DropdownCell',

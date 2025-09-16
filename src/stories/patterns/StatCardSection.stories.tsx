@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { StatCardSection } from '../../components/patterns/stat-card-section';
-import type { StatCardData } from '../../components/patterns/stat-card-section';
+import { StatCardSection } from '../../components/patterns/ui-patterns/stat-card-section';
+import type { StatCardData } from '../../components/patterns/ui-patterns/stat-card-section';
 
 const meta: Meta<typeof StatCardSection> = {
   title: 'Patterns/StatCardSection',

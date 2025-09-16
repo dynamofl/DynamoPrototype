@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import React from 'react';
-import { UploadSheet } from '../../components/patterns/upload-sheet';
+import { UploadSheet } from '../../components/patterns/ui-patterns/upload-sheet';
 import type { CSVParseResult, FileState } from '@/types/csv';
 import type { EvaluationPrompt } from '@/types/evaluation';
 

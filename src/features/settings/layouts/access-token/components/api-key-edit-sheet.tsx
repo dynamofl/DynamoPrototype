@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ViewEditSheet } from '@/components/patterns'
-import { AISystemIcon } from '@/components/patterns/ai-system-icon'
+import { AISystemIcon } from '@/components/patterns/ui-patterns/ai-system-icon'
 import {
   AlertDialog,
   AlertDialogAction,

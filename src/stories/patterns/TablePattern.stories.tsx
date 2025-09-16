@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { TablePattern } from '../../components/patterns/table-pattern';
+import { TablePattern } from '../../components/patterns/ui-patterns/table-pattern';
 import type { TablePatternProps, TableRow, TableColumn, TableStorageConfig } from '@/types/table';
 
 // Mock data for the table

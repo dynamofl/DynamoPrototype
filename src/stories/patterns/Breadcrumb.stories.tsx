@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { MemoryRouter } from 'react-router-dom';
-import { Breadcrumb } from '../../components/patterns/breadcrumb';
+import { Breadcrumb } from '../../components/patterns/ui-patterns/breadcrumb';
 
 const meta: Meta<typeof Breadcrumb> = {
   title: 'Patterns/Breadcrumb',

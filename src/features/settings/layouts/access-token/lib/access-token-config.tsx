@@ -1,4 +1,4 @@
-import { AISystemIcon } from '@/components/patterns/ai-system-icon'
+import { AISystemIcon } from '@/components/patterns/ui-patterns/ai-system-icon'
 import { Pen, Plus } from 'lucide-react'
 import type { TableColumn } from '@/types/table'
 

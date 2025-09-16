@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import React from 'react';
-import { ViewEditSheet } from '../../components/patterns/view-edit-sheet';
+import { ViewEditSheet } from '../../components/patterns/ui-patterns/view-edit-sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

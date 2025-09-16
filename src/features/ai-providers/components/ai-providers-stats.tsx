@@ -4,8 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
-import { StatCardSection } from '@/components/patterns/stat-card-section'
-import type { StatCardData } from '@/components/patterns/stat-card-section'
+import { StatCardSection } from '@/components/patterns/ui-patterns/stat-card-section'
+import type { StatCardData } from '@/components/patterns/ui-patterns/stat-card-section'
 import { APIKeyStorage } from '@/lib/storage/secure-storage'
 
 export function AIProvidersStats() {

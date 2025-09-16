@@ -4,7 +4,7 @@ import {
   RemoteInlineIcon, 
   LocalInlineIcon, 
   AnthropicInlineIcon 
-} from '../../components/patterns/inline-ai-icons';
+} from '../../components/patterns/ui-patterns/inline-ai-icons';
 
 const meta: Meta<typeof OpenAIInlineIcon> = {
   title: 'Patterns/InlineAIIcons',

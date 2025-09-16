@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { ButtonCell } from '../../components/patterns/cell-types/button-cell';
+import { ButtonCell } from '../../components/patterns/ui-patterns/cell-types/button-cell';
 import { Edit, Trash2, Eye, Copy, MoreHorizontal } from 'lucide-react';
 
 const meta: Meta<typeof ButtonCell> = {

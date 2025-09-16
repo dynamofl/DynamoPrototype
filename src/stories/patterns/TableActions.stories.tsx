@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { TableActions } from '../../components/patterns/table-actions';
+import { TableActions } from '../../components/patterns/ui-patterns/table-actions';
 
 const meta: Meta<typeof TableActions> = {
   title: 'Patterns/TableActions',

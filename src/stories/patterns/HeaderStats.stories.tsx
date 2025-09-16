@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { HeaderStats } from '../../components/patterns/header-stats';
+import { HeaderStats } from '../../components/patterns/ui-patterns/header-stats';
 
 const meta: Meta<typeof HeaderStats> = {
   title: 'Patterns/HeaderStats',

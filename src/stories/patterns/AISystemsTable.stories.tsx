@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import React from 'react';
-import { AISystemsTable } from '../../components/patterns/ai-systems-table';
-import type { AISystem } from '../../components/patterns/ai-systems-table';
+import { AISystemsTable } from '../../components/patterns/ui-patterns/ai-systems-table';
+import type { AISystem } from '../../components/patterns/ui-patterns/ai-systems-table';
 
 // Mock data for the AI systems table
 const mockAISystems: AISystem[] = [

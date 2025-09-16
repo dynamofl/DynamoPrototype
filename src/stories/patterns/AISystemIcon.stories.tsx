@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { AISystemIcon } from '../../components/patterns/ai-system-icon';
+import { AISystemIcon } from '../../components/patterns/ui-patterns/ai-system-icon';
 
 const meta: Meta<typeof AISystemIcon> = {
   title: 'Patterns/AISystemIcon',

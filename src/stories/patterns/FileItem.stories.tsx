@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { FileItem } from '../../components/patterns/file-item';
+import { FileItem } from '../../components/patterns/ui-patterns/file-item';
 import type { FileState } from '@/types/csv';
 
 const meta: Meta<typeof FileItem> = {

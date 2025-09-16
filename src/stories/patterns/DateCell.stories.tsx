@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import React from 'react';
-import { DateCell } from '../../components/patterns/cell-types/date-cell';
+import { DateCell } from '../../components/patterns/ui-patterns/cell-types/date-cell';
 
 const meta: Meta<typeof DateCell> = {
   title: 'Patterns/CellTypes/DateCell',

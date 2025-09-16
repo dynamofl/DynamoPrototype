@@ -9,7 +9,10 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "generate-story": "node scripts/generate-story.js",
+    "generate-all-stories": "node scripts/generate-story.js --all",
+    "watch-stories": "node scripts/generate-story.js --watch"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.15",

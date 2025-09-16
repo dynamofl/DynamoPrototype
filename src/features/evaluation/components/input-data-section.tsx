@@ -15,7 +15,7 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
 } from "@/components/ui/pagination";
-import { UploadSheet } from "@/components/patterns/upload-sheet";
+import { UploadSheet } from "@/components/patterns/ui-patterns/upload-sheet";
 import { Plus, Notebook, Sparkles, AlertTriangle } from "lucide-react";
 import type { EvaluationPrompt } from "../types/evaluation";
 import { getTableColumns } from "../lib/table";

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import React from 'react';
-import { IconCell } from '../../components/patterns/cell-types/icon-cell';
+import { IconCell } from '../../components/patterns/ui-patterns/cell-types/icon-cell';
 import { CheckCircle, AlertTriangle, XCircle, Settings } from 'lucide-react';
 
 const meta: Meta<typeof IconCell> = {

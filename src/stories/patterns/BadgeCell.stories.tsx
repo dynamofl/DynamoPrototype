@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { BadgeCell } from '../../components/patterns/cell-types/badge-cell';
+import { BadgeCell } from '../../components/patterns/ui-patterns/cell-types/badge-cell';
 import { CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
 
 const meta: Meta<typeof BadgeCell> = {

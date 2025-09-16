@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { SwitchCell } from '../../components/patterns/cell-types/switch-cell';
+import { SwitchCell } from '../../components/patterns/ui-patterns/cell-types/switch-cell';
 
 const meta: Meta<typeof SwitchCell> = {
   title: 'Patterns/CellTypes/SwitchCell',

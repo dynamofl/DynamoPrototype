@@ -3,7 +3,7 @@
  */
 
 import React from 'react'
-import { AISystemIcon } from '@/components/patterns/ai-system-icon'
+import { AISystemIcon } from '@/components/patterns/ui-patterns/ai-system-icon'
 import { Edit, Trash2, Squircle, Square } from 'lucide-react'
 import type { TableColumn, ExpandableConfig, TableStorageConfig } from '@/types/table'
 import { AI_SYSTEMS_STORAGE_KEY, AI_SYSTEMS_ITEMS_PER_PAGE } from '../constants'

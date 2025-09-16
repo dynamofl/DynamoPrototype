@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import React from 'react';
-import { FreeTextCell } from '../../components/patterns/cell-types/free-text-cell';
+import { FreeTextCell } from '../../components/patterns/ui-patterns/cell-types/free-text-cell';
 
 const meta: Meta<typeof FreeTextCell> = {
   title: 'Patterns/CellTypes/FreeTextCell',
