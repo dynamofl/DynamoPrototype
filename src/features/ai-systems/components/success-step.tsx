@@ -3,8 +3,8 @@
  * Displays the success screen after AI system creation
  */
 
-import { CheckCircle, FolderOpen, Shield, CircleGauge, ChevronRight } from "lucide-react";
-import { AISystemIcon } from "@/components/patterns";
+import { FolderOpen, Shield, CircleGauge, ChevronRight } from "lucide-react";
+import { AISystemIcon, AnimatedCheck } from "@/components/patterns";
 
 export interface SuccessStepProps {
   createdSystem: {
@@ -19,26 +19,23 @@ export function SuccessStep({ createdSystem }: SuccessStepProps) {
       <div className="space-y-6 p-1">
         {/* Success Header */}
         <div className="space-y-3 py-2">
-          <div className="flex items-center justify-center w-12 h-12 bg-white border border-gray-200 rounded-xl">
-            <AISystemIcon
-              type={createdSystem?.icon as any}
-              className="w-12 h-12"
-            />
+          <div className="flex">
+            <AnimatedCheck className="text-green-800" size={32} />
           </div>
           <div className="space-y-1">
-            <h3 className="text-base font-450 text-gray-900">
+            <h3 className="text-base font-450 text-gray-700">
               AI System Connection Successful
             </h3>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+            <AISystemIcon
+              type={createdSystem?.icon as any}
+              className="w-5 h-5"
+              
+            />
               <span className="text-[13px] text-gray-700">
                 {createdSystem?.name}
               </span>
-              <div className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 border border-green-200 rounded-full">
-                <CheckCircle className="w-3 h-3 text-green-600" />
-                <span className="text-xs font-450 text-green-700">
-                  Connected
-                </span>
-              </div>
+              
             </div>
           </div>
         </div>

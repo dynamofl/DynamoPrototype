@@ -3,7 +3,7 @@ import { mergeConfig } from 'vite';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
 
 const config: StorybookConfig = {
   "stories": [
@@ -14,7 +14,8 @@ const config: StorybookConfig = {
     "@chromatic-com/storybook",
     "@storybook/addon-onboarding",
     "@storybook/addon-a11y",
-    "@storybook/addon-themes"
+    "@storybook/addon-themes",
+    "@storybook/addon-docs"
   ],
   "framework": {
     "name": "@storybook/react-vite",
@@ -24,7 +25,7 @@ const config: StorybookConfig = {
     return mergeConfig(config, {
       resolve: {
         alias: {
-          "@": path.resolve(__dirname, "../src"),
+          "@": path.resolve(currentDir, "../src"),
         },
       },
     });

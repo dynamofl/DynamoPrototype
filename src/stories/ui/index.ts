@@ -4,10 +4,13 @@
 export const UI_STORIES = [
   'Alert',
   'Badge',
+  'Banner',
   'Button',
   'Card',
   'Checkbox',
+  'ConversationFeedItem',
   'Dialog',
+  'GuardrailFeedItem',
   'Input',
   'Label',
   'Progress',
