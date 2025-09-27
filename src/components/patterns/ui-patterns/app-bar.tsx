@@ -28,6 +28,7 @@ export function AppBar() {
   // Navigation items based on experiments toggle
   const experimentNavItems = [
     { name: "Evaluation Sandbox", path: "/evaluation-sandbox" },
+    { name: "Evaluation Results", path: "/evaluation-results" },
     { name: "AI Providers", path: "/ai-providers" },
     { name: "Policies", path: "/guardrails" },
   ]

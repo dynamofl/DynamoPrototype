@@ -16,7 +16,7 @@ export function ExperimentsGuard() {
     const currentPath = location.pathname
 
     // Define pages available in each state
-    const experimentPages = ['/evaluation-sandbox', '/ai-providers', '/guardrails']
+    const experimentPages = ['/evaluation-sandbox', '/evaluation-results', '/ai-providers', '/guardrails']
     const standardPages = ['/ai-systems', '/guardrails']
 
     // Check if current page is available in the current experiments state

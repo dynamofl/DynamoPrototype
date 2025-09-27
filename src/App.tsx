@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { AIProvidersPage } from '@/features/ai-providers'
 import { AISystemsPage } from '@/features/ai-systems'
 import { EvaluationPage } from '@/features/evaluation'
+import { EvaluationResultsPage } from '@/features/evaluation-results'
 import { GuardrailsPage } from '@/features/guardrails'
 import { SettingsPage } from '@/features/settings'
 import { TablePatternDemo } from '@/components/table-pattern-demo'
@@ -19,7 +20,7 @@ function App() {
       <Route path="/settings" element={<SettingsPage />} />
       
       {/* All other routes with default layout */}
-      <Route path="*" element={
+      <Route path="/*" element={
         <div className="min-h-screen bg-background">
           <AppBar />
           <ExperimentsGuard />
@@ -36,6 +37,9 @@ function App() {
               
               {/* Evaluation Sandbox Route */}
               <Route path="/evaluation-sandbox" element={<EvaluationPage />} />
+              
+              {/* Evaluation Results Route */}
+              <Route path="/evaluation-results" element={<EvaluationResultsPage />} />
               
               {/* AI Providers Route */}
               <Route path="/ai-providers" element={<AIProvidersPage />} />
