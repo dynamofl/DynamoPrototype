@@ -23,9 +23,11 @@ import {
 interface EvaluationResultsFiltersProps {
   filters: FilterState
   onFiltersChange: (filters: FilterState) => void
+  currentView: 'table' | 'conversation'
+  onViewChange: (view: 'table' | 'conversation') => void
 }
 
-export function EvaluationResultsFilters({ filters, onFiltersChange }: EvaluationResultsFiltersProps) {
+export function EvaluationResultsFilters({ filters, onFiltersChange, currentView, onViewChange }: EvaluationResultsFiltersProps) {
   // State to track which additional filters are visible
   const [visibleAdditionalFilters, setVisibleAdditionalFilters] = useState<Set<string>>(new Set())
 
@@ -171,7 +173,7 @@ export function EvaluationResultsFilters({ filters, onFiltersChange }: Evaluatio
   }
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="space-y-4 py-3 px-4">
       {/* Primary Filter Row */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -180,7 +182,7 @@ export function EvaluationResultsFilters({ filters, onFiltersChange }: Evaluatio
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="outline" 
-                className={`gap-2 h-8 ${
+                className={`gap-2 h-7 ${
                   filters.attackOutcome.length > 0 
                     ? 'bg-blue-50 text-blue-700 border-blue-300' 
                     : 'border-gray-300'
@@ -212,7 +214,7 @@ export function EvaluationResultsFilters({ filters, onFiltersChange }: Evaluatio
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="outline" 
-                className={`gap-2 h-8 ${
+                className={`gap-2 h-7 ${
                   filters.attackType.length > 0 
                     ? 'bg-blue-50 text-blue-700 border-blue-300' 
                     : 'border-gray-300'
@@ -244,7 +246,7 @@ export function EvaluationResultsFilters({ filters, onFiltersChange }: Evaluatio
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="outline" 
-                className={`gap-2 h-8 ${
+                className={`gap-2 h-7 ${
                   filters.guardrailJudgment.length > 0 
                     ? 'bg-blue-50 text-blue-700 border-blue-300' 
                     : 'border-gray-300'
@@ -278,7 +280,7 @@ export function EvaluationResultsFilters({ filters, onFiltersChange }: Evaluatio
               <DropdownMenuTrigger asChild>
                 <Button 
                   variant="outline" 
-                  className={`gap-2 h-8 ${
+                  className={`gap-2 h-7 ${
                     filters.aiSystemJudgment.length > 0 
                       ? 'bg-blue-50 text-blue-700 border-blue-300' 
                       : 'border-gray-300'
@@ -325,7 +327,7 @@ export function EvaluationResultsFilters({ filters, onFiltersChange }: Evaluatio
               <DropdownMenuTrigger asChild>
                 <Button 
                   variant="outline" 
-                  className={`gap-2 h-8 ${
+                  className={`gap-2 h-7 ${
                     filters.severity.length > 0 
                       ? 'bg-blue-50 text-blue-700 border-blue-300' 
                       : 'border-gray-300'
@@ -371,7 +373,7 @@ export function EvaluationResultsFilters({ filters, onFiltersChange }: Evaluatio
           {getAvailableAdditionalFilters().length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2 h-8 border-gray-300">
+                <Button variant="outline" className="gap-2 h-7 border-gray-300">
                   <Plus className="h-3 w-3" />
                   More filters
                 </Button>
@@ -399,7 +401,7 @@ export function EvaluationResultsFilters({ filters, onFiltersChange }: Evaluatio
               placeholder="Search conversations"
               value={filters.searchTerm}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="pl-9 w-64 h-8"
+              className="pl-9 w-64 h-7"
             />
           </div>
 
@@ -407,14 +409,24 @@ export function EvaluationResultsFilters({ filters, onFiltersChange }: Evaluatio
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 px-3 bg-blue-50 text-blue-600 text-xs"
+              onClick={() => onViewChange('table')}
+              className={`h-6 px-3 text-xs ${
+                currentView === 'table' 
+                  ? 'bg-blue-50 text-blue-600' 
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
             >
               Table View
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 px-3 text-gray-600 text-xs"
+              onClick={() => onViewChange('conversation')}
+              className={`h-6 px-3 text-xs ${
+                currentView === 'conversation' 
+                  ? 'bg-blue-50 text-blue-600' 
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
             >
               Conversation View
             </Button>

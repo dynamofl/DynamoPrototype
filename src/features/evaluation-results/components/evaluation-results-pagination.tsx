@@ -14,11 +14,13 @@ import { PAGE_SIZE_OPTIONS } from '../constants'
 interface EvaluationResultsPaginationProps {
   pagination: PaginationState
   onPaginationChange: (pagination: PaginationState) => void
+  showQuickNavigation?: boolean
 }
 
 export function EvaluationResultsPagination({
   pagination,
-  onPaginationChange
+  onPaginationChange,
+  showQuickNavigation = true
 }: EvaluationResultsPaginationProps) {
   const { page, pageSize, total } = pagination
   const totalPages = Math.ceil(total / pageSize)
@@ -42,21 +44,23 @@ export function EvaluationResultsPagination({
 
   return (
     <div className="flex items-center justify-between px-4 py-3">
-      {/* Left side - Navigate To and Quick Navigation */}
-      <div className="flex items-center gap-4">
-        <div className="text-sm text-gray-600">
-          Navigate To:
+      {/* Left side - Navigate To and Quick Navigation - Only show if enabled */}
+      {showQuickNavigation && (
+        <div className="flex items-center gap-4">
+          <div className="text-sm text-gray-600">
+            Navigate To:
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-sm text-gray-600">First</span>
+          </div>
+          <div className="text-sm text-gray-600">
+            Quick Navigation
+          </div>
         </div>
-        <div className="flex items-center gap-1">
-          <span className="text-sm text-gray-600">First</span>
-        </div>
-        <div className="text-sm text-gray-600">
-          Quick Navigation
-        </div>
-      </div>
+      )}
 
       {/* Right side - Pagination controls */}
-      <div className="flex items-center gap-4">
+      <div className={`flex items-center gap-4 ${!showQuickNavigation ? 'ml-auto' : ''}`}>
         {/* Rows per page */}
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-600">Rows per page:</span>
@@ -81,14 +85,18 @@ export function EvaluationResultsPagination({
 
         {/* Navigation buttons */}
         <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handlePageChange(1)}
-            disabled={page === 1}
-          >
-            <ChevronsLeft className="h-4 w-4" />
-          </Button>
+          {showQuickNavigation && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handlePageChange(1)}
+                disabled={page === 1}
+              >
+                <ChevronsLeft className="h-4 w-4" />
+              </Button>
+            </>
+          )}
           <Button
             variant="ghost"
             size="sm"
@@ -105,14 +113,16 @@ export function EvaluationResultsPagination({
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handlePageChange(totalPages)}
-            disabled={page === totalPages}
-          >
-            <ChevronsRight className="h-4 w-4" />
-          </Button>
+          {showQuickNavigation && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handlePageChange(totalPages)}
+              disabled={page === totalPages}
+            >
+              <ChevronsRight className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
     </div>
