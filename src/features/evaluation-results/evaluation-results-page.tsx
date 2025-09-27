@@ -21,6 +21,7 @@ export function EvaluationResultsPage() {
   const [currentView, setCurrentView] = useState<ViewType>('table')
   const [conversationDisplayCount, setConversationDisplayCount] = useState(25)
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null)
+  const [transitionState, setTransitionState] = useState<'idle' | 'exiting' | 'entering'>('idle')
 
   const [filters, setFilters] = useState<FilterState>({
     attackOutcome: [],
@@ -118,11 +119,25 @@ export function EvaluationResultsPage() {
   }
 
   const handleViewChange = (view: ViewType) => {
-    setCurrentView(view)
-    // Reset conversation display count when switching views
-    if (view === 'conversation') {
-      setConversationDisplayCount(25)
-    }
+    if (view === currentView || transitionState !== 'idle') return
+    
+    // Start exit animation
+    setTransitionState('exiting')
+    
+    // After exit animation, switch view and start entrance
+    setTimeout(() => {
+      setCurrentView(view)
+      // Reset conversation display count when switching to conversation view
+      if (view === 'conversation') {
+        setConversationDisplayCount(25)
+      }
+      setTransitionState('entering')
+      
+      // Complete entrance animation
+      setTimeout(() => {
+        setTransitionState('idle')
+      }, 150) // Duration of entrance animation
+    }, 150) // Duration of exit animation
   }
 
   const handleLoadMore = () => {
@@ -163,23 +178,37 @@ export function EvaluationResultsPage() {
       <div className="flex flex-1 overflow-hidden">
         {/* Table/Conversation View */}
         <div className={`${currentView === 'conversation' ? 'w-[480px]' : 'flex-1'} ${currentView === 'table' ? 'overflow-auto' : 'flex flex-col overflow-hidden'}`}>
-          {currentView === 'table' ? (
-            <EvaluationResultsTable
-              data={displayData}
-              selectedRows={selectedRows}
-              onRowSelect={handleRowSelect}
-              onSelectAll={handleSelectAll}
-            />
-          ) : (
-            <EvaluationResultsConversationView
-              data={displayData}
-              totalCount={filteredData.length}
-              hasMore={displayData.length < filteredData.length}
-              onLoadMore={handleLoadMore}
-              selectedConversationId={selectedConversationId}
-              onConversationSelect={handleConversationSelect}
-            />
-          )}
+          <div 
+            className={`h-full transition-all  ${
+              transitionState === 'exiting'
+                ? currentView === 'table'
+                  ? 'opacity-0 transform -translate-x-4' // Table exit: slide left + fade
+                  : 'opacity-0 transform translate-x-4' // Conversation exit: slide right + fade
+                : transitionState === 'entering'
+                ? currentView === 'table'
+                  ? 'opacity-0 transform -translate-x-4' // Table entrance: from right + fade
+                  : 'opacity-0 transform translate-x-4' // Conversation entrance: from left + fade
+                : 'opacity-100 transform translate-x-0' // Normal state: visible + centered
+            }`}
+          >
+            {currentView === 'table' ? (
+              <EvaluationResultsTable
+                data={displayData}
+                selectedRows={selectedRows}
+                onRowSelect={handleRowSelect}
+                onSelectAll={handleSelectAll}
+              />
+            ) : (
+              <EvaluationResultsConversationView
+                data={displayData}
+                totalCount={filteredData.length}
+                hasMore={displayData.length < filteredData.length}
+                onLoadMore={handleLoadMore}
+                selectedConversationId={selectedConversationId}
+                onConversationSelect={handleConversationSelect}
+              />
+            )}
+          </div>
         </div>
         
         {/* Right White Space for Conversation View */}
