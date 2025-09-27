@@ -5,6 +5,7 @@ import {
   EvaluationResultsPagination,
   EvaluationResultsConversationView
 } from './components'
+import { EvaluationConversationDetail } from './components/evaluation-conversation-detail'
 import { loadEvaluationData, filterRecords, paginateRecords } from './lib'
 import { DEFAULT_PAGE_SIZE } from './constants'
 import type { EvaluationRecord, FilterState, PaginationState } from './types'
@@ -211,10 +212,26 @@ export function EvaluationResultsPage() {
           </div>
         </div>
         
-        {/* Right White Space for Conversation View */}
+        {/* Right Detail Area for Conversation View */}
         {currentView === 'conversation' && (
-          <div className="flex-1 bg-white border-l border-gray-200 overflow-y-auto">
-            {/* This will be the detailed view area later - now scrollable */}
+          <div className="flex-1 border-l border-gray-200 overflow-y-auto">
+            {selectedConversationId && displayData.length > 0 && (
+              (() => {
+                const selectedRecord = displayData.find(record => record.id === selectedConversationId)
+                return selectedRecord ? (
+                  <EvaluationConversationDetail record={selectedRecord} />
+                ) : (
+                  <div className="flex items-center justify-center h-64">
+                    <div className="text-lg text-gray-500">No conversation selected</div>
+                  </div>
+                )
+              })()
+            )}
+            {(!selectedConversationId || displayData.length === 0) && (
+              <div className="flex items-center justify-center h-64">
+                <div className="text-lg text-gray-500">Select a conversation to view details</div>
+              </div>
+            )}
           </div>
         )}
       </div>

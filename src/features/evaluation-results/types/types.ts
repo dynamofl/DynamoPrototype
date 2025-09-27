@@ -10,6 +10,11 @@ export interface GuardrailResult {
   result: "Blocked" | "Allowed"
 }
 
+export interface ConversationMessage {
+  role: "user" | "agent" | "system"
+  message: string
+}
+
 export interface EvaluationRecord {
   id: string
   timestamp: string
@@ -19,6 +24,7 @@ export interface EvaluationRecord {
   dataSource: string
   frameworksReferred: FrameworkReference[]
   jailbrokenPrompt: string
+  jailbrokenConversation?: ConversationMessage[]
   inputGuardrails: GuardrailResult[]
   inputGuardrailResultAggregate: "Blocked" | "Allowed"
   aiSystemResponse: string

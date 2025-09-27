@@ -422,16 +422,16 @@ export function EvaluationResultsFilters({ filters, onFiltersChange, currentView
               placeholder="Search conversations"
               value={filters.searchTerm}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="pl-9 w-64 h-7"
+              className="pl-9 w-64 h-8"
             />
           </div>
 
           <Tabs value={currentView} onValueChange={(value) => onViewChange(value as 'table' | 'conversation')}>
-            <TabsList className="h-8">
-              <TabsTrigger value="table" className="text-xs px-3">
+            <TabsList className="h-9 px-1 rounded-lg">
+              <TabsTrigger value="table" className="text-[13px] py-1 px-3 rounded-md">
                 Table View
               </TabsTrigger>
-              <TabsTrigger value="conversation" className="text-xs px-3">
+              <TabsTrigger value="conversation" className="text-[13px] py-1 px-3 rounded-md">
                 Conversation View
               </TabsTrigger>
             </TabsList>
