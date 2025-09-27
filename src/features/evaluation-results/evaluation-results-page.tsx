@@ -20,6 +20,7 @@ export function EvaluationResultsPage() {
   const [selectedRows, setSelectedRows] = useState<string[]>([])
   const [currentView, setCurrentView] = useState<ViewType>('table')
   const [conversationDisplayCount, setConversationDisplayCount] = useState(25)
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null)
 
   const [filters, setFilters] = useState<FilterState>({
     attackOutcome: [],
@@ -75,8 +76,20 @@ export function EvaluationResultsPage() {
       // For conversation view, show the first N items based on conversationDisplayCount
       const conversationData = filteredData.slice(0, conversationDisplayCount)
       setDisplayData(conversationData)
+      
+      // Auto-select first conversation if none selected or current selection not in data
+      if (conversationData.length > 0) {
+        const currentSelectionExists = selectedConversationId && 
+          conversationData.some(record => record.id === selectedConversationId)
+        
+        if (!currentSelectionExists) {
+          setSelectedConversationId(conversationData[0].id)
+        }
+      } else {
+        setSelectedConversationId(null)
+      }
     }
-  }, [filteredData, pagination.page, pagination.pageSize, currentView, conversationDisplayCount])
+  }, [filteredData, pagination.page, pagination.pageSize, currentView, conversationDisplayCount, selectedConversationId])
 
   const handleFiltersChange = (newFilters: FilterState) => {
     setFilters(newFilters)
@@ -116,6 +129,10 @@ export function EvaluationResultsPage() {
     setConversationDisplayCount(prev => prev + 25)
   }
 
+  const handleConversationSelect = (id: string) => {
+    setSelectedConversationId(id)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -133,9 +150,7 @@ export function EvaluationResultsPage() {
   }
 
   return (
-    <div className="flex flex-col h-full">
-   
-
+    <div className="flex flex-col overflow-hidden" style={{ height: 'calc(100vh - 64px)' }}>
       {/* Filters */}
       <EvaluationResultsFilters 
         filters={filters}
@@ -147,7 +162,7 @@ export function EvaluationResultsPage() {
       {/* Content Area */}
       <div className="flex flex-1 overflow-hidden">
         {/* Table/Conversation View */}
-        <div className={`${currentView === 'conversation' ? 'w-[480px]' : 'flex-1'} ${currentView === 'table' ? 'overflow-auto' : 'flex flex-col'}`}>
+        <div className={`${currentView === 'conversation' ? 'w-[480px]' : 'flex-1'} ${currentView === 'table' ? 'overflow-auto' : 'flex flex-col overflow-hidden'}`}>
           {currentView === 'table' ? (
             <EvaluationResultsTable
               data={displayData}
@@ -161,14 +176,16 @@ export function EvaluationResultsPage() {
               totalCount={filteredData.length}
               hasMore={displayData.length < filteredData.length}
               onLoadMore={handleLoadMore}
+              selectedConversationId={selectedConversationId}
+              onConversationSelect={handleConversationSelect}
             />
           )}
         </div>
         
         {/* Right White Space for Conversation View */}
         {currentView === 'conversation' && (
-          <div className="flex-1 bg-white border-l border-gray-200">
-            {/* This will be the detailed view area later */}
+          <div className="flex-1 bg-white border-l border-gray-200 overflow-y-auto">
+            {/* This will be the detailed view area later - now scrollable */}
           </div>
         )}
       </div>

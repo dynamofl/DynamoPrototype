@@ -3,10 +3,11 @@ import { Search, ChevronDown, Plus, X, Filter } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuCheckboxItem,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
@@ -173,7 +174,7 @@ export function EvaluationResultsFilters({ filters, onFiltersChange, currentView
   }
 
   return (
-    <div className="space-y-4 py-3 px-4">
+    <div className="space-y-4 py-3 mx-4 border-b">
       {/* Primary Filter Row */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -182,7 +183,7 @@ export function EvaluationResultsFilters({ filters, onFiltersChange, currentView
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="outline" 
-                className={`gap-2 h-7 ${
+                className={`text-gray-700 gap-2 h-7 ${
                   filters.attackOutcome.length > 0 
                     ? 'bg-blue-50 text-blue-700 border-blue-300' 
                     : 'border-gray-300'
@@ -199,13 +200,17 @@ export function EvaluationResultsFilters({ filters, onFiltersChange, currentView
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
               {ATTACK_OUTCOME_OPTIONS.map((option) => (
-                <DropdownMenuCheckboxItem
+                <DropdownMenuItem
                   key={option.value}
-                  checked={filters.attackOutcome.includes(option.value)}
-                  onCheckedChange={(checked) => handleAttackOutcomeChange(option.value, checked)}
+                  className="flex items-center space-x-2 cursor-pointer"
+                  onClick={() => handleAttackOutcomeChange(option.value, !filters.attackOutcome.includes(option.value))}
                 >
-                  {option.label}
-                </DropdownMenuCheckboxItem>
+                  <Checkbox
+                    checked={filters.attackOutcome.includes(option.value)}
+                    onCheckedChange={(checked) => handleAttackOutcomeChange(option.value, !!checked)}
+                  />
+                  <span className="flex-1">{option.label}</span>
+                </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
@@ -214,7 +219,7 @@ export function EvaluationResultsFilters({ filters, onFiltersChange, currentView
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="outline" 
-                className={`gap-2 h-7 ${
+                className={`text-gray-700 gap-2 h-7 ${
                   filters.attackType.length > 0 
                     ? 'bg-blue-50 text-blue-700 border-blue-300' 
                     : 'border-gray-300'
@@ -231,13 +236,17 @@ export function EvaluationResultsFilters({ filters, onFiltersChange, currentView
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-56">
               {ATTACK_TYPE_OPTIONS.map((option) => (
-                <DropdownMenuCheckboxItem
+                <DropdownMenuItem
                   key={option.value}
-                  checked={filters.attackType.includes(option.value)}
-                  onCheckedChange={(checked) => handleAttackTypeChange(option.value, checked)}
+                  className="flex items-center space-x-2 cursor-pointer"
+                  onClick={() => handleAttackTypeChange(option.value, !filters.attackType.includes(option.value))}
                 >
-                  {option.label}
-                </DropdownMenuCheckboxItem>
+                  <Checkbox
+                    checked={filters.attackType.includes(option.value)}
+                    onCheckedChange={(checked) => handleAttackTypeChange(option.value, !!checked)}
+                  />
+                  <span className="flex-1">{option.label}</span>
+                </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
@@ -246,7 +255,7 @@ export function EvaluationResultsFilters({ filters, onFiltersChange, currentView
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="outline" 
-                className={`gap-2 h-7 ${
+                className={`text-gray-700 gap-2 h-7 ${
                   filters.guardrailJudgment.length > 0 
                     ? 'bg-blue-50 text-blue-700 border-blue-300' 
                     : 'border-gray-300'
@@ -263,13 +272,17 @@ export function EvaluationResultsFilters({ filters, onFiltersChange, currentView
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
               {GUARDRAIL_JUDGMENT_OPTIONS.map((option) => (
-                <DropdownMenuCheckboxItem
+                <DropdownMenuItem
                   key={option.value}
-                  checked={filters.guardrailJudgment.includes(option.value)}
-                  onCheckedChange={(checked) => handleGuardrailJudgmentChange(option.value, checked)}
+                  className="flex items-center space-x-2 cursor-pointer"
+                  onClick={() => handleGuardrailJudgmentChange(option.value, !filters.guardrailJudgment.includes(option.value))}
                 >
-                  {option.label}
-                </DropdownMenuCheckboxItem>
+                  <Checkbox
+                    checked={filters.guardrailJudgment.includes(option.value)}
+                    onCheckedChange={(checked) => handleGuardrailJudgmentChange(option.value, !!checked)}
+                  />
+                  <span className="flex-1">{option.label}</span>
+                </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
@@ -280,7 +293,7 @@ export function EvaluationResultsFilters({ filters, onFiltersChange, currentView
               <DropdownMenuTrigger asChild>
                 <Button 
                   variant="outline" 
-                  className={`gap-2 h-7 ${
+                  className={`text-gray-700 gap-2 h-7 ${
                     filters.aiSystemJudgment.length > 0 
                       ? 'bg-blue-50 text-blue-700 border-blue-300' 
                       : 'border-gray-300'
@@ -310,13 +323,17 @@ export function EvaluationResultsFilters({ filters, onFiltersChange, currentView
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
                 {AI_SYSTEM_JUDGMENT_OPTIONS.map((option) => (
-                  <DropdownMenuCheckboxItem
+                  <DropdownMenuItem
                     key={option.value}
-                    checked={filters.aiSystemJudgment.includes(option.value)}
-                    onCheckedChange={(checked) => handleAiSystemJudgmentChange(option.value, checked)}
+                    className="flex items-center space-x-2 cursor-pointer"
+                    onClick={() => handleAiSystemJudgmentChange(option.value, !filters.aiSystemJudgment.includes(option.value))}
                   >
-                    {option.label}
-                  </DropdownMenuCheckboxItem>
+                    <Checkbox
+                      checked={filters.aiSystemJudgment.includes(option.value)}
+                      onCheckedChange={(checked) => handleAiSystemJudgmentChange(option.value, !!checked)}
+                    />
+                    <span className="flex-1">{option.label}</span>
+                  </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
@@ -327,7 +344,7 @@ export function EvaluationResultsFilters({ filters, onFiltersChange, currentView
               <DropdownMenuTrigger asChild>
                 <Button 
                   variant="outline" 
-                  className={`gap-2 h-7 ${
+                  className={`text-gray-700 gap-2 h-7 ${
                     filters.severity.length > 0 
                       ? 'bg-blue-50 text-blue-700 border-blue-300' 
                       : 'border-gray-300'
@@ -357,13 +374,17 @@ export function EvaluationResultsFilters({ filters, onFiltersChange, currentView
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
                 {SEVERITY_OPTIONS.map((option) => (
-                  <DropdownMenuCheckboxItem
+                  <DropdownMenuItem
                     key={option.value}
-                    checked={filters.severity.includes(option.value)}
-                    onCheckedChange={(checked) => handleSeverityChange(option.value, checked)}
+                    className="flex items-center space-x-2 cursor-pointer"
+                    onClick={() => handleSeverityChange(option.value, !filters.severity.includes(option.value))}
                   >
-                    {option.label}
-                  </DropdownMenuCheckboxItem>
+                    <Checkbox
+                      checked={filters.severity.includes(option.value)}
+                      onCheckedChange={(checked) => handleSeverityChange(option.value, !!checked)}
+                    />
+                    <span className="flex-1">{option.label}</span>
+                  </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
@@ -373,7 +394,7 @@ export function EvaluationResultsFilters({ filters, onFiltersChange, currentView
           {getAvailableAdditionalFilters().length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2 h-7 border-gray-300">
+                <Button variant="outline" className="text-gray-700 gap-2 h-7 border-gray-300">
                   <Plus className="h-3 w-3" />
                   More filters
                 </Button>
@@ -405,32 +426,16 @@ export function EvaluationResultsFilters({ filters, onFiltersChange, currentView
             />
           </div>
 
-          <div className="flex gap-1 border rounded-lg p-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onViewChange('table')}
-              className={`h-6 px-3 text-xs ${
-                currentView === 'table' 
-                  ? 'bg-blue-50 text-blue-600' 
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Table View
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onViewChange('conversation')}
-              className={`h-6 px-3 text-xs ${
-                currentView === 'conversation' 
-                  ? 'bg-blue-50 text-blue-600' 
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Conversation View
-            </Button>
-          </div>
+          <Tabs value={currentView} onValueChange={(value) => onViewChange(value as 'table' | 'conversation')}>
+            <TabsList className="h-8">
+              <TabsTrigger value="table" className="text-xs px-3">
+                Table View
+              </TabsTrigger>
+              <TabsTrigger value="conversation" className="text-xs px-3">
+                Conversation View
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
       </div>
 
@@ -458,7 +463,7 @@ export function EvaluationResultsFilters({ filters, onFiltersChange, currentView
           <Button
             variant="ghost"
             onClick={clearAllFilters}
-            className="h-6 px-3 text-gray-600 hover:text-gray-900 text-xs"
+            className="h-6 px-3 text-gray-600 hover:text-gray-700 text-xs"
           >
             Clear all filters
           </Button>

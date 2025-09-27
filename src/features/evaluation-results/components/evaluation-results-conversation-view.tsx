@@ -1,5 +1,5 @@
-import React from 'react'
-import { MessagesSquare } from 'lucide-react'
+import React, { useEffect, useRef } from 'react'
+import { MessagesSquare, ChevronUp, ChevronDown } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import type { EvaluationRecord } from '../types'
@@ -9,14 +9,70 @@ interface EvaluationResultsConversationViewProps {
   totalCount: number
   hasMore: boolean
   onLoadMore: () => void
+  selectedConversationId: string | null
+  onConversationSelect: (id: string) => void
 }
 
 export function EvaluationResultsConversationView({ 
   data, 
   totalCount,
   hasMore,
-  onLoadMore
+  onLoadMore,
+  selectedConversationId,
+  onConversationSelect
 }: EvaluationResultsConversationViewProps) {
+  
+  const containerRef = useRef<HTMLDivElement>(null)
+  
+  // Find the selected conversation's position
+  const selectedIndex = selectedConversationId 
+    ? data.findIndex(record => record.id === selectedConversationId) 
+    : -1
+  const selectedPosition = selectedIndex >= 0 ? selectedIndex + 1 : 0
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!event.shiftKey || data.length === 0) return
+      
+      if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+        event.preventDefault()
+        
+        const currentIndex = selectedIndex >= 0 ? selectedIndex : 0
+        
+        if (event.key === 'ArrowUp') {
+          // Only navigate up if not at the top
+          if (currentIndex > 0) {
+            onConversationSelect(data[currentIndex - 1].id)
+          }
+        } else if (event.key === 'ArrowDown') {
+          // Only navigate down if not at the bottom
+          if (currentIndex < data.length - 1) {
+            onConversationSelect(data[currentIndex + 1].id)
+          }
+        }
+      }
+    }
+
+    // Add event listener to document to capture keyboard events globally
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [selectedIndex, data, onConversationSelect])
+
+  // Navigation functions
+  const navigateUp = () => {
+    if (data.length === 0 || selectedIndex <= 0) return
+    onConversationSelect(data[selectedIndex - 1].id)
+  }
+
+  const navigateDown = () => {
+    if (data.length === 0 || selectedIndex >= data.length - 1) return
+    onConversationSelect(data[selectedIndex + 1].id)
+  }
+
+  // Check if navigation buttons should be disabled
+  const isUpDisabled = data.length === 0 || selectedIndex <= 0
+  const isDownDisabled = data.length === 0 || selectedIndex >= data.length - 1
 
   const renderAttackOutcome = (outcome: string) => (
     <Badge 
@@ -33,17 +89,42 @@ export function EvaluationResultsConversationView({
 
 
   return (
-    <div className="h-full flex flex-col px-4">
+    <div 
+      ref={containerRef}
+      className="pl-4 pr-2 h-full flex flex-col " 
+      tabIndex={0}
+      style={{ outline: 'none' }}
+    >
       {/* Header Row - Fixed */}
-      <div className="flex items-center h-8 border-b bg-gray-100 flex-shrink-0">
-        <div className="w-12 flex items-center justify-center">
+      <div className="flex items-center h-8  bg-gray-100 flex-shrink-0 px-2 mb-1">
+        <div className="w-8 flex items-center justify-center">
           <MessagesSquare className="h-4 w-4 text-gray-500" strokeWidth="2" />
         </div>
         <div className="flex-1 text-xs font-450 text-gray-600 pl-3">
           Test Conversations
         </div>
-        <div className="w-[150px] text-sm text-gray-600 text-right pr-2">
-          {totalCount > 0 ? `${data.length}/${totalCount}` : '0/0'}
+        <div className="flex items-center gap-[8px]">
+          <div className="text-[13px] font-[425] text-[#4b5976] text-right">
+            {totalCount > 0 ? `${selectedPosition}/${totalCount}` : '0/0'}
+          </div>
+          <div className="flex gap-[4px] p-[2px]">
+            <button
+              onClick={navigateUp}
+              disabled={isUpDisabled}
+              className="size-[20px] bg-[rgba(9,28,66,0.04)] rounded-[4px] flex items-center justify-center hover:bg-[rgba(9,28,66,0.08)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Previous conversation (Shift + ↑)"
+            >
+              <ChevronUp className="size-3 text-[#4b5976]" />
+            </button>
+            <button
+              onClick={navigateDown}
+              disabled={isDownDisabled}
+              className="size-[20px] bg-[rgba(9,28,66,0.04)] rounded-[4px] flex items-center justify-center hover:bg-[rgba(9,28,66,0.08)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Next conversation (Shift + ↓)"
+            >
+              <ChevronDown className="size-3 text-[#4b5976]" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -51,13 +132,20 @@ export function EvaluationResultsConversationView({
       <div className="flex-1 overflow-y-auto">
         {data.length > 0 ? (
           <div>
-            {data.map((record, index) => (
-              <div
-                key={record.id}
-                className="flex py-2 items-center border-b group transition-colors hover:bg-gray-50"
-              >
+            {data.map((record, index) => {
+              const isSelected = selectedConversationId === record.id
+              return (
+                <div
+                  key={record.id}
+                  onClick={() => onConversationSelect(record.id)}
+                  className={`flex p-2 items-center group transition-colors rounded-md cursor-pointer ${
+                    isSelected 
+                      ? 'bg-blue-50 border-blue-200' 
+                      : 'hover:bg-gray-100 border-none'
+                  }`}
+                >
                 {/* Row Number Cell */}
-                <div className="w-12 flex items-center justify-center">
+                <div className="w-8 flex items-center justify-center">
                   <span className="text-sm text-gray-500">
                     {index + 1}
                   </span>
@@ -71,11 +159,12 @@ export function EvaluationResultsConversationView({
                 </div>
 
                 {/* Status Badge */}
-                <div className="w-[150px] flex justify-end pr-2">
+                <div className="w-[150px] flex justify-end ">
                   {renderAttackOutcome(record.attackOutcome)}
                 </div>
               </div>
-            ))}
+            )
+            })}
           </div>
         ) : (
           /* Empty State */
