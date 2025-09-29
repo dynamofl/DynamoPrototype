@@ -1,17 +1,10 @@
 import { Navigate } from 'react-router-dom'
-import { useExperimentsToggle } from '@/hooks/useExperimentsToggle'
 
 /**
- * Smart redirect component that redirects users to the appropriate page
- * based on the experiments toggle state:
- * - If experiments are OFF: redirect to AI Systems
- * - If experiments are ON: redirect to AI Providers
+ * Smart redirect component that redirects users to AI Systems page
+ * regardless of experiments state, since AI Systems is now a main navigation item.
  */
 export function SmartRedirect() {
-  const { experimentsEnabled } = useExperimentsToggle()
-  
-  // Redirect based on experiments toggle state
-  const redirectPath = experimentsEnabled ? '/ai-providers' : '/ai-systems'
-  
-  return <Navigate to={redirectPath} replace />
+  // Always redirect to AI Systems as it's the main dashboard
+  return <Navigate to="/ai-systems" replace />
 }

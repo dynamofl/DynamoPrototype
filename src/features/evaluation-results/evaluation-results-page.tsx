@@ -3,7 +3,8 @@ import {
   EvaluationResultsTable, 
   EvaluationResultsFilters, 
   EvaluationResultsPagination,
-  EvaluationResultsConversationView
+  EvaluationResultsConversationView,
+  EvaluationConversationSideSheet
 } from './components'
 import { EvaluationConversationDetail } from './components/evaluation-conversation-detail'
 import { loadEvaluationData, filterRecords, paginateRecords } from './lib'
@@ -23,6 +24,8 @@ export function EvaluationResultsPage() {
   const [conversationDisplayCount, setConversationDisplayCount] = useState(25)
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null)
   const [transitionState, setTransitionState] = useState<'idle' | 'exiting' | 'entering'>('idle')
+  const [sideSheetOpen, setSideSheetOpen] = useState(false)
+  const [sideSheetRecordId, setSideSheetRecordId] = useState<string | null>(null)
 
   const [filters, setFilters] = useState<FilterState>({
     attackOutcome: [],
@@ -149,6 +152,37 @@ export function EvaluationResultsPage() {
     setSelectedConversationId(id)
   }
 
+  const handleRowClick = (record: EvaluationRecord) => {
+    setSideSheetRecordId(record.id)
+    setSideSheetOpen(true)
+  }
+
+  const handleSideSheetNavigateNext = () => {
+    if (!sideSheetRecordId) return
+    const currentIndex = allData.findIndex(r => r.id === sideSheetRecordId)
+    if (currentIndex < allData.length - 1) {
+      setSideSheetRecordId(allData[currentIndex + 1].id)
+    }
+  }
+
+  const handleSideSheetNavigatePrevious = () => {
+    if (!sideSheetRecordId) return
+    const currentIndex = allData.findIndex(r => r.id === sideSheetRecordId)
+    if (currentIndex > 0) {
+      setSideSheetRecordId(allData[currentIndex - 1].id)
+    }
+  }
+
+  const handleSideSheetExpand = () => {
+    if (!sideSheetRecordId) return
+    // Close side sheet
+    setSideSheetOpen(false)
+    // Switch to conversation view
+    handleViewChange('conversation')
+    // Set the selected conversation
+    setSelectedConversationId(sideSheetRecordId)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -198,6 +232,7 @@ export function EvaluationResultsPage() {
                 selectedRows={selectedRows}
                 onRowSelect={handleRowSelect}
                 onSelectAll={handleSelectAll}
+                onRowClick={handleRowClick}
               />
             ) : (
               <EvaluationResultsConversationView
@@ -215,23 +250,27 @@ export function EvaluationResultsPage() {
         {/* Right Detail Area for Conversation View */}
         {currentView === 'conversation' && (
           <div className="flex-1 border-l border-gray-200 overflow-y-auto">
-            {selectedConversationId && displayData.length > 0 && (
-              (() => {
-                const selectedRecord = displayData.find(record => record.id === selectedConversationId)
-                return selectedRecord ? (
-                  <EvaluationConversationDetail record={selectedRecord} />
-                ) : (
-                  <div className="flex items-center justify-center h-64">
-                    <div className="text-lg text-gray-500">No conversation selected</div>
-                  </div>
-                )
-              })()
-            )}
-            {(!selectedConversationId || displayData.length === 0) && (
-              <div className="flex items-center justify-center h-64">
-                <div className="text-lg text-gray-500">Select a conversation to view details</div>
-              </div>
-            )}
+            <div className="transition-all duration-300 ease-in-out">
+              {selectedConversationId && displayData.length > 0 && (
+                (() => {
+                  const selectedRecord = displayData.find(record => record.id === selectedConversationId)
+                  return selectedRecord ? (
+                    <div className="animate-in fade-in-0 slide-in-from-right-2 duration-300">
+                      <EvaluationConversationDetail record={selectedRecord} />
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-64 animate-in fade-in-0 duration-300">
+                      <div className="text-lg text-gray-500">No conversation selected</div>
+                    </div>
+                  )
+                })()
+              )}
+              {(!selectedConversationId || displayData.length === 0) && (
+                <div className="flex items-center justify-center h-64 animate-in fade-in-0 duration-300">
+                  <div className="text-lg text-gray-500">Select a conversation to view details</div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -243,6 +282,17 @@ export function EvaluationResultsPage() {
           onPaginationChange={handlePaginationChange}
         />
       )}
+
+      {/* Side Sheet */}
+      <EvaluationConversationSideSheet
+        open={sideSheetOpen}
+        onOpenChange={setSideSheetOpen}
+        record={sideSheetRecordId ? allData.find(r => r.id === sideSheetRecordId) || null : null}
+        allRecords={allData}
+        onNavigateNext={handleSideSheetNavigateNext}
+        onNavigatePrevious={handleSideSheetNavigatePrevious}
+        onExpand={handleSideSheetExpand}
+      />
     </div>
   )
 }

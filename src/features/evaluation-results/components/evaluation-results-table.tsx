@@ -21,13 +21,15 @@ interface EvaluationResultsTableProps {
   selectedRows: string[]
   onRowSelect: (id: string, selected: boolean) => void
   onSelectAll: (selected: boolean) => void
+  onRowClick?: (record: EvaluationRecord) => void
 }
 
 export function EvaluationResultsTable({
   data,
   selectedRows,
   onRowSelect,
-  onSelectAll
+  onSelectAll,
+  onRowClick
 }: EvaluationResultsTableProps) {
   const allSelected = data.length > 0 && selectedRows.length === data.length
   const someSelected = selectedRows.length > 0 && selectedRows.length < data.length
@@ -107,7 +109,8 @@ export function EvaluationResultsTable({
           {data.map((record, index) => (
             <TableRow 
               key={record.id} 
-              className={`group transition-colors ${
+              onClick={() => onRowClick?.(record)}
+              className={`group transition-colors cursor-pointer ${
                 selectedRows.includes(record.id) 
                   ? 'bg-blue-50 hover:bg-blue-100' 
                   : 'hover:bg-gray-50'
@@ -133,6 +136,7 @@ export function EvaluationResultsTable({
                         ? 'opacity-100' 
                         : 'group-hover:opacity-100 opacity-0'
                     }`}
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <Checkbox
                       checked={selectedRows.includes(record.id)}
@@ -146,7 +150,7 @@ export function EvaluationResultsTable({
                 <MessagesSquare className="h-4 w-4 text-gray-500" strokeWidth="2" />
               </TableCell>
               <TableCell className="font-450 text-gray-900">
-                <div className="truncate max-w-md" title={record.basePrompt}>
+                <div className="truncate max-w-md group-hover:underline" title={record.basePrompt}>
                   {record.basePrompt}
                 </div>
               </TableCell>

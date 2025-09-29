@@ -195,7 +195,7 @@ export function EvaluationResultsFilters({ filters, onFiltersChange, currentView
                     {filters.attackOutcome.length}
                   </span>
                 )}
-                <ChevronDown className="h-3 w-3" />
+                <ChevronDown className="h-3 w-3" strokeWidth={2} />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
@@ -231,7 +231,7 @@ export function EvaluationResultsFilters({ filters, onFiltersChange, currentView
                     {filters.attackType.length}
                   </span>
                 )}
-                <ChevronDown className="h-3 w-3" />
+                <ChevronDown className="h-3 w-3" strokeWidth={2} />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-56">
@@ -267,7 +267,7 @@ export function EvaluationResultsFilters({ filters, onFiltersChange, currentView
                     {filters.guardrailJudgment.length}
                   </span>
                 )}
-                <ChevronDown className="h-3 w-3" />
+                <ChevronDown className="h-3 w-3" strokeWidth={2} />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
@@ -317,7 +317,7 @@ export function EvaluationResultsFilters({ filters, onFiltersChange, currentView
                     }}
                     className="ml-2 hover:bg-gray-200 rounded-full p-0.5"
                   >
-                    <ChevronDown className="h-3 w-3" />
+                    <ChevronDown className="h-3 w-3" strokeWidth={2} />
                   </button>
                 </Button>
               </DropdownMenuTrigger>
@@ -368,7 +368,7 @@ export function EvaluationResultsFilters({ filters, onFiltersChange, currentView
                     }}
                     className="ml-2 hover:bg-gray-200 rounded-full p-0.5"
                   >
-                    <ChevronDown className="h-3 w-3" />
+                    <ChevronDown className="h-3 w-3" strokeWidth={2} />
                   </button>
                 </Button>
               </DropdownMenuTrigger>
@@ -395,7 +395,7 @@ export function EvaluationResultsFilters({ filters, onFiltersChange, currentView
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="text-gray-700 gap-2 h-7 border-gray-300">
-                  <Plus className="h-3 w-3" />
+                  <Plus className="h-3 w-3" strokeWidth={2} />
                   More filters
                 </Button>
               </DropdownMenuTrigger>
@@ -417,17 +417,17 @@ export function EvaluationResultsFilters({ filters, onFiltersChange, currentView
         {/* Right Side - Search and View Toggle */}
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" strokeWidth={2} />
             <Input
               placeholder="Search conversations"
               value={filters.searchTerm}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="pl-9 w-64 h-8"
+              className="pl-9 w-64"
             />
           </div>
 
           <Tabs value={currentView} onValueChange={(value) => onViewChange(value as 'table' | 'conversation')}>
-            <TabsList className="h-9 px-1 rounded-lg">
+            <TabsList className="h-8 px-0.5 rounded-md">
               <TabsTrigger value="table" className="text-[13px] py-1 px-3 rounded-md">
                 Table View
               </TabsTrigger>
@@ -454,7 +454,7 @@ export function EvaluationResultsFilters({ filters, onFiltersChange, currentView
                 onClick={() => removeFilter(chip.type, chip.value)}
                 className="ml-1 hover:bg-gray-200 rounded-full p-0.5"
               >
-                <X className="h-3 w-3" />
+                <X className="h-3 w-3" strokeWidth={2} />
               </button>
             </Badge>
           ))}

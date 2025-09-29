@@ -43,9 +43,9 @@ export function EvaluationResultsPagination({
   }
 
   return (
-    <div className="flex items-center justify-between px-4 py-3">
+    <div className="flex items-right justify-end px-4 py-3">
       {/* Left side - Navigate To and Quick Navigation - Only show if enabled */}
-      {showQuickNavigation && (
+      {/* {showQuickNavigation && (
         <div className="flex items-center gap-4">
           <div className="text-sm text-gray-600">
             Navigate To:
@@ -57,7 +57,7 @@ export function EvaluationResultsPagination({
             Quick Navigation
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Right side - Pagination controls */}
       <div className={`flex items-center gap-4 ${!showQuickNavigation ? 'ml-auto' : ''}`}>
@@ -93,7 +93,7 @@ export function EvaluationResultsPagination({
                 onClick={() => handlePageChange(1)}
                 disabled={page === 1}
               >
-                <ChevronsLeft className="h-4 w-4" />
+                <ChevronsLeft className="h-4 w-4" strokeWidth={2} />
               </Button>
             </>
           )}
@@ -103,7 +103,7 @@ export function EvaluationResultsPagination({
             onClick={() => handlePageChange(page - 1)}
             disabled={page === 1}
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-4 w-4" strokeWidth={2} />
           </Button>
           <Button
             variant="ghost"
@@ -111,7 +111,7 @@ export function EvaluationResultsPagination({
             onClick={() => handlePageChange(page + 1)}
             disabled={page === totalPages}
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4" strokeWidth={2} />
           </Button>
           {showQuickNavigation && (
             <Button
@@ -120,7 +120,7 @@ export function EvaluationResultsPagination({
               onClick={() => handlePageChange(totalPages)}
               disabled={page === totalPages}
             >
-              <ChevronsRight className="h-4 w-4" />
+              <ChevronsRight className="h-4 w-4" strokeWidth={2} />
             </Button>
           )}
         </div>

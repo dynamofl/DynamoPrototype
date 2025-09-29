@@ -4,9 +4,11 @@ import { ExperimentsGuard } from '@/components/patterns/experiments-guard'
 import { Button } from '@/components/ui/button'
 import { AIProvidersPage } from '@/features/ai-providers'
 import { AISystemsPage } from '@/features/ai-systems'
+import { BetaFeaturesPage } from '@/features/beta-features'
 import { EvaluationPage } from '@/features/evaluation'
 import { EvaluationResultsPage } from '@/features/evaluation-results'
 import { GuardrailsPage } from '@/features/guardrails'
+import { ProjectsPage } from '@/features/projects'
 import { SettingsPage } from '@/features/settings'
 import { TablePatternDemo } from '@/components/table-pattern-demo'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -32,8 +34,14 @@ function App() {
               {/* Smart redirect based on experiments toggle state */}
               <Route path="/" element={<SmartRedirect />} />
               
+              {/* Projects Route */}
+              <Route path="/projects" element={<ProjectsPage />} />
+              
               {/* AI Systems Route */}
               <Route path="/ai-systems" element={<AISystemsPage />} />
+              
+              {/* Beta Features Route */}
+              <Route path="/beta-features" element={<BetaFeaturesPage />} />
               
               {/* Evaluation Sandbox Route */}
               <Route path="/evaluation-sandbox" element={<EvaluationPage />} />

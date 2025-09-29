@@ -96,33 +96,33 @@ export function EvaluationResultsConversationView({
       style={{ outline: 'none' }}
     >
       {/* Header Row - Fixed */}
-      <div className="flex items-center h-8  bg-gray-100 flex-shrink-0 px-2 mb-1">
+      <div className="flex items-center h-8 bg-gray-100 flex-shrink-0 px-2 mb-1 rounded-sm">
         <div className="w-8 flex items-center justify-center">
           <MessagesSquare className="h-4 w-4 text-gray-500" strokeWidth="2" />
         </div>
-        <div className="flex-1 text-xs font-450 text-gray-600 pl-3">
+        <div className="flex-1 text-xs font-medium text-gray-600 pl-3">
           Test Conversations
         </div>
-        <div className="flex items-center gap-[8px]">
-          <div className="text-[13px] font-[425] text-[#4b5976] text-right">
+        <div className="flex items-center gap-2">
+          <div className="text-xs font-normal text-gray-600 text-right min-w-fit">
             {totalCount > 0 ? `${selectedPosition}/${totalCount}` : '0/0'}
           </div>
-          <div className="flex gap-[4px] p-[2px]">
+          <div className="flex gap-1 p-0.5">
             <button
               onClick={navigateUp}
               disabled={isUpDisabled}
-              className="size-[20px] bg-[rgba(9,28,66,0.04)] rounded-[4px] flex items-center justify-center hover:bg-[rgba(9,28,66,0.08)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-5 h-5 bg-gray-50 rounded flex items-center justify-center hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
               title="Previous conversation (Shift + ↑)"
             >
-              <ChevronUp className="size-3 text-[#4b5976]" />
+              <ChevronUp className="w-3 h-3 text-gray-600" />
             </button>
             <button
               onClick={navigateDown}
               disabled={isDownDisabled}
-              className="size-[20px] bg-[rgba(9,28,66,0.04)] rounded-[4px] flex items-center justify-center hover:bg-[rgba(9,28,66,0.08)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-5 h-5 bg-gray-50 rounded flex items-center justify-center hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
               title="Next conversation (Shift + ↓)"
             >
-              <ChevronDown className="size-3 text-[#4b5976]" />
+              <ChevronDown className="w-3 h-3 text-gray-600" />
             </button>
           </div>
         </div>
