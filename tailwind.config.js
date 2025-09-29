@@ -43,6 +43,7 @@ module.exports = {
   		},
   		colors: {
   			gray: {
+  				'0': 'rgb(var(--gray-0) / <alpha-value>)',
   				'50': 'rgb(var(--gray-50) / <alpha-value>)',
   				'100': 'rgb(var(--gray-100) / <alpha-value>)',
   				'200': 'rgb(var(--gray-200) / <alpha-value>)',
@@ -97,7 +98,6 @@ module.exports = {
   			border: 'hsl(var(--border))',
   			input: 'hsl(var(--input))',
   			ring: 'hsl(var(--ring))',
-  			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			primary: {
   				DEFAULT: 'hsl(var(--primary))',

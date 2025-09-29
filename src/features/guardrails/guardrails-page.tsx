@@ -10,7 +10,6 @@ import type { TableRow } from '@/types/table'
 import type { TableStorage } from '@/lib/storage/types'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
-import { useExperimentsToggle } from '@/hooks/useExperimentsToggle'
 
 // Custom storage for guardrails using localStorage
 class GuardrailsTableStorage implements TableStorage {
@@ -87,7 +86,6 @@ export function Guardrails() {
   const [isEditingGuardrail, setIsEditingGuardrail] = useState(false)
   const [viewingGuardrail, setViewingGuardrail] = useState<TableRow | null>(null)
   const [editingGuardrail, setEditingGuardrail] = useState<TableRow | null>(null)
-  const { experimentsEnabled, setExperiments } = useExperimentsToggle()
 
 
   // Create custom storage instance
@@ -146,12 +144,12 @@ export function Guardrails() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <main className="mx-auto">
         <div className="space-y-4">
           {/* Page Header */}
           <div className="px-6">
-            <div className="flex items-center justify-between my-4">
+            <div className="flex items-center justify-between ">
               <h1 className="text-lg font-450 tracking-tight">Policies</h1>
               <Button
                 onClick={() => setIsAddingGuardrail(true)}
@@ -163,12 +161,13 @@ export function Guardrails() {
             </div>
 
             {/* Stats Cards */}
-            {experimentsEnabled && <GuardrailsStats />}
+            <GuardrailsStats />
           </div>
 
           {/* Table */}
           <div className="px-6">
-            <TablePattern
+            <div className="bg-gray-0 rounded-lg border border-gray-200">
+              <TablePattern
               mode="view"
               columns={guardrailsColumns}
               storageConfig={guardrailsStorageConfig}
@@ -177,9 +176,10 @@ export function Guardrails() {
               onDataChange={handleDataChange}
               onCellAction={handleCellAction}
               onRowExpand={handleRowExpand}
-              className="border rounded-lg"
+              className=""
               emptyMessage="No guardrails configured. Create your first guardrail to get started."
             />
+            </div>
           </div>
 
           {/* View Guardrail Sheet */}

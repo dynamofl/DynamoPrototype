@@ -1,6 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
 import { AppBar, Breadcrumb, SmartRedirect } from '@/components/patterns'
-import { ExperimentsGuard } from '@/components/patterns/experiments-guard'
 import { Button } from '@/components/ui/button'
 import { AIProvidersPage } from '@/features/ai-providers'
 import { AISystemsPage } from '@/features/ai-systems'
@@ -23,12 +22,11 @@ function App() {
       
       {/* All other routes with default layout */}
       <Route path="/*" element={
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-gray-100 flex flex-col">
           <AppBar />
-          <ExperimentsGuard />
 
           {/* Main Content */}
-          <main className="mx-auto">
+          <main className="flex-1 bg-gray-0 border rounded-lg shadow m-2 mt-0">
             <Breadcrumb />
             <Routes>
               {/* Smart redirect based on experiments toggle state */}

@@ -147,12 +147,12 @@ export function AISystemsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="">
       <main className="mx-auto">
         <div className="space-y-4">
           {/* Page Header */}
           <div className="px-6">
-            <div className="flex items-center justify-between my-4">
+            <div className="flex items-center justify-between">
               <h1 className="text-lg font-450 tracking-tight">AI Systems</h1>
               <Button
                 onClick={() => setIsAddingSystem(true)}
@@ -175,7 +175,8 @@ export function AISystemsPage() {
 
           {/* Systems Table */}
           <div className="px-6">
-            <TablePattern
+            <div className="bg-gray-0 rounded-lg border border-gray-200">
+              <TablePattern
               key={refreshTrigger}
               mode="view"
               columns={aiSystemsColumns}
@@ -189,6 +190,7 @@ export function AISystemsPage() {
               className=""
               emptyMessage="No AI systems configured. Add your first system to get started."
             />
+            </div>
           </div>
 
           {/* Create System Sheet */}

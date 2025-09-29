@@ -6,6 +6,7 @@ import Severity2Icon from '@/assets/icons/Severity2.svg'
 import Severity3Icon from '@/assets/icons/Severity3.svg'
 import BlockIcon from '@/assets/icons/Block.svg'
 import StatusCompleteIcon from '@/assets/icons/StatusComplete.svg'
+import { PolicyIcon } from '@/assets/icons/policy-icon'
 
 interface EvaluationConversationDetailProps {
   record: EvaluationRecord
@@ -16,7 +17,7 @@ function InfoIconOutline() {
 }
 
 function PolicyFileIcon() {
-  return <FileText className="w-5 h-5 text-blue-600" />
+  return <PolicyIcon className="w-4 h-4" />
 }
 
 function ArrowTopRightIcon() {
@@ -58,12 +59,11 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
       }
 
       return (
-        <div key={index} className="bg-blue-50 border border-blue-100 flex items-center gap-1 h-6 px-2 py-1 rounded hover:bg-blue-100 transition-colors cursor-pointer">
+        <div key={index} className="inline-flex items-center text-gray-600 gap-1 p-1 bg-gray-100 rounded hover:bg-gray-200 transition-colors cursor-pointer">
           <span className="text-[13px]">{getFrameworkIcon(framework.framework)}</span>
-          <span className="text-xs font-medium text-blue-800 truncate max-w-20">
+          <span className="text-xs font-450 truncate max-w-40">
             {framework.name}
           </span>
-          <ArrowTopRightIcon />
         </div>
       )
     })
@@ -135,7 +135,7 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
         
         {/* Evaluation Summary */}
         <section className="space-y-2">
-          <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+          <h3 className="text-xs font-450 text-gray-500 uppercase tracking-wide">
             Evaluation Summary
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -143,12 +143,12 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
             {/* Attack Type */}
             <div className="border border-gray-200 rounded-lg p-3 space-y-2">
               <div className="flex items-center gap-1">
-                <span className="text-xs font-medium text-gray-700">Attack Type</span>
+                <span className="text-xs font-450 text-gray-700">Attack Type</span>
                 <InfoIconOutline />
               </div>
               <div className="flex items-center gap-2">
                 {getSeverityIcon(record.severity)}
-                <span className="text-[13px] font-medium text-gray-900 truncate">
+                <span className="text-[13px] font-450 text-gray-900 truncate">
                   {record.attackType}
                 </span>
               </div>
@@ -157,12 +157,12 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
             {/* Guardrail Response */}
             <div className="border border-gray-200 rounded-lg p-3 space-y-2">
               <div className="flex items-center gap-1">
-                <span className="text-xs font-medium text-gray-700">Guardrail Response</span>
+                <span className="text-xs font-450 text-gray-700">Guardrail Response</span>
                 <InfoIconOutline />
               </div>
               <div className="flex items-center gap-2">
                 {getStatusIcon(record.inputGuardrailResultAggregate)}
-                <span className="text-[13px] font-medium text-gray-900">
+                <span className="text-[13px] font-450 text-gray-900">
                   {record.inputGuardrailResultAggregate}
                 </span>
               </div>
@@ -171,12 +171,12 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
             {/* AI System Response */}
             <div className="border border-gray-200 rounded-lg p-3 space-y-2">
               <div className="flex items-center gap-1">
-                <span className="text-xs font-medium text-gray-700">AI System Response</span>
+                <span className="text-xs font-450 text-gray-700">AI System Response</span>
                 <InfoIconOutline />
               </div>
               <div className="flex items-center gap-2">
                 {getStatusIcon(record.aiSystemResponseType)}
-                <span className="text-[13px] font-medium text-gray-900">
+                <span className="text-[13px] font-450 text-gray-900">
                   {record.aiSystemResponseType}
                 </span>
               </div>
@@ -186,7 +186,7 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
 
         {/* Base Prompt */}
         <section className="space-y-2">
-          <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+          <h3 className="text-xs font-450 text-gray-500 uppercase tracking-wide">
             Base Prompt
           </h3>
           <div className="text-[13px] text-gray-900 leading-relaxed">
@@ -196,14 +196,14 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
 
         {/* Attack Details */}
         <section className="space-y-2">
-          <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+          <h3 className="text-xs font-450 text-gray-500 uppercase tracking-wide">
             Attack Details
           </h3>
           <div className="border border-gray-200 rounded-md p-3 space-y-3">
             
             {/* Attack Area */}
             <div className="flex">
-              <div className="w-36 text-xs font-medium text-gray-500">
+              <div className="w-36 text-xs font-450 text-gray-500">
                 Attack Area:
               </div>
               <div className="flex-1 text-xs text-gray-900">
@@ -213,23 +213,23 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
 
             {/* Data Source */}
             <div className="flex">
-              <div className="w-36 text-xs font-medium text-gray-500">
+              <div className="w-36 text-xs font-450 text-gray-500 pt-1">
                 Data Source:
               </div>
-              <div className="flex-1">
-                <div className="inline-flex items-center gap-1 bg-blue-50 border border-blue-100 px-2 py-1 rounded hover:bg-blue-100 transition-colors cursor-pointer">
-                  <PolicyFileIcon />
-                  <span className="text-xs font-medium text-blue-800">
+              <div className="flex-1 gap-1">
+                <div className="inline-flex items-center text-gray-600 gap-1 p-1 bg-gray-100 rounded hover:bg-gray-200 transition-colors cursor-pointer">
+                  <PolicyFileIcon/>
+                  <span className="text-xs font-450">
                     {record.dataSource}
                   </span>
-                  <ArrowTopRightIcon />
+                
                 </div>
               </div>
             </div>
 
             {/* Frameworks */}
             <div className="flex">
-              <div className="w-36 text-xs font-medium text-gray-500">
+              <div className="w-36 text-xs font-450 text-gray-500 pt-1">
                 Frameworks:
               </div>
               <div className="flex-1">
@@ -243,19 +243,19 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
 
         {/* Jailbreak Prompt */}
         <section className="space-y-2">
-          <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+          <h3 className="text-xs font-450 text-gray-500 uppercase tracking-wide">
             Jailbreak Prompt
           </h3>
           <div className="border border-gray-200 rounded p-3 space-y-6">
             {conversationMessages.map((message, index) => (
               <div key={index} className="space-y-2 w-full">
                 <div className="w-full">
-                  <p className="text-[13px] font-normal leading-5 text-gray-500">
+                  <p className="text-[13px] font-400 leading-5 text-gray-500">
                     {getRoleLabel(message.role)}
                   </p>
                 </div>
                 <div className="w-full">
-                  <p className="text-[13px] font-normal leading-5 text-gray-900 whitespace-pre-wrap">
+                  <p className="text-[13px] font-400 leading-5 text-gray-900 whitespace-pre-wrap">
                     {message.message}
                   </p>
                 </div>
@@ -266,7 +266,7 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
 
         {/* Input Guardrails */}
         <section className="space-y-2">
-          <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+          <h3 className="text-xs font-450 text-gray-500 uppercase tracking-wide">
             Input Guardrails
           </h3>
           <div className="border border-gray-200 rounded-md p-2 space-y-1">
@@ -274,7 +274,7 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
               <div key={index} className="flex items-center gap-2 p-2 rounded hover:bg-gray-50">
                 {getStatusIcon(guardrail.result)}
                 <span className="text-xs text-gray-900 flex-1">
-                  <span className="font-medium">{guardrail.name}:</span>
+                  <span className="font-450">{guardrail.name}:</span>
                   <span className="ml-1">{guardrail.result}</span>
                 </span>
               </div>
@@ -284,7 +284,7 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
 
         {/* AI System Response */}
         <section className="space-y-2">
-          <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+          <h3 className="text-xs font-450 text-gray-500 uppercase tracking-wide">
             AI System Response
           </h3>
           <div className="text-[13px] text-gray-900 leading-relaxed">
@@ -294,7 +294,7 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
             <div className="flex items-center gap-2 p-2">
               {getStatusIcon(record.aiSystemResponseType)}
               <span className="text-xs text-gray-900">
-                <span className="font-medium">Judgement Item:</span>
+                <span className="font-450">Judgement Item:</span>
                 <span className="ml-1">{record.aiSystemResponseType}</span>
               </span>
             </div>

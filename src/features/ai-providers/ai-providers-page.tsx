@@ -151,12 +151,12 @@ export function AIProviders() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gray-0">
       <main className="mx-auto">
         <div className="space-y-4">
           {/* Page Header */}
           <div className="px-6">
-            <div className="flex items-center justify-between my-4">
+            <div className="flex items-center justify-between">
               <h1 className="text-lg font-450 tracking-tight">AI Providers</h1>
               <Button
                 onClick={() => setIsAddingProvider(true)}
@@ -173,7 +173,8 @@ export function AIProviders() {
 
           {/* Provider Table */}
           <div className="px-6">
-            <TablePattern
+            <div className="bg-gray-0 rounded-lg border border-gray-200">
+              <TablePattern
               mode="view"
               columns={aiProvidersColumns}
               storageConfig={aiProvidersStorageConfig}
@@ -186,9 +187,10 @@ export function AIProviders() {
               onDataChange={handleDataChange}
               onCellAction={handleCellAction}
               onRowExpand={handleRowExpand}
-              className="border rounded-lg"
+              className=""
               emptyMessage="No AI providers configured. Add your first provider to get started."
             />
+            </div>
           </div>
 
           {/* View Provider Sheet */}

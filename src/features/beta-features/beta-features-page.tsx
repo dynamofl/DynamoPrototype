@@ -48,16 +48,16 @@ const betaFeatures = [
 
 export function BetaFeaturesPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gray-50">
       <main className="mx-auto">
         <div className="space-y-6">
           {/* Page Header */}
           <div className="px-6">
-            <div className="flex items-center justify-between my-4">
+            <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <h1 className="text-lg font-450 tracking-tight">Beta Features</h1>
                 <p className="text-sm text-muted-foreground">
-                  Explore experimental features and upcoming functionality
+                  Explore advanced features and enhanced functionality
                 </p>
               </div>
             </div>
@@ -77,7 +77,7 @@ export function BetaFeaturesPage() {
                             <Icon className="h-5 w-5 text-primary" />
                           </div>
                           <div className="space-y-1">
-                            <CardTitle className="text-base font-medium">
+                            <CardTitle className="text-base font-450">
                               {feature.title}
                             </CardTitle>
                             <Badge variant="secondary" className="text-xs">
@@ -93,7 +93,7 @@ export function BetaFeaturesPage() {
                       </CardDescription>
                       
                       <div className="space-y-2">
-                        <h4 className="text-sm font-medium text-foreground">Key Features:</h4>
+                        <h4 className="text-sm font-450 text-foreground">Key Features:</h4>
                         <ul className="space-y-1 text-sm text-muted-foreground">
                           {feature.features.map((item, index) => (
                             <li key={index} className="flex items-center space-x-2">
@@ -123,22 +123,7 @@ export function BetaFeaturesPage() {
           </div>
 
           {/* Coming Soon Section */}
-          <div className="px-6">
-            <div className="mt-12 space-y-4">
-              <h2 className="text-lg font-medium">Coming Soon</h2>
-              <Card className="bg-muted/30">
-                <CardContent className="flex items-center justify-between p-6">
-                  <div className="space-y-1">
-                    <h3 className="font-medium">More Beta Features</h3>
-                    <p className="text-sm text-muted-foreground">
-                      We're constantly working on new experimental features. Stay tuned for updates!
-                    </p>
-                  </div>
-                  <Badge variant="outline">Coming Soon</Badge>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+          
         </div>
       </main>
     </div>

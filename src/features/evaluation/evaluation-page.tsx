@@ -379,7 +379,7 @@ export function EvaluationSandbox() {
           </div>
         </div>
 
-        <div className="bg-background grid grid-cols-1 lg:grid-cols-3 rounded-t-xl flex-1 border border-gray-200">
+        <div className="bg-gray-0 grid grid-cols-1 lg:grid-cols-3 rounded-t-xl flex-1 border border-gray-200">
           {/* Configuration Panel */}
           <ConfigurationPanel
             config={config}

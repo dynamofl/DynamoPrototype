@@ -586,9 +586,6 @@ export const DynamoTable: React.FC<DynamoTableProps> = ({
         }
         
         .enhanced-table th {
-          border-right: 1px solid #e5e7eb;
-          border-bottom: 1px solid #e5e7eb;
-          background-color: #f9fafb;
           height: 40px;
         }
         
@@ -597,8 +594,6 @@ export const DynamoTable: React.FC<DynamoTableProps> = ({
         }
         
         .enhanced-table td {
-          border-right: 1px solid #e5e7eb;
-          border-bottom: 1px solid #e5e7eb;
           height: 40px;
         }
         
@@ -611,24 +606,19 @@ export const DynamoTable: React.FC<DynamoTableProps> = ({
         }
         
         .cell-content:hover {
-          background-color: #f9fafb !important;
         }
         
         .cell-content:focus {
           outline: none;
-          background-color: #f8fafc !important;
-          border-color: #d1d5db !important;
         }
         
         .cell-content.switch:hover,
         .cell-content.button:hover {
-          background-color: #f1f5f9 !important;
           border-color: #cbd5e1 !important;
         }
         
         .cell-content.switch:focus,
         .cell-content.button:focus {
-          background-color: #e2e8f0 !important;
           border-color: #94a3b8 !important;
         }
         

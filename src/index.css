@@ -6,11 +6,10 @@
 @layer base {
   :root {
     /* Semantic colors */
-    --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
+    --card: var(--gray-0);
     --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
+    --popover: var(--gray-0);
     --popover-foreground: 222.2 84% 4.9%;
     --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
@@ -28,6 +27,7 @@
     --radius: 0.5rem;
 
     /* Gray scale - Light theme */
+    --gray-0: 255 255 255;
     --gray-50: 249 250 251;
     --gray-100: 243 244 246;
     --gray-200: 229 231 235;
@@ -90,11 +90,10 @@
 
   .dark {
     /* Semantic colors - Dark theme */
-    --background: 222.2 84% 2.9%;
     --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
+    --card: var(--gray-0);
     --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
+    --popover: var(--gray-0);
     --popover-foreground: 210 40% 98%;
     --primary: 210 40% 98%;
     --primary-foreground: 222.2 47.4% 11.2%;
@@ -111,6 +110,7 @@
     --ring: 212.7 26.8% 83.9%;
 
     /* Gray scale - Dark theme (inverted) */
+    --gray-0: 0 0 0;
     --gray-50: 3 7 18;
     --gray-100: 17 24 39;
     --gray-200: 31 41 55;
@@ -177,7 +177,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-gray-50 text-foreground;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }

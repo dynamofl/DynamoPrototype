@@ -396,7 +396,7 @@ export function EvaluationResultsFilters({ filters, onFiltersChange, currentView
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="text-gray-700 gap-2 h-7 border-gray-300">
                   <Plus className="h-3 w-3" strokeWidth={2} />
-                  More filters
+                  More Filters
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-48">

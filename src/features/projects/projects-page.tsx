@@ -2,15 +2,10 @@ import { Construction } from 'lucide-react'
 
 export function ProjectsPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gray-50">
       <main className="mx-auto">
         <div className="space-y-4">
-          {/* Page Header */}
-          <div className="px-6">
-            <div className="flex items-center justify-between my-4">
-              <h1 className="text-lg font-450 tracking-tight">Projects</h1>
-            </div>
-          </div>
+       
 
           {/* Empty State */}
           <div className="flex flex-col items-center justify-center min-h-[60vh] px-6">
@@ -19,7 +14,7 @@ export function ProjectsPage() {
                 <Construction className="h-10 w-10 text-muted-foreground" />
               </div>
               <div className="space-y-2">
-                <h3 className="text-2xl font-semibold tracking-tight">
+                <h3 className="text-lg font-450 tracking-tight">
                   Projects Page Under Construction
                 </h3>
                 <p className="text-muted-foreground max-w-[420px]">

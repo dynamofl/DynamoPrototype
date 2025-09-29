@@ -39,7 +39,7 @@ const MockAppBar = ({ experimentsEnabled = false }: { experimentsEnabled?: boole
   const currentNavItems = experimentsEnabled ? experimentNavItems : standardNavItems
 
   return (
-    <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="border-b bg-gray-0/95 backdrop-blur supports-[backdrop-filter]:bg-gray-0/60">
       <div className=" mx-auto px-6 py-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center">

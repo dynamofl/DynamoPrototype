@@ -16,7 +16,6 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
-import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import {
   Settings,
@@ -24,41 +23,14 @@ import {
   Sun,
   Moon,
   Monitor,
-  ChevronDown,
   FlaskConical,
 } from "lucide-react"
 import { useTheme } from '@/components/patterns/theme-provider'
-import { NavLink, useNavigate, useLocation } from 'react-router-dom'
-import { useExperimentsToggle } from '@/hooks/useExperimentsToggle'
+import { NavLink, useNavigate } from 'react-router-dom'
 
 export function AppBar() {
   const { setTheme } = useTheme()
   const navigate = useNavigate()
-  const location = useLocation()
-  const { experimentsEnabled, setExperiments } = useExperimentsToggle()
-
-  // Routes that are only available when experiments are enabled
-  const experimentOnlyRoutes = [
-    '/evaluation-sandbox',
-    '/evaluation-results', 
-    '/ai-providers'
-  ]
-
-  // Handle experiments toggle with redirection logic
-  const handleExperimentsToggle = (enabled: boolean) => {
-    setExperiments(enabled)
-    
-    // If turning experiments off and user is on an experiment-only route, redirect to AI Systems
-    if (!enabled) {
-      const isOnExperimentRoute = experimentOnlyRoutes.some(route => 
-        location.pathname.startsWith(route)
-      )
-      
-      if (isOnExperimentRoute) {
-        navigate('/ai-systems', { replace: true })
-      }
-    }
-  }
 
   // Main navigation items (always visible)
   const mainNavItems = [
@@ -67,11 +39,8 @@ export function AppBar() {
     { name: "Policies", path: "/guardrails", icon: PoliciesIcon },
   ]
 
-  // Beta features navigation item (only when experiments enabled)
-  const betaFeaturesNavItem = { name: "Beta Features", path: "/beta-features", icon: FlaskConical }
-
   return (
-    <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 relative z-40">
+    <header className="  backdrop-blur relative z-40">
       <div className=" mx-auto px-6 py-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
@@ -92,11 +61,10 @@ export function AppBar() {
                       <NavLink
                         to={item.path}
                         className={({ isActive }) => cn(
-                          navigationMenuTriggerStyle(),
-                          "h-8 px-3 text-[13px] font-450 flex items-center gap-2",
+                          "h-8 px-3 text-[13px] font-450 flex items-center gap-2 rounded-md transition-colors hover:bg-gray-200",
                           isActive
-                            ? "text-gray-800 bg-gray-100"
-                            : "text-gray-600 hover:bg-gray-50"
+                            ? "text-gray-800"
+                            : "text-gray-600"
                         )}
                       >
                         <Icon className="h-4 w-4" />
@@ -105,39 +73,25 @@ export function AppBar() {
                     </NavigationMenuItem>
                   )
                 })}
-
-                {/* Beta Features navigation item (only when experiments enabled) */}
-                {experimentsEnabled && (
-                  <NavigationMenuItem>
-                    <NavLink
-                      to={betaFeaturesNavItem.path}
-                      className={({ isActive }) => cn(
-                        navigationMenuTriggerStyle(),
-                        "h-8 px-3 text-[13px] font-450 flex items-center gap-2",
-                        isActive
-                          ? "text-gray-800 bg-gray-100"
-                          : "text-gray-600 hover:bg-gray-50"
-                      )}
-                    >
-                      <FlaskConical className="h-4 w-4" />
-                      {betaFeaturesNavItem.name}
-                    </NavLink>
-                  </NavigationMenuItem>
-                )}
               </NavigationMenuList>
             </NavigationMenu>
           </div>
 
-          {/* Right side - Experiments Toggle and Profile Dropdown */}
+          {/* Right side - Beta Features and Profile Dropdown */}
           <div className="flex items-center gap-4">
-            {/* Experiments Toggle */}
-            <div className="hidden md:flex items-center gap-2">
-              <span className="text-[13px] font-450 text-gray-600">Experiments</span>
-              <Switch
-                checked={experimentsEnabled}
-                onCheckedChange={handleExperimentsToggle}
-              />
-            </div>
+            {/* Beta Features Button */}
+            <NavLink
+              to="/beta-features"
+              className={({ isActive }) => cn(
+                "h-8 px-3 text-[13px] font-450 flex items-center gap-2 rounded-md transition-colors hover:bg-gray-200",
+                isActive
+                  ? "text-gray-800"
+                  : "text-gray-600"
+              )}
+            >
+              <FlaskConical className="h-4 w-4" />
+              Beta Features
+            </NavLink>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

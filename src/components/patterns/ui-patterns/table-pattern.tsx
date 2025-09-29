@@ -659,7 +659,7 @@ export function TablePattern({
               }}
             >
               {showHeader && (
-                <TableHeader className={stickyHeader ? 'sticky top-0 bg-background z-10' : ''}>
+                <TableHeader className={stickyHeader ? 'sticky top-0 bg-gray-0 z-10' : ''}>
                   <UITableRow className="h-8">
                     {columns.map((column) => {
                       const widthValue = getWidthValue(column.width)
