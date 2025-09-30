@@ -164,7 +164,7 @@ export function APIKeyCreateSheet({
           <Button
             onClick={handleValidateAndSave}
             disabled={isValidating}
-            className="flex w-fit bg-blue-600 text-white hover:bg-blue-700"
+            className="flex w-fit"
           >
             {isValidating ? (
               <>

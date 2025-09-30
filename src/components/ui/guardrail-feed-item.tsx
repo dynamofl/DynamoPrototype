@@ -24,15 +24,15 @@ export interface GuardrailFeedItemProps {
 const getJudgmentStyles = (type: GuardrailJudgmentType) => {
   switch (type) {
     case "blocked":
-      return "text-[#c10007]"
+      return "text-red-700"
     case "compliant":
-      return "text-[#008236]"
+      return "text-green-700"
     case "warning":
       return "text-orange-600"
     case "info":
       return "text-blue-600"
     default:
-      return "text-[#192c4b]"
+      return "text-gray-800"
   }
 }
 
@@ -58,11 +58,11 @@ const GuardrailFeedItem = React.forwardRef<
       className={cn("flex flex-col gap-3 w-full", className)}
     >
       <div className="px-1 py-1">
-        <p className="text-xs font-medium leading-4 text-[#4b5976]">
+        <p className="text-xs font-medium leading-4 text-gray-600">
           {title}
         </p>
       </div>
-      <div className="bg-white border border-[#e0e2e6] rounded-[4px] w-full">
+      <div className="bg-white border border-gray-300 rounded-[4px] w-full">
         <div className="flex flex-col p-1 gap-2">
           {guardrailJudgments.map((guardrail, index) => (
             <div 
@@ -77,7 +77,7 @@ const GuardrailFeedItem = React.forwardRef<
                     src={getJudgmentIcon(guardrail.type)} 
                   />
                 </div>
-                <div className="flex items-center gap-0.5 text-xs leading-4 text-[#192c4b] whitespace-nowrap">
+                <div className="flex items-center gap-0.5 text-xs leading-4 text-gray-800 whitespace-nowrap">
                   <span className="font-normal">
                     {guardrail.name}:
                   </span>
@@ -91,7 +91,7 @@ const GuardrailFeedItem = React.forwardRef<
                   className="flex items-center gap-0.5 px-2 py-1.5 rounded-md cursor-pointer opacity-0 hover:opacity-100 transition-opacity"
                   onClick={guardrail.onPreviewPolicy}
                 >
-                  <p className="text-xs font-medium leading-4 text-[#4b5976] underline whitespace-nowrap">
+                  <p className="text-xs font-medium leading-4 text-gray-600 underline whitespace-nowrap">
                     Preview Policy
                   </p>
                   <div className="relative w-5 h-5 shrink-0">

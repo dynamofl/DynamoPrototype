@@ -364,7 +364,6 @@ export function AISystemCreateSheet({
                disabled={
                  !primaryAPIKey || !selectedModel || !formData.name.trim()
                }
-               className="bg-blue-600 text-white hover:bg-blue-700"
              >
                Create AI System
              </Button>

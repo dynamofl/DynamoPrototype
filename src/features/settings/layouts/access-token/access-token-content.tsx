@@ -70,7 +70,7 @@ export function AccessTokenContent() {
 
       {/* Access Token Section */}
       <div className="px-3 py-4">
-        <div className="bg-blue-50 rounded-lg p-3">
+        <div className="bg-gray-100 rounded-lg p-3">
           <div className="space-y-2">
             <h3 className="text-[13px] font-450 text-gray-900">Your DynamoAI Access Token</h3>
             <p className="text-xs text-gray-600 leading-5">
@@ -78,7 +78,7 @@ export function AccessTokenContent() {
               Generating a new access token will automatically revoke the existing token.
             </p>
             <TokenDialog>
-              <Button variant="default" size="default" className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Button variant="default" size="default">
                 Generate New Token
               </Button>
             </TokenDialog>

@@ -78,7 +78,7 @@ export const accessTokenColumns: TableColumn[] = [
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <AISystemIcon 
             type={iconType} 
-            className="w-7 h-7 rounded-lg border border-gray-200 bg-white p-1 flex-shrink-0" 
+            className="w-7 h-7 rounded-lg border border-gray-200 p-1 flex-shrink-0" 
           />
           <span className="text-[13px] font-450 text-gray-900 truncate">
             {row.provider}

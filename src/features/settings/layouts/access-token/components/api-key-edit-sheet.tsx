@@ -311,7 +311,7 @@ export function APIKeyEditSheet({
           <Button
             onClick={handleSaveNewKey}
             disabled={isValidatingNewKey || !newKeyForm.name.trim() || !newKeyForm.key.trim()}
-            className="w-fit bg-blue-600 text-white hover:bg-blue-700"
+            className="w-fit"
           >
             {isValidatingNewKey ? (
               <>

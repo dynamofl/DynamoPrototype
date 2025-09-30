@@ -114,7 +114,6 @@ export function GuardrailCreateDialog({
           </Button>
           <Button
             onClick={handleCreateGuardrail}
-            className="bg-blue-600 text-white hover:bg-blue-700"
           >
             Create Guardrail
           </Button>

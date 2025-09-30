@@ -102,7 +102,7 @@ export function ExampleGuardrails() {
                   console.log('Creating guardrail:', newGuardrail);
                   handleDialogOpenChange(false);
                 }}
-                className="bg-blue-600 text-blue-50 hover:bg-blue-700"
+                className=" hover:bg-blue-700"
               >
                 Add Guardrail
               </Button>

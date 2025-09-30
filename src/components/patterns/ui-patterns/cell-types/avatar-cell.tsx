@@ -67,7 +67,7 @@ export function AvatarCell({
     <div className={cn('min-h-[32px] flex items-center gap-2', className)}>
       {/* Avatar */}
       <div className={cn(
-        'bg-white border border-gray-200 rounded-lg flex items-center justify-center shrink-0',
+        ' border border-gray-200 rounded-lg flex items-center justify-center shrink-0',
         getAvatarSizeClass()
       )}>
         {showAvatar && avatarSrc ? (

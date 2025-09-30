@@ -26,13 +26,13 @@ export function SettingsPage() {
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen w-full bg-white">
+      <div className="flex h-screen w-full">
         <SettingsSidebar 
           activePage={activePage} 
           onPageChange={setActivePage} 
         />
         
-        <SidebarInset className="flex-1 bg-white">
+        <SidebarInset className="flex-1">
           <SettingsLayout>
             {renderActiveContent()}
           </SettingsLayout>

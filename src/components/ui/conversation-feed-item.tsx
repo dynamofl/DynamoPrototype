@@ -26,15 +26,15 @@ export interface ConversationFeedItemProps {
 const getJudgmentStyles = (type: JudgmentType) => {
   switch (type) {
     case "non-compliant":
-      return "text-[#c10007]"
+      return "text-red-700"
     case "compliant":
-      return "text-[#008236]"
+      return "text-green-700"
     case "warning":
       return "text-orange-600"
     case "info":
       return "text-blue-600"
     default:
-      return "text-[#192c4b]"
+      return "text-gray-800"
   }
 }
 
@@ -61,18 +61,18 @@ const ConversationFeedItem = React.forwardRef<
     >
       <div className="flex items-center gap-2 h-4 w-full">
         <div className="flex flex-col justify-center">
-          <p className="text-xs font-medium leading-4 text-[#4b5976] whitespace-nowrap">
+          <p className="text-xs font-medium leading-4 text-gray-600 whitespace-nowrap">
             {title}
           </p>
         </div>
       </div>
       <div className="flex flex-col justify-center w-full">
-        <p className="text-[13px] font-normal leading-5 text-[#192c4b]">
+        <p className="text-[13px] font-normal leading-5 text-gray-800">
           {content}
         </p>
       </div>
       {judgment && (
-        <div className="flex items-center justify-between px-2 py-0.5 border border-[#e9eaed] rounded-md w-full">
+        <div className="flex items-center justify-between px-2 py-0.5 border border-gray-200 rounded-md w-full">
           <div className="flex items-center gap-1 py-1">
             <div className="relative w-4 h-4 shrink-0">
               <img 
@@ -81,7 +81,7 @@ const ConversationFeedItem = React.forwardRef<
                 src={getJudgmentIcon(judgment.type)} 
               />
             </div>
-            <div className="flex items-center gap-0.5 text-xs leading-4 text-[#192c4b] whitespace-nowrap">
+            <div className="flex items-center gap-0.5 text-xs leading-4 text-gray-800 whitespace-nowrap">
               <span className="font-normal">
                 {judgment.status === "ground-truth" ? "Ground Truth:" : 
                  judgment.status === "evaluation" ? "Evaluation:" : "Review:"}
@@ -96,7 +96,7 @@ const ConversationFeedItem = React.forwardRef<
               className="flex items-center gap-0.5 px-2 py-1.5 rounded-md cursor-pointer opacity-0 hover:opacity-100 transition-opacity"
               onClick={judgment.onPreviewPolicy}
             >
-              <p className="text-xs font-medium leading-4 text-[#4b5976] underline whitespace-nowrap">
+              <p className="text-xs font-medium leading-4 text-gray-600 underline whitespace-nowrap">
                 Preview Policy
               </p>
               <div className="relative w-5 h-5 shrink-0">

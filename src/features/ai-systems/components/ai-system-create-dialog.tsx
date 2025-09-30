@@ -367,7 +367,6 @@ export function AISystemCreateSheet({
                disabled={
                  !primaryAPIKey || !selectedModel || !formData.name.trim() || isConnecting
                }
-               className="bg-blue-600 text-white hover:bg-blue-700"
              >
                {isConnecting ? "Connecting..." : "Validate & Connect"}
              </Button>

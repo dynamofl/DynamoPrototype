@@ -140,7 +140,7 @@ export function TeamMembersContent() {
               View and update your team members and their access across the product.
             </p> */}
           </div>
-          <Button variant="default" size="default" className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Button variant="default" size="default">
             <Plus className="h-4 w-4 mr-2" />
             Add Members
           </Button>

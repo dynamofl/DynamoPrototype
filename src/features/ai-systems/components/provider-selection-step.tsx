@@ -19,7 +19,7 @@ export function ProviderSelectionStep({
   return (
     <div className="space-y-3">
       <div className="border-gray-100">
-        <p className="text-[13px] text-[#4b5976]">Select AI System Provider</p>
+        <p className="text-[13px] text-gray-600">Select AI System Provider</p>
       </div>
 
       <div className="space-y-4">
@@ -35,7 +35,7 @@ export function ProviderSelectionStep({
                   type={provider.icon as any}
                   className="w-8 h-8"
                 />
-                <p className="font-450 text-[#192c4b] text-[13px]">
+                <p className="font-450 text-gray-800 text-[13px]">
                   {provider.name}
                 </p>
               </div>

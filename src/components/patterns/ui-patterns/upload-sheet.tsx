@@ -76,7 +76,7 @@ const ActionFooter = ({ uploadedFiles, onImportAllValidFiles }: ActionFooterProp
       <div className="flex-1" />
       <button
         onClick={onImportAllValidFiles}
-        className="bg-blue-600 text-blue-50 text-[13px] font-450 px-3 py-2 rounded"
+        className=" text-[13px] font-450 px-3 py-2 rounded"
       >
         Add {totalValidRows} Dataset Files
       </button>

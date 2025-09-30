@@ -86,7 +86,7 @@ const DialogHeader = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "flex items-center justify-between px-4 py-1.5 bg-[#f7f8f9] border-b border-[rgba(9,28,66,0.14)] relative",
+      "flex items-center justify-between px-4 py-1.5 bg-gray-50 border-b border-gray-200 relative",
       className
     )}
     {...props}
@@ -104,7 +104,7 @@ const DialogHeader = React.forwardRef<
     {showCloseButton && (
       <div className="flex items-center gap-1">
         <DialogPrimitive.Close className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-black/5 transition-colors">
-          <X className="h-4 w-4 text-[#6b7894]" />
+          <X className="h-4 w-4 text-gray-500" />
           <span className="sr-only">Close</span>
         </DialogPrimitive.Close>
       </div>
@@ -192,7 +192,7 @@ const DialogFooter = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "flex items-center gap-4 px-4 py-3 bg-white border-t border-[rgba(9,28,66,0.1)] relative",
+      "flex items-center gap-4 px-4 py-3 bg-white border-t border-gray-200 relative",
       align === "left" && "justify-start",
       align === "center" && "justify-center",
       align === "right" && "justify-end",
@@ -242,7 +242,7 @@ const DialogFooterButtonSet = React.forwardRef<
       <button
         type="button"
         onClick={onSecondaryClick}
-        className="px-3 py-2 text-[13px] font-medium text-[#4b5976] bg-transparent hover:bg-black/5 rounded-md transition-colors leading-4"
+        className="px-3 py-2 text-[13px] font-medium text-gray-600 bg-transparent hover:bg-black/5 rounded-md transition-colors leading-4"
       >
         {secondaryText}
       </button>
@@ -251,8 +251,8 @@ const DialogFooterButtonSet = React.forwardRef<
       type="button"
       onClick={onPrimaryClick}
       className={cn(
-        "px-3 py-2 text-[13px] font-medium text-[#ebf1fd] rounded-md transition-colors leading-4",
-        variant === "default" && "bg-[#2563eb] hover:bg-blue-700",
+        "px-3 py-2 text-[13px] font-medium text-blue-50 rounded-md transition-colors leading-4",
+        variant === "default" && "",
         variant === "danger" && "bg-red-600 hover:bg-red-700",
         variant === "success" && "bg-green-600 hover:bg-green-700"
       )}
@@ -270,7 +270,7 @@ const DialogTitle = React.forwardRef<
   <DialogPrimitive.Title
     ref={ref}
     className={cn(
-      "text-[13px] font-[550] leading-5 tracking-[0.07px] text-[#192c4b]",
+      "text-[13px] font-[550] leading-5 tracking-[0.07px] text-gray-800",
       className
     )}
     {...props}

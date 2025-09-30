@@ -187,7 +187,7 @@ export function ProviderCreateDialog({
           <Button
             onClick={handleAddProvider}
             disabled={isValidating || selectedModels.length === 0}
-            className="bg-blue-600 text-[#ebf1fd] hover:bg-blue-700"
+            className="bg-blue-600 text-blue-50 hover:bg-blue-700"
           >
             {isValidating ? 'Validating...' : 'Add Provider'}
           </Button>
@@ -198,8 +198,8 @@ export function ProviderCreateDialog({
         // Provider Selection Screen
         <div className="space-y-4">
           <div className="text-center py-4">
-            <h3 className="text-lg font-450 text-[#192c4b] mb-2">Choose AI Provider</h3>
-            <p className="text-[13px] text-[#4b5976]">Select the AI service provider you want to add</p>
+            <h3 className="text-lg font-450 text-gray-800 mb-2">Choose AI Provider</h3>
+            <p className="text-[13px] text-gray-600">Select the AI service provider you want to add</p>
           </div>
           
           <div className="grid grid-cols-1 gap-3">
@@ -217,12 +217,12 @@ export function ProviderCreateDialog({
                   <AISystemIcon type={providerType.icon} className="w-6 h-6 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2">
-                      <h4 className="font-450 text-[#192c4b]">{providerType.name}</h4>
+                      <h4 className="font-450 text-gray-800">{providerType.name}</h4>
                       {!providerType.isAvailable && (
                         <Badge variant="secondary" className="text-xs">Coming Soon</Badge>
                       )}
                     </div>
-                    <p className="text-[13px] text-[#4b5976] mt-1">{providerType.description}</p>
+                    <p className="text-[13px] text-gray-600 mt-1">{providerType.description}</p>
                   </div>
                 </div>
               </div>
@@ -235,9 +235,9 @@ export function ProviderCreateDialog({
           <div className="text-center py-4">
             <div className="flex items-center justify-center space-x-3 mb-2">
               <AISystemIcon type={selectedProviderType!.icon} className="w-6 h-6" />
-              <h3 className="text-lg font-450 text-[#192c4b]">Configure {selectedProviderType!.name}</h3>
+              <h3 className="text-lg font-450 text-gray-800">Configure {selectedProviderType!.name}</h3>
             </div>
-            <p className="text-[13px] text-[#4b5976]">Enter your API key and select models</p>
+            <p className="text-[13px] text-gray-600">Enter your API key and select models</p>
           </div>
 
           <div className="space-y-4">

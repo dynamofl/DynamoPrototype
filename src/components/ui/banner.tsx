@@ -112,7 +112,7 @@ const Banner = React.forwardRef<HTMLDivElement, BannerProps>(
                       variant="outline"
                       size="sm"
                       onClick={secondaryAction.onClick}
-                      className="h-6 px-2 py-1 text-xs font-medium bg-white border-[#e3e3e3] text-[#192c4b] hover:bg-gray-50"
+                      className="h-6 px-2 py-1 text-xs font-medium bg-white border-gray-300 text-gray-800 hover:bg-gray-50"
                     >
                       {secondaryAction.label}
                     </Button>
@@ -137,7 +137,7 @@ const Banner = React.forwardRef<HTMLDivElement, BannerProps>(
                     variant="outline"
                     size="sm"
                     onClick={secondaryAction.onClick}
-                    className="h-6 px-2 py-1 text-xs font-medium bg-white border-[#e3e3e3] text-[#192c4b] hover:bg-gray-50"
+                    className="h-6 px-2 py-1 text-xs font-medium bg-white border-gray-300 text-gray-800 hover:bg-gray-50"
                   >
                     {secondaryAction.label}
                   </Button>

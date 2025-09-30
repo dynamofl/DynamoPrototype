@@ -25,13 +25,13 @@ export const FileItem = ({ file, variant, onRemove }: FileItemProps) => {
         };
       case 'invalid':
         return {
-          container: "bg-white rounded-lg p-2 flex items-start gap-2 border border-red-500 shadow-[0px_0px_0px_2px_rgba(249,137,137,0.25)]",
+          container: " rounded-lg p-2 flex items-start gap-2 border border-red-500 shadow-[0px_0px_0px_2px_rgba(249,137,137,0.25)]",
           badge: "bg-green-600",
           badgeText: "text-[10px] font-450 font-mono text-white leading-[14.545px]"
         };
       case 'validated':
         return {
-          container: "bg-white rounded-lg border border-gray-300 p-2 flex items-start gap-2",
+          container: " rounded-lg border border-gray-300 p-2 flex items-start gap-2",
           badge: "bg-green-600",
           badgeText: "text-[10px] font-450 font-mono text-white leading-[14.545px]"
         };
