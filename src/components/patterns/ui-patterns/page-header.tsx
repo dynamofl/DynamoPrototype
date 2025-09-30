@@ -8,6 +8,7 @@ export interface PageHeaderAction {
   onClick: () => void
   variant?: 'default' | 'outline' | 'secondary' | 'ghost' | 'link' | 'destructive'
   className?: string
+  disabled?: boolean
 }
 
 export interface PageHeaderProps {
@@ -32,7 +33,7 @@ export function PageHeader({
   actionsClassName
 }: PageHeaderProps) {
   return (
-    <div className={cn("px-4", className)}>
+    <div className={cn("px-4 ", className)}>
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <h1 className={cn("text-md font-450 tracking-tight", titleClassName)}>
@@ -53,6 +54,7 @@ export function PageHeader({
                 onClick={action.onClick}
                 variant={action.variant || 'default'}
                 className={cn("flex items-center gap-2", action.className)}
+                disabled={action.disabled}
               >
                 {action.icon && <action.icon className="h-4 w-4" />}
                 {action.label}

@@ -74,7 +74,7 @@ export function ConfigurationPanel({
 
   return (
     <div className="lg:col-span-1 border-r border-gray-200">
-      <div className="px-6 py-4 text-gray-900 border-b border-gray-200">
+      <div className="px-4 py-3 text-gray-900 border-b border-gray-200 text-sm font-450">
         Configuration
       </div>
       <div className="p-6 border-b space-y-6">

@@ -12,7 +12,7 @@ export function formatTimestamp(timestamp: string): string {
 export function getJudgmentColor(judgment: string): string {
   switch (judgment.toLowerCase()) {
     case 'blocked':
-    case 'attack failed':
+    case 'Attack blocked':
       return 'text-red-600'
     case 'allowed':
     case 'compliant':
@@ -28,7 +28,7 @@ export function getJudgmentColor(judgment: string): string {
 export function getJudgmentIcon(judgment: string): string {
   switch (judgment.toLowerCase()) {
     case 'blocked':
-    case 'attack failed':
+    case 'Attack blocked':
       return '⚠️'
     case 'allowed':
     case 'compliant':

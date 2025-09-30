@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Play, History } from "lucide-react";
 
 // Modularized components
 import {
@@ -8,6 +6,7 @@ import {
   InputDataSection,
   ResultsSection,
   LoadingState,
+  EvaluationHeader,
 } from "./components";
 
 // Utilities
@@ -334,52 +333,35 @@ export function EvaluationSandbox() {
     }
   }, [evaluationInput.prompts.length, currentPage, paginationHelpers.totalPages]);
 
+  const isEvaluationDisabled =
+    isLoading ||
+    !evaluationInput.prompts.some(
+      (p) =>
+        p.prompt.trim() &&
+        p.userMarkedAdversarial &&
+        p.userMarkedAdversarial !== ""
+    ) ||
+    (availableModels.length === 1 &&
+      availableModels[0].id === "no-models");
+
+  const handleShowHistory = () => {
+    // TODO: Implement history view
+    console.log("Show history clicked");
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
+    <div className="min-h-screen flex flex-col">
       <div className="mx-auto flex-1 flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between  px-6 py-4">
-          <div>
-            <h1 className="text-[16px] font-450 ">Evaluation Sandbox</h1>
-            <p className="text-[13px] font-400 text-gray-600">
-              Test and evaluate AI models with different configurations
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-          <Button
-                  className="w-full"
-                  onClick={handleSubmit}
-                  disabled={
-                    isLoading ||
-                !evaluationInput.prompts.some(
-                  (p) =>
-                    p.prompt.trim() &&
-                    p.userMarkedAdversarial &&
-                    p.userMarkedAdversarial !== ""
-                ) ||
-                    (availableModels.length === 1 &&
-                      availableModels[0].id === "no-models")
-                  }
-                >
-                  <Play className="mr-2 h-4 w-4" />
-                  {isLoading ? "Evaluating..." : "Run Evaluation"}
-                </Button>
-                <Button variant="outline" className="w-full">
-                  <History className="mr-2 h-4 w-4" />
-                  Show History
-                </Button>
-            {/* <Button variant="outline" size="sm" onClick={handleSave}>
-              <Save className="mr-2 h-4 w-4" />
-              Save
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleShare}>
-              <Share className="mr-2 h-4 w-4" />
-              Share
-            </Button> */}
-          </div>
-        </div>
+        <EvaluationHeader
+          onRunEvaluation={handleSubmit}
+          onShowHistory={handleShowHistory}
+          isLoading={isLoading}
+          isDisabled={isEvaluationDisabled}
+          
+        />
 
-        <div className="bg-gray-0 grid grid-cols-1 lg:grid-cols-3 rounded-t-xl flex-1 border border-gray-200">
+        <div className="grid grid-cols-1 lg:grid-cols-3 flex-1 border-t border-gray-200">
           {/* Configuration Panel */}
           <ConfigurationPanel
             config={config}

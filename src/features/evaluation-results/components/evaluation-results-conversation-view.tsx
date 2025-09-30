@@ -78,9 +78,9 @@ export function EvaluationResultsConversationView({
     <Badge 
       variant="secondary" 
       className={`text-xs ${
-        outcome === 'Attack Failed' 
-          ? 'bg-green-100 text-green-800 border-green-200' 
-          : 'bg-red-100 text-red-800 border-red-200'
+        outcome === 'Attack Blocked' 
+         ? 'bg-green-50 text-green-800' 
+          : 'bg-red-50 text-red-800'
       }`}
     >
       {outcome}

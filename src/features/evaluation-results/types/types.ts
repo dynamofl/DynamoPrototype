@@ -29,7 +29,7 @@ export interface EvaluationRecord {
   inputGuardrailResultAggregate: "Blocked" | "Allowed"
   aiSystemResponse: string
   aiSystemResponseType: "Blocked" | "Answer"
-  attackOutcome: "Attack Failed" | "Attack Success"
+  attackOutcome: "Attack Blocked" | "Attack Success"
   severity: number
   notes: string
 }

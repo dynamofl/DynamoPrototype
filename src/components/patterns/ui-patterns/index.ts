@@ -31,6 +31,7 @@ export { UploadSheet } from './upload-sheet';
 export { HeaderStats } from './header-stats';
 export { ThemeToggle } from './theme-toggle';
 export { PageHeader } from './page-header';
+export type { PageHeaderAction, PageHeaderProps } from './page-header';
 
 // Icon Components
 export * from './inline-ai-icons';

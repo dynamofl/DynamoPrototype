@@ -1,5 +1,5 @@
 export const ATTACK_OUTCOME_OPTIONS = [
-  { value: 'Attack Failed', label: 'Attack Failed' },
+  { value: 'Attack Blocked', label: 'Attack Blocked' },
   { value: 'Attack Success', label: 'Attack Success' }
 ] as const
 

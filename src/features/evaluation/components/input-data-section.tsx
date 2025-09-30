@@ -61,7 +61,7 @@ export function InputDataSection({
 
   return (
     <div>
-      <div className="px-6 py-4 text-gray-900 border-b border-gray-200">
+      <div className="px-4 py-3 text-gray-900 border-b border-gray-200  text-sm font-450">
         Test Data
       </div>
       <div className="space-y-4 px-6 py-4">
