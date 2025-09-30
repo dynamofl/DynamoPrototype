@@ -1,8 +1,10 @@
 import { useState, useMemo, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { AISystem } from './types'
 import {
   AISystemCreateSheet,
   AISystemEditSheet,
+  AISystemViewSheet,
   AISystemsHeader,
   AISystemsStats,
   AISystemsTableDirect
@@ -28,10 +30,14 @@ import {
  */
 
 export function AISystemsPage() {
+  const navigate = useNavigate()
+
   // Dialog and sheet states
   const [isAddingSystem, setIsAddingSystem] = useState(false)
   const [isEditingSystem, setIsEditingSystem] = useState(false)
   const [editingSystem, setEditingSystem] = useState<AISystem | null>(null)
+  const [isViewingSystem, setIsViewingSystem] = useState(false)
+  const [viewingSystem, setViewingSystem] = useState<AISystem | null>(null)
   
   // Delete confirmation dialog state
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
@@ -129,6 +135,25 @@ export function AISystemsPage() {
     setSystemToDelete(null)
   }
 
+  // Handle manage evaluation
+  const handleManageEvaluation = (system: AISystem) => {
+    // Navigate to the evaluation page with system name in URL
+    navigate(`/ai-systems/${encodeURIComponent(system.name)}/evaluation`)
+  }
+
+  // Handle view info
+  const handleViewInfo = (system: AISystem) => {
+    setViewingSystem(system)
+    setIsViewingSystem(true)
+  }
+
+  // Handle edit from view sheet
+  const handleEditFromView = () => {
+    if (viewingSystem) {
+      setEditingSystem(viewingSystem)
+      setIsEditingSystem(true)
+    }
+  }
 
   // Handle row selection
   const handleRowSelect = (id: string, selected: boolean) => {
@@ -166,6 +191,8 @@ export function AISystemsPage() {
               onSelectAll={handleSelectAll}
               onEdit={handleEditSystem}
               onDelete={handleDeleteSystemRequest}
+              onManageEvaluation={handleManageEvaluation}
+              onViewInfo={handleViewInfo}
             />
           </div>
 
@@ -174,6 +201,14 @@ export function AISystemsPage() {
             open={isAddingSystem}
             onOpenChange={setIsAddingSystem}
             onAISystemCreated={handleSystemCreated}
+          />
+
+          {/* View System Sheet */}
+          <AISystemViewSheet
+            open={isViewingSystem}
+            onOpenChange={setIsViewingSystem}
+            aiSystem={viewingSystem}
+            onEditClick={handleEditFromView}
           />
 
           {/* Edit System Sheet */}

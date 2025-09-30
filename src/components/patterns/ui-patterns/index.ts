@@ -20,6 +20,7 @@ export { SidebarPattern } from './sidebar-pattern';
 export { AISystemIcon } from './ai-system-icon';
 export { AISystemsTable } from './ai-systems-table';
 export { AppBar } from './app-bar';
+export type { AppBarProps, BreadcrumbItem, AppBarActionButton } from './app-bar';
 export { Breadcrumb } from './breadcrumb';
 
 // Data & File Components

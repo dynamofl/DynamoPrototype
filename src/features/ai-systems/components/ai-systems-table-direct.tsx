@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Edit, Trash2, Squircle } from 'lucide-react'
+import { PenLine, Trash2, Squircle, MoreHorizontal, Info } from 'lucide-react'
 import { AISystemIcon } from '@/components/patterns/ui-patterns/ai-system-icon'
 import { AISystemsIcon } from '@/assets/icons/ai-systems-icon'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -13,6 +13,12 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import type { AISystem, AISystemsFilterState } from '../types/types'
 
 interface AISystemsTableDirectProps {
@@ -22,6 +28,8 @@ interface AISystemsTableDirectProps {
   onSelectAll?: (selected: boolean) => void
   onEdit: (system: AISystem) => void
   onDelete: (system: AISystem) => void
+  onManageEvaluation?: (system: AISystem) => void
+  onViewInfo?: (system: AISystem) => void
 }
 
 // Map provider names to AISystemIcon types
@@ -52,7 +60,9 @@ export function AISystemsTableDirect({
   onRowSelect,
   onSelectAll,
   onEdit,
-  onDelete
+  onDelete,
+  onManageEvaluation,
+  onViewInfo
 }: AISystemsTableDirectProps) {
   // Filter state
   const [filters, setFilters] = useState<AISystemsFilterState>({
@@ -212,7 +222,7 @@ export function AISystemsTableDirect({
             <TableHead className="font-450">Owner</TableHead>
             <TableHead className="font-450">Created At</TableHead>
             <TableHead className="font-450">Status</TableHead>
-            <TableHead className="w-[100px] font-450">Actions</TableHead>
+            <TableHead className="w-[200px] font-450">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -283,28 +293,63 @@ export function AISystemsTableDirect({
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onEdit(system)
-                    }}
-                    className="h-8 w-8 p-0"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onDelete(system)
-                    }}
-                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  {onManageEvaluation && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onManageEvaluation(system)
+                      }}
+                      className=""
+                    >
+                      Manage Evaluation
+                    </Button>
+                  )}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className=""
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-[160px]">
+                      {onViewInfo && (
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onViewInfo(system)
+                          }}
+                        >
+                          <Info className="mr-3 h-4 w-4" />
+                          View Info
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onEdit(system)
+                        }}
+                      >
+                        <PenLine className="mr-3 h-4 w-4" />
+                        Edit Info
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onDelete(system)
+                        }}
+                        className="text-red-600 focus:text-red-600"
+                      >
+                        <Trash2 className="mr-3 h-4 w-4" />
+                        Delete AI System
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </TableCell>
             </TableRow>

@@ -1,5 +1,6 @@
 export { AISystemCreateSheet } from './ai-system-create-dialog'
 export { AISystemEditSheet } from './ai-system-edit-sheet'
+export { AISystemViewSheet } from './ai-system-view-sheet'
 export * from './ai-systems-table'
 export { AISystemsTableDirect } from './ai-systems-table-direct'
 export { AISystemsStats } from './ai-systems-stats'

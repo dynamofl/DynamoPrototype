@@ -3,6 +3,7 @@ import { AppBar, Breadcrumb, SmartRedirect } from '@/components/patterns'
 import { Button } from '@/components/ui/button'
 import { AIProvidersPage } from '@/features/ai-providers'
 import { AISystemsPage } from '@/features/ai-systems'
+import { AISystemEvaluationPage } from '@/features/ai-system-evaluation'
 import { BetaFeaturesPage } from '@/features/beta-features'
 import { EvaluationPage } from '@/features/evaluation'
 import { EvaluationResultsPage } from '@/features/evaluation-results'
@@ -19,7 +20,10 @@ function App() {
     <Routes>
       {/* Settings Route - Separate layout without AppBar */}
       <Route path="/settings" element={<SettingsPage />} />
-      
+
+      {/* AI System Evaluation Route - Separate layout with breadcrumb app bar */}
+      <Route path="/ai-systems/:systemName/evaluation" element={<AISystemEvaluationPage />} />
+
       {/* All other routes with default layout */}
       <Route path="/*" element={
         <div className="min-h-screen bg-gray-100 flex flex-col">

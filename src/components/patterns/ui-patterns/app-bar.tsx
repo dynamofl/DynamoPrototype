@@ -24,62 +24,187 @@ import {
   Moon,
   Monitor,
   FlaskConical,
+  Play,
+  UserPlus,
+  ChevronDown,
 } from "lucide-react"
 import { useTheme } from '@/components/patterns/theme-provider'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate, Link } from 'react-router-dom'
 
-export function AppBar() {
+export interface BreadcrumbItem {
+  name: string
+  path: string
+  current?: boolean
+}
+
+export interface AppBarActionButton {
+  label: string
+  onClick: () => void
+  variant?: 'primary' | 'secondary'
+  icon?: React.ReactNode
+  disabled?: boolean
+  loading?: boolean
+}
+
+export interface AppBarProps {
+  variant?: 'default' | 'breadcrumb'
+  // Breadcrumb mode props
+  breadcrumbs?: BreadcrumbItem[]
+  currentSection?: {
+    name: string
+    badge?: string
+  }
+  actionButtons?: AppBarActionButton[]
+}
+
+export function AppBar({
+  variant = 'default',
+  breadcrumbs = [],
+  currentSection,
+  actionButtons = [],
+}: AppBarProps) {
   const { setTheme } = useTheme()
   const navigate = useNavigate()
 
-  // Main navigation items (always visible)
+  // Main navigation items (for default variant)
   const mainNavItems = [
     { name: "Projects", path: "/projects", icon: ProjectsIcon },
     { name: "AI Systems", path: "/ai-systems", icon: AISystemsIcon },
     { name: "Policies", path: "/guardrails", icon: PoliciesIcon },
   ]
 
+  // Render left section based on variant
+  const renderLeftSection = () => {
+    if (variant === 'breadcrumb') {
+      return (
+        <div className="flex items-center gap-1 animate-in fade-in slide-in-from-right-2 duration-150">
+          {/* Logo */}
+          <Link to="/ai-systems" className="flex items-center pr-2 rounded-full hover:bg-gray-100">
+            <DynamoLogoTypeface className="h-4" />
+          </Link>
+
+          {/* Separator */}
+          <span className="text-gray-500 text-[13px] font-450">/</span>
+
+          {/* Breadcrumb Items */}
+          {breadcrumbs.map((item, index) => (
+            <div key={item.path} className="flex items-center gap-3 animate-in fade-in slide-in-from-right-2 duration-150" style={{ animationDelay: `${index * 50}ms` }}>
+              {item.current ? (
+                <span className="text-gray-600 text-[13px] font-450">
+                  {item.name}
+                </span>
+              ) : (
+                <Link
+                  to={item.path}
+                  className="text-gray-600 text-[13px] font-450 px-2 py-1.5 rounded-full hover:bg-gray-100"
+                >
+                  {item.name}
+                </Link>
+              )}
+              {index < breadcrumbs.length - 1 && (
+                <span className="text-gray-500 text-[13px] font-450">/</span>
+              )}
+            </div>
+          ))}
+
+          {/* Current Section with Badge and Dropdown */}
+          {currentSection && (
+            <>
+              <span className="text-gray-500 text-[13px] font-450">/</span>
+              <div className="flex items-center gap-1 px-2 rounded-full hover:bg-gray-100 cursor-pointer animate-in fade-in slide-in-from-right-2 duration-150" style={{ animationDelay: `${breadcrumbs.length * 50}ms` }}>
+                <span className="text-gray-800 text-[13px] font-450">
+                  {currentSection.name}
+                </span>
+                {currentSection.badge && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[12px] font-[425] bg-gray-100 text-gray-800">
+                    {currentSection.badge}
+                  </span>
+                )}
+                <ChevronDown className="h-5 w-5 text-gray-800" />
+              </div>
+            </>
+          )}
+        </div>
+      )
+    }
+
+    // Default variant
+    return (
+      <div className="flex items-center">
+        {/* Logo */}
+        <DynamoLogoTypeface />
+        {/* Vertical Separator */}
+        <div className="hidden md:block ml-4 mr-2 w-px h-4 bg-gray-300"></div>
+
+        {/* Navigation Links */}
+        <NavigationMenu className="hidden md:flex">
+          <NavigationMenuList>
+            {/* Main navigation items */}
+            {mainNavItems.map((item) => {
+              const Icon = item.icon
+              return (
+                <NavigationMenuItem key={item.name}>
+                  <NavLink
+                    to={item.path}
+                    className={({ isActive }) => cn(
+                      "h-8 px-3 text-[13px] font-450 flex items-center gap-2 rounded-md transition-colors hover:bg-gray-200",
+                      isActive
+                        ? "text-gray-800"
+                        : "text-gray-600"
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {item.name}
+                  </NavLink>
+                </NavigationMenuItem>
+              )
+            })}
+          </NavigationMenuList>
+        </NavigationMenu>
+      </div>
+    )
+  }
+
   return (
-    <header className="  backdrop-blur relative z-40">
-      <div className=" mx-auto px-6 py-2">
+    <header className={cn(
+      "backdrop-blur relative z-40",
+    )}>
+      <div className="mx-auto px-6 py-2">
         <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            {/* Logo */}
-            
-            <DynamoLogoTypeface />
-            {/* Vertical Separator */}
-            <div className="hidden md:block ml-4 mr-2 w-px h-4 bg-gray-300"></div>
+          {/* Left Section - Dynamic based on variant */}
+          {renderLeftSection()}
 
-            {/* Navigation Links */}
-            <NavigationMenu className="hidden md:flex">
-              <NavigationMenuList>
-                {/* Main navigation items */}
-                {mainNavItems.map((item) => {
-                  const Icon = item.icon
-                  return (
-                    <NavigationMenuItem key={item.name}>
-                      <NavLink
-                        to={item.path}
-                        className={({ isActive }) => cn(
-                          "h-8 px-3 text-[13px] font-450 flex items-center gap-2 rounded-md transition-colors hover:bg-gray-200",
-                          isActive
-                            ? "text-gray-800"
-                            : "text-gray-600"
-                        )}
-                      >
-                        <Icon className="h-4 w-4" />
-                        {item.name}
-                      </NavLink>
-                    </NavigationMenuItem>
-                  )
-                })}
-              </NavigationMenuList>
-            </NavigationMenu>
-          </div>
+          {/* Right side - Action Buttons, Beta Features and Profile Dropdown */}
+          <div className="flex items-center gap-2">
+            {/* Custom Action Buttons (for breadcrumb variant) */}
+            {actionButtons.length > 0 && (
+              <div className="flex items-center gap-2 pr-1">
+                {actionButtons.map((button, index) => (
+                  <Button
+                    key={index}
+                    onClick={button.onClick}
+                    disabled={button.disabled || button.loading}
+                    variant={button.variant === 'secondary' ? 'outline' : 'default'}
+                    className={cn(
+                      "h-7 px-2 text-[12px] font-450 flex items-center gap-2 animate-in fade-in duration-150 ",
+                      button.variant === 'primary' && "bg-blue-600 text-white hover:bg-blue-700",
+                      button.variant === 'secondary' && "text-gray-800 border-gray-200"
+                    )}
+                    style={{ animationDelay: `${index * 75}ms` }}
+                  >
+                    {button.icon}
+                    {button.loading ? 'Loading...' : button.label}
+                  </Button>
+                ))}
+              </div>
+            )}
 
-          {/* Right side - Beta Features and Profile Dropdown */}
-          <div className="flex items-center gap-4">
-            {/* Beta Features Button */}
+            {/* Separator (if action buttons exist) */}
+            {actionButtons.length > 0 && (
+              <div className="h-4 w-px bg-gray-200" />
+            )}
+
+            {/* Beta Features Button - Same styling for both variants */}
             <NavLink
               to="/beta-features"
               className={({ isActive }) => cn(
@@ -93,13 +218,16 @@ export function AppBar() {
               Beta Features
             </NavLink>
 
+            {/* Profile Dropdown - Same styling for both variants */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="w-8 h-8  bg-gray-200 hover:bg-gray-300 text-primary-foreground rounded-full p-0"
+                  className="w-8 h-8 bg-gray-200 hover:bg-gray-300 text-primary-foreground rounded-full p-0"
                 >
-                  <span className="text-gray-800 font-450 text-[13px]">PK</span>
+                  <span className="text-gray-800 font-450 text-[13px]">
+                    PK
+                  </span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">

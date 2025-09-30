@@ -1,0 +1,3 @@
+- Ensure UI component uses the tailwind classes
+- For the colors, use only tailwind colors gray, red, green, amber
+- For title case for Heading, title, labels
