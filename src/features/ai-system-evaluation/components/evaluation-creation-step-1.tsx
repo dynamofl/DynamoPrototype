@@ -10,6 +10,7 @@ export function EvaluationCreationStep1({
   onDataChange,
   onNext,
   onCancel,
+  variant = "overlay",
 }: EvaluationCreationStepProps) {
   const [name, setName] = useState(data.name || "");
   const [type, setType] = useState<EvaluationType | undefined>(data.type);
@@ -52,10 +53,18 @@ export function EvaluationCreationStep1({
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h2 className="text-2xl font-semibold text-gray-900">Let's start with some basics</h2>
-        <p className="text-sm text-gray-600 mt-2">
-          Choose your evaluation name and type to get started.
+      <div className="space-y-1">
+        <h2 className="text-lg font-450 text-gray-900">
+          {variant === "onboarding"
+            ? "Let's create your first evaluation"
+            : "Let's start with some basics"
+          }
+        </h2>
+        <p className="text-sm text-gray-600">
+          {variant === "onboarding"
+            ? "Set up your first evaluation to start testing your AI system's safety and performance."
+            : "Choose your evaluation name and type to get started."
+          }
         </p>
       </div>
 
@@ -73,20 +82,20 @@ export function EvaluationCreationStep1({
       </div>
 
       {/* Evaluation Type */}
-      <div className="space-y-3">
-        <Label>Type of evaluation</Label>
+      <div className="space-y-2">
+        <Label>Type of Evaluation</Label>
         <RadioGroup
           value={type}
           onValueChange={handleTypeChange}
         >
           <div className="space-y-3">
             {/* Compliance Evaluation */}
-            <div className="flex items-start space-x-3 rounded-lg border border-gray-200 p-4 hover:border-gray-300 transition-colors cursor-pointer">
-              <RadioGroupItem value="compliance" id="compliance" className="mt-0.5" />
+            <div className="flex items-start space-x-3 rounded-lg border border-gray-200 px-4 py-3 hover:border-gray-300 transition-colors cursor-pointer">
+              <RadioGroupItem value="compliance" id="compliance" className="mt-1" />
               <div className="flex-1">
                 <label
                   htmlFor="compliance"
-                  className="text-sm font-medium text-gray-900 cursor-pointer"
+                  className="text-sm font-450 text-gray-900 cursor-pointer"
                 >
                   Compliance
                 </label>
@@ -97,12 +106,12 @@ export function EvaluationCreationStep1({
             </div>
 
             {/* Jailbreak Evaluation */}
-            <div className="flex items-start space-x-3 rounded-lg border border-gray-200 p-4 hover:border-gray-300 transition-colors cursor-pointer">
-              <RadioGroupItem value="jailbreak" id="jailbreak" className="mt-0.5" />
+            <div className="flex items-start space-x-3 rounded-lg border border-gray-200 px-4 py-3 hover:border-gray-300 transition-colors cursor-pointer">
+              <RadioGroupItem value="jailbreak" id="jailbreak" className="mt-1" />
               <div className="flex-1">
                 <label
                   htmlFor="jailbreak"
-                  className="text-sm font-medium text-gray-900 cursor-pointer"
+                  className="text-sm font-450 text-gray-900 cursor-pointer"
                 >
                   Jailbreak
                 </label>

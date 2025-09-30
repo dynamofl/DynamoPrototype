@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { EvaluationCreationStep1 } from "./evaluation-creation-step-1";
+import { EvaluationCreationStep2 } from "./evaluation-creation-step-2";
 import type { EvaluationCreationData } from "../types/evaluation-creation";
 
 interface EvaluationCreationFlowProps {
@@ -128,34 +129,17 @@ export function EvaluationCreationFlow({
               onDataChange={handleDataChange}
               onNext={handleStep1Next}
               onCancel={onCancel}
+              variant={variant}
             />
           )}
           {currentStep === 2 && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-semibold text-gray-900">Configure tests</h2>
-                <p className="text-sm text-gray-600 mt-2">
-                  Step 2 will be implemented next. Current data:
-                </p>
-              </div>
-              <pre className="text-xs bg-white p-4 rounded border border-gray-200">
-                {JSON.stringify(evaluationData, null, 2)}
-              </pre>
-              <div className="flex justify-between pt-4">
-                <button
-                  onClick={handleBack}
-                  className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 bg-white"
-                >
-                  Back
-                </button>
-                <button
-                  onClick={() => setCurrentStep(3)}
-                  className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                >
-                  Continue
-                </button>
-              </div>
-            </div>
+            <EvaluationCreationStep2
+              data={evaluationData}
+              onDataChange={handleDataChange}
+              onNext={() => setCurrentStep(3)}
+              onBack={handleBack}
+              variant={variant}
+            />
           )}
           {currentStep === 3 && (
             <div className="space-y-6">

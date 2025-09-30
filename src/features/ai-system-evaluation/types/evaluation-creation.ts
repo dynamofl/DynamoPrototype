@@ -3,6 +3,7 @@ export type EvaluationType = 'compliance' | 'jailbreak';
 export interface EvaluationCreationData {
   name: string;
   type: EvaluationType;
+  guardrailIds: string[];
 }
 
 export interface EvaluationCreationStepProps {
@@ -11,4 +12,5 @@ export interface EvaluationCreationStepProps {
   onNext?: () => void;
   onBack?: () => void;
   onCancel?: () => void;
+  variant?: "overlay" | "onboarding";
 }
