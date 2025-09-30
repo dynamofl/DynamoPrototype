@@ -66,26 +66,26 @@ export const ViewMode: Story = {
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label className="text-sm font-medium">Name</Label>
-            <p className="text-sm text-muted-foreground mt-1">{mockItem.name}</p>
+            <Label className="text-[13px] font-medium">Name</Label>
+            <p className="text-[13px] text-muted-foreground mt-1">{mockItem.name}</p>
           </div>
           <div>
-            <Label className="text-sm font-medium">Status</Label>
-            <p className="text-sm text-muted-foreground mt-1 capitalize">{mockItem.status}</p>
+            <Label className="text-[13px] font-medium">Status</Label>
+            <p className="text-[13px] text-muted-foreground mt-1 capitalize">{mockItem.status}</p>
           </div>
         </div>
         <div>
-          <Label className="text-sm font-medium">Description</Label>
-          <p className="text-sm text-muted-foreground mt-1">{mockItem.description}</p>
+          <Label className="text-[13px] font-medium">Description</Label>
+          <p className="text-[13px] text-muted-foreground mt-1">{mockItem.description}</p>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label className="text-sm font-medium">Provider</Label>
-            <p className="text-sm text-muted-foreground mt-1">{mockItem.provider}</p>
+            <Label className="text-[13px] font-medium">Provider</Label>
+            <p className="text-[13px] text-muted-foreground mt-1">{mockItem.provider}</p>
           </div>
           <div>
-            <Label className="text-sm font-medium">Created</Label>
-            <p className="text-sm text-muted-foreground mt-1">{mockItem.createdAt}</p>
+            <Label className="text-[13px] font-medium">Created</Label>
+            <p className="text-[13px] text-muted-foreground mt-1">{mockItem.createdAt}</p>
           </div>
         </div>
       </div>

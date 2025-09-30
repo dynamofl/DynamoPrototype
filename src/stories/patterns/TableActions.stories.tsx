@@ -50,9 +50,9 @@ export const InTableHeader: Story = {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">AI Systems</h2>
-          <p className="text-sm text-muted-foreground">Manage your AI systems and configurations</p>
+          <p className="text-[13px] text-muted-foreground">Manage your AI systems and configurations</p>
         </div>
-        <button className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">
+        <button className="px-4 py-2 bg-blue-600 text-white rounded-md text-[13px] font-medium hover:bg-blue-700">
           Add System
         </button>
       </div>
@@ -67,7 +67,7 @@ export const InTableHeader: Story = {
       
       <div className="border rounded-lg">
         <div className="p-4 border-b">
-          <div className="grid grid-cols-4 gap-4 text-sm font-medium text-muted-foreground">
+          <div className="grid grid-cols-4 gap-4 text-[13px] font-medium text-muted-foreground">
             <div>Name</div>
             <div>Provider</div>
             <div>Status</div>
@@ -75,7 +75,7 @@ export const InTableHeader: Story = {
           </div>
         </div>
         <div className="p-4">
-          <p className="text-sm text-muted-foreground">Table content would go here...</p>
+          <p className="text-[13px] text-muted-foreground">Table content would go here...</p>
         </div>
       </div>
     </div>

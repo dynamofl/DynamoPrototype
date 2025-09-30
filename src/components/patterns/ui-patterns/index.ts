@@ -30,12 +30,16 @@ export { UploadSheet } from './upload-sheet';
 // Display Components
 export { HeaderStats } from './header-stats';
 export { ThemeToggle } from './theme-toggle';
+export { PageHeader } from './page-header';
 
 // Icon Components
 export * from './inline-ai-icons';
 
 // Cell Types (UI Components)
 export * from './cell-types';
+
+// Filter & Search Components
+export * from './filter-search';
 
 
 

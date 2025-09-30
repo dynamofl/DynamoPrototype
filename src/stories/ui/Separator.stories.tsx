@@ -43,18 +43,18 @@ export const InList: Story = {
   render: () => (
     <div className="w-80">
       <div className="space-y-1">
-        <div className="text-sm font-medium">Account</div>
-        <div className="text-sm text-muted-foreground">Manage your account settings</div>
+        <div className="text-[13px] font-medium">Account</div>
+        <div className="text-[13px] text-muted-foreground">Manage your account settings</div>
       </div>
       <Separator className="my-4" />
       <div className="space-y-1">
-        <div className="text-sm font-medium">Privacy</div>
-        <div className="text-sm text-muted-foreground">Manage your privacy settings</div>
+        <div className="text-[13px] font-medium">Privacy</div>
+        <div className="text-[13px] text-muted-foreground">Manage your privacy settings</div>
       </div>
       <Separator className="my-4" />
       <div className="space-y-1">
-        <div className="text-sm font-medium">Notifications</div>
-        <div className="text-sm text-muted-foreground">Manage your notification preferences</div>
+        <div className="text-[13px] font-medium">Notifications</div>
+        <div className="text-[13px] text-muted-foreground">Manage your notification preferences</div>
       </div>
     </div>
   ),
@@ -63,13 +63,13 @@ export const InList: Story = {
 export const InNavigation: Story = {
   render: () => (
     <div className="flex h-5 items-center space-x-4 w-80">
-      <div className="text-sm font-medium">Home</div>
+      <div className="text-[13px] font-medium">Home</div>
       <Separator orientation="vertical" />
-      <div className="text-sm font-medium">Products</div>
+      <div className="text-[13px] font-medium">Products</div>
       <Separator orientation="vertical" />
-      <div className="text-sm font-medium">About</div>
+      <div className="text-[13px] font-medium">About</div>
       <Separator orientation="vertical" />
-      <div className="text-sm font-medium">Contact</div>
+      <div className="text-[13px] font-medium">Contact</div>
     </div>
   ),
 };
@@ -79,15 +79,15 @@ export const InCard: Story = {
     <div className="w-80 rounded-lg border bg-card text-card-foreground shadow-sm">
       <div className="p-6">
         <h3 className="text-2xl font-450 leading-none tracking-tight">Card Title</h3>
-        <p className="text-sm text-muted-foreground mt-2">Card description goes here.</p>
+        <p className="text-[13px] text-muted-foreground mt-2">Card description goes here.</p>
       </div>
       <Separator />
       <div className="p-6">
-        <p className="text-sm">Card content goes here.</p>
+        <p className="text-[13px]">Card content goes here.</p>
       </div>
       <Separator />
       <div className="flex items-center p-6">
-        <button className="text-sm font-medium">Action</button>
+        <button className="text-[13px] font-medium">Action</button>
       </div>
     </div>
   ),
@@ -97,17 +97,17 @@ export const InForm: Story = {
   render: () => (
     <div className="w-80 space-y-4">
       <div className="space-y-2">
-        <label className="text-sm font-medium">Personal Information</label>
+        <label className="text-[13px] font-medium">Personal Information</label>
         <div className="space-y-2">
           <input
             type="text"
             placeholder="First name"
-            className="flex h-10 w-full rounded-md border border-input bg-gray-0 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-10 w-full rounded-md border border-input bg-gray-0 px-3 py-2 text-[13px] ring-offset-background file:border-0 file:bg-transparent file:text-[13px] file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           />
           <input
             type="text"
             placeholder="Last name"
-            className="flex h-10 w-full rounded-md border border-input bg-gray-0 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-10 w-full rounded-md border border-input bg-gray-0 px-3 py-2 text-[13px] ring-offset-background file:border-0 file:bg-transparent file:text-[13px] file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           />
         </div>
       </div>
@@ -115,17 +115,17 @@ export const InForm: Story = {
       <Separator />
       
       <div className="space-y-2">
-        <label className="text-sm font-medium">Contact Information</label>
+        <label className="text-[13px] font-medium">Contact Information</label>
         <div className="space-y-2">
           <input
             type="email"
             placeholder="Email"
-            className="flex h-10 w-full rounded-md border border-input bg-gray-0 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-10 w-full rounded-md border border-input bg-gray-0 px-3 py-2 text-[13px] ring-offset-background file:border-0 file:bg-transparent file:text-[13px] file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           />
           <input
             type="tel"
             placeholder="Phone"
-            className="flex h-10 w-full rounded-md border border-input bg-gray-0 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-10 w-full rounded-md border border-input bg-gray-0 px-3 py-2 text-[13px] ring-offset-background file:border-0 file:bg-transparent file:text-[13px] file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           />
         </div>
       </div>
@@ -136,16 +136,16 @@ export const InForm: Story = {
 export const CustomStyling: Story = {
   render: () => (
     <div className="w-80 space-y-4">
-      <div className="text-sm">Default separator</div>
+      <div className="text-[13px]">Default separator</div>
       <Separator />
       
-      <div className="text-sm">Thick separator</div>
+      <div className="text-[13px]">Thick separator</div>
       <Separator className="h-2" />
       
-      <div className="text-sm">Colored separator</div>
+      <div className="text-[13px]">Colored separator</div>
       <Separator className="bg-blue-500" />
       
-      <div className="text-sm">Dashed separator</div>
+      <div className="text-[13px]">Dashed separator</div>
       <Separator className="border-dashed" />
     </div>
   ),

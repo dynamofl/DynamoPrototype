@@ -135,13 +135,13 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
         
         {/* Evaluation Summary */}
         <section className="space-y-2">
-          <h3 className="text-xs font-450 text-gray-500 uppercase tracking-wide">
+          <h3 className="text-[11px] font-450 text-gray-500 uppercase tracking-wide">
             Evaluation Summary
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             
             {/* Attack Type */}
-            <div className="border border-gray-200 rounded-lg p-3 space-y-2">
+            <div className="border border-gray-200 rounded-lg p-2 space-y-2">
               <div className="flex items-center gap-1">
                 <span className="text-xs font-450 text-gray-700">Attack Type</span>
                 <InfoIconOutline />
@@ -155,7 +155,7 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
             </div>
 
             {/* Guardrail Response */}
-            <div className="border border-gray-200 rounded-lg p-3 space-y-2">
+            <div className="border border-gray-200 rounded-lg p-2 space-y-2">
               <div className="flex items-center gap-1">
                 <span className="text-xs font-450 text-gray-700">Guardrail Response</span>
                 <InfoIconOutline />
@@ -169,7 +169,7 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
             </div>
 
             {/* AI System Response */}
-            <div className="border border-gray-200 rounded-lg p-3 space-y-2">
+            <div className="border border-gray-200 rounded-lg p-2 space-y-2">
               <div className="flex items-center gap-1">
                 <span className="text-xs font-450 text-gray-700">AI System Response</span>
                 <InfoIconOutline />
@@ -186,7 +186,7 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
 
         {/* Base Prompt */}
         <section className="space-y-2">
-          <h3 className="text-xs font-450 text-gray-500 uppercase tracking-wide">
+          <h3 className="text-[11px] font-450 text-gray-500 uppercase tracking-wide">
             Base Prompt
           </h3>
           <div className="text-[13px] text-gray-900 leading-relaxed">
@@ -196,13 +196,13 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
 
         {/* Attack Details */}
         <section className="space-y-2">
-          <h3 className="text-xs font-450 text-gray-500 uppercase tracking-wide">
+          <h3 className="text-[11px] font-450 text-gray-500 uppercase tracking-wide">
             Attack Details
           </h3>
-          <div className="border border-gray-200 rounded-md p-3 space-y-3">
+          <div className="border border-gray-200 rounded-md p-2 space-y-2">
             
             {/* Attack Area */}
-            <div className="flex">
+            <div className="flex py-1">
               <div className="w-36 text-xs font-450 text-gray-500">
                 Attack Area:
               </div>
@@ -243,10 +243,10 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
 
         {/* Jailbreak Prompt */}
         <section className="space-y-2">
-          <h3 className="text-xs font-450 text-gray-500 uppercase tracking-wide">
+          <h3 className="text-[11px] font-450 text-gray-500 uppercase tracking-wide">
             Jailbreak Prompt
           </h3>
-          <div className="border border-gray-200 rounded p-3 space-y-6">
+          <div className="border border-gray-200 rounded p-2 space-y-6">
             {conversationMessages.map((message, index) => (
               <div key={index} className="space-y-2 w-full">
                 <div className="w-full">
@@ -266,10 +266,10 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
 
         {/* Input Guardrails */}
         <section className="space-y-2">
-          <h3 className="text-xs font-450 text-gray-500 uppercase tracking-wide">
+          <h3 className="text-[11px] font-450 text-gray-500 uppercase tracking-wide">
             Input Guardrails
           </h3>
-          <div className="border border-gray-200 rounded-md p-2 space-y-1">
+          <div className="border border-gray-200 rounded-md p-1 ">
             {record.inputGuardrails.map((guardrail, index) => (
               <div key={index} className="flex items-center gap-2 p-2 rounded hover:bg-gray-50">
                 {getStatusIcon(guardrail.result)}
@@ -284,13 +284,13 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
 
         {/* AI System Response */}
         <section className="space-y-2">
-          <h3 className="text-xs font-450 text-gray-500 uppercase tracking-wide">
+          <h3 className="text-[11px] font-450 text-gray-500 uppercase tracking-wide">
             AI System Response
           </h3>
           <div className="text-[13px] text-gray-900 leading-relaxed">
             {record.aiSystemResponse}
           </div>
-          <div className="border border-gray-200 rounded-md p-2">
+          <div className="border border-gray-200 rounded-md p-1">
             <div className="flex items-center gap-2 p-2">
               {getStatusIcon(record.aiSystemResponseType)}
               <span className="text-xs text-gray-900">

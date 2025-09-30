@@ -200,7 +200,7 @@ export function EvaluationResultsPage() {
   }
 
   return (
-    <div className="flex flex-col overflow-hidden" style={{ height: 'calc(100vh - 64px)' }}>
+    <div className="flex flex-col overflow-hidden py-2" style={{ height: 'calc(100vh - 64px)' }}>
       {/* Filters */}
       <EvaluationResultsFilters 
         filters={filters}

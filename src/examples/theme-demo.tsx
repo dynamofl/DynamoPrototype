@@ -224,7 +224,7 @@ export function ThemeDemo() {
       {/* Usage Examples */}
       <section>
         <h2 className="text-xl font-600 mb-4">How to Use</h2>
-        <div className="bg-gray-100 p-4 rounded-lg font-mono text-sm">
+        <div className="bg-gray-100 p-4 rounded-lg font-mono text-[13px]">
           <div className="space-y-2 text-gray-800">
             <div><span className="text-gray-600">// Custom font weights:</span></div>
             <div>className="font-450"  <span className="text-gray-600">// Custom medium weight</span></div>

@@ -69,11 +69,11 @@ export function EvaluationTable({ className = '', onDataChange }: EvaluationTabl
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">Evaluation Prompts</h2>
-          <p className="text-sm text-gray-600">
+          <p className="text-[13px] text-gray-600">
             Define prompts to test your AI models and guardrails
           </p>
           {hasErrors && (
-            <div className="mt-2 text-sm text-red-600">
+            <div className="mt-2 text-[13px] text-red-600">
               {validation.errors.map((error, index) => (
                 <div key={index}>• {error}</div>
               ))}
@@ -104,7 +104,7 @@ export function EvaluationTable({ className = '', onDataChange }: EvaluationTabl
       />
 
       {/* Summary */}
-      <div className="flex items-center justify-between text-sm text-gray-600">
+      <div className="flex items-center justify-between text-[13px] text-gray-600">
         <div>
           Total prompts: {data.length}
         </div>

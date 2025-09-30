@@ -61,16 +61,16 @@ export function SidebarPattern({
           container: 'w-64 border-r border-gray-200 bg-white',
           headerButton: 'flex items-center gap-2 text-xs font-450 text-gray-600 hover:text-gray-900 transition-colors',
           groupLabel: 'px-3 py-2 text-xs font-450 text-gray-500',
-          menuButton: 'flex items-center gap-2 px-2 py-1.5 text-sm font-450 text-gray-600 hover:text-gray-900 hover:bg-gray-50',
-          activeMenuButton: 'flex items-center gap-2 px-2 py-1.5 text-sm font-450 bg-gray-50 text-gray-900 rounded-md'
+          menuButton: 'flex items-center gap-2 px-2 py-1.5 text-[13px] font-450 text-gray-600 hover:text-gray-900 hover:bg-gray-50',
+          activeMenuButton: 'flex items-center gap-2 px-2 py-1.5 text-[13px] font-450 bg-gray-50 text-gray-900 rounded-md'
         }
       default:
         return {
           container: 'w-64 border-r border-gray-200 bg-white',
           headerButton: 'flex items-center gap-2 text-xs font-450 text-gray-600 hover:text-gray-900 transition-colors',
           groupLabel: 'px-3 py-2 text-xs font-450 text-gray-500',
-          menuButton: 'flex items-center gap-2 px-2 py-1.5 text-sm font-450 text-gray-600 hover:text-gray-900 hover:bg-gray-50',
-          activeMenuButton: 'flex items-center gap-2 px-2 py-1.5 text-sm font-450 bg-gray-50 text-gray-900 rounded-md'
+          menuButton: 'flex items-center gap-2 px-2 py-1.5 text-[13px] font-450 text-gray-600 hover:text-gray-900 hover:bg-gray-50',
+          activeMenuButton: 'flex items-center gap-2 px-2 py-1.5 text-[13px] font-450 bg-gray-50 text-gray-900 rounded-md'
         }
     }
   }

@@ -73,49 +73,49 @@ export function GuardrailViewSheet({
       <div className="space-y-6 mt-6">
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label className="text-sm font-450 text-muted-foreground">Guardrail Name</Label>
-            <p className="text-sm font-450">{guardrail.name}</p>
+            <Label className="text-[13px] font-450 text-muted-foreground">Guardrail Name</Label>
+            <p className="text-[13px] font-450">{guardrail.name}</p>
           </div>
           
           <div className="space-y-2">
-            <Label className="text-sm font-450 text-muted-foreground">Category</Label>
+            <Label className="text-[13px] font-450 text-muted-foreground">Category</Label>
             <div>
               {guardrail.category ? getCategoryBadge(guardrail.category) : (
-                <span className="text-sm text-muted-foreground">No category assigned</span>
+                <span className="text-[13px] text-muted-foreground">No category assigned</span>
               )}
             </div>
           </div>
           
           <div className="space-y-2">
-            <Label className="text-sm font-450 text-muted-foreground">Status</Label>
+            <Label className="text-[13px] font-450 text-muted-foreground">Status</Label>
             <div>
               {getStatusBadge(guardrail.status)}
             </div>
           </div>
           
           <div className="space-y-2">
-            <Label className="text-sm font-450 text-muted-foreground">Description</Label>
-            <p className="text-sm">{guardrail.description}</p>
+            <Label className="text-[13px] font-450 text-muted-foreground">Description</Label>
+            <p className="text-[13px]">{guardrail.description}</p>
           </div>
           
           <div className="space-y-2">
-            <Label className="text-sm font-450 text-muted-foreground">Created</Label>
-            <p className="text-sm">{guardrail.createdAt}</p>
+            <Label className="text-[13px] font-450 text-muted-foreground">Created</Label>
+            <p className="text-[13px]">{guardrail.createdAt}</p>
           </div>
           
           {guardrail.updatedAt && guardrail.updatedAt !== guardrail.createdAt && (
             <div className="space-y-2">
-              <Label className="text-sm font-450 text-muted-foreground">Last Updated</Label>
-              <p className="text-sm">{guardrail.updatedAt}</p>
+              <Label className="text-[13px] font-450 text-muted-foreground">Last Updated</Label>
+              <p className="text-[13px]">{guardrail.updatedAt}</p>
             </div>
           )}
         </div>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label className="text-sm font-450 text-muted-foreground">Guardrail Content</Label>
+            <Label className="text-[13px] font-450 text-muted-foreground">Guardrail Content</Label>
             <div className="p-4 bg-muted rounded-md">
-              <p className="text-sm whitespace-pre-wrap">{guardrail.content}</p>
+              <p className="text-[13px] whitespace-pre-wrap">{guardrail.content}</p>
             </div>
           </div>
         </div>

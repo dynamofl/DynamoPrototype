@@ -199,7 +199,7 @@ export function ProviderCreateDialog({
         <div className="space-y-4">
           <div className="text-center py-4">
             <h3 className="text-lg font-450 text-[#192c4b] mb-2">Choose AI Provider</h3>
-            <p className="text-sm text-[#4b5976]">Select the AI service provider you want to add</p>
+            <p className="text-[13px] text-[#4b5976]">Select the AI service provider you want to add</p>
           </div>
           
           <div className="grid grid-cols-1 gap-3">
@@ -222,7 +222,7 @@ export function ProviderCreateDialog({
                         <Badge variant="secondary" className="text-xs">Coming Soon</Badge>
                       )}
                     </div>
-                    <p className="text-sm text-[#4b5976] mt-1">{providerType.description}</p>
+                    <p className="text-[13px] text-[#4b5976] mt-1">{providerType.description}</p>
                   </div>
                 </div>
               </div>
@@ -237,7 +237,7 @@ export function ProviderCreateDialog({
               <AISystemIcon type={selectedProviderType!.icon} className="w-6 h-6" />
               <h3 className="text-lg font-450 text-[#192c4b]">Configure {selectedProviderType!.name}</h3>
             </div>
-            <p className="text-sm text-[#4b5976]">Enter your API key and select models</p>
+            <p className="text-[13px] text-[#4b5976]">Enter your API key and select models</p>
           </div>
 
           <div className="space-y-4">
@@ -286,7 +286,7 @@ export function ProviderCreateDialog({
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Fetching available models...</span>
+                  <span className="text-[13px] text-muted-foreground">Fetching available models...</span>
                 </div>
               </div>
             )}
@@ -309,7 +309,7 @@ export function ProviderCreateDialog({
                       }}
                       className="rounded"
                     />
-                    <Label htmlFor="select-all-models" className="text-sm font-450 cursor-pointer">
+                    <Label htmlFor="select-all-models" className="text-[13px] font-450 cursor-pointer">
                       Select All Models
                     </Label>
                   </div>
@@ -328,7 +328,7 @@ export function ProviderCreateDialog({
                         }}
                         className="rounded"
                       />
-                      <Label htmlFor={`model-${model.id}`} className="text-sm cursor-pointer flex-1">
+                      <Label htmlFor={`model-${model.id}`} className="text-[13px] cursor-pointer flex-1">
                         <div className="font-450">{model.id}</div>
                         <div className="text-xs text-muted-foreground">
                           Created: {formatModelDate(model.created)}
@@ -344,7 +344,7 @@ export function ProviderCreateDialog({
             )}
 
             {validationError && (
-              <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+              <div className="text-[13px] text-red-600 bg-red-50 p-3 rounded-md">
                 {validationError}
               </div>
             )}

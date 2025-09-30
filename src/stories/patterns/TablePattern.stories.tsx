@@ -460,7 +460,7 @@ export const ColumnCustomization: Story = {
         <div className="p-4 bg-blue-50 rounded">
           <h3 className="font-bold text-blue-800">Column Customization Demo</h3>
           <p className="text-blue-600">Use the Controls panel to customize column titles, widths, and placeholders in real-time!</p>
-          <p className="text-sm text-blue-500 mt-2">
+          <p className="text-[13px] text-blue-500 mt-2">
             Try changing the column titles and widths using the input fields in the Controls panel.
           </p>
         </div>
@@ -652,13 +652,13 @@ export const WorkingTable: Story = {
         <div className="p-4 bg-green-50 rounded">
           <h3 className="font-bold text-green-800">Working Table</h3>
           <p className="text-green-600">This table actually works and shows all the data!</p>
-          <p className="text-sm text-green-500">Displaying {mockRows.length} AI systems with all cell types.</p>
+          <p className="text-[13px] text-green-500">Displaying {mockRows.length} AI systems with all cell types.</p>
         </div>
         
         {/* Use the actual Table components from the UI library */}
         <div className="border rounded-lg">
           <div className="relative overflow-auto">
-            <table className="w-full caption-bottom text-sm">
+            <table className="w-full caption-bottom text-[13px]">
               <thead className="[&_tr]:border-b">
                 <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                   {mockColumns.map((column) => (
@@ -696,7 +696,7 @@ export const WorkingTable: Story = {
                              row[column.key] === 'error' ? '❌' : '❓'}
                           </span>
                         ) : column.type === 'dropdown' ? (
-                          <span className="text-sm text-gray-700">
+                          <span className="text-[13px] text-gray-700">
                             {column.options?.find(opt => opt.value === row[column.key])?.label || row[column.key]}
                           </span>
                         ) : column.type === 'multiBadge' ? (
@@ -710,15 +710,15 @@ export const WorkingTable: Story = {
                           </div>
                         ) : column.type === 'multiButton' ? (
                           <div className="flex gap-2">
-                            <button className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-gray-0 hover:bg-accent hover:text-accent-foreground h-9 px-3">
+                            <button className="inline-flex items-center justify-center rounded-md text-[13px] font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-gray-0 hover:bg-accent hover:text-accent-foreground h-9 px-3">
                               Edit
                             </button>
-                            <button className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-9 px-3">
+                            <button className="inline-flex items-center justify-center rounded-md text-[13px] font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-9 px-3">
                               Delete
                             </button>
                           </div>
                         ) : (
-                          <span className="text-sm text-gray-700">
+                          <span className="text-[13px] text-gray-700">
                             {String(row[column.key] || '')}
                           </span>
                         )}
@@ -749,7 +749,7 @@ export const RealAISystemsTable: Story = {
         <div className="p-4 bg-green-50 rounded">
           <h3 className="font-bold text-green-800">Real AI Systems Table</h3>
           <p className="text-green-600">This uses the actual working AI Systems table from your codebase!</p>
-          <p className="text-sm text-green-500">This should definitely show the data since it's the real component.</p>
+          <p className="text-[13px] text-green-500">This should definitely show the data since it's the real component.</p>
         </div>
 
         <div className="text-center p-8 text-gray-500">
@@ -782,7 +782,7 @@ export const CorrectlyConfiguredTable: Story = {
         <div className="p-4 bg-green-50 rounded">
           <h3 className="font-bold text-green-800">Correctly Configured Table</h3>
           <p className="text-green-600">This uses the exact same configuration as the working AI Systems table!</p>
-          <p className="text-sm text-green-500">Using storageConfig (not customStorage) like the real working tables.</p>
+          <p className="text-[13px] text-green-500">Using storageConfig (not customStorage) like the real working tables.</p>
         </div>
 
         <div className="border-t border-b">
@@ -873,13 +873,13 @@ export const StaticDataTable: Story = {
         <div className="p-4 bg-purple-50 rounded">
           <h3 className="font-bold text-purple-800">Static Data Table</h3>
           <p className="text-purple-600">This table shows static data without any loading or storage logic.</p>
-          <p className="text-sm text-purple-500">Displaying {staticData.length} AI systems with all cell types.</p>
+          <p className="text-[13px] text-purple-500">Displaying {staticData.length} AI systems with all cell types.</p>
         </div>
         
         {/* Render the table with static data */}
         <div className="border rounded-lg">
           <div className="relative overflow-auto">
-            <table className="w-full caption-bottom text-sm">
+            <table className="w-full caption-bottom text-[13px]">
               <thead className="[&_tr]:border-b">
                 <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                   <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Name</th>
@@ -906,7 +906,7 @@ export const StaticDataTable: Story = {
                         {row.status}
                       </span>
                     </td>
-                    <td className="p-4 align-middle text-sm text-gray-700">
+                    <td className="p-4 align-middle text-[13px] text-gray-700">
                       {row.provider === 'openai' ? 'OpenAI' :
                        row.provider === 'anthropic' ? 'Anthropic' :
                        row.provider === 'google' ? 'Google' :
@@ -920,7 +920,7 @@ export const StaticDataTable: Story = {
                         {row.enabled ? 'On' : 'Off'}
                       </span>
                     </td>
-                    <td className="p-4 align-middle text-sm text-gray-700">{row.createdAt}</td>
+                    <td className="p-4 align-middle text-[13px] text-gray-700">{row.createdAt}</td>
                     <td className="p-4 align-middle">
                       <span className="text-lg">
                         {row.health === 'healthy' ? '✅' :
@@ -940,10 +940,10 @@ export const StaticDataTable: Story = {
                     </td>
                     <td className="p-4 align-middle">
                       <div className="flex gap-2">
-                        <button className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-gray-0 hover:bg-accent hover:text-accent-foreground h-9 px-3">
+                        <button className="inline-flex items-center justify-center rounded-md text-[13px] font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-gray-0 hover:bg-accent hover:text-accent-foreground h-9 px-3">
                           Edit
                         </button>
-                        <button className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-9 px-3">
+                        <button className="inline-flex items-center justify-center rounded-md text-[13px] font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-9 px-3">
                           Delete
                         </button>
                       </div>

@@ -19,7 +19,7 @@ module.exports = {
   	extend: {
   		fontFamily: {
   			sans: [
-  				'Inter',
+  				'Inter Variable',
   				'-apple-system',
   				'BlinkMacSystemFont',
   				'Segoe UI',

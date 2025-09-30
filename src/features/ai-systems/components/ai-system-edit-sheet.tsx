@@ -334,7 +334,7 @@ export function AISystemEditSheet({
                 className="w-8 h-8"
               />
               <div className="flex-1">
-                <p className="text-sm font-450 text-gray-900">
+                <p className="text-[13px] font-450 text-gray-900">
                   {currentProvider.name}
                 </p>
               </div>
@@ -382,7 +382,7 @@ export function AISystemEditSheet({
                           <div className="flex space-x-3 flex-1">
                             <KeyRound className="w-4 h-4 text-gray-500 mt-1.5" />
                             <div className="flex-1">
-                              <Label htmlFor={apiKey.id} className="font-450 text-sm text-gray-900 cursor-pointer">
+                              <Label htmlFor={apiKey.id} className="font-450 text-[13px] text-gray-900 cursor-pointer">
                                 {apiKey.name}
                               </Label>
                               <div className="text-xs text-gray-500 mt-1">
@@ -656,7 +656,7 @@ export function AISystemEditSheet({
               <Label>Model</Label>
               <div className="flex items-center space-x-3 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="flex-1">
-                  <p className="text-sm font-450 text-gray-900">
+                  <p className="text-[13px] font-450 text-gray-900">
                     {aiSystem.selectedModel || "Unknown Model"}
                   </p>
                 

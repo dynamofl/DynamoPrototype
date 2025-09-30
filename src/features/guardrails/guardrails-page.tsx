@@ -1,15 +1,9 @@
-import { useState, useMemo } from 'react'
-import { TablePattern } from '@/components/patterns'
-import { GuardrailsStats, GuardrailCreateDialog, GuardrailViewSheet, GuardrailEditSheet } from './components'
-import {
-  guardrailsStorageConfig,
-  guardrailsColumns,
-  guardrailsPaginationConfig
-} from './lib/guardrails-config'
+import { useState, useMemo, useEffect } from 'react'
+import { GuardrailsHeader, GuardrailsStats, GuardrailCreateDialog, GuardrailViewSheet, GuardrailEditSheet } from './components'
+import { GuardrailsTableDirect } from './components/guardrails-table-direct'
+import type { Guardrail } from './types'
 import type { TableRow } from '@/types/table'
 import type { TableStorage } from '@/lib/storage/types'
-import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
 
 // Custom storage for guardrails using localStorage
 class GuardrailsTableStorage implements TableStorage {
@@ -84,102 +78,92 @@ export function Guardrails() {
   const [isAddingGuardrail, setIsAddingGuardrail] = useState(false)
   const [isViewingGuardrail, setIsViewingGuardrail] = useState(false)
   const [isEditingGuardrail, setIsEditingGuardrail] = useState(false)
-  const [viewingGuardrail, setViewingGuardrail] = useState<TableRow | null>(null)
-  const [editingGuardrail, setEditingGuardrail] = useState<TableRow | null>(null)
-
+  const [viewingGuardrail, setViewingGuardrail] = useState<Guardrail | null>(null)
+  const [editingGuardrail, setEditingGuardrail] = useState<Guardrail | null>(null)
+  const [guardrails, setGuardrails] = useState<Guardrail[]>([])
+  
+  // Selection state
+  const [selectedRows, setSelectedRows] = useState<string[]>([])
 
   // Create custom storage instance
   const customStorage = useMemo(() => new GuardrailsTableStorage(), [])
 
-  // Handle cell actions
-  const handleCellAction = (action: string, row: TableRow, _index: number) => {
-    switch (action) {
-      case 'view':
-        setViewingGuardrail(row)
-        setIsViewingGuardrail(true)
-        break
-      case 'edit':
-        setEditingGuardrail(row)
+  // Load guardrails on mount
+  useEffect(() => {
+    const loadGuardrails = async () => {
+      const data = await customStorage.load()
+      setGuardrails(data as Guardrail[])
+    }
+    loadGuardrails()
+  }, [])
+
+  // Handle guardrail edit
+  const handleEdit = (guardrail: Guardrail | TableRow) => {
+    setEditingGuardrail(guardrail as Guardrail)
     setIsEditingGuardrail(true)
-        break
-      case 'copy':
-        // Handle copy action
-        console.log('Copy guardrail:', row.id)
-        break
-      case 'delete':
-        // Handle delete action
-        console.log('Delete guardrail:', row.id)
-        break
-      default:
-        console.log('Unknown action:', action)
+  }
+
+  // Handle guardrail delete
+  const handleDelete = async (guardrail: Guardrail) => {
+    if (confirm(`Are you sure you want to delete "${guardrail.name}"?`)) {
+      await customStorage.delete(guardrail.id)
+      const updatedData = await customStorage.load()
+      setGuardrails(updatedData as Guardrail[])
     }
   }
 
-  // Handle data changes
-  const handleDataChange = (data: TableRow[]) => {
-    console.log('Data changed:', data.length, 'guardrails')
-  }
-
-  // Handle row expand
-  const handleRowExpand = (rowId: string, isExpanded: boolean) => {
-    console.log('Row expanded:', rowId, isExpanded)
-  }
-
   // Handle guardrail creation
-  const handleGuardrailCreated = (guardrail: TableRow) => {
-    customStorage.add(guardrail)
+  const handleGuardrailCreated = async (guardrail: TableRow) => {
+    await customStorage.add(guardrail)
+    const updatedData = await customStorage.load()
+    setGuardrails(updatedData as Guardrail[])
     console.log('Guardrail created:', guardrail.name)
   }
 
-  // Handle guardrail editing
-  const handleGuardrailEdit = (guardrail: TableRow) => {
-    setEditingGuardrail(guardrail)
-    setIsEditingGuardrail(true)
-  }
-
   // Handle guardrail update
-  const handleGuardrailUpdated = (guardrail: TableRow) => {
-    customStorage.update(guardrail.id, guardrail)
+  const handleGuardrailUpdated = async (guardrail: TableRow) => {
+    await customStorage.update(guardrail.id, guardrail)
+    const updatedData = await customStorage.load()
+    setGuardrails(updatedData as Guardrail[])
     console.log('Guardrail updated:', guardrail.name)
   }
 
-  return (
-    <div className="min-h-screen">
-      <main className="mx-auto">
-        <div className="space-y-4">
-          {/* Page Header */}
-          <div className="px-6">
-            <div className="flex items-center justify-between ">
-              <h1 className="text-lg font-450 tracking-tight">Policies</h1>
-              <Button
-                onClick={() => setIsAddingGuardrail(true)}
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Add Policy
-              </Button>
-            </div>
+  // Handle row selection
+  const handleRowSelect = (id: string, selected: boolean) => {
+    setSelectedRows(prev => 
+      selected 
+        ? [...prev, id]
+        : prev.filter(rowId => rowId !== id)
+    )
+  }
 
-            {/* Stats Cards */}
+  // Handle select all
+  const handleSelectAll = (selected: boolean) => {
+    setSelectedRows(selected ? guardrails.map(guardrail => guardrail.id) : [])
+  }
+
+  return (
+    <div className="">
+      <main className="mx-auto">
+        <div className="space-y-3 py-3">
+          {/* Page Header */}
+          <GuardrailsHeader onAddGuardrail={() => setIsAddingGuardrail(true)} />
+
+          {/* Stats Cards */}
+          <div className="px-4">
             <GuardrailsStats />
           </div>
 
           {/* Table */}
-          <div className="px-6">
-            <div className="bg-gray-0 rounded-lg border border-gray-200">
-              <TablePattern
-              mode="view"
-              columns={guardrailsColumns}
-              storageConfig={guardrailsStorageConfig}
-              customStorage={customStorage}
-              pagination={guardrailsPaginationConfig}
-              onDataChange={handleDataChange}
-              onCellAction={handleCellAction}
-              onRowExpand={handleRowExpand}
-              className=""
-              emptyMessage="No guardrails configured. Create your first guardrail to get started."
+          <div className="">
+            <GuardrailsTableDirect
+              data={guardrails}
+              selectedRows={selectedRows}
+              onRowSelect={handleRowSelect}
+              onSelectAll={handleSelectAll}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
             />
-            </div>
           </div>
 
           {/* View Guardrail Sheet */}
@@ -187,7 +171,7 @@ export function Guardrails() {
             open={isViewingGuardrail}
             onOpenChange={setIsViewingGuardrail}
             guardrail={viewingGuardrail}
-            onEdit={handleGuardrailEdit}
+            onEdit={handleEdit}
           />
 
           {/* Edit Guardrail Sheet */}

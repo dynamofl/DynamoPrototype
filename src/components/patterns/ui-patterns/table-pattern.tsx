@@ -659,7 +659,7 @@ export function TablePattern({
               }}
             >
               {showHeader && (
-                <TableHeader className={stickyHeader ? 'sticky top-0 bg-gray-0 z-10' : ''}>
+                <TableHeader className={stickyHeader ? 'sticky top-0 z-10 bg-background' : ''}>
                   <UITableRow className="h-8">
                     {columns.map((column) => {
                       const widthValue = getWidthValue(column.width)
@@ -732,7 +732,6 @@ export function TablePattern({
               width: `${editState.overlayPosition.width}px`,
               height: `${editState.overlayPosition.height}px`,
               backgroundColor: 'white',
-              border: '2px solid #3b82f6',
               borderRadius: '6px',
               boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
               overflow: 'visible'
@@ -817,15 +816,12 @@ export function TablePattern({
         }
         
         .enhanced-table th {
-          border-bottom: 1px solid #e5e7eb;
-          background-color: #f9fafb;
           height: 40px;
           padding-left: 16px;
           padding-right: 16px;
         }
         
         .enhanced-table td {
-          border-bottom: 1px solid #e5e7eb;
           height: 40px;
           padding-left: 16px;
           padding-right: 16px;
@@ -837,7 +833,6 @@ export function TablePattern({
         
         /* Column separators only in edit mode */
         .enhanced-table.edit-mode th {
-          border-right: 1px solid #e5e7eb;
           padding-left: 0;
           padding-right: 0;
         }
@@ -847,7 +842,6 @@ export function TablePattern({
         }
         
         .enhanced-table.edit-mode td {
-          border-right: 1px solid #e5e7eb;
           padding-left: 0;
           padding-right: 0;
         }
@@ -857,25 +851,19 @@ export function TablePattern({
         }
         
         .cell-content:hover {
-          background-color: #f9fafb !important;
         }
         
         .cell-content:focus {
           outline: none;
-          background-color: #f8fafc !important;
-          border-color: #d1d5db !important;
         }
         
         .cell-content.switch:hover,
         .cell-content.button:hover {
-          background-color: #f1f5f9 !important;
-          border-color: #cbd5e1 !important;
         }
         
         .cell-content.switch:focus,
         .cell-content.button:focus {
-          background-color: #e2e8f0 !important;
-          border-color: #94a3b8 !important;
+
         }
         
         .line-clamp-1 {

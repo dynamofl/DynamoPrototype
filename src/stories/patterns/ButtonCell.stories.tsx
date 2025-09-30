@@ -150,7 +150,7 @@ export const InTable: Story = {
     <div className="w-full max-w-2xl">
       <div className="border rounded-lg">
         <div className="p-4 border-b">
-          <div className="grid grid-cols-4 gap-4 text-sm font-medium text-muted-foreground">
+          <div className="grid grid-cols-4 gap-4 text-[13px] font-medium text-muted-foreground">
             <div>Name</div>
             <div>Status</div>
             <div>Provider</div>
@@ -159,11 +159,11 @@ export const InTable: Story = {
         </div>
         <div className="divide-y">
           <div className="p-4 grid grid-cols-4 gap-4 items-center">
-            <div className="text-sm">GPT-4 System</div>
-            <div className="text-sm">
+            <div className="text-[13px]">GPT-4 System</div>
+            <div className="text-[13px]">
               <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">Active</span>
             </div>
-            <div className="text-sm">OpenAI</div>
+            <div className="text-[13px]">OpenAI</div>
             <div>
               <ButtonCell
                 value={null}
@@ -196,11 +196,11 @@ export const InTable: Story = {
           </div>
           
           <div className="p-4 grid grid-cols-4 gap-4 items-center">
-            <div className="text-sm">Claude System</div>
-            <div className="text-sm">
+            <div className="text-[13px]">Claude System</div>
+            <div className="text-[13px]">
               <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded">Pending</span>
             </div>
-            <div className="text-sm">Anthropic</div>
+            <div className="text-[13px]">Anthropic</div>
             <div>
               <ButtonCell
                 value={null}
@@ -221,11 +221,11 @@ export const InTable: Story = {
           </div>
           
           <div className="p-4 grid grid-cols-4 gap-4 items-center">
-            <div className="text-sm">Gemini System</div>
-            <div className="text-sm">
+            <div className="text-[13px]">Gemini System</div>
+            <div className="text-[13px]">
               <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded">Error</span>
             </div>
-            <div className="text-sm">Google</div>
+            <div className="text-[13px]">Google</div>
             <div>
               <ButtonCell
                 value={null}

@@ -40,7 +40,7 @@ export function EvaluationResultsTable({
         <img src={BlockIcon} alt="Blocked" className="w-4 h-4 text-red-600" style={{ filter: 'brightness(0) saturate(100%) invert(25%) sepia(85%) saturate(5963%) hue-rotate(346deg) brightness(93%) contrast(90%)' }} /> :
         <img src={StatusCompleteIcon} alt="Allowed" className="w-4 h-4 text-green-600" style={{ filter: 'brightness(0) saturate(100%) invert(39%) sepia(80%) saturate(1969%) hue-rotate(96deg) brightness(96%) contrast(95%)' }} />
       }
-      <span className="text-sm">{aggregate}</span>
+      <span className="">{aggregate}</span>
     </div>
   )
 
@@ -50,7 +50,7 @@ export function EvaluationResultsTable({
         <img src={BlockIcon} alt="Blocked" className="w-4 h-4 text-red-600" style={{ filter: 'brightness(0) saturate(100%) invert(25%) sepia(85%) saturate(5963%) hue-rotate(346deg) brightness(93%) contrast(90%)' }} /> :
         <img src={StatusCompleteIcon} alt="Answer" className="w-4 h-4 text-green-600" style={{ filter: 'brightness(0) saturate(100%) invert(39%) sepia(80%) saturate(1969%) hue-rotate(96deg) brightness(96%) contrast(95%)' }} />
       }
-      <span className="text-sm">{responseType}</span>
+      <span className="">{responseType}</span>
     </div>
   )
 
@@ -59,8 +59,8 @@ export function EvaluationResultsTable({
       variant="secondary" 
       className={`text-xs ${
         outcome === 'Attack Failed' 
-          ? 'bg-green-100 text-green-800 border-green-200' 
-          : 'bg-red-100 text-red-800 border-red-200'
+          ? 'bg-green-100 text-green-800' 
+          : 'bg-red-100 text-red-800'
       }`}
     >
       {outcome}
@@ -120,7 +120,7 @@ export function EvaluationResultsTable({
                 <div className="flex items-center justify-center relative">
                   {/* Row number - shown by default, hidden on hover unless selected */}
                   <span 
-                    className={`text-sm text-gray-500 transition-opacity ${
+                    className={` text-gray-500 transition-opacity ${
                       selectedRows.includes(record.id) 
                         ? 'opacity-0' 
                         : 'group-hover:opacity-0 opacity-100'
@@ -155,14 +155,14 @@ export function EvaluationResultsTable({
                 </div>
               </TableCell>
               <TableCell>
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="secondary" className="text-xs text-gray-700">
                   {record.attackArea}
                 </Badge>
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
                   {getSeverityIcon(record.severity)}
-                  <span className="text-sm">{record.attackType}</span>
+                  <span className="">{record.attackType}</span>
                 </div>
               </TableCell>
               <TableCell>

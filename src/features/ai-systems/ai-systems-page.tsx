@@ -1,20 +1,17 @@
-import { useState, useMemo } from 'react'
-import type { TableRow } from '@/types/table'
+import { useState, useMemo, useEffect } from 'react'
 import type { AISystem } from './types'
 import {
   AISystemCreateSheet,
-  AISystemEditSheet
+  AISystemEditSheet,
+  AISystemsHeader,
+  AISystemsStats,
+  AISystemsTableDirect
 } from './components'
 import {
   AISystemsTableStorage,
   aiSystemsStorageConfig,
-  aiSystemsColumns,
-  aiSystemsExpandableConfig,
-  aiSystemsPaginationConfig,
   aiSystemsStateManager
 } from './lib'
-import { TablePattern, TableActions } from '@/components/patterns'
-import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,7 +22,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Plus } from 'lucide-react'
 
 /**
  * AI Systems page - Main component using modular components
@@ -44,37 +40,34 @@ export function AISystemsPage() {
   // Refresh trigger for table
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   
+  // AI Systems data
+  const [aiSystems, setAiSystems] = useState<AISystem[]>([])
+  
+  // Selection state
+  const [selectedRows, setSelectedRows] = useState<string[]>([])
+  
   // Create custom storage instance for AI systems
   const customStorage = useMemo(() => {
     return new AISystemsTableStorage(aiSystemsStorageConfig)
   }, [])
 
-
-  // Handle cell actions from TablePattern
-  const handleCellAction = (action: string, row: TableRow) => {
-    switch (action) {
-      case 'edit':
-        setEditingSystem(row as AISystem)
-        setIsEditingSystem(true)
-        break
-      case 'delete':
-        setSystemToDelete(row as AISystem)
-        setIsDeleteDialogOpen(true)
-        break
-      default:
-        console.log('Unknown action:', action)
+  // Load AI systems data
+  const loadAISystems = async () => {
+    try {
+      const systems = await customStorage.load()
+      setAiSystems(systems as AISystem[])
+    } catch (error) {
+      console.error('Failed to load AI systems:', error)
+      setAiSystems([])
     }
   }
 
-  // Handle row expansion
-  const handleRowExpand = (rowId: string, expanded: boolean) => {
-    console.log('Row expanded:', rowId, expanded)
-  }
+  // Load data on mount and refresh trigger changes
+  useEffect(() => {
+    loadAISystems()
+  }, [refreshTrigger, customStorage])
 
-  // Handle data changes from TablePattern
-  const handleDataChange = (data: TableRow[]) => {
-    console.log('Data changed:', data.length, 'systems')
-  }
+
 
   // Handle system creation
   const handleSystemCreated = async (system: AISystem) => {
@@ -102,9 +95,20 @@ export function AISystemsPage() {
     }
   }
 
+  // Handle edit system from direct table
+  const handleEditSystem = (system: AISystem) => {
+    setEditingSystem(system)
+    setIsEditingSystem(true)
+  }
 
-  // Handle delete system
-  const handleDeleteSystem = async () => {
+  // Handle delete system from direct table
+  const handleDeleteSystemRequest = (system: AISystem) => {
+    setSystemToDelete(system)
+    setIsDeleteDialogOpen(true)
+  }
+
+  // Handle delete system confirmation
+  const handleDeleteSystemConfirm = async () => {
     if (!systemToDelete) return
     
     try {
@@ -125,72 +129,44 @@ export function AISystemsPage() {
     setSystemToDelete(null)
   }
 
-  // Handle table actions
-  const handleSearch = (value: string) => {
-    console.log('Search:', value)
-    // TODO: Implement search functionality
+
+  // Handle row selection
+  const handleRowSelect = (id: string, selected: boolean) => {
+    setSelectedRows(prev => 
+      selected 
+        ? [...prev, id]
+        : prev.filter(rowId => rowId !== id)
+    )
   }
 
-  const handleFilter = () => {
-    console.log('Filter clicked')
-    // TODO: Implement filter functionality
-  }
-
-  const handleEditColumns = () => {
-    console.log('Edit columns clicked')
-    // TODO: Implement column management
-  }
-
-  const handleExport = () => {
-    console.log('Export clicked')
-    // TODO: Implement export functionality
+  // Handle select all
+  const handleSelectAll = (selected: boolean) => {
+    setSelectedRows(selected ? aiSystems.map(system => system.id) : [])
   }
 
   return (
     <div className="">
       <main className="mx-auto">
-        <div className="space-y-4">
+        <div className="space-y-3 py-3">
           {/* Page Header */}
-          <div className="px-6">
-            <div className="flex items-center justify-between">
-              <h1 className="text-lg font-450 tracking-tight">AI Systems</h1>
-              <Button
-                onClick={() => setIsAddingSystem(true)}
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Connect AI System
-              </Button>
-            </div>
+          <AISystemsHeader onAddSystem={() => setIsAddingSystem(true)} />
+
+          {/* Stats Cards */}
+          <div className="px-4">
+            <AISystemsStats data={aiSystems} />
           </div>
 
-          {/* Table Actions */}
-          <TableActions
-            searchPlaceholder="Search AI Systems..."
-            onSearch={handleSearch}
-            onFilter={handleFilter}
-            onEditColumns={handleEditColumns}
-            onExport={handleExport}
-          />
 
           {/* Systems Table */}
-          <div className="px-6">
-            <div className="bg-gray-0 rounded-lg border border-gray-200">
-              <TablePattern
-              key={refreshTrigger}
-              mode="view"
-              columns={aiSystemsColumns}
-              storageConfig={aiSystemsStorageConfig}
-              customStorage={customStorage}
-              pagination={aiSystemsPaginationConfig}
-              expandable={aiSystemsExpandableConfig}
-              onDataChange={handleDataChange}
-              onCellAction={handleCellAction}
-              onRowExpand={handleRowExpand}
-              className=""
-              emptyMessage="No AI systems configured. Add your first system to get started."
+          <div className="">
+            <AISystemsTableDirect
+              data={aiSystems}
+              selectedRows={selectedRows}
+              onRowSelect={handleRowSelect}
+              onSelectAll={handleSelectAll}
+              onEdit={handleEditSystem}
+              onDelete={handleDeleteSystemRequest}
             />
-            </div>
           </div>
 
           {/* Create System Sheet */}
@@ -222,7 +198,7 @@ export function AISystemsPage() {
                   Cancel
                 </AlertDialogCancel>
                 <AlertDialogAction
-                  onClick={handleDeleteSystem}
+                  onClick={handleDeleteSystemConfirm}
                   className="bg-red-600 hover:bg-red-700"
                 >
                   Delete

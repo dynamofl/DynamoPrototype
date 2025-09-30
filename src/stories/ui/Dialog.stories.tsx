@@ -158,14 +158,14 @@ This story demonstrates all available dialog properties and controls. Use the Co
         </DialogHeader>
         <DialogBody scrollable={args.scrollable} size={args.size}>
           <div className="space-y-4">
-            <p className="text-sm text-gray-600">
+            <p className="text-[13px] text-gray-600">
               This is the dialog body content. You can control various aspects of this dialog 
               using the Storybook controls panel.
             </p>
             {args.scrollable && (
               <div className="space-y-2">
                 {Array.from({ length: 10 }, (_, i) => (
-                  <p key={i} className="text-sm text-gray-500">
+                  <p key={i} className="text-[13px] text-gray-500">
                     Scrollable content line {i + 1}. This demonstrates the scrolling behavior 
                     when the content exceeds the dialog height.
                   </p>
@@ -222,7 +222,7 @@ A standard confirmation dialog with title, description, body content, and action
           </DialogDescription>
         </DialogHeader>
         <DialogBody size="md">
-          <p className="text-sm text-gray-600">
+          <p className="text-[13px] text-gray-600">
             Please confirm that you want to proceed with this action.
           </p>
         </DialogBody>
@@ -275,7 +275,7 @@ Use for quick confirmations, simple forms, or minimal content. The small size en
           </DialogDescription>
         </DialogHeader>
         <DialogBody size={args.size}>
-          <p className="text-sm text-gray-600">
+          <p className="text-[13px] text-gray-600">
             Compact content for quick actions.
           </p>
         </DialogBody>
@@ -324,11 +324,11 @@ The default size for most dialog use cases. Provides a good balance between cont
         </DialogHeader>
         <DialogBody size={args.size}>
           <div className="space-y-4">
-            <p className="text-sm text-gray-600">
+            <p className="text-[13px] text-gray-600">
               Standard content area with comfortable spacing.
             </p>
             <div className="grid gap-2">
-              <label className="text-sm font-medium">Example field:</label>
+              <label className="text-[13px] font-medium">Example field:</label>
               <input className="px-3 py-2 border rounded-md" placeholder="Enter text..." />
             </div>
           </div>
@@ -378,20 +378,20 @@ Provides more space for detailed forms, content with multiple sections, or when 
         </DialogHeader>
         <DialogBody>
           <div className="space-y-6">
-            <p className="text-sm text-gray-600">
+            <p className="text-[13px] text-gray-600">
               Expanded content area for detailed forms or information.
             </p>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">First Name:</label>
+                <label className="text-[13px] font-medium">First Name:</label>
                 <input className="w-full px-3 py-2 border rounded-md" />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Last Name:</label>
+                <label className="text-[13px] font-medium">Last Name:</label>
                 <input className="w-full px-3 py-2 border rounded-md" />
               </div>
               <div className="space-y-2 col-span-2">
-                <label className="text-sm font-medium">Description:</label>
+                <label className="text-[13px] font-medium">Description:</label>
                 <textarea className="w-full px-3 py-2 border rounded-md" rows={3} />
               </div>
             </div>
@@ -443,12 +443,12 @@ Maximum width for complex interfaces, data tables, or when you need to show subs
         </DialogHeader>
         <DialogBody>
           <div className="space-y-6">
-            <p className="text-sm text-gray-600">
+            <p className="text-[13px] text-gray-600">
               Maximum width dialog for complex forms, tables, or detailed information.
             </p>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Category:</label>
+                <label className="text-[13px] font-medium">Category:</label>
                 <select className="w-full px-3 py-2 border rounded-md">
                   <option>Select category</option>
                   <option>Option 1</option>
@@ -456,7 +456,7 @@ Maximum width for complex interfaces, data tables, or when you need to show subs
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Priority:</label>
+                <label className="text-[13px] font-medium">Priority:</label>
                 <select className="w-full px-3 py-2 border rounded-md">
                   <option>Select priority</option>
                   <option>High</option>
@@ -465,7 +465,7 @@ Maximum width for complex interfaces, data tables, or when you need to show subs
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Status:</label>
+                <label className="text-[13px] font-medium">Status:</label>
                 <select className="w-full px-3 py-2 border rounded-md">
                   <option>Active</option>
                   <option>Inactive</option>
@@ -477,11 +477,11 @@ Maximum width for complex interfaces, data tables, or when you need to show subs
               <div className="grid grid-cols-2 gap-4">
                 <label className="flex items-center space-x-2">
                   <input type="checkbox" className="rounded" />
-                  <span className="text-sm">Enable notifications</span>
+                  <span className="text-[13px]">Enable notifications</span>
                 </label>
                 <label className="flex items-center space-x-2">
                   <input type="checkbox" className="rounded" />
-                  <span className="text-sm">Auto-save changes</span>
+                  <span className="text-[13px]">Auto-save changes</span>
                 </label>
               </div>
             </div>
@@ -532,7 +532,7 @@ Standard dialog appearance for general use cases. Uses neutral colors and standa
           </DialogDescription>
         </DialogHeader>
         <DialogBody>
-          <p className="text-sm text-gray-600">
+          <p className="text-[13px] text-gray-600">
             Standard dialog content with default button styling.
           </p>
         </DialogBody>
@@ -591,7 +591,7 @@ Use warning appearance for actions that require user attention but are not destr
         </DialogHeader>
         <DialogBody>
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <p className="text-sm text-yellow-800">
+            <p className="text-[13px] text-yellow-800">
               This action may have important consequences. Please ensure you understand 
               the implications before continuing.
             </p>
@@ -655,7 +655,7 @@ Use danger appearance for destructive actions that cannot be undone. Features re
         </DialogHeader>
         <DialogBody>
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-sm text-red-800">
+            <p className="text-[13px] text-red-800">
               <strong>Warning:</strong> This will permanently delete all associated data 
               and cannot be recovered.
             </p>
@@ -719,7 +719,7 @@ Use success appearance for positive confirmations and completed actions. Feature
         </DialogHeader>
         <DialogBody>
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <p className="text-sm text-green-800">
+            <p className="text-[13px] text-green-800">
               The operation was completed successfully. All changes have been saved.
             </p>
           </div>
@@ -779,13 +779,13 @@ Demonstrates how the dialog body handles long content with scrolling. The max-he
         </DialogHeader>
         <DialogBody scrollable={args.scrollable} size={args.size}>
           <div className="space-y-4">
-            <p className="text-sm text-gray-600">
+            <p className="text-[13px] text-gray-600">
               This content area is scrollable when it exceeds the maximum height.
             </p>
             {Array.from({ length: 20 }, (_, i) => (
               <div key={i} className="p-4 border rounded-lg bg-gray-50">
                 <h4 className="font-medium">Content Block {i + 1}</h4>
-                <p className="text-sm text-gray-600">
+                <p className="text-[13px] text-gray-600">
                   This is example content that demonstrates how the dialog body 
                   handles overflow with scrolling. Each block contains meaningful 
                   information that users might need to scroll through.
@@ -845,7 +845,7 @@ Shows how content is centered within the dialog body when scrolling is disabled.
               <Info className="h-8 w-8 text-blue-600" />
             </div>
             <h3 className="text-lg font-medium">Action Required</h3>
-            <p className="text-sm text-gray-600 max-w-sm mx-auto">
+            <p className="text-[13px] text-gray-600 max-w-sm mx-auto">
               Please review and confirm the details before proceeding with this action.
             </p>
           </div>
@@ -892,7 +892,7 @@ Demonstrates the three button variants available in DialogFooterButtonSet:
             <DialogTitle>Default Button Set</DialogTitle>
           </DialogHeader>
           <DialogBody>
-            <p className="text-sm text-gray-600">Standard button styling.</p>
+            <p className="text-[13px] text-gray-600">Standard button styling.</p>
           </DialogBody>
           <DialogFooter>
             <DialogFooterButtonSet variant="default" />
@@ -911,7 +911,7 @@ Demonstrates the three button variants available in DialogFooterButtonSet:
             <DialogTitle>Danger Button Set</DialogTitle>
           </DialogHeader>
           <DialogBody>
-            <p className="text-sm text-gray-600">Destructive action styling.</p>
+            <p className="text-[13px] text-gray-600">Destructive action styling.</p>
           </DialogBody>
           <DialogFooter>
             <DialogFooterButtonSet 
@@ -934,7 +934,7 @@ Demonstrates the three button variants available in DialogFooterButtonSet:
             <DialogTitle>Success Button Set</DialogTitle>
           </DialogHeader>
           <DialogBody>
-            <p className="text-sm text-gray-600">Positive action styling.</p>
+            <p className="text-[13px] text-gray-600">Positive action styling.</p>
           </DialogBody>
           <DialogFooter>
             <DialogFooterButtonSet 
@@ -983,7 +983,7 @@ Shows how to customize button labels and add click handlers. You can provide cus
         </DialogHeader>
         <DialogBody>
           <div className="space-y-4">
-            <p className="text-sm text-gray-600">
+            <p className="text-[13px] text-gray-600">
               You can customize button text and even show only a primary button.
             </p>
           </div>
@@ -1039,7 +1039,7 @@ Demonstrates the \`primaryOnly\` prop which shows only the primary button. This 
             <div className="w-12 h-12 bg-blue-100 rounded-full mx-auto flex items-center justify-center">
               <Info className="h-6 w-6 text-blue-600" />
             </div>
-            <p className="text-sm text-gray-600">
+            <p className="text-[13px] text-gray-600">
               This is an informational dialog that only needs an acknowledgment.
             </p>
           </div>
@@ -1094,7 +1094,7 @@ Demonstrates the three footer alignment options: left, center, and right. The al
             </DialogDescription>
           </DialogHeader>
           <DialogBody>
-            <p className="text-sm text-gray-600">
+            <p className="text-[13px] text-gray-600">
               This demonstrates left-aligned footer buttons.
             </p>
           </DialogBody>
@@ -1119,7 +1119,7 @@ Demonstrates the three footer alignment options: left, center, and right. The al
             </DialogDescription>
           </DialogHeader>
           <DialogBody>
-            <p className="text-sm text-gray-600">
+            <p className="text-[13px] text-gray-600">
               This demonstrates center-aligned footer buttons.
             </p>
           </DialogBody>
@@ -1144,7 +1144,7 @@ Demonstrates the three footer alignment options: left, center, and right. The al
             </DialogDescription>
           </DialogHeader>
           <DialogBody>
-            <p className="text-sm text-gray-600">
+            <p className="text-[13px] text-gray-600">
               This demonstrates right-aligned footer buttons (standard).
             </p>
           </DialogBody>
@@ -1202,7 +1202,7 @@ Demonstrates different header configurations including icons, close buttons, and
             </DialogDescription>
           </DialogHeader>
           <DialogBody>
-            <p className="text-sm text-gray-600">
+            <p className="text-[13px] text-gray-600">
               Header with icon and descriptive subtitle.
             </p>
           </DialogBody>
@@ -1224,7 +1224,7 @@ Demonstrates different header configurations including icons, close buttons, and
             </DialogDescription>
           </DialogHeader>
           <DialogBody>
-            <p className="text-sm text-gray-600">
+            <p className="text-[13px] text-gray-600">
               Header without close button for mandatory actions.
             </p>
           </DialogBody>
@@ -1246,7 +1246,7 @@ Demonstrates different header configurations including icons, close buttons, and
             <DialogTitle>Simple Dialog</DialogTitle>
           </DialogHeader>
           <DialogBody>
-            <p className="text-sm text-gray-600">
+            <p className="text-[13px] text-gray-600">
               Minimal header with just title and close button.
             </p>
           </DialogBody>
@@ -1305,7 +1305,7 @@ A real-world example showing how to use the dialog for a complex form with multi
           <form className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-[13px] font-medium text-gray-700">
                   Project Name *
                 </label>
                 <input 
@@ -1315,7 +1315,7 @@ A real-world example showing how to use the dialog for a complex form with multi
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-[13px] font-medium text-gray-700">
                   Project Type *
                 </label>
                 <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
@@ -1329,7 +1329,7 @@ A real-world example showing how to use the dialog for a complex form with multi
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-[13px] font-medium text-gray-700">
                 Description
               </label>
               <textarea 
@@ -1341,7 +1341,7 @@ A real-world example showing how to use the dialog for a complex form with multi
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-[13px] font-medium text-gray-700">
                   Repository URL
                 </label>
                 <input 
@@ -1351,7 +1351,7 @@ A real-world example showing how to use the dialog for a complex form with multi
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-[13px] font-medium text-gray-700">
                   Team Size
                 </label>
                 <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
@@ -1364,19 +1364,19 @@ A real-world example showing how to use the dialog for a complex form with multi
             </div>
 
             <div className="border rounded-lg p-4 bg-gray-50">
-              <h4 className="text-sm font-medium text-gray-900 mb-3">Project Settings</h4>
+              <h4 className="text-[13px] font-medium text-gray-900 mb-3">Project Settings</h4>
               <div className="space-y-3">
                 <label className="flex items-center space-x-3">
                   <input type="checkbox" className="rounded border-gray-300" defaultChecked />
-                  <span className="text-sm text-gray-700">Enable automatic deployments</span>
+                  <span className="text-[13px] text-gray-700">Enable automatic deployments</span>
                 </label>
                 <label className="flex items-center space-x-3">
                   <input type="checkbox" className="rounded border-gray-300" />
-                  <span className="text-sm text-gray-700">Require code reviews</span>
+                  <span className="text-[13px] text-gray-700">Require code reviews</span>
                 </label>
                 <label className="flex items-center space-x-3">
                   <input type="checkbox" className="rounded border-gray-300" defaultChecked />
-                  <span className="text-sm text-gray-700">Send email notifications</span>
+                  <span className="text-[13px] text-gray-700">Send email notifications</span>
                 </label>
               </div>
             </div>
@@ -1385,8 +1385,8 @@ A real-world example showing how to use the dialog for a complex form with multi
               <div className="flex items-start space-x-3">
                 <Info className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <h4 className="text-sm font-medium text-blue-900">Getting Started</h4>
-                  <p className="text-sm text-blue-700 mt-1">
+                  <h4 className="text-[13px] font-medium text-blue-900">Getting Started</h4>
+                  <p className="text-[13px] text-blue-700 mt-1">
                     Once created, you'll be able to configure additional settings like integrations, 
                     deployment pipelines, and team permissions from the project dashboard.
                   </p>

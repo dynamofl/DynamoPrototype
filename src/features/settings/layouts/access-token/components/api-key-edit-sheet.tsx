@@ -385,7 +385,7 @@ export function APIKeyEditSheet({
               className="w-8 h-8"
             />
             <div>
-              <p className="text-sm font-450 text-gray-900">
+              <p className="text-[13px] font-450 text-gray-900">
                 {provider.provider}
               </p>
             </div>
@@ -444,7 +444,7 @@ export function APIKeyEditSheet({
               {newKeyValidationStatus === "success" && (
                 <div className="flex items-center space-x-2 p-3 bg-green-50 border border-green-200 rounded-md">
                   <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span className="text-sm text-green-800">
+                  <span className="text-[13px] text-green-800">
                     API key validated successfully!
                   </span>
                 </div>
@@ -453,7 +453,7 @@ export function APIKeyEditSheet({
               {newKeyValidationStatus === "error" && (
                 <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-md">
                   <XCircle className="h-4 w-4 text-red-600" />
-                  <span className="text-sm text-red-800">
+                  <span className="text-[13px] text-red-800">
                     API key validation failed
                   </span>
                 </div>
@@ -493,7 +493,7 @@ export function APIKeyEditSheet({
                       {validationStatus === 'success' && (
                         <div className="flex items-center space-x-2 p-3 bg-green-50 border border-green-200 rounded-md">
                           <CheckCircle className="h-4 w-4 text-green-600" />
-                          <span className="text-sm text-green-800">API key updated successfully!</span>
+                          <span className="text-[13px] text-green-800">API key updated successfully!</span>
                         </div>
                       )}
                     </div>
@@ -509,7 +509,7 @@ export function APIKeyEditSheet({
                           <div className="text-[13px] font-400 text-gray-900">{key.name}</div>
                         </div>
                         <div className="flex items-center space-x-2 mt-1">
-                          <div className="text-sm font-400">
+                          <div className="text-[13px] font-400">
                            {maskAPIKey(key.key)}
                           </div>
 
@@ -616,7 +616,7 @@ export function APIKeyEditSheet({
                   {newKeyValidationStatus === 'success' && (
                     <div className="flex items-center space-x-2 p-3 bg-green-50 border border-green-200 rounded-md">
                       <CheckCircle className="h-4 w-4 text-green-600" />
-                      <span className="text-sm text-green-800">API key added successfully!</span>
+                      <span className="text-[13px] text-green-800">API key added successfully!</span>
                     </div>
                   )}
                 </div>

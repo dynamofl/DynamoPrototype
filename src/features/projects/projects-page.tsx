@@ -2,7 +2,7 @@ import { Construction } from 'lucide-react'
 
 export function ProjectsPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="">
       <main className="mx-auto">
         <div className="space-y-4">
        

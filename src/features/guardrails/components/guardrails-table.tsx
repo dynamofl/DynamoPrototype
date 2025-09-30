@@ -63,7 +63,7 @@ export function GuardrailsTable({ className = '' }: GuardrailsTableProps) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">Guardrails</h2>
-          <p className="text-sm text-gray-600">
+          <p className="text-[13px] text-gray-600">
             Define and manage content safety and compliance rules
           </p>
         </div>
@@ -111,29 +111,29 @@ export function GuardrailsTable({ className = '' }: GuardrailsTableProps) {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-450 text-gray-700">Name</label>
-                <p className="text-sm text-gray-900">{viewingGuardrail.name}</p>
+                <label className="text-[13px] font-450 text-gray-700">Name</label>
+                <p className="text-[13px] text-gray-900">{viewingGuardrail.name}</p>
               </div>
               <div>
-                <label className="text-sm font-450 text-gray-700">Category</label>
-                <p className="text-sm text-gray-900">{viewingGuardrail.category}</p>
+                <label className="text-[13px] font-450 text-gray-700">Category</label>
+                <p className="text-[13px] text-gray-900">{viewingGuardrail.category}</p>
               </div>
               <div>
-                <label className="text-sm font-450 text-gray-700">Status</label>
-                <p className="text-sm text-gray-900">{viewingGuardrail.status}</p>
+                <label className="text-[13px] font-450 text-gray-700">Status</label>
+                <p className="text-[13px] text-gray-900">{viewingGuardrail.status}</p>
               </div>
               <div>
-                <label className="text-sm font-450 text-gray-700">Created</label>
-                <p className="text-sm text-gray-900">{viewingGuardrail.createdAt}</p>
+                <label className="text-[13px] font-450 text-gray-700">Created</label>
+                <p className="text-[13px] text-gray-900">{viewingGuardrail.createdAt}</p>
               </div>
             </div>
             <div>
-              <label className="text-sm font-450 text-gray-700">Description</label>
-              <p className="text-sm text-gray-900">{viewingGuardrail.description}</p>
+              <label className="text-[13px] font-450 text-gray-700">Description</label>
+              <p className="text-[13px] text-gray-900">{viewingGuardrail.description}</p>
             </div>
             <div>
-              <label className="text-sm font-450 text-gray-700">Content</label>
-              <p className="text-sm text-gray-900 whitespace-pre-wrap">{viewingGuardrail.content}</p>
+              <label className="text-[13px] font-450 text-gray-700">Content</label>
+              <p className="text-[13px] text-gray-900 whitespace-pre-wrap">{viewingGuardrail.content}</p>
             </div>
           </div>
         )}
@@ -151,12 +151,12 @@ export function GuardrailsTable({ className = '' }: GuardrailsTableProps) {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-450 text-gray-700">Name</label>
-                <p className="text-sm text-gray-900">{editingGuardrail.name}</p>
+                <label className="text-[13px] font-450 text-gray-700">Name</label>
+                <p className="text-[13px] text-gray-900">{editingGuardrail.name}</p>
               </div>
               <div>
-                <label className="text-sm font-450 text-gray-700">Category</label>
-                <p className="text-sm text-gray-900">{editingGuardrail.category}</p>
+                <label className="text-[13px] font-450 text-gray-700">Category</label>
+                <p className="text-[13px] text-gray-900">{editingGuardrail.category}</p>
               </div>
             </div>
             {/* Edit form content will go here */}

@@ -119,7 +119,7 @@ export const FormExample: Story = {
   render: () => (
     <div className="space-y-4 w-80">
       <div className="space-y-2">
-        <label className="text-sm font-medium">Country</label>
+        <label className="text-[13px] font-medium">Country</label>
         <Select>
           <SelectTrigger>
             <SelectValue placeholder="Select your country" />
@@ -137,7 +137,7 @@ export const FormExample: Story = {
       </div>
       
       <div className="space-y-2">
-        <label className="text-sm font-medium">Language</label>
+        <label className="text-[13px] font-medium">Language</label>
         <Select>
           <SelectTrigger>
             <SelectValue placeholder="Select your language" />
@@ -170,7 +170,7 @@ export const MultipleSelects: Story = {
   render: () => (
     <div className="space-y-4 w-80">
       <div className="space-y-2">
-        <label className="text-sm font-medium">Size</label>
+        <label className="text-[13px] font-medium">Size</label>
         <Select>
           <SelectTrigger>
             <SelectValue placeholder="Select size" />
@@ -186,7 +186,7 @@ export const MultipleSelects: Story = {
       </div>
       
       <div className="space-y-2">
-        <label className="text-sm font-medium">Color</label>
+        <label className="text-[13px] font-medium">Color</label>
         <Select>
           <SelectTrigger>
             <SelectValue placeholder="Select color" />
@@ -202,7 +202,7 @@ export const MultipleSelects: Story = {
       </div>
       
       <div className="space-y-2">
-        <label className="text-sm font-medium">Material</label>
+        <label className="text-[13px] font-medium">Material</label>
         <Select>
           <SelectTrigger>
             <SelectValue placeholder="Select material" />

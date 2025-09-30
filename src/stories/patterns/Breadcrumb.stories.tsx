@@ -91,28 +91,28 @@ export const DifferentPaths: Story = {
   render: () => (
     <div className="space-y-6 w-full max-w-2xl">
       <div>
-        <h3 className="text-sm font-medium mb-2">AI Systems</h3>
+        <h3 className="text-[13px] font-medium mb-2">AI Systems</h3>
         <MemoryRouter initialEntries={['/ai-systems']}>
           <Breadcrumb />
         </MemoryRouter>
       </div>
       
       <div>
-        <h3 className="text-sm font-medium mb-2">Create System</h3>
+        <h3 className="text-[13px] font-medium mb-2">Create System</h3>
         <MemoryRouter initialEntries={['/ai-systems/create']}>
           <Breadcrumb />
         </MemoryRouter>
       </div>
       
       <div>
-        <h3 className="text-sm font-medium mb-2">Configuration</h3>
+        <h3 className="text-[13px] font-medium mb-2">Configuration</h3>
         <MemoryRouter initialEntries={['/ai-systems/create/configuration']}>
           <Breadcrumb />
         </MemoryRouter>
       </div>
       
       <div>
-        <h3 className="text-sm font-medium mb-2">Settings</h3>
+        <h3 className="text-[13px] font-medium mb-2">Settings</h3>
         <MemoryRouter initialEntries={['/settings/team-members']}>
           <Breadcrumb />
         </MemoryRouter>

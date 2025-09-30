@@ -140,7 +140,7 @@ export function ProviderEditSheet({
         {/* Models Management */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <Label className="text-sm font-450">Models Management</Label>
+            <Label className="text-[13px] font-450">Models Management</Label>
             <Button
               variant="outline"
               size="sm"
@@ -164,7 +164,7 @@ export function ProviderEditSheet({
           {/* Current Models Display */}
           {editingProvider.models && editingProvider.models.length > 0 && (
             <div className="space-y-2">
-              <Label className="text-sm text-muted-foreground">
+              <Label className="text-[13px] text-muted-foreground">
                 Currently Selected Models ({editingProvider.models.length})
               </Label>
               <div className="max-h-32 overflow-y-auto border rounded-md p-3 space-y-2">
@@ -175,7 +175,7 @@ export function ProviderEditSheet({
                     <div className="flex items-center space-x-2">
                       <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                       <div>
-                        <div className="font-450 text-sm">{model.id}</div>
+                        <div className="font-450 text-[13px]">{model.id}</div>
                         <div className="text-xs text-muted-foreground">
                           Created: {formatModelDate(model.created)}
                         </div>
@@ -190,7 +190,7 @@ export function ProviderEditSheet({
           {/* Available Models Selection */}
           {editAvailableModels.length > 0 && (
             <div className="space-y-2">
-              <Label className="text-sm text-muted-foreground">
+              <Label className="text-[13px] text-muted-foreground">
                 Available Models ({editAvailableModels.length})
               </Label>
               <div className="max-h-48 overflow-y-auto border rounded-md p-3 space-y-2">
@@ -208,7 +208,7 @@ export function ProviderEditSheet({
                     }}
                     className="rounded"
                   />
-                  <Label htmlFor="edit-select-all-models" className="text-sm font-450 cursor-pointer">
+                  <Label htmlFor="edit-select-all-models" className="text-[13px] font-450 cursor-pointer">
                     Select All Models
                   </Label>
                 </div>
@@ -231,7 +231,7 @@ export function ProviderEditSheet({
                           }}
                           className="rounded"
                         />
-                        <Label htmlFor={`edit-model-${model.id}`} className="text-sm cursor-pointer flex-1">
+                        <Label htmlFor={`edit-model-${model.id}`} className="text-[13px] cursor-pointer flex-1">
                           <div className="flex items-center space-x-2">
                             <span className="font-450">{model.id}</span>
                             {isCurrentlySelected && (
@@ -255,14 +255,14 @@ export function ProviderEditSheet({
           )}
 
           {editAvailableModels.length === 0 && editingProvider.models && editingProvider.models.length === 0 && (
-            <div className="text-center py-4 text-sm text-muted-foreground">
+            <div className="text-center py-4 text-[13px] text-muted-foreground">
               No models available. Click "Fetch All Models" to discover available models.
             </div>
           )}
         </div>
 
         {validationError && (
-          <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+          <div className="text-[13px] text-red-600 bg-red-50 p-3 rounded-md">
             {validationError}
           </div>
         )}

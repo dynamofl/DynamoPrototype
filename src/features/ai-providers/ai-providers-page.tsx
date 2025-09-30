@@ -3,13 +3,12 @@ import { APIKeyStorage } from '@/lib/storage/secure-storage'
 import type { TableRow } from '@/types/table'
 import type { AIProvider } from './types'
 import {
+  AIProvidersHeader,
   AIProvidersStats,
   ProviderCreateDialog,
   ProviderViewSheet,
   ProviderEditSheet
 } from './components'
-import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
 import {
   createDefaultProvider,
   fetchModelsForProvider,
@@ -155,19 +154,10 @@ export function AIProviders() {
       <main className="mx-auto">
         <div className="space-y-4">
           {/* Page Header */}
+          <AIProvidersHeader onAddProvider={() => setIsAddingProvider(true)} />
+
+          {/* Stats Cards */}
           <div className="px-6">
-            <div className="flex items-center justify-between">
-              <h1 className="text-lg font-450 tracking-tight">AI Providers</h1>
-              <Button
-                onClick={() => setIsAddingProvider(true)}
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Add Provider
-              </Button>
-            </div>
-            
-            {/* Stats Cards */}
             <AIProvidersStats />
           </div>
 

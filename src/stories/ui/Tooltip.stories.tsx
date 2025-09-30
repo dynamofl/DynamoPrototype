@@ -117,7 +117,7 @@ export const WithFormElements: Story = {
     <div className="space-y-4 w-80">
       <div className="space-y-2">
         <div className="flex items-center space-x-2">
-          <label className="text-sm font-medium">Password</label>
+          <label className="text-[13px] font-medium">Password</label>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="icon" className="h-4 w-4">
@@ -144,13 +144,13 @@ export const WithFormElements: Story = {
         <input
           type="password"
           placeholder="Enter your password"
-          className="flex h-10 w-full rounded-md border border-input bg-gray-0 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex h-10 w-full rounded-md border border-input bg-gray-0 px-3 py-2 text-[13px] ring-offset-background file:border-0 file:bg-transparent file:text-[13px] file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         />
       </div>
       
       <div className="space-y-2">
         <div className="flex items-center space-x-2">
-          <label className="text-sm font-medium">Email</label>
+          <label className="text-[13px] font-medium">Email</label>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="icon" className="h-4 w-4">
@@ -177,7 +177,7 @@ export const WithFormElements: Story = {
         <input
           type="email"
           placeholder="Enter your email"
-          className="flex h-10 w-full rounded-md border border-input bg-gray-0 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex h-10 w-full rounded-md border border-input bg-gray-0 px-3 py-2 text-[13px] ring-offset-background file:border-0 file:bg-transparent file:text-[13px] file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         />
       </div>
     </div>

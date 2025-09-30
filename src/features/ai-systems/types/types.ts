@@ -78,3 +78,11 @@ export interface ProviderOption {
   apiKeys: APIKeyOption[]
   hasApiKeys: boolean
 }
+
+export interface AISystemsFilterState {
+  status: string[]
+  provider: string[]
+  hasGuardrails: boolean | null
+  isEvaluated: boolean | null
+  searchTerm: string
+}

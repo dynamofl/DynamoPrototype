@@ -107,3 +107,26 @@ export const statusOptions = [
 // Table configuration constants
 export const AI_SYSTEMS_STORAGE_KEY = 'dynamo-ai-systems'
 export const AI_SYSTEMS_ITEMS_PER_PAGE = 20
+
+// Filter options for AI Systems
+export const STATUS_OPTIONS = [
+  { value: 'connected', label: 'Connected' },
+  { value: 'disconnected', label: 'Disconnected' }
+]
+
+export const PROVIDER_OPTIONS = [
+  { value: 'OpenAI', label: 'OpenAI' },
+  { value: 'Azure', label: 'Azure OpenAI' },
+  { value: 'Anthropic', label: 'Anthropic' },
+  { value: 'Mistral', label: 'Mistral AI' },
+  { value: 'Databricks', label: 'Databricks' },
+  { value: 'HuggingFace', label: 'Hugging Face' },
+  { value: 'AWS', label: 'AWS Bedrock' },
+  { value: 'Remote', label: 'Remote' },
+  { value: 'Local', label: 'Local' }
+]
+
+export const BOOLEAN_OPTIONS = [
+  { value: true, label: 'Yes' },
+  { value: false, label: 'No' }
+]

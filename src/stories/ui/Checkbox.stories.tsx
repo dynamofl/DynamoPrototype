@@ -50,7 +50,7 @@ export const WithLabel: Story = {
       <Checkbox id="terms" />
       <label
         htmlFor="terms"
-        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        className="text-[13px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
       >
         Accept terms and conditions
       </label>
@@ -65,7 +65,7 @@ export const CheckboxList: Story = {
         <Checkbox id="option1" />
         <label
           htmlFor="option1"
-          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          className="text-[13px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
         >
           Option 1
         </label>
@@ -74,7 +74,7 @@ export const CheckboxList: Story = {
         <Checkbox id="option2" defaultChecked />
         <label
           htmlFor="option2"
-          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          className="text-[13px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
         >
           Option 2 (checked by default)
         </label>
@@ -83,7 +83,7 @@ export const CheckboxList: Story = {
         <Checkbox id="option3" disabled />
         <label
           htmlFor="option3"
-          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          className="text-[13px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
         >
           Option 3 (disabled)
         </label>
@@ -102,7 +102,7 @@ export const FormExample: Story = {
           <Checkbox id="notifications" />
           <label
             htmlFor="notifications"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            className="text-[13px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
           >
             Email notifications
           </label>
@@ -112,7 +112,7 @@ export const FormExample: Story = {
           <Checkbox id="marketing" defaultChecked />
           <label
             htmlFor="marketing"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            className="text-[13px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
           >
             Marketing emails
           </label>
@@ -122,7 +122,7 @@ export const FormExample: Story = {
           <Checkbox id="analytics" />
           <label
             htmlFor="analytics"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            className="text-[13px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
           >
             Analytics tracking
           </label>
@@ -132,7 +132,7 @@ export const FormExample: Story = {
           <Checkbox id="cookies" disabled />
           <label
             htmlFor="cookies"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            className="text-[13px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
           >
             Cookie preferences (disabled)
           </label>

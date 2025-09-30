@@ -76,7 +76,7 @@ const ActionFooter = ({ uploadedFiles, onImportAllValidFiles }: ActionFooterProp
       <div className="flex-1" />
       <button
         onClick={onImportAllValidFiles}
-        className="bg-blue-600 text-blue-50 text-sm font-450 px-3 py-2 rounded"
+        className="bg-blue-600 text-blue-50 text-[13px] font-450 px-3 py-2 rounded"
       >
         Add {totalValidRows} Dataset Files
       </button>
@@ -209,7 +209,7 @@ export function UploadSheet({
           <button onClick={() => setOpen(false)} className="text-gray-700 hover:text-gray-900 transition-colors">
             <X className="h-4 w-4" />
           </button>
-            <DialogTitle className="text-sm font-450 text-gray-900 leading-5">
+            <DialogTitle className="text-[13px] font-450 text-gray-900 leading-5">
               {title}
             </DialogTitle>
           </div>

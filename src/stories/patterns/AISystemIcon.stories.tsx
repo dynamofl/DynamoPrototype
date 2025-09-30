@@ -84,43 +84,43 @@ export const AllIcons: Story = {
     <div className="flex flex-wrap gap-4">
       <div className="flex flex-col items-center gap-2">
         <AISystemIcon type="OpenAI" />
-        <span className="text-sm">OpenAI</span>
+        <span className="text-[13px]">OpenAI</span>
       </div>
       <div className="flex flex-col items-center gap-2">
         <AISystemIcon type="Azure" />
-        <span className="text-sm">Azure</span>
+        <span className="text-[13px]">Azure</span>
       </div>
       <div className="flex flex-col items-center gap-2">
         <AISystemIcon type="Mistral" />
-        <span className="text-sm">Mistral</span>
+        <span className="text-[13px]">Mistral</span>
       </div>
       <div className="flex flex-col items-center gap-2">
         <AISystemIcon type="Databricks" />
-        <span className="text-sm">Databricks</span>
+        <span className="text-[13px]">Databricks</span>
       </div>
       <div className="flex flex-col items-center gap-2">
         <AISystemIcon type="HuggingFace" />
-        <span className="text-sm">HuggingFace</span>
+        <span className="text-[13px]">HuggingFace</span>
       </div>
       <div className="flex flex-col items-center gap-2">
         <AISystemIcon type="Anthropic" />
-        <span className="text-sm">Anthropic</span>
+        <span className="text-[13px]">Anthropic</span>
       </div>
       <div className="flex flex-col items-center gap-2">
         <AISystemIcon type="Remote" />
-        <span className="text-sm">Remote</span>
+        <span className="text-[13px]">Remote</span>
       </div>
       <div className="flex flex-col items-center gap-2">
         <AISystemIcon type="Local" />
-        <span className="text-sm">Local</span>
+        <span className="text-[13px]">Local</span>
       </div>
       <div className="flex flex-col items-center gap-2">
         <AISystemIcon type="AWS" />
-        <span className="text-sm">AWS</span>
+        <span className="text-[13px]">AWS</span>
       </div>
       <div className="flex flex-col items-center gap-2">
         <AISystemIcon type="DynamoAI" />
-        <span className="text-sm">DynamoAI</span>
+        <span className="text-[13px]">DynamoAI</span>
       </div>
     </div>
   ),

@@ -109,7 +109,7 @@ export function GuardrailsStats() {
   return (
     <StatCardSection
       cards={stats}
-      className="mb-6"
+      className=""
       gridCols={{ default: 1, md: 2, lg: 4 }}
       gap="2"
     />

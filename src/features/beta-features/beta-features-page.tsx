@@ -1,129 +1,107 @@
 import { NavLink } from 'react-router-dom'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { FlaskConical, BarChart3, Settings, ArrowRight } from 'lucide-react'
+import { FlaskConical, BarChart3, Settings, Database, Zap, Shield } from 'lucide-react'
 
 const betaFeatures = [
   {
     title: 'Evaluation Sandbox',
-    description: 'Test and evaluate AI models in a controlled environment with custom prompts and datasets.',
+    description: 'Test and compare AI models with custom prompts and measure performance instantly.',
     path: '/evaluation-sandbox',
     icon: FlaskConical,
-    status: 'Available',
-    features: [
-      'Custom prompt testing',
-      'Model comparison',
-      'Performance metrics',
-      'Real-time evaluation'
-    ]
+    category: 'Testing & Analysis',
+    gradient: 'from-blue-400/20 to-blue-600/20',
+    image: '/src/assets/images/betafeatures/EvaluationSandbox.png'
   },
   {
     title: 'Evaluation Results',
-    description: 'View detailed results and analytics from your evaluations with comprehensive reporting.',
+    description: 'Summarize data, uncover insights, and create comprehensive reports in minutes.',
     path: '/evaluation-results',
     icon: BarChart3,
-    status: 'Available',
-    features: [
-      'Detailed analytics',
-      'Performance insights',
-      'Export capabilities',
-      'Historical comparisons'
-    ]
+    category: 'Analytics & Reporting',
+    gradient: 'from-green-400/20 to-green-600/20',
+    image: '/src/assets/images/betafeatures/BetaConversationView.png'
   },
   {
     title: 'AI Providers',
-    description: 'Manage and configure your AI service providers with secure API key management.',
+    description: 'Configure and manage AI providers with secure API key storage and connection testing.',
     path: '/ai-providers',
     icon: Settings,
-    status: 'Available',
-    features: [
-      'Provider configuration',
-      'Secure key storage',
-      'Connection testing',
-      'Usage monitoring'
-    ]
-  }
+    category: 'Configuration',
+    gradient: 'from-orange-400/20 to-orange-600/20',
+    image: '/src/assets/images/betafeatures/AISystemProviders.png'
+  },
 ]
 
 export function BetaFeaturesPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-0">
       <main className="mx-auto">
-        <div className="space-y-6">
-          {/* Page Header */}
+        <div className="space-y-12">
+          {/* Hero Section */}
+          <div
+            className="relative overflow-hidden bg-cover bg-center px-6 py-32 m-0.5 rounded-md text-center"
+            style={{ backgroundImage: 'url(/src/assets/images/LabCover.png)' }}
+          >
+            <div className="absolute inset-0 bg-black/40" />
+            <div className="relative z-10 mx-auto max-w-3xl space-y-4">
+              <p className="text-[13px] font-450 uppercase tracking-wider text-white">
+                Beta Features
+              </p>
+              <h1 className="text-4xl font-550 text-white md:text-4xl">
+                Dynamo HumanAI Experience Lab
+              </h1>
+              <p className="text-base  text-white/80 md:text-md">
+                Try and experiment with ideas that are conceptualized for DynamoAI.
+              </p>
+            </div>
+          </div>
+
+          {/* Features Grid */}
           <div className="px-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <h1 className="text-lg font-450 tracking-tight">Beta Features</h1>
-                <p className="text-sm text-muted-foreground">
-                  Explore advanced features and enhanced functionality
-                </p>
+            <div className="mx-auto max-w-7xl">
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {betaFeatures.map((feature) => {
+                  const Icon = feature.icon
+                  return (
+                    <NavLink key={feature.title} to={feature.path} className="block">
+                      <Card className="relative border-none bg-transparent shadow-none rounded-none">
+                      {/* Visual Preview Area */}
+                        <div
+                          className="aspect-video rounded-lg bg-cover bg-center transition-transform hover:scale-[1.02]"
+                          style={{ backgroundImage: `url(${feature.image})` }}
+                        >
+                          <div className="flex h-full items-center justify-center">
+                          </div>
+                        </div>
+
+                      {/* Content */}
+                      <CardHeader className="space-y-1 p-0 pt-4 pb-2">
+                        <div className="text-[11px] font-450 uppercase tracking-wider text-muted-foreground">
+                          {feature.category}
+                        </div>
+                          <CardTitle className="text-xl font-550">
+                          {feature.title}
+                        </CardTitle>
+                      </CardHeader>
+
+                      <CardContent className="space-y-2 p-0">
+                        <CardDescription className="text-[13px] leading-relaxed text-gray-600">
+                          {feature.description}
+                        </CardDescription>
+
+                          {/* <div className="flex items-center justify-between pt-2 text-[13px] font-450 text-gray-900">
+                            <span>Explore {feature.title}</span>
+                            <span className="text-lg">→</span>
+                          </div> */}
+                      </CardContent>
+                    </Card>
+                    </NavLink>
+                  )
+                })}
               </div>
             </div>
           </div>
-
-          {/* Beta Features Cards */}
-          <div className="px-6">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {betaFeatures.map((feature) => {
-                const Icon = feature.icon
-                return (
-                  <Card key={feature.title} className="relative overflow-hidden">
-                    <CardHeader className="pb-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                            <Icon className="h-5 w-5 text-primary" />
-                          </div>
-                          <div className="space-y-1">
-                            <CardTitle className="text-base font-450">
-                              {feature.title}
-                            </CardTitle>
-                            <Badge variant="secondary" className="text-xs">
-                              {feature.status}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <CardDescription className="text-sm leading-relaxed">
-                        {feature.description}
-                      </CardDescription>
-                      
-                      <div className="space-y-2">
-                        <h4 className="text-sm font-450 text-foreground">Key Features:</h4>
-                        <ul className="space-y-1 text-sm text-muted-foreground">
-                          {feature.features.map((item, index) => (
-                            <li key={index} className="flex items-center space-x-2">
-                              <div className="h-1 w-1 rounded-full bg-muted-foreground" />
-                              <span>{item}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      <div className="pt-2">
-                        <Button asChild className="w-full" variant="outline">
-                          <NavLink 
-                            to={feature.path}
-                            className="flex items-center justify-center gap-2"
-                          >
-                            Try {feature.title}
-                            <ArrowRight className="h-4 w-4" />
-                          </NavLink>
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Coming Soon Section */}
-          
         </div>
       </main>
     </div>

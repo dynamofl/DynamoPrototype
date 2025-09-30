@@ -8,6 +8,7 @@ export { ProviderCreateDialog } from './provider-create-dialog'
 export { ProviderViewSheet } from './provider-view-sheet'
 export { ProviderEditSheet } from './provider-edit-sheet'
 export { ProviderTable } from './provider-table'
+export { AIProvidersHeader } from './ai-providers-header'
 
 export type { StatCardProps } from './stat-card'
 export type { ProviderCreateDialogProps } from './provider-create-dialog'

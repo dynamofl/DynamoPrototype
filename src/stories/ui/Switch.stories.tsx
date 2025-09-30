@@ -50,7 +50,7 @@ export const WithLabel: Story = {
       <Switch id="airplane-mode" />
       <label
         htmlFor="airplane-mode"
-        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        className="text-[13px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
       >
         Airplane mode
       </label>
@@ -63,32 +63,32 @@ export const SwitchList: Story = {
     <div className="space-y-4 w-80">
       <div className="flex items-center justify-between">
         <div className="space-y-0.5">
-          <label className="text-sm font-medium">Wi-Fi</label>
-          <p className="text-sm text-muted-foreground">Connect to available networks</p>
+          <label className="text-[13px] font-medium">Wi-Fi</label>
+          <p className="text-[13px] text-muted-foreground">Connect to available networks</p>
         </div>
         <Switch defaultChecked />
       </div>
       
       <div className="flex items-center justify-between">
         <div className="space-y-0.5">
-          <label className="text-sm font-medium">Bluetooth</label>
-          <p className="text-sm text-muted-foreground">Connect to nearby devices</p>
+          <label className="text-[13px] font-medium">Bluetooth</label>
+          <p className="text-[13px] text-muted-foreground">Connect to nearby devices</p>
         </div>
         <Switch />
       </div>
       
       <div className="flex items-center justify-between">
         <div className="space-y-0.5">
-          <label className="text-sm font-medium">Location Services</label>
-          <p className="text-sm text-muted-foreground">Allow apps to access your location</p>
+          <label className="text-[13px] font-medium">Location Services</label>
+          <p className="text-[13px] text-muted-foreground">Allow apps to access your location</p>
         </div>
         <Switch defaultChecked />
       </div>
       
       <div className="flex items-center justify-between">
         <div className="space-y-0.5">
-          <label className="text-sm font-medium">Notifications</label>
-          <p className="text-sm text-muted-foreground">Receive push notifications</p>
+          <label className="text-[13px] font-medium">Notifications</label>
+          <p className="text-[13px] text-muted-foreground">Receive push notifications</p>
         </div>
         <Switch disabled />
       </div>
@@ -104,24 +104,24 @@ export const SettingsExample: Story = {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <label className="text-sm font-medium">Profile Visibility</label>
-              <p className="text-sm text-muted-foreground">Make your profile visible to other users</p>
+              <label className="text-[13px] font-medium">Profile Visibility</label>
+              <p className="text-[13px] text-muted-foreground">Make your profile visible to other users</p>
             </div>
             <Switch defaultChecked />
           </div>
           
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <label className="text-sm font-medium">Data Collection</label>
-              <p className="text-sm text-muted-foreground">Allow us to collect usage data</p>
+              <label className="text-[13px] font-medium">Data Collection</label>
+              <p className="text-[13px] text-muted-foreground">Allow us to collect usage data</p>
             </div>
             <Switch />
           </div>
           
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <label className="text-sm font-medium">Marketing Emails</label>
-              <p className="text-sm text-muted-foreground">Receive promotional content</p>
+              <label className="text-[13px] font-medium">Marketing Emails</label>
+              <p className="text-[13px] text-muted-foreground">Receive promotional content</p>
             </div>
             <Switch defaultChecked />
           </div>
@@ -133,24 +133,24 @@ export const SettingsExample: Story = {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <label className="text-sm font-medium">Auto-save</label>
-              <p className="text-sm text-muted-foreground">Automatically save your work</p>
+              <label className="text-[13px] font-medium">Auto-save</label>
+              <p className="text-[13px] text-muted-foreground">Automatically save your work</p>
             </div>
             <Switch defaultChecked />
           </div>
           
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <label className="text-sm font-medium">Dark Mode</label>
-              <p className="text-sm text-muted-foreground">Use dark theme</p>
+              <label className="text-[13px] font-medium">Dark Mode</label>
+              <p className="text-[13px] text-muted-foreground">Use dark theme</p>
             </div>
             <Switch />
           </div>
           
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <label className="text-sm font-medium">Beta Features</label>
-              <p className="text-sm text-muted-foreground">Enable experimental features</p>
+              <label className="text-[13px] font-medium">Beta Features</label>
+              <p className="text-[13px] text-muted-foreground">Enable experimental features</p>
             </div>
             <Switch disabled />
           </div>

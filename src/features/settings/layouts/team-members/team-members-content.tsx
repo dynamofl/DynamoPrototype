@@ -136,7 +136,7 @@ export function TeamMembersContent() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-base font-450 text-gray-900 tracking-tight">Team Members</h1>
-            {/* <p className="text-sm text-gray-600 mt-1">
+            {/* <p className="text-[13px] text-gray-600 mt-1">
               View and update your team members and their access across the product.
             </p> */}
           </div>

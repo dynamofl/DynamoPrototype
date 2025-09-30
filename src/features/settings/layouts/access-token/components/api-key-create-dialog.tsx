@@ -143,7 +143,7 @@ export function APIKeyCreateSheet({
           />
           <div>
             <h3 className="font-450 text-gray-900">{provider.provider}</h3>
-            <p className="text-sm text-gray-600">API Provider</p>
+            <p className="text-[13px] text-gray-600">API Provider</p>
           </div>
         </div>
 
@@ -183,19 +183,19 @@ export function APIKeyCreateSheet({
         {validationStatus === 'success' && (
           <div className="flex items-center space-x-2 p-3 bg-green-50 border border-green-200 rounded-md">
             <CheckCircle className="h-4 w-4 text-green-600" />
-            <span className="text-sm text-green-800">API key validated successfully!</span>
+            <span className="text-[13px] text-green-800">API key validated successfully!</span>
           </div>
         )}
 
         {validationStatus === 'error' && (
           <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-md">
             <XCircle className="h-4 w-4 text-red-600" />
-            <span className="text-sm text-red-800">API key validation failed</span>
+            <span className="text-[13px] text-red-800">API key validation failed</span>
           </div>
         )}
 
         {validationError && (
-          <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+          <div className="text-[13px] text-red-600 bg-red-50 p-3 rounded-md">
             {validationError}
           </div>
         )}

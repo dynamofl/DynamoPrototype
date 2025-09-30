@@ -72,7 +72,7 @@ export function AccessTokenContent() {
       <div className="px-3 py-4">
         <div className="bg-blue-50 rounded-lg p-3">
           <div className="space-y-2">
-            <h3 className="text-sm font-450 text-gray-900">Your DynamoAI Access Token</h3>
+            <h3 className="text-[13px] font-450 text-gray-900">Your DynamoAI Access Token</h3>
             <p className="text-xs text-gray-600 leading-5">
               Access tokens authenticate your identity and grant authorization when interacting with Dynamo AI via the API or SDK. Only one access token can remain valid at a given time. 
               Generating a new access token will automatically revoke the existing token.

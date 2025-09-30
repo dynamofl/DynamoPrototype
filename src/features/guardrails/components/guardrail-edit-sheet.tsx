@@ -172,7 +172,7 @@ export function GuardrailEditSheet({
         </div>
 
         {validationError && (
-          <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+          <div className="text-[13px] text-red-600 bg-red-50 p-3 rounded-md">
             {validationError}
           </div>
         )}

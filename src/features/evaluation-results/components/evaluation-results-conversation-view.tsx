@@ -146,7 +146,7 @@ export function EvaluationResultsConversationView({
                 >
                 {/* Row Number Cell */}
                 <div className="w-8 flex items-center justify-center">
-                  <span className="text-sm text-gray-500">
+                  <span className="text-[13px] text-gray-500">
                     {index + 1}
                   </span>
                 </div>

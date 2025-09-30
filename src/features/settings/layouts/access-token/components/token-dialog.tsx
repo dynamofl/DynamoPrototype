@@ -44,7 +44,7 @@ export function TokenDialog({ children }: TokenDialogProps) {
           {/* Header */}
           <div className="bg-slate-100 px-4 py-2 border-b border-slate-200/20">
             <div className="flex items-center justify-between">
-              <DialogTitle className="text-sm font-normal text-slate-800 leading-5">
+              <DialogTitle className="text-[13px] font-normal text-slate-800 leading-5">
                 Save your Key
               </DialogTitle>
               <button
@@ -68,7 +68,7 @@ export function TokenDialog({ children }: TokenDialogProps) {
               <div className="bg-white border border-slate-200 rounded-md h-10 pl-2 pr-1.5 flex items-center justify-between">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   <KeyRound className="h-4 w-4 text-slate-500 shrink-0" />
-                  <span className="text-sm font-normal text-slate-800 leading-5 tracking-wide truncate">
+                  <span className="text-[13px] font-normal text-slate-800 leading-5 tracking-wide truncate">
                     {generatedToken}
                   </span>
                 </div>

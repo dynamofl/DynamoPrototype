@@ -36,7 +36,7 @@ export function AvatarCell({
   const getAvatarSizeClass = () => {
     switch (avatarSize) {
       case 'sm': return 'h-6 w-6 text-xs'
-      case 'lg': return 'h-10 w-10 text-sm'
+      case 'lg': return 'h-10 w-10 text-[13px]'
       default: return 'h-7 w-7 text-xs'
     }
   }

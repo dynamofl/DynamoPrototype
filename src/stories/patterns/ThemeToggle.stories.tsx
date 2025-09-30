@@ -24,7 +24,7 @@ export const InHeader: Story = {
         <h1 className="text-lg font-semibold">My App</h1>
       </div>
       <div className="flex items-center space-x-2">
-        <span className="text-sm text-muted-foreground">Theme:</span>
+        <span className="text-[13px] text-muted-foreground">Theme:</span>
         <ThemeToggle />
       </div>
     </div>
@@ -34,7 +34,7 @@ export const InHeader: Story = {
 export const WithLabel: Story = {
   render: () => (
     <div className="flex items-center space-x-2">
-      <span className="text-sm font-medium">Appearance</span>
+      <span className="text-[13px] font-medium">Appearance</span>
       <ThemeToggle />
     </div>
   ),
@@ -45,13 +45,13 @@ export const InSettings: Story = {
     <div className="space-y-4 w-80">
       <div className="space-y-2">
         <h3 className="text-lg font-medium">Settings</h3>
-        <p className="text-sm text-muted-foreground">Customize your experience</p>
+        <p className="text-[13px] text-muted-foreground">Customize your experience</p>
       </div>
       
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium">Theme</p>
+            <p className="text-[13px] font-medium">Theme</p>
             <p className="text-xs text-muted-foreground">Choose your preferred theme</p>
           </div>
           <ThemeToggle />
@@ -59,7 +59,7 @@ export const InSettings: Story = {
         
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium">Notifications</p>
+            <p className="text-[13px] font-medium">Notifications</p>
             <p className="text-xs text-muted-foreground">Manage notification preferences</p>
           </div>
           <div className="h-10 w-10 bg-gray-200 rounded flex items-center justify-center">

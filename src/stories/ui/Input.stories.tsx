@@ -101,27 +101,27 @@ export const AllTypes: Story = {
   render: () => (
     <div className="space-y-4 w-80">
       <div>
-        <label className="block text-sm font-medium mb-1">Text Input</label>
+        <label className="block text-[13px] font-medium mb-1">Text Input</label>
         <Input placeholder="Enter text..." />
       </div>
       <div>
-        <label className="block text-sm font-medium mb-1">Email Input</label>
+        <label className="block text-[13px] font-medium mb-1">Email Input</label>
         <Input type="email" placeholder="Enter your email" />
       </div>
       <div>
-        <label className="block text-sm font-medium mb-1">Password Input</label>
+        <label className="block text-[13px] font-medium mb-1">Password Input</label>
         <Input type="password" placeholder="Enter your password" />
       </div>
       <div>
-        <label className="block text-sm font-medium mb-1">Number Input</label>
+        <label className="block text-[13px] font-medium mb-1">Number Input</label>
         <Input type="number" placeholder="Enter a number" />
       </div>
       <div>
-        <label className="block text-sm font-medium mb-1">Input with Error</label>
+        <label className="block text-[13px] font-medium mb-1">Input with Error</label>
         <Input placeholder="Enter text..." error="This field is required" />
       </div>
       <div>
-        <label className="block text-sm font-medium mb-1">Disabled Input</label>
+        <label className="block text-[13px] font-medium mb-1">Disabled Input</label>
         <Input placeholder="Disabled input" disabled />
       </div>
     </div>

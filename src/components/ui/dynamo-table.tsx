@@ -297,7 +297,15 @@ export const DynamoTable: React.FC<DynamoTableProps> = ({
     const cellProps = {
       'data-row': rowIndex,
       'data-col': colIndex,
-      className: `cell-content ${isCurrentlyEditing ? 'editing' : ''} ${column.type}`,
+      className: `w-full h-full flex items-center outline-none rounded transition-all duration-200 ${
+        isCurrentlyEditing 
+          ? 'border-2 border-blue-500 bg-slate-50' 
+          : 'border border-transparent'
+      } ${
+        editable && !column.readonly && !column.disabled && (column.type === 'freeText' || column.type === 'dropdown')
+          ? 'cursor-pointer' 
+          : 'cursor-default'
+      }`,
       tabIndex: editable ? 0 : -1,
       onKeyDown: (e: KeyboardEvent) => handleKeyDown(e, rowIndex, colIndex),
       onClick: () => {
@@ -306,19 +314,6 @@ export const DynamoTable: React.FC<DynamoTableProps> = ({
             (column.type === 'freeText' || column.type === 'dropdown')) {
           startEditing(rowIndex, colIndex, column.type, value)
         }
-      },
-      style: {
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        padding: '8px',
-        cursor: editable && !column.readonly && !column.disabled ? 'pointer' : 'default',
-        outline: 'none',
-        border: isCurrentlyEditing ? '2px solid #3b82f6' : '1px solid transparent',
-        borderRadius: '4px',
-        backgroundColor: isCurrentlyEditing ? '#f8fafc' : 'transparent',
-        transition: 'all 0.2s ease-in-out'
       }
     }
 
@@ -329,7 +324,7 @@ export const DynamoTable: React.FC<DynamoTableProps> = ({
         return (
           <div {...cellProps}>
             <div className="w-full overflow-hidden">
-              <div className="whitespace-pre-line line-clamp-1 text-ellipsis overflow-hidden text-sm">
+              <div className="whitespace-pre-line line-clamp-1 text-ellipsis overflow-hidden">
                 {value || (
                   <span className="text-gray-400 italic">
                     {column.placeholder}
@@ -348,12 +343,10 @@ export const DynamoTable: React.FC<DynamoTableProps> = ({
       case 'switch':
         return (
           <div 
-            {...cellProps} 
-            style={{ 
-              ...cellProps.style, 
-              justifyContent: 'center',
-              cursor: editable && !column.readonly && !column.disabled ? 'pointer' : 'default'
-            }}
+            {...cellProps}
+            className={`${cellProps.className} justify-center ${
+              editable && !column.readonly && !column.disabled ? 'cursor-pointer' : 'cursor-default'
+            }`}
             onClick={(e) => {
               e.stopPropagation()
               if (editable && !column.readonly && !column.disabled) {
@@ -387,12 +380,10 @@ export const DynamoTable: React.FC<DynamoTableProps> = ({
       case 'button':
         return (
           <div 
-            {...cellProps} 
-            style={{ 
-              ...cellProps.style, 
-              justifyContent: 'center',
-              cursor: column.disabled ? 'default' : 'pointer'
-            }}
+            {...cellProps}
+            className={`${cellProps.className} justify-center ${
+              column.disabled ? 'cursor-default' : 'cursor-pointer'
+            }`}
             onClick={(e) => e.stopPropagation()} // Prevent cell editing trigger
           >
             <Button
@@ -415,7 +406,7 @@ export const DynamoTable: React.FC<DynamoTableProps> = ({
 
       case 'dropdown':
         return (
-          <div {...cellProps} style={{ ...cellProps.style, border: 'none' }}>
+          <div {...cellProps} className={`${cellProps.className} border-none`}>
             <Select
               value={value}
               onValueChange={(val) => {
@@ -427,7 +418,7 @@ export const DynamoTable: React.FC<DynamoTableProps> = ({
               }}
               disabled={!editable || column.readonly || column.disabled}
             >
-              <SelectTrigger className="w-full h-8 border-none focus:ring-0 focus:outline-none hover:bg-gray-200 hover:cursor-pointer hover:ring-0">
+              <SelectTrigger className="w-full h-8 border-none focus:ring-0 focus:outline-none hover:bg-gray-50 hover:cursor-pointer hover:ring-0">
                 <SelectValue placeholder={column.placeholder} />
               </SelectTrigger>
               <SelectContent>
@@ -444,7 +435,7 @@ export const DynamoTable: React.FC<DynamoTableProps> = ({
       default:
         return (
           <div {...cellProps}>
-            <span className="text-sm">{String(value || '')}</span>
+            <span>{String(value || '')}</span>
           </div>
         )
     }
@@ -466,14 +457,14 @@ export const DynamoTable: React.FC<DynamoTableProps> = ({
   return (
     <div className="relative">
       {/* Main Table */}
-      <div className={` overflow-visible border-t border-b border-gray-200 ${className}`}>
+      <div className={`overflow-visible ${className}`}>
         <Table ref={tableRef} className="enhanced-table">
           <TableHeader>
-            <TableRow className="h-8">
+            <TableRow className="bg-gray-50 border-b border-gray-200">
               {columns.map((column) => (
                 <TableHead 
                   key={column.key} 
-                  className="px-4 py-3 font-450"
+                  className="h-10 px-4 font-450 text-[13px] text-gray-900"
                   style={{ width: column.width }}
                 >
                   {column.title}
@@ -483,11 +474,11 @@ export const DynamoTable: React.FC<DynamoTableProps> = ({
           </TableHeader>
           <TableBody>
             {data.map((row, rowIndex) => (
-              <TableRow key={getRowKey(row, rowIndex)} className="h-8">
+              <TableRow key={getRowKey(row, rowIndex)} className="group cursor-pointer transition-colors hover:bg-gray-50 border-b border-gray-200">
                 {columns.map((column, colIndex) => (
                   <TableCell 
                     key={column.key}
-                    className="p-0 h-8"
+                    className="h-12 px-4 py-2 text-gray-900 text-[13px]"
                     style={{ width: column.width }}
                   >
                     {renderCellContent(row, column, rowIndex, colIndex)}
@@ -503,19 +494,12 @@ export const DynamoTable: React.FC<DynamoTableProps> = ({
       {editState.isEditing && editState.editType === 'freeText' && editState.overlayPosition && (
         <div 
           ref={overlayRef}
-          className="global-edit-overlay"
+          className="absolute z-[1000] bg-white border-2 border-blue-500 rounded-md shadow-lg overflow-visible"
           style={{
-            position: 'absolute',
-            zIndex: 1000,
             top: `${editState.overlayPosition.top}px`,
             left: `${editState.overlayPosition.left}px`,
             width: `${editState.overlayPosition.width}px`,
-            height: `${editState.overlayPosition.height}px`,
-            backgroundColor: 'white',
-            border: '2px solid #3b82f6',
-            borderRadius: '6px',
-            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-            overflow: 'visible'
+            height: `${editState.overlayPosition.height}px`
           }}
           onKeyDown={(e) => {
             if (e.key === 'Escape') {
@@ -585,41 +569,8 @@ export const DynamoTable: React.FC<DynamoTableProps> = ({
           position: relative;
         }
         
-        .enhanced-table th {
-          height: 40px;
-        }
-        
-        .enhanced-table th:last-child {
-          border-right: none;
-        }
-        
-        .enhanced-table td {
-          height: 40px;
-        }
-        
-        .enhanced-table td:last-child {
-          border-right: none;
-        }
-        
         .enhanced-table tr:last-child td {
-          border-bottom: none;
-        }
-        
-        .cell-content:hover {
-        }
-        
-        .cell-content:focus {
-          outline: none;
-        }
-        
-        .cell-content.switch:hover,
-        .cell-content.button:hover {
-          border-color: #cbd5e1 !important;
-        }
-        
-        .cell-content.switch:focus,
-        .cell-content.button:focus {
-          border-color: #94a3b8 !important;
+          border-bottom: none !important;
         }
         
         .line-clamp-1 {

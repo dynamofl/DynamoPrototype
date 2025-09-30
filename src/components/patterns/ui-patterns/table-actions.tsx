@@ -33,7 +33,7 @@ export function TableActions({
   }
 
   return (
-    <div className={`flex items-center justify-between px-6 ${className}`}>
+    <div className={`flex items-center justify-between px-4 ${className}`}>
       <div className="flex items-center space-x-2">
         <div className="relative">
           <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-600" />
