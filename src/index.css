@@ -78,6 +78,19 @@
     --blue-800: 30 64 175;
     --blue-900: 30 58 138;
     --blue-950: 23 37 84;
+
+    /* Amber scale - Light theme */
+    --amber-50: 255 251 235;
+    --amber-100: 254 243 199;
+    --amber-200: 253 230 138;
+    --amber-300: 252 211 77;
+    --amber-400: 251 191 36;
+    --amber-500: 245 158 11;
+    --amber-600: 217 119 6;
+    --amber-700: 180 83 9;
+    --amber-800: 146 64 14;
+    --amber-900: 120 53 15;
+    --amber-950: 69 26 3;
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -161,6 +174,19 @@
     --blue-800: 191 219 254;
     --blue-900: 219 234 254;
     --blue-950: 239 246 255;
+
+    /* Amber scale - Dark theme (adjusted for better contrast) */
+    --amber-50: 69 26 3;
+    --amber-100: 120 53 15;
+    --amber-200: 146 64 14;
+    --amber-300: 180 83 9;
+    --amber-400: 217 119 6;
+    --amber-500: 245 158 11;
+    --amber-600: 251 191 36;
+    --amber-700: 252 211 77;
+    --amber-800: 253 230 138;
+    --amber-900: 254 243 199;
+    --amber-950: 255 251 235;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -276,6 +302,19 @@
   .text-blue-900 { color: rgb(var(--blue-900)); }
   .text-blue-950 { color: rgb(var(--blue-950)); }
 
+  /* Text color utilities using amber variables */
+  .text-amber-50 { color: rgb(var(--amber-50)); }
+  .text-amber-100 { color: rgb(var(--amber-100)); }
+  .text-amber-200 { color: rgb(var(--amber-200)); }
+  .text-amber-300 { color: rgb(var(--amber-300)); }
+  .text-amber-400 { color: rgb(var(--amber-400)); }
+  .text-amber-500 { color: rgb(var(--amber-500)); }
+  .text-amber-600 { color: rgb(var(--amber-600)); }
+  .text-amber-700 { color: rgb(var(--amber-700)); }
+  .text-amber-800 { color: rgb(var(--amber-800)); }
+  .text-amber-900 { color: rgb(var(--amber-900)); }
+  .text-amber-950 { color: rgb(var(--amber-950)); }
+
   /* Background color utilities using gray variables */
   .bg-gray-50 { background-color: rgb(var(--gray-50)); }
   .bg-gray-100 { background-color: rgb(var(--gray-100)); }
@@ -327,4 +366,17 @@
   .bg-blue-800 { background-color: rgb(var(--blue-800)); }
   .bg-blue-900 { background-color: rgb(var(--blue-900)); }
   .bg-blue-950 { background-color: rgb(var(--blue-950)); }
+
+  /* Background color utilities using amber variables */
+  .bg-amber-50 { background-color: rgb(var(--amber-50)); }
+  .bg-amber-100 { background-color: rgb(var(--amber-100)); }
+  .bg-amber-200 { background-color: rgb(var(--amber-200)); }
+  .bg-amber-300 { background-color: rgb(var(--amber-300)); }
+  .bg-amber-400 { background-color: rgb(var(--amber-400)); }
+  .bg-amber-500 { background-color: rgb(var(--amber-500)); }
+  .bg-amber-600 { background-color: rgb(var(--amber-600)); }
+  .bg-amber-700 { background-color: rgb(var(--amber-700)); }
+  .bg-amber-800 { background-color: rgb(var(--amber-800)); }
+  .bg-amber-900 { background-color: rgb(var(--amber-900)); }
+  .bg-amber-950 { background-color: rgb(var(--amber-950)); }
 }

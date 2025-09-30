@@ -31,7 +31,7 @@ export function StatCard({ title, value, info, variant = 'default' }: StatCardPr
 
   return (
     <Card className={cn("shadow-none bg-transparent")}>
-      <CardContent className="p-3">
+      <CardContent className="px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <div className="flex items-center gap-1">

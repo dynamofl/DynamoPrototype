@@ -1,10 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { TablePattern } from '@/components/patterns'
-import { accessTokenColumns, accessTokenStorageConfig } from './lib/access-token-config'
 import { AccessTokenStorage } from './lib/access-token-storage'
-import { APIKeyCreateSheet, APIKeyEditSheet } from './components'
-import { TokenDialog } from './components/token-dialog'
+import { APIKeyCreateSheet, APIKeyEditSheet, TokenDialog, AccessTokenTable } from './components'
 import type { TableRow } from '@/types/table'
 
 export function AccessTokenContent() {
@@ -21,7 +18,7 @@ export function AccessTokenContent() {
 
   const handleCellAction = (action: string, row: any) => {
     console.log('Cell action:', action, row)
-    
+
     if (action === 'add') {
       setSelectedProvider(row)
       setIsAddingAPIKey(true)
@@ -29,10 +26,6 @@ export function AccessTokenContent() {
       setSelectedProvider(row)
       setIsManagingAPIKey(true)
     }
-  }
-
-  const handleDataChange = (data: any[]) => {
-    console.log('Data changed:', data)
   }
 
   const handleAPIKeyCreated = async (provider: TableRow, name: string, apiKey: string) => {
@@ -62,19 +55,19 @@ export function AccessTokenContent() {
   }
 
   return (
-    <>
+    <div className="space-y-3 py-3">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200">
+      <div className="px-4">
         <h1 className="text-base font-450 text-gray-900 tracking-tight">Access Token & API Keys</h1>
       </div>
 
       {/* Access Token Section */}
-      <div className="px-3 py-4">
+      <div className="px-4">
         <div className="bg-gray-100 rounded-lg p-3">
           <div className="space-y-2">
             <h3 className="text-[13px] font-450 text-gray-900">Your DynamoAI Access Token</h3>
             <p className="text-xs text-gray-600 leading-5">
-              Access tokens authenticate your identity and grant authorization when interacting with Dynamo AI via the API or SDK. Only one access token can remain valid at a given time. 
+              Access tokens authenticate your identity and grant authorization when interacting with Dynamo AI via the API or SDK. Only one access token can remain valid at a given time.
               Generating a new access token will automatically revoke the existing token.
             </p>
             <TokenDialog>
@@ -87,18 +80,11 @@ export function AccessTokenContent() {
       </div>
 
       {/* API Providers Table */}
-      <div className="flex-1 px-3 pb-2">
+      <div className="px-4">
         <div className="overflow-x-auto">
-          <TablePattern
-            key={refreshTrigger} // Force re-render when API keys change
-            mode="view"
-            columns={accessTokenColumns}
-            storageConfig={accessTokenStorageConfig}
-            customStorage={customStorage}
-            onDataChange={handleDataChange}
+          <AccessTokenTable
+            refreshTrigger={refreshTrigger}
             onCellAction={handleCellAction}
-            className="border-0 rounded-lg min-w-full"
-            emptyMessage="No API providers configured"
           />
         </div>
       </div>
@@ -120,6 +106,6 @@ export function AccessTokenContent() {
         onAPIKeyUpdated={handleAPIKeyUpdated}
         onAPIKeyDeleted={handleAPIKeyDeleted}
       />
-    </>
+    </div>
   )
 }
