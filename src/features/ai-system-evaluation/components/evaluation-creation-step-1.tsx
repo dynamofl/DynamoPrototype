@@ -90,7 +90,10 @@ export function EvaluationCreationStep1({
         >
           <div className="space-y-3">
             {/* Compliance Evaluation */}
-            <div className="flex items-start space-x-3 rounded-lg border border-gray-200 px-4 py-3 hover:border-gray-300 transition-colors cursor-pointer">
+            <div
+              className="flex items-start space-x-3 rounded-lg border border-gray-200 px-4 py-3 hover:border-gray-300 transition-colors cursor-pointer"
+              onClick={() => handleTypeChange('compliance')}
+            >
               <RadioGroupItem value="compliance" id="compliance" className="mt-1" />
               <div className="flex-1">
                 <label
@@ -106,7 +109,10 @@ export function EvaluationCreationStep1({
             </div>
 
             {/* Jailbreak Evaluation */}
-            <div className="flex items-start space-x-3 rounded-lg border border-gray-200 px-4 py-3 hover:border-gray-300 transition-colors cursor-pointer">
+            <div
+              className="flex items-start space-x-3 rounded-lg border border-gray-200 px-4 py-3 hover:border-gray-300 transition-colors cursor-pointer"
+              onClick={() => handleTypeChange('jailbreak')}
+            >
               <RadioGroupItem value="jailbreak" id="jailbreak" className="mt-1" />
               <div className="flex-1">
                 <label

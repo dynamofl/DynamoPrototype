@@ -102,18 +102,19 @@ export function FilterSearch({
         <DropdownMenuTrigger asChild>
           <Button 
             variant="outline" 
-            className={`text-gray-700 gap-2 h-7 ${
+            className={`text-gray-700 gap-1 h-7  ${
               hasActiveValue
-                ? 'bg-blue-50 text-blue-700 border-blue-300' 
+                ? 'pl-1' 
                 : 'border-gray-300'
             }`}
           >
-            {filter.label}
             {filter.type === 'array' && currentValue.length > 0 && (
-              <span className="bg-blue-100 text-blue-600 rounded-full text-xs px-1.5 py-0.5 ml-1">
+              <span className="bg-blue-100 text-blue-600 rounded-full text-xs px-1.5 py-0.5 min-w-5">
                 {currentValue.length}
               </span>
             )}
+            {filter.label}
+
             {isAdditional && (
               <button
                 onClick={(e) => {
@@ -164,10 +165,10 @@ export function FilterSearch({
   }
 
   return (
-    <div className="space-y-4 pb-2 mx-4 border-b">
+    <div className="space-y-2 pb-3 mx-4 border-b">
       {/* Primary Filter Row */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {/* Primary Filters */}
           {primaryFilters.map(filter => renderFilterDropdown(filter))}
 
@@ -241,7 +242,7 @@ export function FilterSearch({
             onClick={onClearAll}
             className="h-6 px-3 text-gray-600 hover:text-gray-700 text-xs"
           >
-            Clear all filters
+            Clear All Filters
           </Button>
         </div>
       )}

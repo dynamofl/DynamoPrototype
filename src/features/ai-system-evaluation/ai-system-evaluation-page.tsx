@@ -133,7 +133,7 @@ export function AISystemEvaluationPage() {
       />
 
       {/* Main Content */}
-      <main className="flex-1 border rounded-lg shadow m-2 mt-0 bg-gray-50">
+      <main className="flex-1 border rounded-lg shadow m-2 mt-0 bg-gray-0">
         <div className="flex flex-col h-full">
           {showCreationFlow ? (
             /* Show creation flow */

@@ -29,18 +29,27 @@ export function EvaluationCreationFlow({
 }: EvaluationCreationFlowProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [evaluationData, setEvaluationData] = useState<Partial<EvaluationCreationData>>({});
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const handleDataChange = (data: Partial<EvaluationCreationData>) => {
     setEvaluationData((prev) => ({ ...prev, ...data }));
   };
 
+  const transitionToStep = (step: number) => {
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentStep(step);
+      setIsTransitioning(false);
+    }, 150);
+  };
+
   const handleStep1Next = () => {
-    setCurrentStep(2);
+    transitionToStep(2);
   };
 
   const handleBack = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+      transitionToStep(currentStep - 1);
     }
   };
 
@@ -80,7 +89,7 @@ export function EvaluationCreationFlow({
                   {/* Step Badge */}
                   <div className="flex items-center gap-2">
                     <div
-                      className={`flex items-center justify-center w-7 h-7 rounded-full text-[13px] font-semibold transition-colors ${
+                      className={`flex items-center justify-center w-7 h-7 rounded-full text-[13px] font-450 transition-colors ${
                         isActive
                           ? "bg-blue-100 text-blue-800"
                           : isCompleted
@@ -94,7 +103,7 @@ export function EvaluationCreationFlow({
                         step.number
                       )}
                     </div>
-                    <span className={`text-[13px] font-medium pr-2 ${
+                    <span className={`text-[13px] font-450 pr-2 ${
                       isActive ? "text-gray-900" : "text-gray-600"
                     }`}>
                       {step.title}
@@ -125,8 +134,10 @@ export function EvaluationCreationFlow({
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-y-auto bg-gray-50">
-        <div className="max-w-2xl mx-auto py-12 px-8">
+      <div className="flex-1 overflow-y-auto">
+        <div className={`max-w-2xl mx-auto py-12 px-8 transition-all duration-200 ${
+          isTransitioning ? "opacity-0 blur-sm" : "opacity-100 blur-0"
+        }`}>
           {currentStep === 1 && (
             <EvaluationCreationStep1
               data={evaluationData}
@@ -140,7 +151,7 @@ export function EvaluationCreationFlow({
             <EvaluationCreationStep2
               data={evaluationData}
               onDataChange={handleDataChange}
-              onNext={() => setCurrentStep(3)}
+              onNext={() => transitionToStep(3)}
               onBack={handleBack}
               variant={variant}
             />

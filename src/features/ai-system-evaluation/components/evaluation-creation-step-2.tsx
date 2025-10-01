@@ -63,7 +63,7 @@ export function EvaluationCreationStep2({
             : "Select guardrails"
           }
         </h2>
-        <p className="text-sm text-gray-600">
+        <p className="text-[13px] text-gray-600">
           {variant === "onboarding"
             ? "Choose which safety guardrails to apply during this evaluation."
             : "Select one or more guardrails to include in this evaluation."
@@ -71,26 +71,11 @@ export function EvaluationCreationStep2({
         </p>
       </div>
 
-      {/* Search */}
-      <div className="space-y-2">
-        <Label htmlFor="guardrail-search">Search guardrails</Label>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            id="guardrail-search"
-            placeholder="Search by name, description, or category..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-      </div>
-
       {/* Guardrails List */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium text-gray-600">
-            Available guardrails ({filteredGuardrails.length})
+          <Label className="text-xs font-medium text-gray-600">
+            Available Guardrails ({filteredGuardrails.length})
           </Label>
           {selectedGuardrailIds.length > 0 && (
             <span className="text-xs text-gray-500">
@@ -99,11 +84,26 @@ export function EvaluationCreationStep2({
           )}
         </div>
 
-        {/* Guardrails */}
-        <div className="space-y-2 max-h-96 overflow-y-auto border border-gray-200 rounded-lg">
+        <div className="border border-gray-200 rounded-lg overflow-hidden">
+          {/* Search inside list */}
+          <div className="py-2 px-1 border-b border-gray-200 ">
+            <div className="relative">
+              <Search className=" absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                id="guardrail-search"
+                placeholder="Search by name, description, or category..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-transparent border-none focus:border-none focus-visible:ring-0 pl-9"
+              />
+            </div>
+          </div>
+
+          {/* Guardrails */}
+          <div className="max-h-96 overflow-y-auto">
           {filteredGuardrails.length === 0 ? (
             <div className="p-8 text-center">
-              <p className="text-sm text-gray-500">
+              <p className="text-[13px] text-gray-500">
                 {searchQuery ? "No guardrails found matching your search." : "No guardrails available."}
               </p>
               {!searchQuery && (
@@ -120,7 +120,7 @@ export function EvaluationCreationStep2({
               return (
                 <div
                   key={guardrail.id}
-                  className={`flex items-start gap-3 p-4 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors ${
+                  className={`flex items-start gap-3 m-1 rounded-md p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-100 transition-colors ${
                     !isActive ? "opacity-60" : ""
                   }`}
                 >
@@ -136,28 +136,27 @@ export function EvaluationCreationStep2({
                     className="flex-1 cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-gray-900">
+                      <span className="text-[13px] font-medium text-gray-900">
                         {guardrail.name}
                       </span>
                       {guardrail.category && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
                           {guardrail.category}
                         </span>
                       )}
                       {!isActive && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
                           Inactive
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {guardrail.description}
-                    </p>
+                   
                   </label>
                 </div>
               );
             })
           )}
+          </div>
         </div>
       </div>
 
@@ -168,7 +167,7 @@ export function EvaluationCreationStep2({
         </Button>
         <div className="flex gap-2">
           <Button variant="ghost" onClick={handleSkip}>
-            Skip for now
+            Skip for Now
           </Button>
           <Button onClick={handleContinue}>
             Continue
