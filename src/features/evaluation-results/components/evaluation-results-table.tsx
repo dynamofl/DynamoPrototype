@@ -113,7 +113,7 @@ export function EvaluationResultsTable({
               className={`group transition-colors cursor-pointer ${
                 selectedRows.includes(record.id) 
                   ? 'bg-blue-50 hover:bg-blue-100' 
-                  : 'hover:bg-gray-50'
+                  : 'hover:bg-gray-100'
               }`}
             >
               <TableCell>
@@ -155,7 +155,7 @@ export function EvaluationResultsTable({
                 </div>
               </TableCell>
               <TableCell>
-                <Badge variant="secondary" className="text-xs text-gray-600">
+                <Badge variant="secondary">
                   {record.attackArea}
                 </Badge>
               </TableCell>
