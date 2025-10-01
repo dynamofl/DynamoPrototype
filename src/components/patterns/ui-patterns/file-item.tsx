@@ -90,7 +90,7 @@ export const FileItem = ({ file, variant, onRemove }: FileItemProps) => {
   return (
     <div className={styles.container}>
       <div className="relative">
-        <File className="h-12 w-12 text-gray-700" />
+        <File className="h-12 w-12 text-gray-600" />
         <div className={`absolute left-1 bottom-1 ${styles.badge} px-[2.909px] rounded-[2.909px]`}>
           <span className={styles.badgeText}>CSV</span>
         </div>
@@ -101,7 +101,7 @@ export const FileItem = ({ file, variant, onRemove }: FileItemProps) => {
       </div>
       <button
         onClick={() => onRemove(file.id)}
-        className="h-5 w-5 text-gray-700 hover:text-gray-900"
+        className="h-5 w-5 text-gray-600 hover:text-gray-900"
       >
         {getRemoveIcon()}
       </button>

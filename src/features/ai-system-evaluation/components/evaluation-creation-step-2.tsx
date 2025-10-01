@@ -89,7 +89,7 @@ export function EvaluationCreationStep2({
       {/* Guardrails List */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium text-gray-700">
+          <Label className="text-sm font-medium text-gray-600">
             Available guardrails ({filteredGuardrails.length})
           </Label>
           {selectedGuardrailIds.length > 0 && (

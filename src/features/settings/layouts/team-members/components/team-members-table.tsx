@@ -128,7 +128,7 @@ export function TeamMembersTable({
               <TableCell>
                 <div className="flex items-center gap-3">
                   <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
-                    <span className="text-xs font-450 text-gray-700">
+                    <span className="text-xs font-450 text-gray-600">
                       {getInitials(member.name)}
                     </span>
                   </div>

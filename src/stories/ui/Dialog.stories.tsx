@@ -1305,7 +1305,7 @@ A real-world example showing how to use the dialog for a complex form with multi
           <form className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[13px] font-medium text-gray-700">
+                <label className="text-[13px] font-medium text-gray-600">
                   Project Name *
                 </label>
                 <input 
@@ -1315,7 +1315,7 @@ A real-world example showing how to use the dialog for a complex form with multi
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[13px] font-medium text-gray-700">
+                <label className="text-[13px] font-medium text-gray-600">
                   Project Type *
                 </label>
                 <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
@@ -1329,7 +1329,7 @@ A real-world example showing how to use the dialog for a complex form with multi
             </div>
             
             <div className="space-y-2">
-              <label className="text-[13px] font-medium text-gray-700">
+              <label className="text-[13px] font-medium text-gray-600">
                 Description
               </label>
               <textarea 
@@ -1341,7 +1341,7 @@ A real-world example showing how to use the dialog for a complex form with multi
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[13px] font-medium text-gray-700">
+                <label className="text-[13px] font-medium text-gray-600">
                   Repository URL
                 </label>
                 <input 
@@ -1351,7 +1351,7 @@ A real-world example showing how to use the dialog for a complex form with multi
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[13px] font-medium text-gray-700">
+                <label className="text-[13px] font-medium text-gray-600">
                   Team Size
                 </label>
                 <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
@@ -1368,15 +1368,15 @@ A real-world example showing how to use the dialog for a complex form with multi
               <div className="space-y-3">
                 <label className="flex items-center space-x-3">
                   <input type="checkbox" className="rounded border-gray-300" defaultChecked />
-                  <span className="text-[13px] text-gray-700">Enable automatic deployments</span>
+                  <span className="text-[13px] text-gray-600">Enable automatic deployments</span>
                 </label>
                 <label className="flex items-center space-x-3">
                   <input type="checkbox" className="rounded border-gray-300" />
-                  <span className="text-[13px] text-gray-700">Require code reviews</span>
+                  <span className="text-[13px] text-gray-600">Require code reviews</span>
                 </label>
                 <label className="flex items-center space-x-3">
                   <input type="checkbox" className="rounded border-gray-300" defaultChecked />
-                  <span className="text-[13px] text-gray-700">Send email notifications</span>
+                  <span className="text-[13px] text-gray-600">Send email notifications</span>
                 </label>
               </div>
             </div>

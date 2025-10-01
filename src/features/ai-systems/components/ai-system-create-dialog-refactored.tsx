@@ -373,7 +373,7 @@ export function AISystemCreateSheet({
             <Button
               variant="outline"
               onClick={handleDismiss}
-              className="bg-gray-50 text-gray-700 hover:bg-gray-100"
+              className="bg-gray-50 text-gray-600 hover:bg-gray-100"
             >
               Dismiss
             </Button>

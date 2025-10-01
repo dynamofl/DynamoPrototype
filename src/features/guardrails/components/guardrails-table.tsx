@@ -111,28 +111,28 @@ export function GuardrailsTable({ className = '' }: GuardrailsTableProps) {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-[13px] font-450 text-gray-700">Name</label>
+                <label className="text-[13px] font-450 text-gray-600">Name</label>
                 <p className="text-[13px] text-gray-900">{viewingGuardrail.name}</p>
               </div>
               <div>
-                <label className="text-[13px] font-450 text-gray-700">Category</label>
+                <label className="text-[13px] font-450 text-gray-600">Category</label>
                 <p className="text-[13px] text-gray-900">{viewingGuardrail.category}</p>
               </div>
               <div>
-                <label className="text-[13px] font-450 text-gray-700">Status</label>
+                <label className="text-[13px] font-450 text-gray-600">Status</label>
                 <p className="text-[13px] text-gray-900">{viewingGuardrail.status}</p>
               </div>
               <div>
-                <label className="text-[13px] font-450 text-gray-700">Created</label>
+                <label className="text-[13px] font-450 text-gray-600">Created</label>
                 <p className="text-[13px] text-gray-900">{viewingGuardrail.createdAt}</p>
               </div>
             </div>
             <div>
-              <label className="text-[13px] font-450 text-gray-700">Description</label>
+              <label className="text-[13px] font-450 text-gray-600">Description</label>
               <p className="text-[13px] text-gray-900">{viewingGuardrail.description}</p>
             </div>
             <div>
-              <label className="text-[13px] font-450 text-gray-700">Content</label>
+              <label className="text-[13px] font-450 text-gray-600">Content</label>
               <p className="text-[13px] text-gray-900 whitespace-pre-wrap">{viewingGuardrail.content}</p>
             </div>
           </div>
@@ -151,11 +151,11 @@ export function GuardrailsTable({ className = '' }: GuardrailsTableProps) {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-[13px] font-450 text-gray-700">Name</label>
+                <label className="text-[13px] font-450 text-gray-600">Name</label>
                 <p className="text-[13px] text-gray-900">{editingGuardrail.name}</p>
               </div>
               <div>
-                <label className="text-[13px] font-450 text-gray-700">Category</label>
+                <label className="text-[13px] font-450 text-gray-600">Category</label>
                 <p className="text-[13px] text-gray-900">{editingGuardrail.category}</p>
               </div>
             </div>

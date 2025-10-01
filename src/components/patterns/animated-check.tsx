@@ -40,7 +40,7 @@ export function AnimatedCheck({
           cy="16"
           r="15"
           fill="none"
-          stroke="rgb(18, 105, 50)"
+          stroke="rgba(29, 155, 75, 1)"
           strokeWidth="2"
           className={`transition-all duration-300 ${
             isAnimating ? "opacity-100" : "opacity-0"
@@ -55,7 +55,7 @@ export function AnimatedCheck({
         <path
           d="M9 17l4 4 10-10"
           fill="none"
-          stroke="rgb(18, 105, 50)"
+          stroke="rgba(20, 144, 65, 1)"
           strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"

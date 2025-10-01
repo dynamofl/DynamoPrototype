@@ -73,7 +73,7 @@ export function MultiBadgeCell({
       case 'error':
         return cn(baseClasses, 'bg-red-50 text-red-700 border border-red-200')
       default:
-        return cn(baseClasses, 'bg-gray-50 text-gray-700 border border-gray-200')
+        return cn(baseClasses, 'bg-gray-50 text-gray-600 border border-gray-200')
     }
   }
 

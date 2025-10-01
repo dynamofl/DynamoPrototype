@@ -11,37 +11,37 @@ export function ThemeDemo() {
         <h2 className="text-xl font-600 mb-4">Gray Color Scale (Automatic Light/Dark)</h2>
         <div className="grid grid-cols-11 gap-2 mb-4">
           <div className="bg-gray-50 p-4 rounded text-center">
-            <div className="text-gray-900 text-xs font-500">50</div>
+            <div className="text-gray-900 text-xs font-450">50</div>
           </div>
           <div className="bg-gray-100 p-4 rounded text-center">
-            <div className="text-gray-900 text-xs font-500">100</div>
+            <div className="text-gray-900 text-xs font-450">100</div>
           </div>
           <div className="bg-gray-200 p-4 rounded text-center">
-            <div className="text-gray-900 text-xs font-500">200</div>
+            <div className="text-gray-900 text-xs font-450">200</div>
           </div>
           <div className="bg-gray-300 p-4 rounded text-center">
-            <div className="text-gray-900 text-xs font-500">300</div>
+            <div className="text-gray-900 text-xs font-450">300</div>
           </div>
           <div className="bg-gray-400 p-4 rounded text-center">
-            <div className="text-gray-100 text-xs font-500">400</div>
+            <div className="text-gray-100 text-xs font-450">400</div>
           </div>
           <div className="bg-gray-500 p-4 rounded text-center">
-            <div className="text-gray-100 text-xs font-500">500</div>
+            <div className="text-gray-100 text-xs font-450">500</div>
           </div>
           <div className="bg-gray-600 p-4 rounded text-center">
-            <div className="text-gray-100 text-xs font-500">600</div>
+            <div className="text-gray-100 text-xs font-450">600</div>
           </div>
           <div className="bg-gray-700 p-4 rounded text-center">
-            <div className="text-gray-100 text-xs font-500">700</div>
+            <div className="text-gray-100 text-xs font-450">700</div>
           </div>
           <div className="bg-gray-800 p-4 rounded text-center">
-            <div className="text-gray-100 text-xs font-500">800</div>
+            <div className="text-gray-100 text-xs font-450">800</div>
           </div>
           <div className="bg-gray-900 p-4 rounded text-center">
-            <div className="text-gray-100 text-xs font-500">900</div>
+            <div className="text-gray-100 text-xs font-450">900</div>
           </div>
           <div className="bg-gray-950 p-4 rounded text-center">
-            <div className="text-gray-100 text-xs font-500">950</div>
+            <div className="text-gray-100 text-xs font-450">950</div>
           </div>
         </div>
       </section>
@@ -51,37 +51,37 @@ export function ThemeDemo() {
         <h2 className="text-xl font-600 mb-4">Red Color Scale (Automatic Light/Dark)</h2>
         <div className="grid grid-cols-11 gap-2 mb-4">
           <div className="bg-red-50 p-4 rounded text-center">
-            <div className="text-red-900 text-xs font-500">50</div>
+            <div className="text-red-900 text-xs font-450">50</div>
           </div>
           <div className="bg-red-100 p-4 rounded text-center">
-            <div className="text-red-900 text-xs font-500">100</div>
+            <div className="text-red-900 text-xs font-450">100</div>
           </div>
           <div className="bg-red-200 p-4 rounded text-center">
-            <div className="text-red-900 text-xs font-500">200</div>
+            <div className="text-red-900 text-xs font-450">200</div>
           </div>
           <div className="bg-red-300 p-4 rounded text-center">
-            <div className="text-red-900 text-xs font-500">300</div>
+            <div className="text-red-900 text-xs font-450">300</div>
           </div>
           <div className="bg-red-400 p-4 rounded text-center">
-            <div className="text-red-100 text-xs font-500">400</div>
+            <div className="text-red-100 text-xs font-450">400</div>
           </div>
           <div className="bg-red-500 p-4 rounded text-center">
-            <div className="text-red-100 text-xs font-500">500</div>
+            <div className="text-red-100 text-xs font-450">500</div>
           </div>
           <div className="bg-red-600 p-4 rounded text-center">
-            <div className="text-red-100 text-xs font-500">600</div>
+            <div className="text-red-100 text-xs font-450">600</div>
           </div>
           <div className="bg-red-700 p-4 rounded text-center">
-            <div className="text-red-100 text-xs font-500">700</div>
+            <div className="text-red-100 text-xs font-450">700</div>
           </div>
           <div className="bg-red-800 p-4 rounded text-center">
-            <div className="text-red-100 text-xs font-500">800</div>
+            <div className="text-red-100 text-xs font-450">800</div>
           </div>
           <div className="bg-red-900 p-4 rounded text-center">
-            <div className="text-red-100 text-xs font-500">900</div>
+            <div className="text-red-100 text-xs font-450">900</div>
           </div>
           <div className="bg-red-950 p-4 rounded text-center">
-            <div className="text-red-100 text-xs font-500">950</div>
+            <div className="text-red-100 text-xs font-450">950</div>
           </div>
         </div>
       </section>
@@ -91,37 +91,37 @@ export function ThemeDemo() {
         <h2 className="text-xl font-600 mb-4">Green Color Scale (Automatic Light/Dark)</h2>
         <div className="grid grid-cols-11 gap-2 mb-4">
           <div className="bg-green-50 p-4 rounded text-center">
-            <div className="text-green-900 text-xs font-500">50</div>
+            <div className="text-green-900 text-xs font-450">50</div>
           </div>
           <div className="bg-green-100 p-4 rounded text-center">
-            <div className="text-green-900 text-xs font-500">100</div>
+            <div className="text-green-900 text-xs font-450">100</div>
           </div>
           <div className="bg-green-200 p-4 rounded text-center">
-            <div className="text-green-900 text-xs font-500">200</div>
+            <div className="text-green-900 text-xs font-450">200</div>
           </div>
           <div className="bg-green-300 p-4 rounded text-center">
-            <div className="text-green-900 text-xs font-500">300</div>
+            <div className="text-green-900 text-xs font-450">300</div>
           </div>
           <div className="bg-green-400 p-4 rounded text-center">
-            <div className="text-green-100 text-xs font-500">400</div>
+            <div className="text-green-100 text-xs font-450">400</div>
           </div>
           <div className="bg-green-500 p-4 rounded text-center">
-            <div className="text-green-100 text-xs font-500">500</div>
+            <div className="text-green-100 text-xs font-450">500</div>
           </div>
           <div className="bg-green-600 p-4 rounded text-center">
-            <div className="text-green-100 text-xs font-500">600</div>
+            <div className="text-green-100 text-xs font-450">600</div>
           </div>
           <div className="bg-green-700 p-4 rounded text-center">
-            <div className="text-green-100 text-xs font-500">700</div>
+            <div className="text-green-100 text-xs font-450">700</div>
           </div>
           <div className="bg-green-800 p-4 rounded text-center">
-            <div className="text-green-100 text-xs font-500">800</div>
+            <div className="text-green-100 text-xs font-450">800</div>
           </div>
           <div className="bg-green-900 p-4 rounded text-center">
-            <div className="text-green-100 text-xs font-500">900</div>
+            <div className="text-green-100 text-xs font-450">900</div>
           </div>
           <div className="bg-green-950 p-4 rounded text-center">
-            <div className="text-green-100 text-xs font-500">950</div>
+            <div className="text-green-100 text-xs font-450">950</div>
           </div>
         </div>
       </section>
@@ -131,37 +131,37 @@ export function ThemeDemo() {
         <h2 className="text-xl font-600 mb-4">Blue Color Scale (Automatic Light/Dark)</h2>
         <div className="grid grid-cols-11 gap-2 mb-4">
           <div className="bg-blue-50 p-4 rounded text-center">
-            <div className="text-blue-900 text-xs font-500">50</div>
+            <div className="text-blue-900 text-xs font-450">50</div>
           </div>
           <div className="bg-blue-100 p-4 rounded text-center">
-            <div className="text-blue-900 text-xs font-500">100</div>
+            <div className="text-blue-900 text-xs font-450">100</div>
           </div>
           <div className="bg-blue-200 p-4 rounded text-center">
-            <div className="text-blue-900 text-xs font-500">200</div>
+            <div className="text-blue-900 text-xs font-450">200</div>
           </div>
           <div className="bg-blue-300 p-4 rounded text-center">
-            <div className="text-blue-900 text-xs font-500">300</div>
+            <div className="text-blue-900 text-xs font-450">300</div>
           </div>
           <div className="bg-blue-400 p-4 rounded text-center">
-            <div className="text-blue-100 text-xs font-500">400</div>
+            <div className="text-blue-100 text-xs font-450">400</div>
           </div>
           <div className="bg-blue-500 p-4 rounded text-center">
-            <div className="text-blue-100 text-xs font-500">500</div>
+            <div className="text-blue-100 text-xs font-450">500</div>
           </div>
           <div className="bg-blue-600 p-4 rounded text-center">
-            <div className="text-blue-100 text-xs font-500">600</div>
+            <div className="text-blue-100 text-xs font-450">600</div>
           </div>
           <div className="bg-blue-700 p-4 rounded text-center">
-            <div className="text-blue-100 text-xs font-500">700</div>
+            <div className="text-blue-100 text-xs font-450">700</div>
           </div>
           <div className="bg-blue-800 p-4 rounded text-center">
-            <div className="text-blue-100 text-xs font-500">800</div>
+            <div className="text-blue-100 text-xs font-450">800</div>
           </div>
           <div className="bg-blue-900 p-4 rounded text-center">
-            <div className="text-blue-100 text-xs font-500">900</div>
+            <div className="text-blue-100 text-xs font-450">900</div>
           </div>
           <div className="bg-blue-950 p-4 rounded text-center">
-            <div className="text-blue-100 text-xs font-500">950</div>
+            <div className="text-blue-100 text-xs font-450">950</div>
           </div>
         </div>
       </section>
@@ -170,21 +170,21 @@ export function ThemeDemo() {
       <section>
         <h2 className="text-xl font-600 mb-4">Inter Font Weights</h2>
         <div className="space-y-2">
-          <p className="font-100 text-gray-700">Font weight 100 - Thin</p>
-          <p className="font-200 text-gray-700">Font weight 200 - Extra Light</p>
-          <p className="font-300 text-gray-700">Font weight 300 - Light</p>
-          <p className="font-350 text-gray-700">Font weight 350 - Custom Light</p>
-          <p className="font-400 text-gray-700">Font weight 400 - Normal</p>
-          <p className="font-450 text-gray-700">Font weight 450 - Custom Medium</p>
-          <p className="font-500 text-gray-700">Font weight 500 - Medium</p>
-          <p className="font-450 text-gray-700">Font weight 550 - Custom Medium+</p>
-          <p className="font-600 text-gray-700">Font weight 600 - Semi Bold</p>
-          <p className="font-650 text-gray-700">Font weight 650 - Custom Semi Bold+</p>
-          <p className="font-700 text-gray-700">Font weight 700 - Bold</p>
-          <p className="font-750 text-gray-700">Font weight 750 - Custom Bold+</p>
-          <p className="font-800 text-gray-700">Font weight 800 - Extra Bold</p>
-          <p className="font-850 text-gray-700">Font weight 850 - Custom Extra Bold+</p>
-          <p className="font-900 text-gray-700">Font weight 900 - Black</p>
+          <p className="font-100 text-gray-600">Font weight 100 - Thin</p>
+          <p className="font-200 text-gray-600">Font weight 200 - Extra Light</p>
+          <p className="font-300 text-gray-600">Font weight 300 - Light</p>
+          <p className="font-350 text-gray-600">Font weight 350 - Custom Light</p>
+          <p className="font-400 text-gray-600">Font weight 400 - Normal</p>
+          <p className="font-450 text-gray-600">Font weight 450 - Custom Medium</p>
+          <p className="font-450 text-gray-600">Font weight 500 - Medium</p>
+          <p className="font-450 text-gray-600">Font weight 550 - Custom Medium+</p>
+          <p className="font-600 text-gray-600">Font weight 600 - Semi Bold</p>
+          <p className="font-650 text-gray-600">Font weight 650 - Custom Semi Bold+</p>
+          <p className="font-700 text-gray-600">Font weight 700 - Bold</p>
+          <p className="font-750 text-gray-600">Font weight 750 - Custom Bold+</p>
+          <p className="font-800 text-gray-600">Font weight 800 - Extra Bold</p>
+          <p className="font-850 text-gray-600">Font weight 850 - Custom Extra Bold+</p>
+          <p className="font-900 text-gray-600">Font weight 900 - Black</p>
         </div>
       </section>
 
@@ -215,8 +215,8 @@ export function ThemeDemo() {
             This card demonstrates the new theming system. The background is gray-50, 
             the title uses font-650 weight, and this text uses font-450 weight.
           </p>
-          <button className="bg-gray-800 text-gray-100 px-4 py-2 rounded font-500 hover:bg-gray-700 transition-colors">
-            Button with font-500
+          <button className="bg-gray-800 text-gray-100 px-4 py-2 rounded font-450 hover:bg-gray-700 transition-colors">
+            Button with font-450
           </button>
         </div>
       </section>

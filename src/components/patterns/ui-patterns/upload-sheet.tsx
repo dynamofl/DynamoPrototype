@@ -18,7 +18,7 @@ import type { EvaluationPrompt } from '@/features/evaluation/types/evaluation';
 const TipsSection = () => (
   <div className="bg-gray-50 rounded-lg py-3 px-0.5 space-y-3">
     <div className="flex items-center px-1 gap-2">
-      <Lightbulb className="h-4 w-4 text-gray-700" />
+      <Lightbulb className="h-4 w-4 text-gray-600" />
       <h3 className="text-[13px] font-450 text-gray-900">Tips for preparing your CSV</h3>
     </div>
 
@@ -28,11 +28,11 @@ const TipsSection = () => (
         <span className="text-xs text-gray-600">Required Columns:</span>
         <div className="flex gap-2">
           <div className="flex items-center gap-1 pl-1 pr-2 py-0.5 rounded bg-gray-50 border border-gray-300">
-            <Info className="h-3.5 w-3.5 text-gray-700" />
+            <Info className="h-3.5 w-3.5 text-gray-600" />
             <span className="text-xs font-normal text-gray-900">Adversarial Prompt</span>
           </div>
           <div className="flex items-center gap-1 pl-1 pr-2 py-0.5 rounded bg-gray-50 border border-gray-300">
-            <Info className="h-3.5 w-3.5 text-gray-700" />
+            <Info className="h-3.5 w-3.5 text-gray-600" />
             <span className="text-xs font-normal text-gray-900">Attack Area</span>
           </div>
         </div>

@@ -209,7 +209,7 @@ export function FilterSearch({
               placeholder={searchPlaceholder}
               value={searchValue}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-9 w-64"
+              className="pl-9 w-64 rounded-full"
             />
           </div>
           {rightContent}
@@ -223,7 +223,7 @@ export function FilterSearch({
             <Badge
               key={`${chip.type}-${chip.value}-${index}`}
               variant="secondary"
-              className="h-6 px-2 py-1 text-xs bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-50"
+              className="h-6 px-2 py-1 text-xs bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-50"
             >
               {chip.label}
               <button

@@ -158,7 +158,7 @@ export function CSVUpload({ onUploadComplete, onError, onFilesChange, className 
           <input {...getInputProps()} />
           <div className="flex flex-col items-center justify-center h-full p-2">
             <div className="bg-gray-100 rounded-full p-2 mb-2">
-              <Upload className="h-5 w-5 text-gray-700" />
+              <Upload className="h-5 w-5 text-gray-600" />
             </div>
             <p className="text-[13px] font-450 text-gray-900 mb-1">
               {isDragActive ? "Drop your .csv files here" : "Drag and drop your .csv files here"}

@@ -435,7 +435,7 @@ export function AISystemEditSheet({
                           <div>
                             <Label
                               htmlFor="new-api-key-name"
-                              className="text-xs font-450 text-gray-700"
+                              className="text-xs font-450 text-gray-600"
                             >
                               API Key Name
                             </Label>
@@ -460,7 +460,7 @@ export function AISystemEditSheet({
                           <div>
                             <Label
                               htmlFor="new-api-key-value"
-                              className="text-xs font-450 text-gray-700"
+                              className="text-xs font-450 text-gray-600"
                             >
                               API Key
                             </Label>
@@ -548,7 +548,7 @@ export function AISystemEditSheet({
                         <div>
                           <Label
                             htmlFor="new-api-key-name"
-                            className="text-xs font-450 text-gray-700"
+                            className="text-xs font-450 text-gray-600"
                           >
                             API Key Name
                           </Label>
@@ -573,7 +573,7 @@ export function AISystemEditSheet({
                         <div>
                           <Label
                             htmlFor="new-api-key-value"
-                            className="text-xs font-450 text-gray-700"
+                            className="text-xs font-450 text-gray-600"
                           >
                             API Key
                           </Label>

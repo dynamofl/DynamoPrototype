@@ -115,19 +115,19 @@ export function AIProvidersTable({ className = '' }: AIProvidersTableProps) {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-[13px] font-450 text-gray-700">Name</label>
+                <label className="text-[13px] font-450 text-gray-600">Name</label>
                 <p className="text-[13px] text-gray-900">{viewingProvider.name}</p>
               </div>
               <div>
-                <label className="text-[13px] font-450 text-gray-700">Type</label>
+                <label className="text-[13px] font-450 text-gray-600">Type</label>
                 <p className="text-[13px] text-gray-900">{viewingProvider.type}</p>
               </div>
               <div>
-                <label className="text-[13px] font-450 text-gray-700">Status</label>
+                <label className="text-[13px] font-450 text-gray-600">Status</label>
                 <p className="text-[13px] text-gray-900">{viewingProvider.status}</p>
               </div>
               <div>
-                <label className="text-[13px] font-450 text-gray-700">Models</label>
+                <label className="text-[13px] font-450 text-gray-600">Models</label>
                 <p className="text-[13px] text-gray-900">{viewingProvider.models?.length || 0}</p>
               </div>
             </div>
@@ -147,11 +147,11 @@ export function AIProvidersTable({ className = '' }: AIProvidersTableProps) {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-[13px] font-450 text-gray-700">Name</label>
+                <label className="text-[13px] font-450 text-gray-600">Name</label>
                 <p className="text-[13px] text-gray-900">{editingProvider.name}</p>
               </div>
               <div>
-                <label className="text-[13px] font-450 text-gray-700">Type</label>
+                <label className="text-[13px] font-450 text-gray-600">Type</label>
                 <p className="text-[13px] text-gray-900">{editingProvider.type}</p>
               </div>
             </div>

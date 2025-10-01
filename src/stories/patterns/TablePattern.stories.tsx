@@ -696,7 +696,7 @@ export const WorkingTable: Story = {
                              row[column.key] === 'error' ? '❌' : '❓'}
                           </span>
                         ) : column.type === 'dropdown' ? (
-                          <span className="text-[13px] text-gray-700">
+                          <span className="text-[13px] text-gray-600">
                             {column.options?.find(opt => opt.value === row[column.key])?.label || row[column.key]}
                           </span>
                         ) : column.type === 'multiBadge' ? (
@@ -718,7 +718,7 @@ export const WorkingTable: Story = {
                             </button>
                           </div>
                         ) : (
-                          <span className="text-[13px] text-gray-700">
+                          <span className="text-[13px] text-gray-600">
                             {String(row[column.key] || '')}
                           </span>
                         )}
@@ -906,7 +906,7 @@ export const StaticDataTable: Story = {
                         {row.status}
                       </span>
                     </td>
-                    <td className="p-4 align-middle text-[13px] text-gray-700">
+                    <td className="p-4 align-middle text-[13px] text-gray-600">
                       {row.provider === 'openai' ? 'OpenAI' :
                        row.provider === 'anthropic' ? 'Anthropic' :
                        row.provider === 'google' ? 'Google' :
@@ -920,7 +920,7 @@ export const StaticDataTable: Story = {
                         {row.enabled ? 'On' : 'Off'}
                       </span>
                     </td>
-                    <td className="p-4 align-middle text-[13px] text-gray-700">{row.createdAt}</td>
+                    <td className="p-4 align-middle text-[13px] text-gray-600">{row.createdAt}</td>
                     <td className="p-4 align-middle">
                       <span className="text-lg">
                         {row.health === 'healthy' ? '✅' :

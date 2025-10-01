@@ -143,7 +143,7 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
             {/* Attack Type */}
             <div className="border border-gray-200 rounded-lg p-2 space-y-2">
               <div className="flex items-center gap-1">
-                <span className="text-xs font-450 text-gray-700">Attack Type</span>
+                <span className="text-xs font-450 text-gray-600">Attack Type</span>
                 <InfoIconOutline />
               </div>
               <div className="flex items-center gap-2">
@@ -157,7 +157,7 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
             {/* Guardrail Response */}
             <div className="border border-gray-200 rounded-lg p-2 space-y-2">
               <div className="flex items-center gap-1">
-                <span className="text-xs font-450 text-gray-700">Guardrail Response</span>
+                <span className="text-xs font-450 text-gray-600">Guardrail Response</span>
                 <InfoIconOutline />
               </div>
               <div className="flex items-center gap-2">
@@ -171,7 +171,7 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
             {/* AI System Response */}
             <div className="border border-gray-200 rounded-lg p-2 space-y-2">
               <div className="flex items-center gap-1">
-                <span className="text-xs font-450 text-gray-700">AI System Response</span>
+                <span className="text-xs font-450 text-gray-600">AI System Response</span>
                 <InfoIconOutline />
               </div>
               <div className="flex items-center gap-2">

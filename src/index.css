@@ -11,13 +11,12 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: var(--gray-0);
     --popover-foreground: 222.2 84% 4.9%;
-    /* --primary: 217.2 91.2% 49.8%; */
     --primary: var(--gray-950);
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted-foreground: rgb(var(--gray-600));
     --accent: 210 40% 96%;
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
@@ -109,12 +108,12 @@
     --card-foreground: 210 40% 98%;
     --popover: var(--gray-0);
     --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 49.8%;
+    --primary: var(--gray-950);
     --primary-foreground: 222.2 47.4% 11.2%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted-foreground: rgb(var(--gray-600));
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
@@ -246,7 +245,7 @@
   /* Custom font weight utilities */
   .font-350 { font-weight: 350; }
   .font-450 { font-weight: 450; }
-  .font-450 { font-weight: 550; }
+  .font-550 { font-weight: 550; }
   .font-650 { font-weight: 650; }
   .font-750 { font-weight: 750; }
   .font-850 { font-weight: 850; }

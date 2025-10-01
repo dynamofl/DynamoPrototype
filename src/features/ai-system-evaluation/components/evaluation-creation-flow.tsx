@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, Check } from "lucide-react";
 import { EvaluationCreationStep1 } from "./evaluation-creation-step-1";
 import { EvaluationCreationStep2 } from "./evaluation-creation-step-2";
 import type { EvaluationCreationData } from "../types/evaluation-creation";
@@ -80,17 +80,21 @@ export function EvaluationCreationFlow({
                   {/* Step Badge */}
                   <div className="flex items-center gap-2">
                     <div
-                      className={`flex items-center justify-center px-2.5 py-0.5 rounded-md text-sm font-semibold transition-colors ${
+                      className={`flex items-center justify-center w-7 h-7 rounded-full text-[13px] font-semibold transition-colors ${
                         isActive
                           ? "bg-blue-100 text-blue-800"
                           : isCompleted
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-gray-100 text-gray-500"
+                          ? "bg-gray-100 text-blue-600"
+                          : "bg-gray-100 text-gray-600"
                       }`}
                     >
-                      {step.number}
+                      {isCompleted ? (
+                        <Check className="h-3.5 w-3.5" />
+                      ) : (
+                        step.number
+                      )}
                     </div>
-                    <span className={`text-sm font-medium pr-2 ${
+                    <span className={`text-[13px] font-medium pr-2 ${
                       isActive ? "text-gray-900" : "text-gray-600"
                     }`}>
                       {step.title}

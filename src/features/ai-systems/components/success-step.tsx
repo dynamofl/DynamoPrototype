@@ -20,10 +20,10 @@ export function SuccessStep({ createdSystem }: SuccessStepProps) {
         {/* Success Header */}
         <div className="space-y-3 py-2">
           <div className="flex">
-            <AnimatedCheck className="text-green-800" size={32} />
+            <AnimatedCheck className="text-green-600" size={32} />
           </div>
           <div className="space-y-1">
-            <h3 className="text-base font-450 text-gray-700">
+            <h3 className="text-base font-450 text-gray-600">
               AI System Connection Successful
             </h3>
             <div className="flex items-center gap-1">
@@ -32,7 +32,7 @@ export function SuccessStep({ createdSystem }: SuccessStepProps) {
               className="w-5 h-5"
               
             />
-              <span className="text-[13px] text-gray-700">
+              <span className="text-[13px] text-gray-600">
                 {createdSystem?.name}
               </span>
               
@@ -45,7 +45,7 @@ export function SuccessStep({ createdSystem }: SuccessStepProps) {
           <p className="text-[13px] font-400 text-gray-600">
             You can start doing following tasks with your AI System
           </p>
-          <div className="bg-white border border-gray-200 rounded-lg">
+          <div className="bg-gray-0 border border-gray-200 rounded-lg">
             {/* Add to Project */}
             <div className="flex items-start gap-3 p-4 border-b border-gray-200">
               <div className="flex items-center justify-center w-5 h-5">

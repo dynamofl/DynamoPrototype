@@ -147,7 +147,7 @@ export function AppBar({
                   <NavLink
                     to={item.path}
                     className={({ isActive }) => cn(
-                      "h-8 px-3 text-[13px] font-450 flex items-center gap-2 rounded-md transition-colors hover:bg-gray-200",
+                      "h-8 px-3 text-[13px] font-450 flex items-center gap-2 rounded-full transition-colors hover:bg-gray-200",
                       isActive
                         ? "text-gray-800"
                         : "text-gray-600"
@@ -208,7 +208,7 @@ export function AppBar({
             <NavLink
               to="/beta-features"
               className={({ isActive }) => cn(
-                "h-8 px-3 text-[13px] font-450 flex items-center gap-2 rounded-md transition-colors hover:bg-gray-200",
+                "h-8 px-3 text-[13px] font-450 flex items-center gap-2 rounded-full transition-colors hover:bg-gray-200",
                 isActive
                   ? "text-gray-800"
                   : "text-gray-600"

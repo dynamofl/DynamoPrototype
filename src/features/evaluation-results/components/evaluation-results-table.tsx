@@ -155,7 +155,7 @@ export function EvaluationResultsTable({
                 </div>
               </TableCell>
               <TableCell>
-                <Badge variant="secondary" className="text-xs text-gray-700">
+                <Badge variant="secondary" className="text-xs text-gray-600">
                   {record.attackArea}
                 </Badge>
               </TableCell>
