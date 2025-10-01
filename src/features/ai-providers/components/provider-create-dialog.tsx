@@ -187,7 +187,6 @@ export function ProviderCreateDialog({
           <Button
             onClick={handleAddProvider}
             disabled={isValidating || selectedModels.length === 0}
-            className="bg-blue-600 text-blue-50 hover:bg-blue-700"
           >
             {isValidating ? 'Validating...' : 'Add Provider'}
           </Button>

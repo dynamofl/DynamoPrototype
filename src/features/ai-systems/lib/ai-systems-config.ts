@@ -39,7 +39,7 @@ const renderAISystemName = (_value: string, row: any) => {
     React.createElement(AISystemIcon, {
       key: 'icon',
       type: iconType,
-      className: 'w-7 h-7 rounded-lg border border-gray-200 bg-white p-1 flex-shrink-0'
+      className: 'w-7 h-7 rounded-lg border border-gray-200 p-1 flex-shrink-0'
     }),
     React.createElement('span', {
       key: 'text',

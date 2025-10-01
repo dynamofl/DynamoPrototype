@@ -315,7 +315,6 @@ export function AISystemEditSheet({
             disabled={
               !primaryAPIKey || !formData.name.trim()
             }
-            className="bg-blue-600 text-white hover:bg-blue-700"
           >
             Save Changes
           </Button>

@@ -177,7 +177,7 @@ export function ThemeDemo() {
           <p className="font-400 text-gray-700">Font weight 400 - Normal</p>
           <p className="font-450 text-gray-700">Font weight 450 - Custom Medium</p>
           <p className="font-500 text-gray-700">Font weight 500 - Medium</p>
-          <p className="font-550 text-gray-700">Font weight 550 - Custom Medium+</p>
+          <p className="font-450 text-gray-700">Font weight 550 - Custom Medium+</p>
           <p className="font-600 text-gray-700">Font weight 600 - Semi Bold</p>
           <p className="font-650 text-gray-700">Font weight 650 - Custom Semi Bold+</p>
           <p className="font-700 text-gray-700">Font weight 700 - Bold</p>
@@ -228,7 +228,7 @@ export function ThemeDemo() {
           <div className="space-y-2 text-gray-800">
             <div><span className="text-gray-600">// Custom font weights:</span></div>
             <div>className="font-450"  <span className="text-gray-600">// Custom medium weight</span></div>
-            <div>className="font-550"  <span className="text-gray-600">// Custom medium+ weight</span></div>
+            <div>className="font-450"  <span className="text-gray-600">// Custom medium+ weight</span></div>
             <div>className="font-650"  <span className="text-gray-600">// Custom semi-bold+ weight</span></div>
             <div></div>
             <div><span className="text-gray-600">// Theme-aware gray colors:</span></div>

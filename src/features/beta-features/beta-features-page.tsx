@@ -48,7 +48,7 @@ export function BetaFeaturesPage() {
               <p className="text-[13px] font-450 uppercase tracking-wider text-white">
                 Beta Features
               </p>
-              <h1 className="text-4xl font-550 text-white md:text-4xl">
+              <h1 className="text-4xl font-450 text-white md:text-4xl">
                 Dynamo HumanAI Experience Lab
               </h1>
               <p className="text-base  text-white/80 md:text-md">
@@ -80,7 +80,7 @@ export function BetaFeaturesPage() {
                         <div className="text-[11px] font-450 uppercase tracking-wider text-muted-foreground">
                           {feature.category}
                         </div>
-                          <CardTitle className="text-xl font-550">
+                          <CardTitle className="text-xl font-450">
                           {feature.title}
                         </CardTitle>
                       </CardHeader>
