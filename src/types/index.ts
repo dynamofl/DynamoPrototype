@@ -62,11 +62,14 @@ export interface Guardrail {
   id: string;
   name: string;
   description: string;
-  content: string;
+  content?: string;
   createdAt: string;
   updatedAt: string;
   status: 'active' | 'inactive';
   category?: string;
+  type?: string;
+  allowedBehavior?: string;
+  disallowedBehavior?: string;
 }
 
 export type { EvaluationInput, EvaluationConfig, EvaluationResult, Message } from './evaluation';

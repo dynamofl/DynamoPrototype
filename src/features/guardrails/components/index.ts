@@ -4,7 +4,7 @@
 
 export * from './guardrails-table'
 export { GuardrailsStats } from './guardrails-stats'
-export { GuardrailCreateDialog } from './guardrail-create-dialog'
+export { GuardrailCreateSheet } from './guardrail-create-sheet'
 export { GuardrailViewSheet } from './guardrail-view-sheet'
 export { GuardrailEditSheet } from './guardrail-edit-sheet'
 export { GuardrailsHeader } from './guardrails-header'

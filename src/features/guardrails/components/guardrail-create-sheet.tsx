@@ -1,8 +1,8 @@
 /**
- * GuardrailEditSheet component for editing guardrail details
+ * GuardrailCreateSheet component for adding new guardrails
  */
 
-import React, { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -12,20 +12,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ViewEditSheet } from '@/components/patterns'
 import type { TableRow } from '@/types/table'
 
-export interface GuardrailEditSheetProps {
+export interface GuardrailCreateSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  guardrail: TableRow | null
-  onGuardrailUpdated: (guardrail: TableRow) => void
+  onGuardrailCreated: (guardrail: TableRow) => void
 }
 
-export function GuardrailEditSheet({
+export function GuardrailCreateSheet({
   open,
   onOpenChange,
-  guardrail,
-  onGuardrailUpdated
-}: GuardrailEditSheetProps) {
-  const [editingGuardrail, setEditingGuardrail] = useState<TableRow | null>(null)
+  onGuardrailCreated
+}: GuardrailCreateSheetProps) {
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    category: '',
+    type: '',
+    allowedBehavior: '',
+    disallowedBehavior: ''
+  })
   const [validationError, setValidationError] = useState('')
   const [activeTab, setActiveTab] = useState('allowed')
 
@@ -42,24 +47,33 @@ export function GuardrailEditSheet({
     { value: 'Output Guardrails', label: 'Output Guardrails' }
   ]
 
-  // Initialize state when guardrail changes
-  useEffect(() => {
-    if (guardrail) {
-      setEditingGuardrail({ ...guardrail })
-      setValidationError('')
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      description: '',
+      category: '',
+      type: '',
+      allowedBehavior: '',
+      disallowedBehavior: ''
+    })
+    setValidationError('')
+    setActiveTab('allowed')
+  }
+
+  const handleSheetOpenChange = (open: boolean) => {
+    onOpenChange(open)
+    if (!open) {
+      resetForm()
     }
-  }, [guardrail])
+  }
 
   // Handle textarea input with bullet points
   const handleBehaviorChange = (
     field: 'allowedBehavior' | 'disallowedBehavior',
     value: string
   ) => {
-    if (!editingGuardrail) return
-
-    const currentValue = (editingGuardrail[field] as string) || ''
     // Check if this is a paste operation (large change in content)
-    const isPaste = Math.abs(value.length - currentValue.length) > 1
+    const isPaste = Math.abs(value.length - formData[field].length) > 1
 
     if (isPaste) {
       // Parse pasted content and add bullets to each line
@@ -71,13 +85,13 @@ export function GuardrailEditSheet({
         }
         return line
       })
-      setEditingGuardrail({ ...editingGuardrail, [field]: formattedLines.join('\n') })
+      setFormData({ ...formData, [field]: formattedLines.join('\n') })
     } else {
       // If the field is empty and user starts typing, add a bullet
-      if (currentValue === '' && value.length === 1 && value !== '•') {
-        setEditingGuardrail({ ...editingGuardrail, [field]: `• ${value}` })
+      if (formData[field] === '' && value.length === 1 && value !== '•') {
+        setFormData({ ...formData, [field]: `• ${value}` })
       } else {
-        setEditingGuardrail({ ...editingGuardrail, [field]: value })
+        setFormData({ ...formData, [field]: value })
       }
     }
   }
@@ -86,10 +100,10 @@ export function GuardrailEditSheet({
     e: React.KeyboardEvent<HTMLTextAreaElement>,
     field: 'allowedBehavior' | 'disallowedBehavior'
   ) => {
-    if (e.key === 'Enter' && editingGuardrail) {
+    if (e.key === 'Enter') {
       const textarea = e.currentTarget
       const cursorPosition = textarea.selectionStart
-      const currentValue = (editingGuardrail[field] as string) || ''
+      const currentValue = formData[field]
 
       if (e.shiftKey) {
         // Shift + Enter: Add a line break without bullet
@@ -99,7 +113,7 @@ export function GuardrailEditSheet({
           '\n' +
           currentValue.substring(cursorPosition)
 
-        setEditingGuardrail({ ...editingGuardrail, [field]: newValue })
+        setFormData({ ...formData, [field]: newValue })
 
         // Set cursor position after the line break
         setTimeout(() => {
@@ -117,7 +131,7 @@ export function GuardrailEditSheet({
           '\n• ' +
           currentValue.substring(cursorPosition)
 
-        setEditingGuardrail({ ...editingGuardrail, [field]: newValue })
+        setFormData({ ...formData, [field]: newValue })
 
         // Set cursor position after the bullet
         setTimeout(() => {
@@ -138,73 +152,65 @@ export function GuardrailEditSheet({
     return lines.length
   }
 
-  const allowedCount = countBehaviors((editingGuardrail?.allowedBehavior as string) || '')
-  const disallowedCount = countBehaviors((editingGuardrail?.disallowedBehavior as string) || '')
+  const allowedCount = countBehaviors(formData.allowedBehavior)
+  const disallowedCount = countBehaviors(formData.disallowedBehavior)
 
-  const handleUpdateGuardrail = () => {
-    if (!editingGuardrail) return
-
+  const handleCreateGuardrail = () => {
     // Validation
-    if (!editingGuardrail.name?.trim()) {
+    if (!formData.name.trim()) {
       setValidationError('Guardrail name is required')
       return
     }
 
-    if (!editingGuardrail.description?.trim()) {
+    if (!formData.description.trim()) {
       setValidationError('Description is required')
       return
     }
 
-    if (!editingGuardrail.category) {
+    if (!formData.category) {
       setValidationError('Category is required')
       return
     }
 
-    if (!editingGuardrail.type) {
+    if (!formData.type) {
       setValidationError('Type is required')
       return
     }
 
     setValidationError('')
 
-    // Update guardrail
-    const updatedGuardrail: TableRow = {
-      ...editingGuardrail,
-      name: editingGuardrail.name.trim(),
-      description: editingGuardrail.description.trim(),
-      category: editingGuardrail.category,
-      type: editingGuardrail.type,
-      allowedBehavior: (editingGuardrail.allowedBehavior as string || '').trim(),
-      disallowedBehavior: (editingGuardrail.disallowedBehavior as string || '').trim(),
+    // Create new guardrail
+    const newGuardrail: TableRow = {
+      id: Date.now().toString(),
+      name: formData.name.trim(),
+      description: formData.description.trim(),
+      category: formData.category,
+      type: formData.type,
+      allowedBehavior: formData.allowedBehavior.trim(),
+      disallowedBehavior: formData.disallowedBehavior.trim(),
+      status: 'active',
+      createdAt: new Date().toISOString().split('T')[0],
       updatedAt: new Date().toISOString().split('T')[0]
     }
 
-    onGuardrailUpdated(updatedGuardrail)
-    onOpenChange(false)
+    onGuardrailCreated(newGuardrail)
+    handleSheetOpenChange(false)
   }
-
-  const handleCancel = () => {
-    onOpenChange(false)
-    setEditingGuardrail(null)
-    setValidationError('')
-  }
-
-  if (!editingGuardrail) return null
 
   return (
     <ViewEditSheet
       open={open}
-      onOpenChange={onOpenChange}
-      title="Edit Guardrail"
+      onOpenChange={handleSheetOpenChange}
+      title="Create New Guardrail"
       size="lg"
       footer={
         <div className="flex gap-2">
-          <Button onClick={handleUpdateGuardrail}>
-            Update Guardrail
+          <Button onClick={handleCreateGuardrail}>
+            Create Guardrail
           </Button>
           <Button
             variant="outline"
-            onClick={handleCancel}
+            onClick={() => handleSheetOpenChange(false)}
           >
             Cancel
           </Button>
@@ -213,22 +219,22 @@ export function GuardrailEditSheet({
     >
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="edit-guardrail-name">Name</Label>
+          <Label htmlFor="guardrail-name">Name</Label>
           <Input
-            id="edit-guardrail-name"
+            id="guardrail-name"
             placeholder="Enter guardrail name"
-            value={editingGuardrail.name || ''}
-            onChange={(e) => setEditingGuardrail({ ...editingGuardrail, name: e.target.value })}
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             required
           />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="edit-guardrail-type">Type</Label>
+            <Label htmlFor="guardrail-type">Type</Label>
             <Select
-              value={editingGuardrail.type || ''}
-              onValueChange={(value) => setEditingGuardrail({ ...editingGuardrail, type: value })}
+              value={formData.type}
+              onValueChange={(value) => setFormData({ ...formData, type: value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select Type" />
@@ -243,10 +249,10 @@ export function GuardrailEditSheet({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="edit-guardrail-category">Category</Label>
+            <Label htmlFor="guardrail-category">Category</Label>
             <Select
-              value={editingGuardrail.category || ''}
-              onValueChange={(value) => setEditingGuardrail({ ...editingGuardrail, category: value })}
+              value={formData.category}
+              onValueChange={(value) => setFormData({ ...formData, category: value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select Category" />
@@ -263,13 +269,13 @@ export function GuardrailEditSheet({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="edit-guardrail-description">Description</Label>
+          <Label htmlFor="guardrail-description">Description</Label>
           <Textarea
-            id="edit-guardrail-description"
+            id="guardrail-description"
             placeholder="Brief description of the guardrail"
             className="min-h-[80px]"
-            value={editingGuardrail.description || ''}
-            onChange={(e) => setEditingGuardrail({ ...editingGuardrail, description: e.target.value })}
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             required
           />
         </div>
@@ -291,7 +297,7 @@ export function GuardrailEditSheet({
                 placeholder="• Start typing allowed behaviors&#10;"
                 className="min-h-[120px] max-h-[400px] text-[13px] resize-none overflow-y-auto"
                 style={{ height: 'auto', minHeight: '120px' }}
-                value={(editingGuardrail.allowedBehavior as string) || ''}
+                value={formData.allowedBehavior}
                 onChange={(e) => {
                   handleBehaviorChange('allowedBehavior', e.target.value)
                   // Auto-grow textarea
@@ -310,7 +316,7 @@ export function GuardrailEditSheet({
                 placeholder="• Start typing disallowed behaviors&#10;"
                 className="min-h-[120px] max-h-[400px] text-[13px] resize-none overflow-y-auto"
                 style={{ height: 'auto', minHeight: '120px' }}
-                value={(editingGuardrail.disallowedBehavior as string) || ''}
+                value={formData.disallowedBehavior}
                 onChange={(e) => {
                   handleBehaviorChange('disallowedBehavior', e.target.value)
                   // Auto-grow textarea
@@ -324,22 +330,6 @@ export function GuardrailEditSheet({
               </p>
             </TabsContent>
           </Tabs>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="edit-guardrail-status">Status</Label>
-          <Select
-            value={editingGuardrail.status || 'active'}
-            onValueChange={(value) => setEditingGuardrail({ ...editingGuardrail, status: value })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
         {validationError && (

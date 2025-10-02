@@ -1,11 +1,14 @@
 import { useState, useMemo } from "react";
-import { Search } from "lucide-react";
+import { Search, Plus, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useGuardrails } from "@/features/guardrails/lib/useGuardrails";
-import type { EvaluationCreationStepProps } from "../types/evaluation-creation";
+import { GuardrailViewSheet } from "@/features/guardrails/components";
+import { UploadPromptsSheet } from "./upload-prompts-sheet";
+import type { EvaluationCreationStepProps, PolicyDataset } from "../types/evaluation-creation";
 
 export function EvaluationCreationStep2({
   data,
@@ -14,84 +17,124 @@ export function EvaluationCreationStep2({
   onBack,
   variant = "overlay",
 }: EvaluationCreationStepProps) {
-  const { guardrails: allGuardrails } = useGuardrails();
-  const [selectedGuardrailIds, setSelectedGuardrailIds] = useState<string[]>(
-    data.guardrailIds || []
+  const { guardrails: allPolicies } = useGuardrails();
+  const [selectedPolicyIds, setSelectedPolicyIds] = useState<string[]>(
+    data.policyIds || []
+  );
+  const [policyDatasets, setPolicyDatasets] = useState<PolicyDataset[]>(
+    data.policyDatasets || []
   );
   const [searchQuery, setSearchQuery] = useState("");
+  const [uploadSheetOpen, setUploadSheetOpen] = useState(false);
+  const [currentPolicyId, setCurrentPolicyId] = useState<string | null>(null);
+  const [hoveredPolicyId, setHoveredPolicyId] = useState<string | null>(null);
+  const [viewPolicySheetOpen, setViewPolicySheetOpen] = useState(false);
+  const [selectedPolicyForView, setSelectedPolicyForView] = useState<string | null>(null);
 
-  // Filter guardrails based on search query
-  const filteredGuardrails = useMemo(() => {
-    if (!searchQuery.trim()) return allGuardrails;
+  // Filter policies based on search query
+  const filteredPolicies = useMemo(() => {
+    if (!searchQuery.trim()) return allPolicies;
 
     const query = searchQuery.toLowerCase();
-    return allGuardrails.filter(
-      (guardrail) =>
-        guardrail.name.toLowerCase().includes(query) ||
-        guardrail.description.toLowerCase().includes(query) ||
-        guardrail.category?.toLowerCase().includes(query)
+    return allPolicies.filter(
+      (policy) =>
+        policy.name.toLowerCase().includes(query) ||
+        policy.description.toLowerCase().includes(query) ||
+        policy.category?.toLowerCase().includes(query)
     );
-  }, [allGuardrails, searchQuery]);
+  }, [allPolicies, searchQuery]);
 
-  const handleToggleGuardrail = (guardrailId: string) => {
-    setSelectedGuardrailIds((prev) => {
-      if (prev.includes(guardrailId)) {
-        return prev.filter((id) => id !== guardrailId);
+  const handleTogglePolicy = (policyId: string) => {
+    setSelectedPolicyIds((prev) => {
+      if (prev.includes(policyId)) {
+        // Remove policy
+        setPolicyDatasets((datasets) =>
+          datasets.filter((d) => d.policyId !== policyId)
+        );
+        return prev.filter((id) => id !== policyId);
       } else {
-        return [...prev, guardrailId];
+        // Add policy with default estimated prompts
+        setPolicyDatasets((datasets) => [
+          ...datasets,
+          { policyId, estimatedPrompts: 100 },
+        ]);
+        return [...prev, policyId];
       }
     });
   };
 
+  const handleAddMorePrompts = (policyId: string) => {
+    setCurrentPolicyId(policyId);
+    setUploadSheetOpen(true);
+  };
+
+  const handleUploadPrompts = (
+    prompts: Array<{ prompt: string }>,
+    fileName: string
+  ) => {
+    if (!currentPolicyId) return;
+
+    setPolicyDatasets((prev) =>
+      prev.map((dataset) =>
+        dataset.policyId === currentPolicyId
+          ? {
+              ...dataset,
+              additionalPrompts: prompts,
+              uploadedFileName: fileName,
+            }
+          : dataset
+      )
+    );
+  };
+
   const handleContinue = () => {
-    onDataChange({ guardrailIds: selectedGuardrailIds });
+    onDataChange({ policyIds: selectedPolicyIds, policyDatasets });
     onNext?.();
   };
 
   const handleSkip = () => {
-    onDataChange({ guardrailIds: [] });
+    onDataChange({ policyIds: [], policyDatasets: [] });
     onNext?.();
   };
+
+  const currentPolicy = allPolicies.find((p) => p.id === currentPolicyId);
+  const currentDataset = policyDatasets.find((d) => d.policyId === currentPolicyId);
+  const viewGuardrail = allPolicies.find((p) => p.id === selectedPolicyForView);
 
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="space-y-1">
         <h2 className="text-lg font-450 text-gray-900">
-          {variant === "onboarding"
-            ? "Add guardrails to your evaluation"
-            : "Select guardrails"
-          }
+          Generate Test Dataset from Policies
         </h2>
         <p className="text-[13px] text-gray-600">
-          {variant === "onboarding"
-            ? "Choose which safety guardrails to apply during this evaluation."
-            : "Select one or more guardrails to include in this evaluation."
-          }
+          Choose policies to generate test datasets. Each policy will generate an
+          estimated number of prompts for the benchmark.
         </p>
       </div>
 
-      {/* Guardrails List */}
+      {/* Policies List */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <Label className="text-xs font-medium text-gray-600">
-            Available Guardrails ({filteredGuardrails.length})
+            Available Policies ({filteredPolicies.length})
           </Label>
-          {selectedGuardrailIds.length > 0 && (
+          {selectedPolicyIds.length > 0 && (
             <span className="text-xs text-gray-500">
-              {selectedGuardrailIds.length} selected
+              {selectedPolicyIds.length} selected
             </span>
           )}
         </div>
 
         <div className="border border-gray-200 rounded-lg overflow-hidden">
           {/* Search inside list */}
-          <div className="py-2 px-1 border-b border-gray-200 ">
+          <div className="py-2 px-1 border-b border-gray-200">
             <div className="relative">
-              <Search className=" absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                id="guardrail-search"
-                placeholder="Search by name, description, or category..."
+                id="policy-search"
+                placeholder="Search by policy name, description, or category..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="bg-transparent border-none focus:border-none focus-visible:ring-0 pl-9"
@@ -99,63 +142,109 @@ export function EvaluationCreationStep2({
             </div>
           </div>
 
-          {/* Guardrails */}
+          {/* Policies */}
           <div className="max-h-96 overflow-y-auto">
-          {filteredGuardrails.length === 0 ? (
-            <div className="p-8 text-center">
-              <p className="text-[13px] text-gray-500">
-                {searchQuery ? "No guardrails found matching your search." : "No guardrails available."}
-              </p>
-              {!searchQuery && (
-                <p className="text-xs text-gray-400 mt-2">
-                  Create guardrails in the Guardrails page to use them in evaluations.
+            {filteredPolicies.length === 0 ? (
+              <div className="p-8 text-center">
+                <p className="text-[13px] text-gray-500">
+                  {searchQuery
+                    ? "No policies found matching your search."
+                    : "No policies available."}
                 </p>
-              )}
-            </div>
-          ) : (
-            filteredGuardrails.map((guardrail) => {
-              const isSelected = selectedGuardrailIds.includes(guardrail.id);
-              const isActive = guardrail.status === 'active';
+                {!searchQuery && (
+                  <p className="text-xs text-gray-400 mt-2">
+                    Create policies in the Guardrails page to use them for dataset
+                    generation.
+                  </p>
+                )}
+              </div>
+            ) : (
+              filteredPolicies.map((policy) => {
+                const isSelected = selectedPolicyIds.includes(policy.id);
+                const isActive = policy.status === "active";
+                const dataset = policyDatasets.find((d) => d.policyId === policy.id);
 
-              return (
-                <div
-                  key={guardrail.id}
-                  className={`flex items-start gap-3 m-1 rounded-md p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-100 transition-colors ${
-                    !isActive ? "opacity-60" : ""
-                  }`}
-                >
-                  <Checkbox
-                    id={`guardrail-${guardrail.id}`}
-                    checked={isSelected}
-                    onCheckedChange={() => handleToggleGuardrail(guardrail.id)}
-                    disabled={!isActive}
-                    className="mt-0.5"
-                  />
-                  <label
-                    htmlFor={`guardrail-${guardrail.id}`}
-                    className="flex-1 cursor-pointer"
+                return (
+                  <div
+                    key={policy.id}
+                    className={`relative flex items-start gap-3 m-1 rounded-md p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors ${
+                      !isActive ? "opacity-60" : ""
+                    }`}
+                    onMouseEnter={() => setHoveredPolicyId(policy.id)}
+                    onMouseLeave={() => setHoveredPolicyId(null)}
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="text-[13px] font-medium text-gray-900">
-                        {guardrail.name}
-                      </span>
-                      {guardrail.category && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-                          {guardrail.category}
+                    <Checkbox
+                      id={`policy-${policy.id}`}
+                      checked={isSelected}
+                      onCheckedChange={() => handleTogglePolicy(policy.id)}
+                      disabled={!isActive}
+                      className="mt-0.5"
+                    />
+                    <label
+                      htmlFor={`policy-${policy.id}`}
+                      className="flex-1 cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-[13px] font-450 text-gray-900">
+                          {policy.name}
                         </span>
+                        {policy.category && (
+                          <Badge variant="secondary" className="text-xs">
+                            {policy.category}
+                          </Badge>
+                        )}
+                        {!isActive && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                            Inactive
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Dataset Info - Only show when selected */}
+                      {isSelected && dataset && (
+                        <div className="flex items-center gap-1 mt-2">
+                          <span className="text-xs text-gray-500">
+                            Estimated prompts: {dataset.estimatedPrompts}
+                          </span>
+                          {dataset.additionalPrompts && (
+                            <span className="text-xs text-gray-500">
+                              + {dataset.additionalPrompts.length} uploaded
+                            </span>
+                          )}
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleAddMorePrompts(policy.id);
+                            }}
+                            className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium"
+                          >
+                            <Plus className="h-3 w-3" />
+                            Add More Prompts
+                          </button>
+                        </div>
                       )}
-                      {!isActive && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                          Inactive
-                        </span>
-                      )}
-                    </div>
-                   
-                  </label>
-                </div>
-              );
-            })
-          )}
+                    </label>
+
+                    {/* Preview Button - Shows on hover */}
+                    {hoveredPolicyId === policy.id && (
+                      <Button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setSelectedPolicyForView(policy.id);
+                          setViewPolicySheetOpen(true);
+                        }}
+                        variant="outline"
+                        size="sm"
+                        className="absolute top-3 right-3 inline-flex items-center gap-1 pr-1.5 "
+                      >
+                        Preview Policy
+                        <ChevronRight className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       </div>
@@ -169,11 +258,26 @@ export function EvaluationCreationStep2({
           <Button variant="ghost" onClick={handleSkip}>
             Skip for Now
           </Button>
-          <Button onClick={handleContinue}>
-            Continue
-          </Button>
+          <Button onClick={handleContinue}>Continue</Button>
         </div>
       </div>
+
+      {/* Upload Sheet */}
+      <UploadPromptsSheet
+        open={uploadSheetOpen}
+        onOpenChange={setUploadSheetOpen}
+        policyName={currentPolicy?.name || ""}
+        onUpload={handleUploadPrompts}
+        existingPrompts={currentDataset?.additionalPrompts}
+        existingFileName={currentDataset?.uploadedFileName}
+      />
+
+      {/* View Guardrail Sheet */}
+      <GuardrailViewSheet
+        open={viewPolicySheetOpen}
+        onOpenChange={setViewPolicySheetOpen}
+        guardrail={viewGuardrail || null}
+      />
     </div>
   );
 }

@@ -86,7 +86,7 @@ export function EvaluationResultsTable({
     <div className="px-4">
       <Table>
         <TableHeader>
-          <TableRow className="bg-gray-50">
+          <TableRow className="bg-gray-50 border-0">
             <TableHead className="w-12">
               <div className="flex items-center justify-center">
                 <Checkbox
@@ -113,7 +113,7 @@ export function EvaluationResultsTable({
               className={`group transition-colors cursor-pointer ${
                 selectedRows.includes(record.id) 
                   ? 'bg-blue-50 hover:bg-blue-100' 
-                  : 'hover:bg-gray-100'
+                  : 'hover:bg-gray-50'
               }`}
             >
               <TableCell>

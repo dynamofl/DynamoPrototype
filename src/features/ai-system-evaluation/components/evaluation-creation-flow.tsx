@@ -2,6 +2,7 @@ import { useState } from "react";
 import { X, Check } from "lucide-react";
 import { EvaluationCreationStep1 } from "./evaluation-creation-step-1";
 import { EvaluationCreationStep2 } from "./evaluation-creation-step-2";
+import { EvaluationCreationStep3 } from "./evaluation-creation-step-3";
 import type { EvaluationCreationData } from "../types/evaluation-creation";
 
 interface EvaluationCreationFlowProps {
@@ -17,8 +18,8 @@ interface StepConfig {
 
 const STEPS: StepConfig[] = [
   { number: 1, title: "Evaluation Setup" },
-  { number: 2, title: "Add Guardrails"},
-  { number: 3, title: "Configure Tests" },
+  { number: 2, title: "Select Test Dataset"},
+  { number: 3, title: "Add Guardrails" },
   { number: 4, title: "Review and Finish" },
 ];
 
@@ -157,11 +158,20 @@ export function EvaluationCreationFlow({
             />
           )}
           {currentStep === 3 && (
+            <EvaluationCreationStep3
+              data={evaluationData}
+              onDataChange={handleDataChange}
+              onNext={() => transitionToStep(4)}
+              onBack={handleBack}
+              variant={variant}
+            />
+          )}
+          {currentStep === 4 && (
             <div className="space-y-6">
               <div>
                 <h2 className="text-2xl font-semibold text-gray-900">Review and finish</h2>
                 <p className="text-sm text-gray-600 mt-2">
-                  Step 3 will be implemented next.
+                  Step 4 will be implemented next.
                 </p>
               </div>
               <div className="flex justify-between pt-4">

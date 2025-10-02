@@ -165,7 +165,7 @@ export function FilterSearch({
   }
 
   return (
-    <div className="space-y-2 pb-3 mx-4 border-b">
+    <div className="space-y-2 pt-1 pb-3 mx-4 border-b">
       {/* Primary Filter Row */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">

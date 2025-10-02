@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { GuardrailsHeader, GuardrailsStats, GuardrailCreateDialog, GuardrailViewSheet, GuardrailEditSheet } from './components'
+import { GuardrailsHeader, GuardrailsStats, GuardrailCreateSheet, GuardrailViewSheet, GuardrailEditSheet } from './components'
 import { GuardrailsTableDirect } from './components/guardrails-table-direct'
 import type { Guardrail } from './types'
 import type { TableRow } from '@/types/table'
@@ -182,8 +182,8 @@ export function Guardrails() {
             onGuardrailUpdated={handleGuardrailUpdated}
           />
 
-          {/* Create Guardrail Dialog */}
-          <GuardrailCreateDialog
+          {/* Create Guardrail Sheet */}
+          <GuardrailCreateSheet
             open={isAddingGuardrail}
             onOpenChange={setIsAddingGuardrail}
             onGuardrailCreated={handleGuardrailCreated}

@@ -135,12 +135,10 @@ export function GuardrailsTableDirect({
   }
 
   const renderCategory = (category: string) => {
-    const colorClass = categoryColors[category] || 'bg-gray-100 text-gray-800 border-gray-200'
+    // const colorClass = categoryColors[category] || 'bg-gray-100 text-gray-800 border-gray-200'
     return (
       <Badge 
-        variant="outline" 
-        className={`${colorClass} font-normal`}
-      >
+        variant="secondary">
         {category}
       </Badge>
     )

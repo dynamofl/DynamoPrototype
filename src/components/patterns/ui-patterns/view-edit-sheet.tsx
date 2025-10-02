@@ -38,7 +38,7 @@ export function ViewEditSheet({
 }: ViewEditSheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side={side} className={`${sizeClasses[size]} flex flex-col h-full`}>
+      <SheetContent side={side} className={`${sizeClasses[size]} flex flex-col`}>
         {/* Fixed Header */}
         <SheetHeader className="flex-shrink-0 border-b border-gray-200">
           <SheetTitle>{title}</SheetTitle>

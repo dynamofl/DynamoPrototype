@@ -1,9 +1,18 @@
 export type EvaluationType = 'compliance' | 'jailbreak';
 
+export interface PolicyDataset {
+  policyId: string;
+  estimatedPrompts: number;
+  additionalPrompts?: Array<{ prompt: string }>;
+  uploadedFileName?: string;
+}
+
 export interface EvaluationCreationData {
   name: string;
   type: EvaluationType;
-  guardrailIds: string[];
+  policyIds: string[];
+  policyDatasets?: PolicyDataset[];
+  guardrailIds?: string[];
 }
 
 export interface EvaluationCreationStepProps {

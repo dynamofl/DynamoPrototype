@@ -2,10 +2,11 @@
  * GuardrailViewSheet component for viewing guardrail details
  */
 
-import React from 'react'
+import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ViewEditSheet } from '@/components/patterns'
 import type { TableRow } from '@/types/table'
 
@@ -13,45 +14,64 @@ export interface GuardrailViewSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   guardrail: TableRow | null
-  onEdit: (guardrail: TableRow) => void
+  onEdit?: (guardrail: TableRow) => void
 }
 
-export function GuardrailViewSheet({ 
-  open, 
-  onOpenChange, 
-  guardrail, 
-  onEdit 
+export function GuardrailViewSheet({
+  open,
+  onOpenChange,
+  guardrail,
+  onEdit
 }: GuardrailViewSheetProps) {
+  const [activeTab, setActiveTab] = useState('allowed')
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Active</Badge>
+        return <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">Active</Badge>
       case 'inactive':
-        return <Badge variant="secondary">Inactive</Badge>
+        return <Badge variant="secondary" className="bg-gray-100 text-gray-800">Inactive</Badge>
       default:
-        return <Badge variant="secondary">Unknown</Badge>
+        return <Badge variant="secondary" className="bg-gray-100 text-gray-800">Unknown</Badge>
     }
   }
 
   const getCategoryBadge = (category: string) => {
     const categoryColors = {
-      Safety: 'bg-red-100 text-red-800 border-red-200',
-      Privacy: 'bg-blue-100 text-blue-800 border-blue-200',
-      Compliance: 'bg-purple-100 text-purple-800 border-purple-200',
-      Quality: 'bg-green-100 text-green-800 border-green-200',
-      Security: 'bg-orange-100 text-orange-800 border-orange-200',
-      Ethics: 'bg-gray-100 text-gray-800 border-gray-200'
+      'Content': 'bg-amber-100 text-amber-800 border-amber-200',
+      'Safety': 'bg-red-100 text-red-800 border-red-200',
+      'PII Detection': 'bg-gray-100 text-gray-800 border-gray-200',
+      'Key Word Detection': 'bg-gray-100 text-gray-800 border-gray-200',
+      'Hallucination Detection': 'bg-gray-100 text-gray-800 border-gray-200'
     }
 
     return (
-      <Badge 
-        variant="outline" 
+      <Badge
+        variant="outline"
         className={categoryColors[category as keyof typeof categoryColors] || 'bg-gray-100 text-gray-800 border-gray-200'}
       >
         {category}
       </Badge>
     )
   }
+
+  const getTypeBadge = (type: string) => {
+    return (
+      <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-200">
+        {type}
+      </Badge>
+    )
+  }
+
+  // Count number of behaviors (non-empty bullet points)
+  const countBehaviors = (text: string): number => {
+    if (!text || !text.trim()) return 0
+    const lines = text.split('\n').filter(line => line.trim().startsWith('•') && line.trim().length > 1)
+    return lines.length
+  }
+
+  const allowedCount = countBehaviors((guardrail?.allowedBehavior as string) || '')
+  const disallowedCount = countBehaviors((guardrail?.disallowedBehavior as string) || '')
 
   const handleEdit = () => {
     if (guardrail) {
@@ -66,75 +86,89 @@ export function GuardrailViewSheet({
     <ViewEditSheet
       open={open}
       onOpenChange={onOpenChange}
-      title="Guardrail Details"
-      description="View detailed information about this guardrail policy."
+      title="Policy Details"
       size="lg"
+      footer={
+        onEdit && (
+          <div className="flex gap-2">
+            <Button
+              onClick={handleEdit}
+              className="flex-1"
+            >
+              Edit Guardrail
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
+              Close
+            </Button>
+          </div>
+        ) 
+      }
     >
-      <div className="space-y-6 mt-6">
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label className="text-[13px] font-450 text-muted-foreground">Guardrail Name</Label>
-            <p className="text-[13px] font-450">{guardrail.name}</p>
-          </div>
-          
-          <div className="space-y-2">
-            <Label className="text-[13px] font-450 text-muted-foreground">Category</Label>
-            <div>
-              {guardrail.category ? getCategoryBadge(guardrail.category) : (
-                <span className="text-[13px] text-muted-foreground">No category assigned</span>
-              )}
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label className="text-[13px] font-450 text-muted-foreground">Status</Label>
-            <div>
-              {getStatusBadge(guardrail.status)}
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label className="text-[13px] font-450 text-muted-foreground">Description</Label>
-            <p className="text-[13px]">{guardrail.description}</p>
-          </div>
-          
-          <div className="space-y-2">
-            <Label className="text-[13px] font-450 text-muted-foreground">Created</Label>
-            <p className="text-[13px]">{guardrail.createdAt}</p>
-          </div>
-          
+      <div className="space-y-6">
+
+      <div className='space-y-2'>
+        <p className='font-lg'>{guardrail.name}</p>
+        {/* Badges Section */}
+        <div className="flex flex-wrap gap-1">
+          <Badge variant="default">{guardrail.type}</Badge>
+          <Badge variant="default">{guardrail.category}</Badge>
           {guardrail.updatedAt && guardrail.updatedAt !== guardrail.createdAt && (
-            <div className="space-y-2">
-              <Label className="text-[13px] font-450 text-muted-foreground">Last Updated</Label>
-              <p className="text-[13px]">{guardrail.updatedAt}</p>
-            </div>
+                      <Badge variant="default">Last Updated On: {guardrail.updatedAt}</Badge>
+
+      
           )}
         </div>
-
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label className="text-[13px] font-450 text-muted-foreground">Guardrail Content</Label>
-            <div className="p-4 bg-muted rounded-md">
-              <p className="text-[13px] whitespace-pre-wrap">{guardrail.content}</p>
-            </div>
-          </div>
         </div>
 
-        <div className="flex gap-2 pt-4">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="flex-1"
-          >
-            Close
-          </Button>
-          <Button
-            onClick={handleEdit}
-            className="flex-1"
-          >
-            Edit Guardrail
-          </Button>
+        {/* Description */}
+        <div className="space-y-2">
+          <Label className="text-[13px] font-450 text-gray-600">Description</Label>
+          <p className="text-[13px] text-gray-900 whitespace-pre-wrap">{guardrail.description || 'No description provided'}</p>
         </div>
+
+        {/* Behavior Tabs */}
+        <div className="space-y-2">
+          <Label className="text-[13px] font-450 text-gray-600">Behavior</Label>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="allowed">
+                Allowed Behavior {allowedCount > 0 && `(${allowedCount})`}
+              </TabsTrigger>
+              <TabsTrigger value="disallowed">
+                Disallowed Behavior {disallowedCount > 0 && `(${disallowedCount})`}
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="allowed" className="mt-4">
+              <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
+                {guardrail.allowedBehavior ? (
+                  <div className="text-[13px] text-gray-900 whitespace-pre-wrap font-mono">
+                    {guardrail.allowedBehavior}
+                  </div>
+                ) : (
+                  <p className="text-[13px] text-gray-500">No allowed behaviors defined</p>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="disallowed" className="mt-4">
+              <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
+                {guardrail.disallowedBehavior ? (
+                  <div className="text-[13px] text-gray-900 whitespace-pre-wrap font-mono">
+                    {guardrail.disallowedBehavior}
+                  </div>
+                ) : (
+                  <p className="text-[13px] text-gray-500">No disallowed behaviors defined</p>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+       
       </div>
     </ViewEditSheet>
   )
