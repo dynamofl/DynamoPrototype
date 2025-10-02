@@ -102,7 +102,7 @@ export function EvaluationCreationStep1({
                 >
                   Compliance
                 </label>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-[13px] text-gray-600 mt-1">
                   Test against regulatory and organizational compliance requirements
                 </p>
               </div>
@@ -121,7 +121,7 @@ export function EvaluationCreationStep1({
                 >
                   Jailbreak
                 </label>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-[13px] text-gray-600 mt-1">
                   Evaluate resilience against adversarial attacks and prompt injection
                 </p>
               </div>
