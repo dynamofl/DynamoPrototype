@@ -145,7 +145,7 @@ export function GuardrailViewSheet({
             <TabsContent value="allowed" className="mt-4">
               <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
                 {guardrail.allowedBehavior ? (
-                  <div className="text-[13px] text-gray-900 whitespace-pre-wrap font-mono">
+                  <div className="text-[13px] text-gray-900 whitespace-pre-wrap ">
                     {guardrail.allowedBehavior}
                   </div>
                 ) : (
@@ -157,7 +157,7 @@ export function GuardrailViewSheet({
             <TabsContent value="disallowed" className="mt-4">
               <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
                 {guardrail.disallowedBehavior ? (
-                  <div className="text-[13px] text-gray-900 whitespace-pre-wrap font-mono">
+                  <div className="text-[13px] text-gray-900 whitespace-pre-wrap ">
                     {guardrail.disallowedBehavior}
                   </div>
                 ) : (

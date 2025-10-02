@@ -38,8 +38,8 @@ export function GuardrailEditSheet({
   ]
 
   const typeOptions = [
-    { value: 'Input Guardrails', label: 'Input Guardrails' },
-    { value: 'Output Guardrails', label: 'Output Guardrails' }
+    { value: 'Input Policy', label: 'Input Policy' },
+    { value: 'Output Policy', label: 'Output Policy' }
   ]
 
   // Initialize state when guardrail changes
@@ -195,7 +195,7 @@ export function GuardrailEditSheet({
     <ViewEditSheet
       open={open}
       onOpenChange={onOpenChange}
-      title="Edit Guardrail"
+      title="Edit Policy"
       size="lg"
       footer={
         <div className="flex gap-2">
@@ -267,9 +267,15 @@ export function GuardrailEditSheet({
           <Textarea
             id="edit-guardrail-description"
             placeholder="Brief description of the guardrail"
-            className="min-h-[80px]"
+            className="min-h-[120px] max-h-[200px] resize-none overflow-y-auto"
+            style={{ height: 'auto', minHeight: '120px' }}
             value={editingGuardrail.description || ''}
-            onChange={(e) => setEditingGuardrail({ ...editingGuardrail, description: e.target.value })}
+            onChange={(e) => {
+              setEditingGuardrail({ ...editingGuardrail, description: e.target.value })
+              // Auto-grow textarea
+              e.target.style.height = 'auto'
+              e.target.style.height = Math.min(e.target.scrollHeight, 200) + 'px'
+            }}
             required
           />
         </div>
@@ -289,8 +295,8 @@ export function GuardrailEditSheet({
             <TabsContent value="allowed" className="mt-4">
               <Textarea
                 placeholder="• Start typing allowed behaviors&#10;"
-                className="min-h-[120px] max-h-[400px] text-[13px] resize-none overflow-y-auto"
-                style={{ height: 'auto', minHeight: '120px' }}
+                className="min-h-[240px] max-h-[400px] text-[13px] resize-none overflow-y-auto"
+                style={{ height: 'auto', minHeight: '240px' }}
                 value={(editingGuardrail.allowedBehavior as string) || ''}
                 onChange={(e) => {
                   handleBehaviorChange('allowedBehavior', e.target.value)
@@ -308,8 +314,8 @@ export function GuardrailEditSheet({
             <TabsContent value="disallowed" className="mt-4">
               <Textarea
                 placeholder="• Start typing disallowed behaviors&#10;"
-                className="min-h-[120px] max-h-[400px] text-[13px] resize-none overflow-y-auto"
-                style={{ height: 'auto', minHeight: '120px' }}
+                className="min-h-[240px] max-h-[400px] text-[13px] resize-none overflow-y-auto"
+                style={{ height: 'auto', minHeight: '240px' }}
                 value={(editingGuardrail.disallowedBehavior as string) || ''}
                 onChange={(e) => {
                   handleBehaviorChange('disallowedBehavior', e.target.value)

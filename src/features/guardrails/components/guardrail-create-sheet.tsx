@@ -43,8 +43,8 @@ export function GuardrailCreateSheet({
   ]
 
   const typeOptions = [
-    { value: 'Input Guardrails', label: 'Input Guardrails' },
-    { value: 'Output Guardrails', label: 'Output Guardrails' }
+    { value: 'Input Policy', label: 'Input Policy' },
+    { value: 'Output Policy', label: 'Output Policy' }
   ]
 
   const resetForm = () => {
@@ -201,7 +201,7 @@ export function GuardrailCreateSheet({
     <ViewEditSheet
       open={open}
       onOpenChange={handleSheetOpenChange}
-      title="Create New Guardrail"
+      title="Create New Policy"
       size="lg"
       footer={
         <div className="flex gap-2">
@@ -273,9 +273,15 @@ export function GuardrailCreateSheet({
           <Textarea
             id="guardrail-description"
             placeholder="Brief description of the guardrail"
-            className="min-h-[80px]"
+            className="min-h-[120px] max-h-[200px] resize-none overflow-y-auto"
+            style={{ height: 'auto', minHeight: '120px' }}
             value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            onChange={(e) => {
+              setFormData({ ...formData, description: e.target.value })
+              // Auto-grow textarea
+              e.target.style.height = 'auto'
+              e.target.style.height = Math.min(e.target.scrollHeight, 200) + 'px'
+            }}
             required
           />
         </div>
@@ -295,8 +301,8 @@ export function GuardrailCreateSheet({
             <TabsContent value="allowed" className="mt-4">
               <Textarea
                 placeholder="• Start typing allowed behaviors&#10;"
-                className="min-h-[120px] max-h-[400px] text-[13px] resize-none overflow-y-auto"
-                style={{ height: 'auto', minHeight: '120px' }}
+                className="min-h-[240px] max-h-[400px] text-[13px] resize-none overflow-y-auto"
+                style={{ height: 'auto', minHeight: '240px' }}
                 value={formData.allowedBehavior}
                 onChange={(e) => {
                   handleBehaviorChange('allowedBehavior', e.target.value)
@@ -314,8 +320,8 @@ export function GuardrailCreateSheet({
             <TabsContent value="disallowed" className="mt-4">
               <Textarea
                 placeholder="• Start typing disallowed behaviors&#10;"
-                className="min-h-[120px] max-h-[400px] text-[13px] resize-none overflow-y-auto"
-                style={{ height: 'auto', minHeight: '120px' }}
+                className="min-h-[240px] max-h-[400px] text-[13px] resize-none overflow-y-auto"
+                style={{ height: 'auto', minHeight: '240px' }}
                 value={formData.disallowedBehavior}
                 onChange={(e) => {
                   handleBehaviorChange('disallowedBehavior', e.target.value)
