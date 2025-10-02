@@ -13,15 +13,19 @@ interface EvaluationCreationFlowProps {
   onComplete: (data: EvaluationCreationData) => void;
   onCancel: () => void;
   variant?: "overlay" | "onboarding";
+  aiSystemId?: string; // AI system being evaluated
 }
 
 export function EvaluationCreationFlow({
   onComplete,
   onCancel,
   variant = "overlay",
+  aiSystemId,
 }: EvaluationCreationFlowProps) {
   const [currentStepId, setCurrentStepId] = useState<StepId>("setup");
-  const [evaluationData, setEvaluationData] = useState<Partial<EvaluationCreationData>>({});
+  const [evaluationData, setEvaluationData] = useState<Partial<EvaluationCreationData>>({
+    aiSystemIds: aiSystemId ? [aiSystemId] : undefined,
+  });
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   // Get the current step flow based on evaluation type
@@ -65,78 +69,80 @@ export function EvaluationCreationFlow({
 
   return (
     <div className={containerClasses}>
-      {/* Top Navigation Bar */}
-      <div className="border-b border-gray-200">
-        <div className=" mx-auto px-8 py-3">
-          <div className="flex items-center justify-between">
-            {/* Title */}
+      {/* Top Navigation Bar - Show only after first step */}
+      {currentStepId !== "setup" && (
+        <div className="border-b border-gray-200">
+          <div className=" mx-auto px-8 py-3">
+            <div className="flex items-center justify-between">
+              {/* Title */}
 
-            {/* Cancel button - only in overlay mode */}
-            {variant === "overlay" && (
-              <button
-                onClick={onCancel}
-                className="flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                <X className="h-4 w-4 mr-1" />
-                Cancel
-              </button>
-            )}
-          </div>
+              {/* Cancel button - only in overlay mode */}
+              {variant === "overlay" && (
+                <button
+                  onClick={onCancel}
+                  className="flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Cancel
+                </button>
+              )}
+            </div>
 
-          {/* Horizontal Steps */}
-          <div className="flex items-center justify-center gap-3">
-            {stepFlow.steps.map((step, index) => {
-              const isActive = currentStepId === step.id;
-              const isCompleted = currentStepIndex > index;
+            {/* Horizontal Steps */}
+            <div className="flex items-center justify-center gap-3">
+              {stepFlow.steps.map((step, index) => {
+                const isActive = currentStepId === step.id;
+                const isCompleted = currentStepIndex > index;
 
-              return (
-                <div key={step.id} className="flex items-center">
-                  {/* Step Badge */}
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`flex items-center justify-center w-6 h-6 rounded-full text-[13px] font-450 transition-colors ${
-                        isActive
-                          ? "bg-blue-100 text-blue-800"
-                          : isCompleted
-                          ? "bg-gray-100 text-blue-600"
-                          : "bg-gray-100 text-gray-600"
-                      }`}
-                    >
-                      {isCompleted ? (
-                        <Check className="h-3.5 w-3.5" />
-                      ) : (
-                        index + 1
-                      )}
+                return (
+                  <div key={step.id} className="flex items-center">
+                    {/* Step Badge */}
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`flex items-center justify-center w-6 h-6 rounded-full text-[13px] font-450 transition-colors ${
+                          isActive
+                            ? "bg-blue-100 text-blue-800"
+                            : isCompleted
+                            ? "bg-gray-100 text-blue-600"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        {isCompleted ? (
+                          <Check className="h-3.5 w-3.5" />
+                        ) : (
+                          index + 1
+                        )}
+                      </div>
+                      <span className={`text-[13px] font-450 pr-2 ${
+                        isActive ? "text-gray-900" : "text-gray-600"
+                      }`}>
+                        {step.title}
+                      </span>
                     </div>
-                    <span className={`text-[13px] font-450 pr-2 ${
-                      isActive ? "text-gray-900" : "text-gray-600"
-                    }`}>
-                      {step.title}
-                    </span>
-                  </div>
 
-                  {/* Arrow between steps */}
-                  {index < stepFlow.steps.length - 1 && (
-                    <svg
-                      className="w-4 h-4 mx-2 text-gray-300"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  )}
-                </div>
-              );
-            })}
+                    {/* Arrow between steps */}
+                    {index < stepFlow.steps.length - 1 && (
+                      <svg
+                        className="w-4 h-4 mx-2 text-gray-300"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Content Area */}
       <div className="flex-1 overflow-y-auto">

@@ -141,6 +141,7 @@ export function AISystemEvaluationPage() {
               variant={creationFlowVariant}
               onComplete={handleEvaluationCreated}
               onCancel={handleCancelCreation}
+              aiSystemId={aiSystem.id}
             />
           ) : hasEvaluations ? (
             /* Show evaluations list when evaluations exist */

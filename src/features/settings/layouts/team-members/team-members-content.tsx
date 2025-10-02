@@ -1,7 +1,6 @@
 import { Button } from '@/components/ui/button'
-import { TableActions } from '@/components/patterns'
 import { Plus } from 'lucide-react'
-import { TeamMembersTable } from './components'
+import { TeamMembersTable, TeamMemberFilter } from './components'
 import type { TableRow } from '@/types/table'
 
 export function TeamMembersContent() {
@@ -11,25 +10,10 @@ export function TeamMembersContent() {
     // Handle manage user, resend invite, etc.
   }
 
-  // Handle table actions
+  // Handle search
   const handleSearch = (value: string) => {
     console.log('Search:', value)
     // TODO: Implement search functionality
-  }
-
-  const handleFilter = () => {
-    console.log('Filter clicked')
-    // TODO: Implement filter functionality
-  }
-
-  const handleEditColumns = () => {
-    console.log('Edit columns clicked')
-    // TODO: Implement column management
-  }
-
-  const handleExport = () => {
-    console.log('Export clicked')
-    // TODO: Implement export functionality
   }
 
   return (
@@ -47,14 +31,8 @@ export function TeamMembersContent() {
         </div>
       </div>
 
-      {/* Table Actions */}
-      <TableActions
-        searchPlaceholder="Search Members..."
-        onSearch={handleSearch}
-        onFilter={handleFilter}
-        onEditColumns={handleEditColumns}
-        onExport={handleExport}
-      />
+      {/* Team Member Filter */}
+      <TeamMemberFilter onSearch={handleSearch} />
 
       {/* Table Content */}
       <div className="px-4">

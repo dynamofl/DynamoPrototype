@@ -5,6 +5,7 @@ import { Play, Edit2 } from "lucide-react";
 import { useGuardrails } from "@/features/guardrails/lib/useGuardrails";
 import { AISystemsStorage } from "@/features/ai-systems/lib";
 import { AISystemIcon } from "@/components/patterns/ui-patterns/ai-system-icon";
+import { PolicyIcon } from "@/assets/icons/policy-icon";
 import type { EvaluationCreationStepProps } from "../types/evaluation-creation";
 import type { StepId } from "../constants/evaluation-steps";
 import type { AISystem } from "@/features/ai-systems/types/types";
@@ -37,12 +38,23 @@ export function EvaluationReview({
   const selectedPolicies = allGuardrails.filter((g) =>
     data.policyIds?.includes(g.id)
   );
+
+  // Guardrails attached in setup step
+  const setupGuardrails = allGuardrails.filter((g) =>
+    data.guardrailIds?.includes(g.id)
+  );
+
+  // Additional guardrails selected in guardrail-selection step (for compliance)
   const selectedGuardrails = allGuardrails.filter((g) =>
     data.guardrailIds?.includes(g.id)
   );
+
   const selectedAISystems = allAISystems.filter((s) =>
     data.aiSystemIds?.includes(s.id)
   );
+
+  // Get the AI system being evaluated (first in the list)
+  const evaluatingSystem = selectedAISystems[0];
 
   // Calculate total prompts
   const totalEstimatedPrompts = data.policyDatasets?.reduce(
@@ -69,8 +81,13 @@ export function EvaluationReview({
       <div className="border border-gray-200 rounded-lg p-3 space-y-4">
         {/* Section 1: Evaluation Setup */}
         <div className="border-b border-gray-200 pb-3">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-[13px] font-450 text-gray-600">Evaluation Info</h3>
+          <div className="flex  justify-between mb-3 border-b border-gray-200 pb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-[13px] font-450 text-gray-900">{data.name}</span>
+              <Badge variant="secondary" className="text-xs">
+                {data.type === "compliance" ? "Compliance Evaluation" : "Jailbreak Evaluation"}
+              </Badge>
+            </div>
             <Button
               variant="ghost"
               size="sm"
@@ -81,20 +98,60 @@ export function EvaluationReview({
               Edit
             </Button>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-start gap-2">
-              <span className="text-[13px] font-450 text-gray-900">{data.name}</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <Badge variant="secondary" className="text-xs">
-                {data.type === "compliance" ? "Compliance Evaluation" : "Jailbreak Evaluation"}
-              </Badge>
-            </div>
+
+          <div className="space-y-1">
+            {/* Evaluation Name and Type */}
+            
+
+            {/* Evaluating AI System */}
+            {evaluatingSystem && (
+              <div>
+                <p className="text-[13px] font-450 text-gray-600 my-2">Evaluating AI System</p>
+                <div className="flex items-center gap-2 py-1.5">
+                  <div className="flex items-center gap-2">
+                  <AISystemIcon
+                    type={evaluatingSystem.icon}
+                    className="h-4 w-4"
+                  />
+                  <span className="text-[13px] text-gray-900">{evaluatingSystem.name}</span>
+                  </div>
+
+                  <p className="text-[13px] text-gray-600"> ({evaluatingSystem.providerName} • {evaluatingSystem.selectedModel})</p>
+           
+                </div>
+              </div>
+            )}
+
+            {/* Attached Guardrails from Setup */}
+            {setupGuardrails.length > 0 && (
+              <div>
+                <div className="space-y-1">
+                  {setupGuardrails.map((guardrail) => (
+                    <div
+                      key={guardrail.id}
+                      className="flex items-center gap-2 py-1.5"
+                    >
+                      <PolicyIcon className="h-4 w-4 text-gray-500" />
+                      <span className="text-[13px] text-gray-900">{guardrail.name}</span>
+                      {guardrail.category && (
+                        <Badge variant="secondary" className="">
+                          {guardrail.category}
+                        </Badge>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Section 2: Test Dataset */}
-        <div className="border-b border-gray-200 pb-3">
+        <div className={`pb-3 ${
+          data.type === "compliance" && data.perturbations && data.perturbations.length > 0
+            ? "border-b border-gray-200"
+            : ""
+        }`}>
           <div className="flex items-center justify-between">
             <h3 className="text-[13px] font-450 text-gray-600">Test Dataset</h3>
             <Button
@@ -145,7 +202,7 @@ export function EvaluationReview({
 
         {/* Section 2.5: Dataset Augmentation (for compliance only) */}
         {data.type === "compliance" && data.perturbations && data.perturbations.length > 0 && (
-          <div className="border-b border-gray-200 pb-3">
+          <div className="pb-3">
             <div className="flex items-center justify-between">
               <h3 className="text-[13px] font-450 text-gray-600">Dataset Augmentation</h3>
               <Button
@@ -183,7 +240,7 @@ export function EvaluationReview({
         )}
 
         {/* Section 3: Guardrails (for compliance) or AI Systems (for jailbreak) */}
-        {data.type === "compliance" && (
+        {/* {data.type === "compliance" && (
           <div className="">
             <div className="flex items-center justify-between">
               <h3 className="text-[13px] font-450 text-gray-600">Guardrails</h3>
@@ -244,12 +301,12 @@ export function EvaluationReview({
                       className="flex items-center gap-2 text-[13px] py-1.5"
                     >
                       <AISystemIcon
-                        provider={system.provider}
+                        type={system.icon}
                         className="h-4 w-4"
                       />
                       <span className="text-gray-900">{system.name}</span>
                       <Badge variant="secondary" className="text-xs">
-                        {system.provider}
+                        {system.providerName}
                       </Badge>
                     </div>
                   ))}
@@ -259,7 +316,7 @@ export function EvaluationReview({
               <p className="pt-2 text-xs text-gray-400">No AI systems selected</p>
             )}
           </div>
-        )}
+        )} */}
       </div>
 
       {/* Actions */}

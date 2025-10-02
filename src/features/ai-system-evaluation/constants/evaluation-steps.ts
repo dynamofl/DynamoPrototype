@@ -48,11 +48,6 @@ const COMPLIANCE_STEPS: StepConfig[] = [
     description: "Apply perturbations to enhance test coverage (optional)",
   },
   {
-    id: "guardrail-selection",
-    title: "Add Guardrails",
-    description: "Add guardrails for moderation (optional)",
-  },
-  {
     id: "review",
     title: "Review and Finish",
     description: "Review your evaluation configuration",
@@ -73,11 +68,6 @@ const JAILBREAK_STEPS: StepConfig[] = [
     id: "dataset-selection",
     title: "Select Test Dataset",
     description: "Choose policies to generate adversarial prompts",
-  },
-  {
-    id: "ai-system-selection",
-    title: "Select AI Systems",
-    description: "Choose AI systems to test against",
   },
   {
     id: "review",
