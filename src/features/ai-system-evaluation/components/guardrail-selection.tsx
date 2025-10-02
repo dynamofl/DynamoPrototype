@@ -9,7 +9,7 @@ import { useGuardrails } from "@/features/guardrails/lib/useGuardrails";
 import { GuardrailViewSheet } from "@/features/guardrails/components";
 import type { EvaluationCreationStepProps } from "../types/evaluation-creation";
 
-export function EvaluationCreationStep3({
+export function GuardrailSelection({
   data,
   onDataChange,
   onNext,

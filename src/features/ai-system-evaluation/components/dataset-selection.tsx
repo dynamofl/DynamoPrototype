@@ -10,7 +10,7 @@ import { GuardrailViewSheet } from "@/features/guardrails/components";
 import { UploadPromptsSheet } from "./upload-prompts-sheet";
 import type { EvaluationCreationStepProps, PolicyDataset } from "../types/evaluation-creation";
 
-export function EvaluationCreationStep2({
+export function DatasetSelection({
   data,
   onDataChange,
   onNext,

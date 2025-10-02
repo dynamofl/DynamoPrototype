@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { EvaluationCreationStepProps, EvaluationType } from "../types/evaluation-creation";
 
-export function EvaluationCreationStep1({
+export function EvaluationSetup({
   data,
   onDataChange,
   onNext,

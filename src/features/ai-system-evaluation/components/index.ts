@@ -1,7 +1,9 @@
-export { EvaluationCreationStep1 } from './evaluation-creation-step-1';
-export { EvaluationCreationStep2 } from './evaluation-creation-step-2';
-export { EvaluationCreationStep3 } from './evaluation-creation-step-3';
-export { EvaluationCreationStep4 } from './evaluation-creation-step-4';
+export { EvaluationSetup } from './evaluation-setup';
+export { DatasetSelection } from './dataset-selection';
+export { DatasetAugmentation } from './dataset-augmentation';
+export { GuardrailSelection } from './guardrail-selection';
+export { AISystemSelection } from './ai-system-selection';
+export { EvaluationReview } from './evaluation-review';
 export { EvaluationCreationFlow } from './evaluation-creation-flow';
 export { EvaluationEmptyState } from './evaluation-empty-state';
 export { UploadPromptsSheet } from './upload-prompts-sheet';

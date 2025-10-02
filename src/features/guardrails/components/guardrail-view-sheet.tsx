@@ -131,7 +131,6 @@ export function GuardrailViewSheet({
 
         {/* Behavior Tabs */}
         <div className="space-y-2">
-          <Label className="text-[13px] font-450 text-gray-600">Behavior</Label>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="allowed">
@@ -143,7 +142,7 @@ export function GuardrailViewSheet({
             </TabsList>
 
             <TabsContent value="allowed" className="mt-4">
-              <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
+              <div className="p-3 rounded-md border border-gray-200">
                 {guardrail.allowedBehavior ? (
                   <div className="text-[13px] text-gray-900 whitespace-pre-wrap ">
                     {guardrail.allowedBehavior}
@@ -155,7 +154,7 @@ export function GuardrailViewSheet({
             </TabsContent>
 
             <TabsContent value="disallowed" className="mt-4">
-              <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
+              <div className="p-3 rounded-md border border-gray-200">
                 {guardrail.disallowedBehavior ? (
                   <div className="text-[13px] text-gray-900 whitespace-pre-wrap ">
                     {guardrail.disallowedBehavior}

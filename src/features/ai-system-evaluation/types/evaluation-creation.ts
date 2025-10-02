@@ -1,5 +1,13 @@
 export type EvaluationType = 'compliance' | 'jailbreak';
 
+export type PerturbationType = "rewording" | "misspelling" | "leet" | "random-upper";
+
+export interface PerturbationConfig {
+  type: PerturbationType;
+  enabled: boolean;
+  combinations: number;
+}
+
 export interface PolicyDataset {
   policyId: string;
   estimatedPrompts: number;
@@ -25,7 +33,9 @@ export interface EvaluationCreationData {
   type: EvaluationType;
   policyIds: string[];
   policyDatasets?: PolicyDataset[];
+  perturbations?: PerturbationConfig[]; // For compliance evaluations
   guardrailIds?: string[];
+  aiSystemIds?: string[]; // For jailbreak evaluations
 }
 
 export interface EvaluationCreationStepProps {

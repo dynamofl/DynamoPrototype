@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { X, Check } from "lucide-react";
-import { EvaluationCreationStep1 } from "./evaluation-creation-step-1";
-import { EvaluationCreationStep2 } from "./evaluation-creation-step-2";
-import { EvaluationCreationStep3 } from "./evaluation-creation-step-3";
-import { EvaluationCreationStep4 } from "./evaluation-creation-step-4";
+import { EvaluationSetup } from "./evaluation-setup";
+import { DatasetSelection } from "./dataset-selection";
+import { DatasetAugmentation } from "./dataset-augmentation";
+import { GuardrailSelection } from "./guardrail-selection";
+import { AISystemSelection } from "./ai-system-selection";
+import { EvaluationReview } from "./evaluation-review";
 import type { EvaluationCreationData } from "../types/evaluation-creation";
+import { getStepFlow, type StepId } from "../constants/evaluation-steps";
 
 interface EvaluationCreationFlowProps {
   onComplete: (data: EvaluationCreationData) => void;
@@ -12,46 +15,46 @@ interface EvaluationCreationFlowProps {
   variant?: "overlay" | "onboarding";
 }
 
-interface StepConfig {
-  number: number;
-  title: string;
-}
-
-const STEPS: StepConfig[] = [
-  { number: 1, title: "Evaluation Setup" },
-  { number: 2, title: "Select Test Dataset"},
-  { number: 3, title: "Add Guardrails" },
-  { number: 4, title: "Review and Finish" },
-];
-
 export function EvaluationCreationFlow({
   onComplete,
   onCancel,
   variant = "overlay",
 }: EvaluationCreationFlowProps) {
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStepId, setCurrentStepId] = useState<StepId>("setup");
   const [evaluationData, setEvaluationData] = useState<Partial<EvaluationCreationData>>({});
   const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // Get the current step flow based on evaluation type
+  const stepFlow = useMemo(() => {
+    return getStepFlow(evaluationData.type);
+  }, [evaluationData.type]);
+
+  // Get current step index
+  const currentStepIndex = stepFlow.steps.findIndex((step) => step.id === currentStepId);
 
   const handleDataChange = (data: Partial<EvaluationCreationData>) => {
     setEvaluationData((prev) => ({ ...prev, ...data }));
   };
 
-  const transitionToStep = (step: number) => {
+  const transitionToStep = (stepId: StepId) => {
     setIsTransitioning(true);
     setTimeout(() => {
-      setCurrentStep(step);
+      setCurrentStepId(stepId);
       setIsTransitioning(false);
     }, 150);
   };
 
-  const handleStep1Next = () => {
-    transitionToStep(2);
+  const handleNext = () => {
+    const nextIndex = currentStepIndex + 1;
+    if (nextIndex < stepFlow.steps.length) {
+      transitionToStep(stepFlow.steps[nextIndex].id);
+    }
   };
 
   const handleBack = () => {
-    if (currentStep > 1) {
-      transitionToStep(currentStep - 1);
+    const prevIndex = currentStepIndex - 1;
+    if (prevIndex >= 0) {
+      transitionToStep(stepFlow.steps[prevIndex].id);
     }
   };
 
@@ -64,7 +67,7 @@ export function EvaluationCreationFlow({
     <div className={containerClasses}>
       {/* Top Navigation Bar */}
       <div className="border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-8 py-3">
+        <div className=" mx-auto px-8 py-3">
           <div className="flex items-center justify-between">
             {/* Title */}
 
@@ -82,16 +85,16 @@ export function EvaluationCreationFlow({
 
           {/* Horizontal Steps */}
           <div className="flex items-center justify-center gap-3">
-            {STEPS.map((step, index) => {
-              const isActive = currentStep === step.number;
-              const isCompleted = currentStep > step.number;
+            {stepFlow.steps.map((step, index) => {
+              const isActive = currentStepId === step.id;
+              const isCompleted = currentStepIndex > index;
 
               return (
-                <div key={step.number} className="flex items-center">
+                <div key={step.id} className="flex items-center">
                   {/* Step Badge */}
                   <div className="flex items-center gap-2">
                     <div
-                      className={`flex items-center justify-center w-7 h-7 rounded-full text-[13px] font-450 transition-colors ${
+                      className={`flex items-center justify-center w-6 h-6 rounded-full text-[13px] font-450 transition-colors ${
                         isActive
                           ? "bg-blue-100 text-blue-800"
                           : isCompleted
@@ -102,7 +105,7 @@ export function EvaluationCreationFlow({
                       {isCompleted ? (
                         <Check className="h-3.5 w-3.5" />
                       ) : (
-                        step.number
+                        index + 1
                       )}
                     </div>
                     <span className={`text-[13px] font-450 pr-2 ${
@@ -113,7 +116,7 @@ export function EvaluationCreationFlow({
                   </div>
 
                   {/* Arrow between steps */}
-                  {index < STEPS.length - 1 && (
+                  {index < stepFlow.steps.length - 1 && (
                     <svg
                       className="w-4 h-4 mx-2 text-gray-300"
                       fill="none"
@@ -140,35 +143,53 @@ export function EvaluationCreationFlow({
         <div className={`max-w-2xl mx-auto py-12 px-8 transition-all duration-200 ${
           isTransitioning ? "opacity-0 blur-sm" : "opacity-100 blur-0"
         }`}>
-          {currentStep === 1 && (
-            <EvaluationCreationStep1
+          {currentStepId === "setup" && (
+            <EvaluationSetup
               data={evaluationData}
               onDataChange={handleDataChange}
-              onNext={handleStep1Next}
+              onNext={handleNext}
               onCancel={onCancel}
               variant={variant}
             />
           )}
-          {currentStep === 2 && (
-            <EvaluationCreationStep2
+          {currentStepId === "dataset-selection" && (
+            <DatasetSelection
               data={evaluationData}
               onDataChange={handleDataChange}
-              onNext={() => transitionToStep(3)}
+              onNext={handleNext}
               onBack={handleBack}
               variant={variant}
             />
           )}
-          {currentStep === 3 && (
-            <EvaluationCreationStep3
+          {currentStepId === "dataset-augmentation" && (
+            <DatasetAugmentation
               data={evaluationData}
               onDataChange={handleDataChange}
-              onNext={() => transitionToStep(4)}
+              onNext={handleNext}
               onBack={handleBack}
               variant={variant}
             />
           )}
-          {currentStep === 4 && (
-            <EvaluationCreationStep4
+          {currentStepId === "guardrail-selection" && (
+            <GuardrailSelection
+              data={evaluationData}
+              onDataChange={handleDataChange}
+              onNext={handleNext}
+              onBack={handleBack}
+              variant={variant}
+            />
+          )}
+          {currentStepId === "ai-system-selection" && (
+            <AISystemSelection
+              data={evaluationData}
+              onDataChange={handleDataChange}
+              onNext={handleNext}
+              onBack={handleBack}
+              variant={variant}
+            />
+          )}
+          {currentStepId === "review" && (
+            <EvaluationReview
               data={evaluationData}
               onDataChange={handleDataChange}
               onBack={handleBack}
