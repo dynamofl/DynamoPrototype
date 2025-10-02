@@ -14,15 +14,16 @@ interface ViewEditSheetProps {
   description?: string;
   children: ReactNode;
   side?: 'left' | 'right' | 'top' | 'bottom';
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
   footer?: ReactNode;
 }
 
 const sizeClasses = {
   sm: 'sm:max-w-sm',
   md: 'sm:max-w-md',
-  lg: 'sm:max-w-lg', 
+  lg: 'sm:max-w-lg',
   xl: 'sm:max-w-xl',
+  '2xl': 'sm:max-w-2xl',
   full: 'sm:max-w-full'
 };
 

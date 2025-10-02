@@ -255,10 +255,8 @@ export function EvaluationCreationStep2({
           Back
         </Button>
         <div className="flex gap-2">
-          <Button variant="ghost" onClick={handleSkip}>
-            Skip for Now
-          </Button>
-          <Button onClick={handleContinue}>Continue</Button>
+
+          <Button onClick={handleContinue} disabled={selectedPolicyIds.length === 0}>Continue</Button>
         </div>
       </div>
 
