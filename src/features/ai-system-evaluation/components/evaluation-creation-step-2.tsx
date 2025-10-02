@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, Plus, ChevronRight } from "lucide-react";
+import { Search, Plus, ChevronRight, PencilLineIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -70,7 +70,10 @@ export function EvaluationCreationStep2({
 
   const handleUploadPrompts = (
     prompts: Array<{ prompt: string }>,
-    fileName: string
+    fileName: string,
+    csvData?: { headers: string[]; rows: string[][] },
+    mappedColumns?: { adversarialPrompt: string; attackArea: string },
+    validationResult?: { validCount: number; invalidCount: number; totalCount: number }
   ) => {
     if (!currentPolicyId) return;
 
@@ -79,8 +82,11 @@ export function EvaluationCreationStep2({
         dataset.policyId === currentPolicyId
           ? {
               ...dataset,
-              additionalPrompts: prompts,
-              uploadedFileName: fileName,
+              additionalPrompts: prompts.length > 0 ? prompts : undefined,
+              uploadedFileName: fileName || undefined,
+              csvData: csvData || undefined,
+              mappedColumns: mappedColumns || undefined,
+              validationResult: validationResult || undefined,
             }
           : dataset
       )
@@ -208,7 +214,7 @@ export function EvaluationCreationStep2({
                           </span>
                           {dataset.additionalPrompts && (
                             <span className="text-xs text-gray-500">
-                              + {dataset.additionalPrompts.length} uploaded
+                              + Uploaded Prompts: {dataset.additionalPrompts.length}
                             </span>
                           )}
                           <button
@@ -218,8 +224,17 @@ export function EvaluationCreationStep2({
                             }}
                             className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium"
                           >
-                            <Plus className="h-3 w-3" />
-                            Add More Prompts
+                           
+                            {dataset.additionalPrompts ? 
+                            <div className="flex items-center gap-1">
+                               <PencilLineIcon className="h-3 w-3" />
+                               Manage
+                            </div>
+                             : 
+                             <div className="flex items-center gap-1">
+                               <Plus className="h-3 w-3" />
+                               Add More Prompts
+                            </div>}
                           </button>
                         </div>
                       )}
@@ -250,7 +265,7 @@ export function EvaluationCreationStep2({
       </div>
 
       {/* Actions */}
-      <div className="flex justify-between pt-4">
+      <div className="flex justify-between pt-2">
         <Button variant="outline" onClick={onBack}>
           Back
         </Button>
@@ -268,6 +283,9 @@ export function EvaluationCreationStep2({
         onUpload={handleUploadPrompts}
         existingPrompts={currentDataset?.additionalPrompts}
         existingFileName={currentDataset?.uploadedFileName}
+        existingCsvData={currentDataset?.csvData}
+        existingMappedColumns={currentDataset?.mappedColumns}
+        existingValidationResult={currentDataset?.validationResult}
       />
 
       {/* View Guardrail Sheet */}

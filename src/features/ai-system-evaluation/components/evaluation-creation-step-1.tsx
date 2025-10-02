@@ -131,7 +131,7 @@ export function EvaluationCreationStep1({
       </div>
 
       {/* Actions */}
-      <div className="flex justify-end pt-4">
+      <div className="flex justify-end pt-2">
         <Button onClick={validateAndProceed} disabled={!isValid}>
           Continue
         </Button>

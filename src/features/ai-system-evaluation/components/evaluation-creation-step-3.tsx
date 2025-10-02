@@ -1,11 +1,12 @@
 import { useState, useMemo } from "react";
-import { Search, Shield } from "lucide-react";
+import { Search, Shield, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useGuardrails } from "@/features/guardrails/lib/useGuardrails";
+import { GuardrailViewSheet } from "@/features/guardrails/components";
 import type { EvaluationCreationStepProps } from "../types/evaluation-creation";
 
 export function EvaluationCreationStep3({
@@ -20,6 +21,9 @@ export function EvaluationCreationStep3({
     data.guardrailIds || []
   );
   const [searchQuery, setSearchQuery] = useState("");
+  const [hoveredGuardrailId, setHoveredGuardrailId] = useState<string | null>(null);
+  const [viewGuardrailSheetOpen, setViewGuardrailSheetOpen] = useState(false);
+  const [selectedGuardrailForView, setSelectedGuardrailForView] = useState<string | null>(null);
 
   // Filter guardrails based on search query
   const filteredGuardrails = useMemo(() => {
@@ -54,21 +58,23 @@ export function EvaluationCreationStep3({
     onNext?.();
   };
 
+  const viewGuardrail = allGuardrails.find((g) => g.id === selectedGuardrailForView);
+
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="space-y-1">
         <h2 className="text-lg font-450 text-gray-900">
-          Add Guardrails for Protection
+          Add Guardrails for Moderation (Optional)
         </h2>
         <p className="text-[13px] text-gray-600">
           Optionally add guardrails to protect your AI system by adding a safety layer
-          during evaluation. This step is optional.
+          during evaluation.
         </p>
       </div>
 
       {/* Info Banner */}
-      <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      {/* <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
         <Shield className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
         <div className="flex-1">
           <p className="text-sm font-450 text-blue-900">
@@ -79,7 +85,7 @@ export function EvaluationCreationStep3({
             unsafe or non-compliant responses during evaluation.
           </p>
         </div>
-      </div>
+      </div> */}
 
       {/* Guardrails List */}
       <div className="space-y-3">
@@ -133,9 +139,11 @@ export function EvaluationCreationStep3({
                 return (
                   <div
                     key={guardrail.id}
-                    className={`flex items-start gap-3 m-1 rounded-md p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors ${
+                    className={`relative flex items-start gap-3 m-1 rounded-md p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors ${
                       !isActive ? "opacity-60" : ""
                     }`}
+                    onMouseEnter={() => setHoveredGuardrailId(guardrail.id)}
+                    onMouseLeave={() => setHoveredGuardrailId(null)}
                   >
                     <Checkbox
                       id={`guardrail-${guardrail.id}`}
@@ -163,10 +171,27 @@ export function EvaluationCreationStep3({
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-gray-600 mt-1">
+                      {/* <p className="text-xs text-gray-600 mt-1">
                         {guardrail.description}
-                      </p>
+                      </p> */}
                     </label>
+
+                    {/* Preview Button - Shows on hover */}
+                    {hoveredGuardrailId === guardrail.id && (
+                      <Button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setSelectedGuardrailForView(guardrail.id);
+                          setViewGuardrailSheetOpen(true);
+                        }}
+                        variant="outline"
+                        size="sm"
+                        className="absolute top-3 right-3 inline-flex items-center gap-1 pr-1.5 "
+                      >
+                        Preview Policy
+                        <ChevronRight className="h-3 w-3" />
+                      </Button>
+                    )}
                   </div>
                 );
               })
@@ -176,7 +201,7 @@ export function EvaluationCreationStep3({
       </div>
 
       {/* Actions */}
-      <div className="flex justify-between pt-4">
+      <div className="flex justify-between pt-2">
         <Button variant="outline" onClick={onBack}>
           Back
         </Button>
@@ -187,6 +212,13 @@ export function EvaluationCreationStep3({
           <Button onClick={handleContinue}>Continue</Button>
         </div>
       </div>
+
+      {/* View Guardrail Sheet */}
+      <GuardrailViewSheet
+        open={viewGuardrailSheetOpen}
+        onOpenChange={setViewGuardrailSheetOpen}
+        guardrail={viewGuardrail || null}
+      />
     </div>
   );
 }

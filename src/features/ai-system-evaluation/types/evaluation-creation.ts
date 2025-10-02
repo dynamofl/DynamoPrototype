@@ -5,6 +5,19 @@ export interface PolicyDataset {
   estimatedPrompts: number;
   additionalPrompts?: Array<{ prompt: string }>;
   uploadedFileName?: string;
+  csvData?: {
+    headers: string[];
+    rows: string[][];
+  };
+  mappedColumns?: {
+    adversarialPrompt: string;
+    attackArea: string;
+  };
+  validationResult?: {
+    validCount: number;
+    invalidCount: number;
+    totalCount: number;
+  };
 }
 
 export interface EvaluationCreationData {

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Upload, FileText, X, Lightbulb, Info, Download, ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
+import { TriangleAlert, Upload, FileText, X, Lightbulb, Info, Download, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ViewEditSheet } from "@/components/patterns";
 import {
@@ -18,12 +18,12 @@ interface TipsSectionProps {
 
 const TipsSection = ({ isExpanded, onToggle }: TipsSectionProps) => {
   return (
-    <div className="bg-gray-50 rounded-lg overflow-hidden">
+    <div className={` rounded-lg overflow-hidden border border-gray-200 `}>
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between py-3 px-2 hover:bg-gray-100 transition-colors"
+        className="w-full flex items-center justify-between py-3 px-3 transition-colors"
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <Lightbulb className="h-4 w-4 text-gray-600" />
           <h3 className="text-[13px] font-450 text-gray-900">Tips for preparing your CSV</h3>
         </div>
@@ -81,9 +81,28 @@ interface UploadPromptsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   policyName: string;
-  onUpload: (prompts: Array<{ prompt: string }>, fileName: string) => void;
+  onUpload: (
+    prompts: Array<{ prompt: string }>,
+    fileName: string,
+    csvData?: CSVData,
+    mappedColumns?: { adversarialPrompt: string; attackArea: string },
+    validationResult?: { validCount: number; invalidCount: number; totalCount: number }
+  ) => void;
   existingPrompts?: Array<{ prompt: string }>;
   existingFileName?: string;
+  existingCsvData?: {
+    headers: string[];
+    rows: string[][];
+  };
+  existingMappedColumns?: {
+    adversarialPrompt: string;
+    attackArea: string;
+  };
+  existingValidationResult?: {
+    validCount: number;
+    invalidCount: number;
+    totalCount: number;
+  };
 }
 
 interface ParsedCSVResult {
@@ -105,6 +124,9 @@ export function UploadPromptsSheet({
   onUpload,
   existingPrompts,
   existingFileName,
+  existingCsvData,
+  existingMappedColumns,
+  existingValidationResult,
 }: UploadPromptsSheetProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [csvData, setCSVData] = useState<CSVData | null>(null);
@@ -112,6 +134,13 @@ export function UploadPromptsSheet({
   const [error, setError] = useState("");
   const [showMapping, setShowMapping] = useState(false);
   const [tipsExpanded, setTipsExpanded] = useState(true);
+  const [validationError, setValidationError] = useState("");
+  const [isValidated, setIsValidated] = useState(false);
+  const [validationResult, setValidationResult] = useState<{
+    validCount: number;
+    invalidCount: number;
+    totalCount: number;
+  } | null>(null);
   const [mappedColumns, setMappedColumns] = useState<{
     adversarialPrompt: string;
     attackArea: string;
@@ -119,6 +148,72 @@ export function UploadPromptsSheet({
     adversarialPrompt: "",
     attackArea: "",
   });
+  const [hasModifications, setHasModifications] = useState(false);
+
+  // Initialize with existing data when sheet opens with existing prompts
+  useEffect(() => {
+    if (open && existingPrompts && existingFileName) {
+      // Create a mock file object for display
+      const mockFile = new File([""], existingFileName, { type: "text/csv" });
+      setSelectedFile(mockFile);
+
+      // Set parsed result to show the uploaded state
+      setParsedResult({
+        validCount: existingValidationResult?.validCount || existingPrompts.length,
+        invalidCount: existingValidationResult?.invalidCount || 0,
+        totalCount: existingValidationResult?.totalCount || existingPrompts.length,
+        prompts: existingPrompts,
+      });
+
+      // Set CSV data if available
+      if (existingCsvData) {
+        setCSVData(existingCsvData);
+        setShowMapping(true);
+      }
+
+      // Set mapped columns if available
+      if (existingMappedColumns) {
+        setMappedColumns(existingMappedColumns);
+      }
+
+      // Set validation state if available
+      if (existingValidationResult) {
+        setValidationResult(existingValidationResult);
+        setIsValidated(true);
+
+        // Set validation error message if there were invalid rows
+        if (existingValidationResult.invalidCount > 0) {
+          setValidationError(
+            `${existingValidationResult.invalidCount} out of ${existingValidationResult.totalCount} rows contain invalid data and will be skipped.`
+          );
+        }
+      }
+
+      // Collapse tips since file is already uploaded
+      setTipsExpanded(false);
+
+      // No modifications yet when viewing existing data
+      setHasModifications(false);
+    } else if (open && !existingPrompts) {
+      // Opening fresh (not viewing existing data) - allow modifications
+      setHasModifications(true);
+    } else if (!open) {
+      // Reset when sheet closes without existing data
+      if (!existingPrompts) {
+        setSelectedFile(null);
+        setCSVData(null);
+        setParsedResult(null);
+        setShowMapping(false);
+        setMappedColumns({ adversarialPrompt: "", attackArea: "" });
+        setError("");
+        setValidationError("");
+        setIsValidated(false);
+        setValidationResult(null);
+        setTipsExpanded(true);
+        setHasModifications(false);
+      }
+    }
+  }, [open, existingPrompts, existingFileName, existingCsvData, existingMappedColumns, existingValidationResult]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -126,6 +221,7 @@ export function UploadPromptsSheet({
 
     setError("");
     setSelectedFile(file);
+    setHasModifications(true); // Mark as modified when new file is uploaded
 
     try {
       const text = await file.text();
@@ -171,9 +267,9 @@ export function UploadPromptsSheet({
     }
   };
 
-  const handleMapColumns = () => {
+  const handleValidateAndAdd = () => {
     if (!csvData || !mappedColumns.adversarialPrompt || !mappedColumns.attackArea) {
-      setError("Please map both required columns.");
+      setValidationError("Please map both required columns.");
       return;
     }
 
@@ -196,14 +292,89 @@ export function UploadPromptsSheet({
       }
     });
 
+    setValidationResult({
+      validCount,
+      invalidCount,
+      totalCount: csvData.rows.length,
+    });
+
+    if (validCount === 0) {
+      setValidationError("All rows contain invalid data. Please check your column mappings and ensure the data is correct.");
+      setIsValidated(true);
+      return;
+    }
+
+    // If all rows are valid, directly upload and close
+    if (invalidCount === 0) {
+      onUpload(
+        validPrompts,
+        selectedFile?.name || "",
+        csvData,
+        mappedColumns,
+        { validCount, invalidCount, totalCount: csvData.rows.length }
+      );
+      onOpenChange(false);
+
+      // Reset state
+      setSelectedFile(null);
+      setCSVData(null);
+      setParsedResult(null);
+      setShowMapping(false);
+      setMappedColumns({ adversarialPrompt: "", attackArea: "" });
+      setError("");
+      setValidationError("");
+      setIsValidated(false);
+      setValidationResult(null);
+      setTipsExpanded(true);
+      return;
+    }
+
+    // If there are some invalid rows, show validation state
+    if (invalidCount > 0) {
+      setValidationError(`${invalidCount} out of ${csvData.rows.length} rows contain invalid data and will be skipped.`);
+    }
+
     setParsedResult({
       validCount,
       invalidCount,
       totalCount: csvData.rows.length,
       prompts: validPrompts
     });
+    setIsValidated(true);
+  };
+
+  const handleContinueAdding = () => {
+    if (!parsedResult || !csvData) return;
+
+    onUpload(
+      parsedResult.prompts,
+      selectedFile?.name || "",
+      csvData,
+      mappedColumns,
+      validationResult || undefined
+    );
+    onOpenChange(false);
+
+    // Reset state
+    setSelectedFile(null);
+    setCSVData(null);
+    setParsedResult(null);
     setShowMapping(false);
+    setMappedColumns({ adversarialPrompt: "", attackArea: "" });
     setError("");
+    setValidationError("");
+    setIsValidated(false);
+    setValidationResult(null);
+    setTipsExpanded(true);
+  };
+
+  const handleColumnChange = (field: 'adversarialPrompt' | 'attackArea', value: string) => {
+    setMappedColumns((prev) => ({ ...prev, [field]: value }));
+    // Reset validation when column mapping changes
+    setIsValidated(false);
+    setValidationError("");
+    setValidationResult(null);
+    setHasModifications(true); // Mark as modified when columns change
   };
 
   const handleUpload = () => {
@@ -212,7 +383,13 @@ export function UploadPromptsSheet({
       return;
     }
 
-    onUpload(parsedResult.prompts, selectedFile?.name || existingFileName || "");
+    onUpload(
+      parsedResult.prompts,
+      selectedFile?.name || existingFileName || "",
+      csvData || undefined,
+      mappedColumns.adversarialPrompt ? mappedColumns : undefined,
+      validationResult || undefined
+    );
     onOpenChange(false);
 
     // Reset state
@@ -226,13 +403,23 @@ export function UploadPromptsSheet({
   };
 
   const handleRemove = () => {
+    // If we're removing existing uploaded data, clear it from parent
+    if (existingPrompts && existingFileName) {
+      onUpload([], "", undefined, undefined, undefined);
+    }
+
+    // Reset to initial upload state
     setSelectedFile(null);
     setCSVData(null);
     setParsedResult(null);
     setShowMapping(false);
     setMappedColumns({ adversarialPrompt: "", attackArea: "" });
     setError("");
+    setValidationError("");
+    setIsValidated(false);
+    setValidationResult(null);
     setTipsExpanded(true); // Expand tips when file is removed
+    setHasModifications(true); // Allow new upload
   };
 
   const handleCancel = () => {
@@ -248,15 +435,19 @@ export function UploadPromptsSheet({
 
   // Get preview rows for the mapping table
   const getPreviewRows = () => {
-    if (!csvData || !mappedColumns.adversarialPrompt || !mappedColumns.attackArea) return [];
+    if (!csvData) return [];
 
-    const adversarialPromptIndex = csvData.headers.indexOf(mappedColumns.adversarialPrompt);
-    const attackAreaIndex = csvData.headers.indexOf(mappedColumns.attackArea);
+    const adversarialPromptIndex = mappedColumns.adversarialPrompt
+      ? csvData.headers.indexOf(mappedColumns.adversarialPrompt)
+      : -1;
+    const attackAreaIndex = mappedColumns.attackArea
+      ? csvData.headers.indexOf(mappedColumns.attackArea)
+      : -1;
 
     return csvData.rows.slice(0, 5).map((row, idx) => ({
       id: idx + 1,
-      adversarialPrompt: row[adversarialPromptIndex] || "-",
-      attackArea: row[attackAreaIndex] || "-"
+      adversarialPrompt: adversarialPromptIndex >= 0 ? (row[adversarialPromptIndex] || "-") : "",
+      attackArea: attackAreaIndex >= 0 ? (row[attackAreaIndex] || "-") : ""
     }));
   };
 
@@ -268,24 +459,9 @@ export function UploadPromptsSheet({
       onOpenChange={onOpenChange}
       title="Upload Additional Prompts"
       size="2xl"
-      footer={
-        <div className="flex justify-between items-center">
-          <Button variant="outline" onClick={handleCancel} className="flex-1 mr-2">
-            Cancel
-          </Button>
-          {!showMapping && (
-            <Button
-              onClick={handleUpload}
-              disabled={!parsedResult || parsedResult.validCount === 0}
-              className="flex-1"
-            >
-              Upload Prompts
-            </Button>
-          )}
-        </div>
-      }
+      
     >
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Tips Section */}
         <TipsSection
           isExpanded={tipsExpanded}
@@ -296,7 +472,7 @@ export function UploadPromptsSheet({
         <div className="space-y-3">
           {/* Drop Container - Only show when no file is selected */}
           {!selectedFile && !existingFileName && (
-            <div className="bg-white h-[180px] relative rounded-lg">
+            <div className=" h-[480px] relative rounded-lg">
               <div className="h-full border border-dashed border-gray-300 rounded-lg cursor-pointer transition-colors hover:bg-gray-50">
                 <input
                   id="file-upload"
@@ -326,11 +502,13 @@ export function UploadPromptsSheet({
 
           {/* Selected File Display - Show when file is selected */}
           {(selectedFile || existingFileName) && (
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-              <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg ">
+              <div className="flex items-top gap-3">
+                <div className="pt-0.5">
                 <FileText className="h-4 w-4 text-gray-600" />
+                </div>
                 <div className="flex flex-col">
-                  <span className="text-sm text-gray-900">
+                  <span className="text-[13px] font-450 text-gray-900">
                     {selectedFile?.name || existingFileName}
                   </span>
                   {parsedResult && (
@@ -352,7 +530,7 @@ export function UploadPromptsSheet({
               </div>
               <button
                 onClick={handleRemove}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -369,10 +547,9 @@ export function UploadPromptsSheet({
 
         {/* Column Mapping Section */}
         {showMapping && csvData && (
-          <div className="space-y-4">
+          <div className="pt-2 space-y-2">
             <div className="space-y-2">
-              <h3 className="text-[13px] font-450 text-gray-900">Configure Import Data</h3>
-              <p className="text-xs text-gray-600">
+              <p className="text-[13px] text-gray-600">
                 Map your CSV columns to the expected fields.
               </p>
             </div>
@@ -385,12 +562,10 @@ export function UploadPromptsSheet({
                 </label>
                 <Select
                   value={mappedColumns.adversarialPrompt}
-                  onValueChange={(value) =>
-                    setMappedColumns((prev) => ({ ...prev, adversarialPrompt: value }))
-                  }
+                  onValueChange={(value) => handleColumnChange('adversarialPrompt', value)}
                 >
                   <SelectTrigger className="text-[13px]">
-                    <SelectValue placeholder="Select column..." />
+                    <SelectValue placeholder="Select column from your csv..." />
                   </SelectTrigger>
                   <SelectContent>
                     {csvData.headers.map((header) => (
@@ -408,12 +583,10 @@ export function UploadPromptsSheet({
                 </label>
                 <Select
                   value={mappedColumns.attackArea}
-                  onValueChange={(value) =>
-                    setMappedColumns((prev) => ({ ...prev, attackArea: value }))
-                  }
+                  onValueChange={(value) => handleColumnChange('attackArea', value)}
                 >
                   <SelectTrigger className="text-[13px]">
-                    <SelectValue placeholder="Select column..." />
+                    <SelectValue placeholder="Select column from your csv..." />
                   </SelectTrigger>
                   <SelectContent>
                     {csvData.headers.map((header) => (
@@ -427,60 +600,84 @@ export function UploadPromptsSheet({
             </div>
 
             {/* Preview Section */}
-            {mappedColumns.adversarialPrompt && mappedColumns.attackArea && (
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <h4 className="text-[13px] font-450 text-gray-900">
-                    Preview Data to be Imported
-                  </h4>
-                  <p className="text-xs text-gray-600">
-                    A total of {csvData.rows.length} rows will be added to the table "{policyName}"
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    Here is a preview of the data that will be added (up to the first 20 columns and first 20 rows).
-                  </p>
-                </div>
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <table className="w-full table-fixed ">
+                <colgroup className="">
+                  <col className="w-1/2 border-r" />
+                  <col className="w-1/2 " />
+                </colgroup>
+                {/* <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-3 py-2 h-8 text-left text-xs font-medium text-gray-600">
+                      {mappedColumns.adversarialPrompt || ''}
+                    </th>
+                    <th className="px-3 py-2 h-8 text-left text-xs font-medium text-gray-600">
+                      {mappedColumns.attackArea || ''}
+                    </th>
+                  </tr>
+                </thead> */}
+                <tbody className="divide-y divide-gray-100">
+                  {previewRows.map((row) => (
+                    <tr key={row.id} className="hover:bg-gray-50">
+                      <td className="px-3 py-2 text-xs text-gray-700 truncate">
+                        {row.adversarialPrompt || <span className="text-gray-400">-</span>}
+                      </td>
+                      <td className="px-3 py-2 text-xs text-gray-700 truncate">
+                        {row.attackArea || <span className="text-gray-400">-</span>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-xs  text-gray-400"> Only 5 rows out of {csvData.rows.length} rows are shown for the preview</p>
 
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
-                  <table className="w-full">
-                    <thead className="bg-gray-50 border-b border-gray-200">
-                      <tr>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">
-                          id
-                        </th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">
-                          adversarial_prompt
-                        </th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">
-                          attack_area
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {previewRows.map((row) => (
-                        <tr key={row.id} className="hover:bg-gray-50">
-                          <td className="px-3 py-2 text-xs text-gray-900">{row.id}</td>
-                          <td className="px-3 py-2 text-xs text-gray-700 max-w-xs truncate">
-                            {row.adversarialPrompt}
-                          </td>
-                          <td className="px-3 py-2 text-xs text-gray-700">{row.attackArea}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+            {/* Validation Error/Info */}
+            {validationError && (
+              
+              <div className={`px-3 py-2 flex flex-row gap-2 rounded-lg ${
+                validationResult?.validCount === 0
+                  ? 'bg-red-100 '
+                  : 'bg-amber-100 '
+              }`}>
+                <div className="mt-0.5">
+                <TriangleAlert className={`w-4 h-4 ${
+                validationResult?.validCount === 0
+                  ? 'text-red-700 '
+                  : 'text-amber-700 '
+              }`} />
+              </div>
+                <p className={`text-[13px] ${
+                  validationResult?.validCount === 0
+                    ? 'text-gray-900'
+                    : 'text-gray-900'
+                }`}>
+                  {validationError}
+                </p>
               </div>
             )}
 
-            {/* Map Columns Button */}
-            <div className="flex justify-end">
-              <Button
-                onClick={handleMapColumns}
-                disabled={!mappedColumns.adversarialPrompt || !mappedColumns.attackArea}
-              >
-                Import Data
-              </Button>
-            </div>
+            {/* Action Button - Only show if there are modifications */}
+            {hasModifications && (
+              <>
+                {!isValidated ? (
+                  <div className="flex justify-start pt-2">
+                    <Button
+                      onClick={handleValidateAndAdd}
+                      disabled={!mappedColumns.adversarialPrompt || !mappedColumns.attackArea}
+                    >
+                      Validate and Add
+                    </Button>
+                  </div>
+                ) : validationResult && validationResult.validCount > 0 ? (
+                  <div className="flex justify-start">
+                    <Button onClick={handleContinueAdding}>
+                      Continue Adding {validationResult.validCount} Rows
+                    </Button>
+                  </div>
+                ) : null}
+              </>
+            )}
           </div>
         )}
       </div>

@@ -3,6 +3,7 @@ import { X, Check } from "lucide-react";
 import { EvaluationCreationStep1 } from "./evaluation-creation-step-1";
 import { EvaluationCreationStep2 } from "./evaluation-creation-step-2";
 import { EvaluationCreationStep3 } from "./evaluation-creation-step-3";
+import { EvaluationCreationStep4 } from "./evaluation-creation-step-4";
 import type { EvaluationCreationData } from "../types/evaluation-creation";
 
 interface EvaluationCreationFlowProps {
@@ -167,32 +168,18 @@ export function EvaluationCreationFlow({
             />
           )}
           {currentStep === 4 && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-semibold text-gray-900">Review and finish</h2>
-                <p className="text-sm text-gray-600 mt-2">
-                  Step 4 will be implemented next.
-                </p>
-              </div>
-              <div className="flex justify-between pt-4">
-                <button
-                  onClick={handleBack}
-                  className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 bg-white"
-                >
-                  Back
-                </button>
-                <button
-                  onClick={() => {
-                    if (evaluationData.name && evaluationData.type) {
-                      onComplete(evaluationData as EvaluationCreationData);
-                    }
-                  }}
-                  className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                >
-                  Create Evaluation
-                </button>
-              </div>
-            </div>
+            <EvaluationCreationStep4
+              data={evaluationData}
+              onDataChange={handleDataChange}
+              onBack={handleBack}
+              onEditStep={transitionToStep}
+              onComplete={() => {
+                if (evaluationData.name && evaluationData.type) {
+                  onComplete(evaluationData as EvaluationCreationData);
+                }
+              }}
+              variant={variant}
+            />
           )}
         </div>
       </div>
