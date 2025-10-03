@@ -57,9 +57,9 @@ const TipsSection = ({ isExpanded, onToggle }: TipsSectionProps) => {
 
           <div className="flex items-center gap-2">
             <span className="text-xs text-gray-600 px-2">•</span>
-            <span className="text-xs text-gray-600">Maximum Limit:</span>
+            <span className="text-xs text-gray-600">File Limits:</span>
             <div className="flex gap-2">
-              <span className="text-xs text-gray-900 py-0.5">100 Rows • 5 MB size</span>
+              <span className="text-xs text-gray-900 py-0.5">1-500 Rows • Max 1 MB</span>
             </div>
           </div>
 
@@ -220,16 +220,26 @@ export function UploadPromptsSheet({
     if (!file) return;
 
     setError("");
-    setSelectedFile(file);
+    setValidationError("");
+    setSelectedFile(null);
+    setCSVData(null);
+    setShowMapping(false);
+    setParsedResult(null);
     setHasModifications(true); // Mark as modified when new file is uploaded
+
+    // Validate file size (1MB = 1,048,576 bytes)
+    const maxFileSize = 1 * 1024 * 1024; // 1MB in bytes
+    if (file.size > maxFileSize) {
+      setError(`${file.name}: File size exceeds 1MB. Please upload a smaller file.`);
+      return;
+    }
 
     try {
       const text = await file.text();
       const lines = text.split("\n").filter((line) => line.trim());
 
       if (lines.length === 0) {
-        setError("The file is empty. Please upload a file with at least one prompt.");
-        setParsedResult(null);
+        setError(`${file.name}: The file is empty. Please upload a file with at least one prompt.`);
         return;
       }
 
@@ -242,10 +252,21 @@ export function UploadPromptsSheet({
         const headers = rows[0];
         const dataRows = rows.slice(1);
 
-        // Store CSV data for mapping
+        // Validate row count (min 1, max 500)
+        if (dataRows.length < 1) {
+          setError(`${file.name}: CSV file must contain at least 1 data row (excluding header).`);
+          return;
+        }
+
+        if (dataRows.length > 500) {
+          setError(`${file.name}: CSV file contains more than 500 rows. Please reduce to a maximum of 500 rows.`);
+          return;
+        }
+
+        // All validations passed - set file and show mapping
+        setSelectedFile(file);
         setCSVData({ headers, rows: dataRows });
         setShowMapping(true);
-        setParsedResult(null);
         setTipsExpanded(false); // Collapse tips after successful upload
       } else {
         // Plain text file - each line is a prompt
@@ -253,6 +274,19 @@ export function UploadPromptsSheet({
           prompt: line.trim(),
         }));
 
+        // Validate row count for text files too
+        if (prompts.length < 1) {
+          setError(`${file.name}: File must contain at least 1 prompt.`);
+          return;
+        }
+
+        if (prompts.length > 500) {
+          setError(`${file.name}: File contains more than 500 prompts. Please reduce to a maximum of 500 prompts.`);
+          return;
+        }
+
+        // All validations passed - set file and result
+        setSelectedFile(file);
         setParsedResult({
           validCount: prompts.length,
           invalidCount: 0,
@@ -262,8 +296,7 @@ export function UploadPromptsSheet({
         setTipsExpanded(false); // Collapse tips after successful upload
       }
     } catch (err) {
-      setError("Failed to read the file. Please try again.");
-      setParsedResult(null);
+      setError(`${file.name}: Failed to read the file. Please try again.`);
     }
   };
 
@@ -539,8 +572,21 @@ export function UploadPromptsSheet({
 
           {/* Error Display */}
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-600">{error}</p>
+            <div className="p-3 bg-red-50 rounded-lg flex items-start gap-3">
+              <div className="flex-1 min-w-0 space-y-1">
+                <p className="text-[13px] font-450 text-red-600 truncate">
+                  {error.split(':')[0]}
+                </p>
+                <p className="text-[13px] text-red-600">
+                  {error.split(':').slice(1).join(':').trim()}
+                </p>
+              </div>
+              <button
+                onClick={() => setError("")}
+                className="text-red-600 hover:text-red-800 transition-colors flex-shrink-0"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
           )}
         </div>

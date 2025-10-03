@@ -131,12 +131,13 @@ export function EvaluationSettingsContent() {
         </div>
 
         {/* Right Column - Available Models */}
-        <div className="lg:col-span-1 space-y-2 bg-gray-50 px-2 py-4 rounded-lg">
+        <div className="lg:col-span-1 space-y-2 bg-gray-50 px-2 py-4 rounded-lg h-fit">
           <div className="flex items-center justify-between px-2 pb-4 border-b border-gray-200">
             <div className='space-y-1'>
               <h3 className="text-sm font-450 text-gray-900">Available Internal Usage Models</h3>
              
             </div>
+            {models.length > 0 &&
             <Button
               onClick={() => setShowAddPane(true)}
               className="flex items-center gap-1 pl-2"
@@ -144,15 +145,15 @@ export function EvaluationSettingsContent() {
             >
               <Plus className="h-4 w-4" />
               Add Model
-            </Button>
+            </Button>}
           </div>
 
           {models.length === 0 ? (
-            <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-              <div className="max-w-sm mx-auto">
-                <h3 className="text-sm font-medium text-gray-900 mb-2">No Evaluation Models</h3>
+            <div className="bg-gray-50 rounded-lg p-8 text-center">
+              <div className="max-w-sm mx-auto flex flex-col items-center justify-center">
+                <h3 className="text-sm font-medium text-gray-900 mb-2">No Internal Usage Models</h3>
                 <p className="text-xs text-gray-600 mb-4">
-                  Add your first evaluation model to start running jailbreak evaluations
+                  Add your first model for internal purposes
                 </p>
                 <Button onClick={() => setShowAddPane(true)} className="flex items-center gap-2">
                   <Plus className="h-4 w-4" />
