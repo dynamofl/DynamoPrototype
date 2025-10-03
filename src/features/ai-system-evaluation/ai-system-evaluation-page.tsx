@@ -5,14 +5,20 @@ import { useParams, useNavigate } from "react-router-dom";
 import { AppBar } from "@/components/patterns";
 import type { BreadcrumbItem, AppBarActionButton } from "@/components/patterns";
 import { Plus } from "lucide-react";
-import { EvaluationCreationFlow } from "./components";
+import { EvaluationCreationFlow, EvaluationInProgress, EvaluationResults } from "./components";
 
 // Types and services
 import type { EvaluationCreationData } from "./types/evaluation-creation";
+import type { JailbreakEvaluationOutput } from "./types/jailbreak-evaluation";
 
 // AI Systems
 import { AISystemsTableStorage, aiSystemsStorageConfig } from "@/features/ai-systems/lib";
 import type { AISystem } from "@/features/ai-systems/types/types";
+
+// Jailbreak evaluation
+import { runJailbreakEvaluation } from "./lib/jailbreak-runner";
+import { loadPoliciesFromGuardrailIds } from "./lib/policy-converter";
+import type { Guardrail } from "@/types";
 
 export function AISystemEvaluationPage() {
   const { systemName } = useParams<{ systemName: string }>();
@@ -26,6 +32,16 @@ export function AISystemEvaluationPage() {
   const [hasEvaluations, setHasEvaluations] = useState(false);
   const [showCreationFlow, setShowCreationFlow] = useState(false);
   const [creationFlowVariant, setCreationFlowVariant] = useState<"onboarding" | "overlay">("onboarding");
+
+  // Evaluation execution state
+  const [isRunningEvaluation, setIsRunningEvaluation] = useState(false);
+  const [evaluationResults, setEvaluationResults] = useState<JailbreakEvaluationOutput | null>(null);
+  const [evaluationProgress, setEvaluationProgress] = useState({
+    stage: '',
+    current: 0,
+    total: 0,
+    message: ''
+  });
 
   // Load AI System on mount
   useEffect(() => {
@@ -77,11 +93,52 @@ export function AISystemEvaluationPage() {
     setShowCreationFlow(true);
   };
 
-  const handleEvaluationCreated = (data: EvaluationCreationData) => {
+  const handleEvaluationCreated = async (data: EvaluationCreationData) => {
     console.log("Evaluation created:", data);
-    // TODO: Save evaluation data to storage
+
+    // Only run jailbreak evaluation for jailbreak type
+    if (data.type !== 'jailbreak') {
+      console.log('Non-jailbreak evaluation type - skipping auto-run');
+      setShowCreationFlow(false);
+      setHasEvaluations(true);
+      return;
+    }
+
     setShowCreationFlow(false);
-    setHasEvaluations(true);
+    setIsRunningEvaluation(true);
+
+    try {
+      // Convert policies and guardrails
+      const policies = loadPoliciesFromGuardrailIds(data.policyIds);
+
+      // Load guardrails
+      const guardrailsData = localStorage.getItem('guardrails');
+      const allGuardrails: Guardrail[] = guardrailsData ? JSON.parse(guardrailsData) : [];
+      const selectedGuardrails = data.guardrailIds
+        ? allGuardrails.filter(g => data.guardrailIds?.includes(g.id))
+        : [];
+
+      // Run jailbreak evaluation
+      const results = await runJailbreakEvaluation(
+        {
+          aiSystemId: data.aiSystemIds?.[0] || '',
+          policies,
+          guardrailIds: data.guardrailIds,
+        },
+        selectedGuardrails,
+        (progress) => {
+          setEvaluationProgress(progress);
+        }
+      );
+
+      setEvaluationResults(results);
+      setHasEvaluations(true);
+    } catch (error) {
+      console.error('Evaluation failed:', error);
+      alert(`Evaluation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsRunningEvaluation(false);
+    }
   };
 
   const handleCancelCreation = () => {
@@ -142,6 +199,49 @@ export function AISystemEvaluationPage() {
               onComplete={handleEvaluationCreated}
               onCancel={handleCancelCreation}
               aiSystemId={aiSystem.id}
+            />
+          ) : isRunningEvaluation ? (
+            /* Show evaluation in progress */
+            <EvaluationInProgress
+              stage={evaluationProgress.stage}
+              current={evaluationProgress.current}
+              total={evaluationProgress.total}
+              message={evaluationProgress.message}
+            />
+          ) : evaluationResults ? (
+            /* Show evaluation results */
+            <EvaluationResults
+              results={evaluationResults}
+              onExport={(format) => {
+                if (format === 'json') {
+                  const blob = new Blob([JSON.stringify(evaluationResults, null, 2)], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `evaluation-${evaluationResults.evaluationId}.json`;
+                  a.click();
+                } else if (format === 'csv') {
+                  // Simple CSV export
+                  const headers = ['Policy', 'Behavior Type', 'Attack Type', 'Base Prompt', 'Adversarial Prompt', 'Guardrail', 'Model', 'Outcome'];
+                  const rows = evaluationResults.results.map(r => [
+                    r.policyName,
+                    r.behaviorType,
+                    r.attackType,
+                    r.basePrompt,
+                    r.adversarialPrompt,
+                    r.guardrailJudgement,
+                    r.modelJudgement,
+                    r.attackOutcome
+                  ]);
+                  const csvContent = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+                  const blob = new Blob([csvContent], { type: 'text/csv' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `evaluation-${evaluationResults.evaluationId}.csv`;
+                  a.click();
+                }
+              }}
             />
           ) : hasEvaluations ? (
             /* Show evaluations list when evaluations exist */

@@ -61,6 +61,7 @@ export function AISystemsPage() {
   const loadAISystems = async () => {
     try {
       const systems = await customStorage.load()
+      console.log('AI System IDs:', systems.map(s => ({ id: s.id, name: s.name })))
       setAiSystems(systems as AISystem[])
     } catch (error) {
       console.error('Failed to load AI systems:', error)

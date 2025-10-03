@@ -6,9 +6,10 @@ import {
 import { SettingsLayout } from './layouts/settings-layout'
 import { AccessTokenContent } from './layouts/access-token'
 import { TeamMembersContent } from './layouts/team-members'
+import { EvaluationSettingsContent } from './layouts/evaluation-settings'
 import { SettingsSidebar } from './components/settings-sidebar'
 
-type SettingsPage = 'access-token' | 'team-members'
+type SettingsPage = 'access-token' | 'team-members' | 'evaluation'
 
 export function SettingsPage() {
   const [activePage, setActivePage] = useState<SettingsPage>('access-token')
@@ -19,6 +20,8 @@ export function SettingsPage() {
         return <AccessTokenContent />
       case 'team-members':
         return <TeamMembersContent />
+      case 'evaluation':
+        return <EvaluationSettingsContent />
       default:
         return <AccessTokenContent />
     }

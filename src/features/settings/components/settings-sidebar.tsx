@@ -1,7 +1,7 @@
-import { Users, KeyRound } from 'lucide-react'
+import { Users, KeyRound, TestTube2 } from 'lucide-react'
 import { SidebarPattern, type SidebarGroup } from '@/components/patterns/ui-patterns/sidebar-pattern'
 
-type SettingsPage = 'access-token' | 'team-members'
+type SettingsPage = 'access-token' | 'team-members' | 'evaluation'
 
 interface SettingsSidebarProps {
   activePage: SettingsPage
@@ -26,6 +26,13 @@ export function SettingsSidebar({ activePage, onPageChange }: SettingsSidebarPro
           icon: <KeyRound className="h-4 w-4" />,
           onClick: () => onPageChange('access-token'),
           isActive: activePage === 'access-token'
+        },
+        {
+          id: 'evaluation',
+          label: 'Evaluation Settings',
+          icon: <TestTube2 className="h-4 w-4" />,
+          onClick: () => onPageChange('evaluation'),
+          isActive: activePage === 'evaluation'
         }
       ]
     }
