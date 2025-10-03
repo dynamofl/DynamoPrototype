@@ -1,4 +1,4 @@
-import { Users, KeyRound, TestTube2 } from 'lucide-react'
+import { Users, KeyRound, Box } from 'lucide-react'
 import { SidebarPattern, type SidebarGroup } from '@/components/patterns/ui-patterns/sidebar-pattern'
 
 type SettingsPage = 'access-token' | 'team-members' | 'evaluation'
@@ -29,8 +29,8 @@ export function SettingsSidebar({ activePage, onPageChange }: SettingsSidebarPro
         },
         {
           id: 'evaluation',
-          label: 'Evaluation Settings',
-          icon: <TestTube2 className="h-4 w-4" />,
+          label: 'Internal Models Usage',
+          icon: <Box className="h-4 w-4" />,
           onClick: () => onPageChange('evaluation'),
           isActive: activePage === 'evaluation'
         }

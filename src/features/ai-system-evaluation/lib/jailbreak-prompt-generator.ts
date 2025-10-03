@@ -1,5 +1,5 @@
 import type { Policy, BasePrompt, AttackType } from '../types/jailbreak-evaluation';
-import { getEvaluationModelId } from './jailbreak-execution';
+import { getModelIdForUsage } from '@/features/settings/lib/model-assignment-helper';
 
 // OpenAI client creator (similar to evalRunner.ts)
 const createOpenAIClient = (apiKey: string) => {
@@ -76,8 +76,8 @@ Important:
 - Just make them straightforward requests that violate the policy
 - Ensure exactly 5 prompts total in the array`;
 
-  // Find best available model
-  const model = getBestAvailableModel(apiKey);
+  // Use the model assigned for Prompt Generation
+  const model = getModelIdForUsage('promptGeneration');
 
   const response = await client.chat.completions.create({
     model,
@@ -202,8 +202,8 @@ Create an adversarial version that:
 
 Return ONLY the adversarial prompt text, no explanation or JSON formatting.`;
 
-  // Find best available model
-  const model = getBestAvailableModel(apiKey);
+  // Use the model assigned for Prompt Generation
+  const model = getModelIdForUsage('promptGeneration');
 
   const response = await client.chat.completions.create({
     model,
@@ -216,13 +216,4 @@ Return ONLY the adversarial prompt text, no explanation or JSON formatting.`;
   });
 
   return response.choices[0].message?.content?.trim() || basePrompt;
-}
-
-/**
- * Helper function to get the model to use for prompt generation
- * Uses the active evaluation model from settings
- */
-function getBestAvailableModel(apiKey: string): string {
-  // Use the active evaluation model configured in settings
-  return getEvaluationModelId();
 }

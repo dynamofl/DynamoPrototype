@@ -1,19 +1,38 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, CheckCircle2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { PageHeader } from '@/components/patterns/ui-patterns/page-header';
 import { EvaluationModelStorage } from '../../lib/evaluation-model-storage';
+import { ModelAssignmentStorage } from '../../lib/model-assignment-storage';
 import { AddEvaluationModelSidepane } from '../../components/add-evaluation-model-sidepane';
-import type { EvaluationModel, EvaluationModelFormData } from '../../types/evaluation-model';
+import { ModelAssignmentCard } from '../../components/model-assignment-card';
+import type { EvaluationModel, EvaluationModelFormData, ModelAssignment } from '../../types/evaluation-model';
 
 export function EvaluationSettingsContent() {
   const [models, setModels] = useState<EvaluationModel[]>([]);
   const [showAddPane, setShowAddPane] = useState(false);
+  const [assignments, setAssignments] = useState<ModelAssignment>({
+    promptGeneration: null,
+    evaluationJudgement: null,
+    testExecution: null,
+  });
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [modelToDelete, setModelToDelete] = useState<EvaluationModel | null>(null);
 
-  // Load models on mount
+  // Load models and assignments on mount
   useEffect(() => {
     loadModels();
+    loadAssignments();
   }, []);
 
   const loadModels = () => {
@@ -21,23 +40,39 @@ export function EvaluationSettingsContent() {
     setModels(loadedModels);
   };
 
+  const loadAssignments = () => {
+    const loadedAssignments = ModelAssignmentStorage.load();
+    setAssignments(loadedAssignments);
+  };
+
   const handleAddModel = (data: EvaluationModelFormData) => {
     EvaluationModelStorage.add(data);
     loadModels();
   };
 
-  const handleDeleteModel = (id: string) => {
-    if (confirm('Are you sure you want to delete this evaluation model?')) {
-      EvaluationModelStorage.delete(id);
+  const handleDeleteModel = (model: EvaluationModel) => {
+    setModelToDelete(model);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (modelToDelete) {
+      EvaluationModelStorage.delete(modelToDelete.id);
       loadModels();
+      setIsDeleteDialogOpen(false);
+      setModelToDelete(null);
     }
   };
 
-  const handleToggleActive = (id: string, currentlyActive: boolean) => {
-    if (!currentlyActive) {
-      EvaluationModelStorage.setActive(id);
-      loadModels();
-    }
+  const handleDeleteCancel = () => {
+    setIsDeleteDialogOpen(false);
+    setModelToDelete(null);
+  };
+
+  const handleAssignmentChange = (type: keyof ModelAssignment, modelId: string) => {
+    const newModelId = modelId === 'none' ? null : modelId;
+    ModelAssignmentStorage.updateAssignment(type, newModelId);
+    loadAssignments();
   };
 
   const getProviderColor = (provider: string) => {
@@ -57,61 +92,59 @@ export function EvaluationSettingsContent() {
     <div className="space-y-6 py-3">
       {/* Header */}
       <PageHeader
-        title="Internal Models"
-        description="Manage models for running various internal task"
-        actions={[
-          {
-            icon: Plus,
-            label: 'Add Evaluation Model',
-            onClick: () => setShowAddPane(true),
-          }
-        ]}
+        title="Internal Models Usage"
+        description="Manage and assign models for running various internal task"
       />
 
       {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 px-4">
         {/* Left Column - Where Models Are Used */}
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-sm font-medium text-gray-900 mb-2">Where Models Are Used</h3>
-            <p className="text-xs text-gray-600 mb-4">
-              Internal models power various evaluation and testing features
-            </p>
-          </div>
+        <div className="lg:col-span-2 space-y-4">
+         
 
-          <div className="space-y-3">
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <h4 className="text-sm font-medium text-gray-900 mb-2">Prompt Generation</h4>
-              <p className="text-xs text-gray-600">
-                Generates base test prompts and adversarial variants using various attack techniques (DAN, TAP, IRIS, etc.)
-              </p>
-            </div>
+          <div className="border border-gray-200 rounded-lg px-4">
+            <ModelAssignmentCard
+              title="Prompt Generation"
+              description="Generates base test prompts and adversarial variants using various attack techniques"
+              selectedModelId={assignments.promptGeneration}
+              models={models}
+              onModelChange={(value) => handleAssignmentChange('promptGeneration', value)}
+            />
 
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <h4 className="text-sm font-medium text-gray-900 mb-2">Evaluation & Judgement</h4>
-              <p className="text-xs text-gray-600">
-                Evaluates guardrail effectiveness and judges whether AI system responses are blocked or answered
-              </p>
-            </div>
+            <ModelAssignmentCard
+              title="Evaluation & Judgement"
+              description="Evaluates guardrail effectiveness and judges whether AI system responses are blocked or answered"
+              selectedModelId={assignments.evaluationJudgement}
+              models={models}
+              onModelChange={(value) => handleAssignmentChange('evaluationJudgement', value)}
+            />
 
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <h4 className="text-sm font-medium text-gray-900 mb-2">Test Execution</h4>
-              <p className="text-xs text-gray-600">
-                Runs comprehensive jailbreak tests and safety evaluations across your AI systems
-              </p>
-            </div>
+            <ModelAssignmentCard
+              title="Test Execution"
+              description="Runs comprehensive jailbreak tests and safety evaluations across your AI systems"
+              selectedModelId={assignments.testExecution}
+              models={models}
+              onModelChange={(value) => handleAssignmentChange('testExecution', value)}
+              isLast={true}
+            />
           </div>
         </div>
 
         {/* Right Column - Available Models */}
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-sm font-medium text-gray-900 mb-2">Available Models</h3>
-            <p className="text-xs text-gray-600 mb-4">
-              {models.length === 0
-                ? 'No models configured yet'
-                : `${models.length} model${models.length > 1 ? 's' : ''} configured`}
-            </p>
+        <div className="lg:col-span-1 space-y-2 bg-gray-50 px-2 py-4 rounded-lg">
+          <div className="flex items-center justify-between px-2 pb-4 border-b border-gray-200">
+            <div className='space-y-1'>
+              <h3 className="text-sm font-450 text-gray-900">Available Internal Usage Models</h3>
+             
+            </div>
+            <Button
+              onClick={() => setShowAddPane(true)}
+              className="flex items-center gap-1 pl-2"
+              size="sm"
+            >
+              <Plus className="h-4 w-4" />
+              Add Model
+            </Button>
           </div>
 
           {models.length === 0 ? (
@@ -132,28 +165,26 @@ export function EvaluationSettingsContent() {
               {models.map((model) => (
                 <div
                   key={model.id}
-                  className={`bg-gray-0 border rounded-lg p-4 transition-all ${
-                    model.isActive
-                      ? 'border-blue-500 ring-2 ring-blue-100'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
+                  className="hover:bg-gray-100 rounded-lg p-2 transition-all"
                 >
                   {/* Card Header */}
-                  <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-sm font-semibold text-gray-900">{model.name}</h3>
-                        {model.isActive && (
-                          <span className="flex items-center gap-1 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                            <CheckCircle2 className="h-3 w-3" />
-                            Active
-                          </span>
+                      <h3 className="text-[13px] text-450 text-gray-900 mb-1">{model.name}</h3>
+                      <div className="flex items-center gap-1 text-xs text-gray-600">
+                        <span>{model.provider}</span>
+                        <span>•</span>
+                        <span>{model.modelId}</span>
+                        {model.lastUsed && (
+                          <>
+                            <span>•</span>
+                            <span>Last Used: {new Date(model.lastUsed).toLocaleDateString()}</span>
+                          </>
                         )}
                       </div>
-                      <p className="text-xs text-gray-600">{model.modelId}</p>
                     </div>
                     <button
-                      onClick={() => handleDeleteModel(model.id)}
+                      onClick={() => handleDeleteModel(model)}
                       className="text-gray-400 hover:text-red-600 transition-colors"
                       title="Delete model"
                     >
@@ -162,43 +193,8 @@ export function EvaluationSettingsContent() {
                   </div>
 
                   {/* Model Info */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-600">Provider</span>
-                      <span className={`text-xs px-2 py-0.5 rounded ${getProviderColor(model.provider)}`}>
-                        {model.provider}
-                      </span>
-                    </div>
+                  
 
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-600">Evaluations Run</span>
-                      <span className="text-xs font-medium text-gray-900">{model.evaluationCount}</span>
-                    </div>
-
-                    {model.lastUsed && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-600">Last Used</span>
-                        <span className="text-xs text-gray-700">
-                          {new Date(model.lastUsed).toLocaleDateString()}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-between pt-2 border-t border-gray-200">
-                      <span className="text-xs font-medium text-gray-700">Use for Evaluations</span>
-                      <Switch
-                        checked={model.isActive}
-                        onCheckedChange={() => handleToggleActive(model.id, model.isActive)}
-                      />
-                    </div>
-                  </div>
-
-                  {/* API Key Preview */}
-                  <div className="mt-3 pt-3 border-t border-gray-200">
-                    <p className="text-xs text-gray-500">
-                      API Key: {model.apiKey.slice(0, 8)}...{model.apiKey.slice(-4)}
-                    </p>
-                  </div>
                 </div>
               ))}
             </div>
@@ -212,6 +208,29 @@ export function EvaluationSettingsContent() {
         onOpenChange={setShowAddPane}
         onSave={handleAddModel}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Evaluation Model</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{modelToDelete?.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleDeleteCancel}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

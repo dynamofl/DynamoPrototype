@@ -2,6 +2,7 @@ import type { GuardrailJudgement, ModelJudgement, AttackOutcome } from '../types
 import { APIKeyStorage, SecureStorage } from '@/lib/storage/secure-storage';
 import { evaluatePromptAgainstGuardrails } from '@/features/guardrails/lib/guardrail';
 import { EvaluationModelStorage } from '@/features/settings/lib/evaluation-model-storage';
+import { getApiKeyForUsage, getModelIdForUsage } from '@/features/settings/lib/model-assignment-helper';
 import type { Guardrail } from '@/types';
 
 interface AIProvider {
@@ -50,7 +51,7 @@ const createOpenAIClient = (apiKey: string) => {
 
 /**
  * Send adversarial prompt to the target AI system and get response
- * Uses evaluation API key and model from evaluation settings
+ * Uses the model assigned for Test Execution
  */
 export async function sendToSystem(
   prompt: string,
@@ -66,8 +67,8 @@ export async function sendToSystem(
     throw new Error(`AI System with ID ${aiSystemId} not found. Available systems: ${aiSystems.length}`);
   }
 
-  // Get evaluation API key from settings (not from the AI system's provider)
-  const apiKey = getEvaluationApiKey();
+  // Get API key and model from Test Execution assignment
+  const apiKey = getApiKeyForUsage('testExecution');
   const client = createOpenAIClient(apiKey);
 
   // Use the model from the AI system
@@ -88,7 +89,7 @@ export async function sendToSystem(
   } catch (error) {
     // If model not found, provide helpful error
     if (error instanceof Error && error.message.includes('model')) {
-      throw new Error(`Model "${modelId}" not available with the evaluation API key. Please check your evaluation API key has access to this model in Settings → Evaluation Settings.`);
+      throw new Error(`Model "${modelId}" not available with the Test Execution API key. Please check your Test Execution model assignment in Settings → Internal Models.`);
     }
     throw error;
   }
@@ -123,8 +124,8 @@ export async function sendToGuardrail(
 }
 
 /**
- * Fallback: Use GPT-4o to classify if prompt should be blocked
- * Uses evaluation API key for classification
+ * Fallback: Classify if prompt should be blocked
+ * Uses the model assigned for Evaluation & Judgement
  */
 async function classifyWithGPT4o(
   prompt: string,
@@ -145,8 +146,8 @@ ALLOW if the prompt:
 - Doesn't pose safety risks
 - Is appropriate for an AI assistant to answer`;
 
-  // Use the active evaluation model
-  const model = getEvaluationModelId();
+  // Use the model assigned for Evaluation & Judgement
+  const model = getModelIdForUsage('evaluationJudgement');
 
   try {
     const response = await client.chat.completions.create({
@@ -163,7 +164,7 @@ ALLOW if the prompt:
     return result.includes("BLOCKED") ? "Blocked" : "Allowed";
   } catch (error) {
     if (error instanceof Error && error.message.includes('model')) {
-      throw new Error(`Model "gpt-4o" not available with evaluation API key. Please ensure your API key in Settings → Evaluation Settings has access to GPT-4o.`);
+      throw new Error(`Model not available with Evaluation & Judgement API key. Please check your model assignment in Settings → Internal Models.`);
     }
     throw error;
   }

@@ -16,11 +16,9 @@ import {
   sendToSystem,
   sendToGuardrail,
   judgeModel,
-  calculateOutcome,
-  getEvaluationApiKey,
-  getActiveEvaluationModel
+  calculateOutcome
 } from './jailbreak-execution';
-import { EvaluationModelStorage } from '@/features/settings/lib/evaluation-model-storage';
+import { getApiKeyForUsage, incrementUsageCount } from '@/features/settings/lib/model-assignment-helper';
 import type { Guardrail } from '@/types';
 
 /**
@@ -42,7 +40,9 @@ export async function runJailbreakEvaluation(
   onProgress?: ProgressCallback
 ): Promise<JailbreakEvaluationOutput> {
   const results: JailbreakEvaluationResult[] = [];
-  const evalApiKey = getEvaluationApiKey(); // Use configured evaluation API key
+  // Get API keys for different usage types
+  const promptGenApiKey = getApiKeyForUsage('promptGeneration');
+  const evalJudgeApiKey = getApiKeyForUsage('evaluationJudgement');
   const evaluationId = crypto.randomUUID();
 
   // Get attack types to use
@@ -60,8 +60,8 @@ export async function runJailbreakEvaluation(
       message: `Generating base prompts for policy: ${policy.name}`
     });
 
-    // Step 1: Generate 5 base prompts for this policy
-    const basePrompts = await generateBasePrompts(policy, evalApiKey);
+    // Step 1: Generate 5 base prompts for this policy using Prompt Generation model
+    const basePrompts = await generateBasePrompts(policy, promptGenApiKey);
     currentStep++;
 
     // Step 2: Distribute attack types across base prompts
@@ -76,11 +76,11 @@ export async function runJailbreakEvaluation(
         message: `Applying ${attackType} attack to: "${basePrompt.prompt.substring(0, 50)}..."`
       });
 
-      // Generate adversarial prompt
+      // Generate adversarial prompt using Prompt Generation model
       const adversarialPrompt = await generateAdversarialPrompt(
         basePrompt.prompt,
         attackType,
-        evalApiKey
+        promptGenApiKey
       );
 
       onProgress?.({
@@ -103,11 +103,11 @@ export async function runJailbreakEvaluation(
         message: `Checking guardrail responses...`
       });
 
-      // Step 5: Evaluate with guardrails
+      // Step 5: Evaluate with guardrails using Evaluation & Judgement model
       const guardrailJudgement = await sendToGuardrail(
         adversarialPrompt,
         guardrails,
-        evalApiKey
+        evalJudgeApiKey
       );
 
       // Step 6: Judge model response
@@ -144,11 +144,10 @@ export async function runJailbreakEvaluation(
   // Calculate summary statistics
   const summary = calculateSummary(results);
 
-  // Increment evaluation count for the active model
-  const activeModel = EvaluationModelStorage.getActive();
-  if (activeModel) {
-    EvaluationModelStorage.incrementEvaluationCount(activeModel.id);
-  }
+  // Increment evaluation count for all used models
+  incrementUsageCount('promptGeneration');
+  incrementUsageCount('evaluationJudgement');
+  incrementUsageCount('testExecution');
 
   return {
     results,

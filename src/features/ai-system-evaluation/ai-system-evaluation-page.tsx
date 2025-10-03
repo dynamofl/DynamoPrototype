@@ -18,6 +18,7 @@ import type { AISystem } from "@/features/ai-systems/types/types";
 // Jailbreak evaluation
 import { runJailbreakEvaluation } from "./lib/jailbreak-runner";
 import { loadPoliciesFromGuardrailIds } from "./lib/policy-converter";
+import { validateModelAssignments } from "@/features/settings/lib/model-assignment-helper";
 import type { Guardrail } from "@/types";
 
 export function AISystemEvaluationPage() {
@@ -101,6 +102,13 @@ export function AISystemEvaluationPage() {
       console.log('Non-jailbreak evaluation type - skipping auto-run');
       setShowCreationFlow(false);
       setHasEvaluations(true);
+      return;
+    }
+
+    // Validate model assignments before running
+    const validation = validateModelAssignments();
+    if (!validation.valid) {
+      alert(`Please configure model assignments in Settings → Internal Models.\n\nMissing assignments for:\n- ${validation.missing.join('\n- ')}`);
       return;
     }
 

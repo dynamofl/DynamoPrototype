@@ -1,6 +1,6 @@
-import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import { TeamMembersTable, TeamMemberFilter } from './components'
+import { PageHeader } from '@/components/patterns/ui-patterns/page-header'
 import type { TableRow } from '@/types/table'
 
 export function TeamMembersContent() {
@@ -19,17 +19,17 @@ export function TeamMembersContent() {
   return (
     <div className="space-y-3 py-3">
       {/* Header */}
-      <div className="px-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-base font-450 text-gray-900 tracking-tight">Team Members</h1>
-          </div>
-          <Button variant="default" size="default">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Members
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Team Members"
+        actions={[
+          {
+            icon: Plus,
+            label: 'Add Members',
+            onClick: () => console.log('Add Members clicked'),
+            variant: 'default'
+          }
+        ]}
+      />
 
       {/* Team Member Filter */}
       <TeamMemberFilter onSearch={handleSearch} />

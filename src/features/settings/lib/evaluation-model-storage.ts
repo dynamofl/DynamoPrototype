@@ -31,15 +31,12 @@ export class EvaluationModelStorage {
   static add(model: Omit<EvaluationModel, 'id' | 'evaluationCount' | 'createdAt' | 'isActive'>): EvaluationModel {
     const models = this.load();
 
-    // If this is the first model, make it active
-    const isFirstModel = models.length === 0;
-
     const newModel: EvaluationModel = {
       ...model,
       id: crypto.randomUUID(),
       evaluationCount: 0,
       createdAt: new Date().toISOString(),
-      isActive: isFirstModel,
+      isActive: true, // All models are active by default
     };
 
     models.push(newModel);
@@ -65,16 +62,7 @@ export class EvaluationModelStorage {
    * Delete an evaluation model
    */
   static delete(id: string): void {
-    let models = this.load();
-    const deletedModel = models.find(m => m.id === id);
-
-    models = models.filter(m => m.id !== id);
-
-    // If we deleted the active model, make the first one active
-    if (deletedModel?.isActive && models.length > 0) {
-      models[0].isActive = true;
-    }
-
+    const models = this.load().filter(m => m.id !== id);
     this.save(models);
   }
 
