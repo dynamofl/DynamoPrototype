@@ -46,7 +46,7 @@ export function DropdownCell({
       <div
         className={`cell-content w-full h-full flex items-center p-2 cursor-default outline-none border border-transparent rounded bg-transparent transition-all duration-200 ease-in-out ${className}`}
       >
-        <span className="text-[13px]">
+        <span className="text-[0.8125rem] ">
           {currentOption?.label || value || column.placeholder || 'Select...'}
         </span>
       </div>
@@ -60,7 +60,7 @@ export function DropdownCell({
         className={`cell-content w-full h-full flex items-center p-2 cursor-pointer outline-none border border-transparent rounded bg-transparent transition-all duration-200 ease-in-out ${className}`}
         onClick={() => onRowEdit?.(row)}
       >
-        <span className="text-[13px]">
+        <span className="text-[0.8125rem] ">
           {currentOption?.label || value || column.placeholder || 'Select...'}
         </span>
       </div>

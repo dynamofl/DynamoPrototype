@@ -146,14 +146,14 @@ export function EvaluationResultsConversationView({
                 >
                 {/* Row Number Cell */}
                 <div className="w-8 flex items-center justify-center">
-                  <span className="text-[13px] text-gray-500">
+                  <span className="text-[0.8125rem]  text-gray-500">
                     {index + 1}
                   </span>
                 </div>
 
                 {/* Conversation Content */}
                 <div className="flex-1 min-w-0 pl-3">
-                  <div className="text-[13px] font-450 text-gray-800 truncate max-w-md" title={record.basePrompt}>
+                  <div className="text-[0.8125rem]  font-450 text-gray-800 truncate max-w-md" title={record.basePrompt}>
                     {record.basePrompt}
                   </div>
                 </div>

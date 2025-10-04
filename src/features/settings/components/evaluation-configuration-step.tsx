@@ -53,7 +53,7 @@ export function EvaluationConfigurationStep({
               className="w-8 h-8"
             />
             <div className="flex-1">
-              <p className="text-[13px] font-450 text-gray-900">
+              <p className="text-[0.8125rem]  font-450 text-gray-900">
                 {provider.name}
               </p>
             </div>

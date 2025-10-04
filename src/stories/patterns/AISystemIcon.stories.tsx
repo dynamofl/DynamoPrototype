@@ -84,43 +84,43 @@ export const AllIcons: Story = {
     <div className="flex flex-wrap gap-4">
       <div className="flex flex-col items-center gap-2">
         <AISystemIcon type="OpenAI" />
-        <span className="text-[13px]">OpenAI</span>
+        <span className="text-[0.8125rem] ">OpenAI</span>
       </div>
       <div className="flex flex-col items-center gap-2">
         <AISystemIcon type="Azure" />
-        <span className="text-[13px]">Azure</span>
+        <span className="text-[0.8125rem] ">Azure</span>
       </div>
       <div className="flex flex-col items-center gap-2">
         <AISystemIcon type="Mistral" />
-        <span className="text-[13px]">Mistral</span>
+        <span className="text-[0.8125rem] ">Mistral</span>
       </div>
       <div className="flex flex-col items-center gap-2">
         <AISystemIcon type="Databricks" />
-        <span className="text-[13px]">Databricks</span>
+        <span className="text-[0.8125rem] ">Databricks</span>
       </div>
       <div className="flex flex-col items-center gap-2">
         <AISystemIcon type="HuggingFace" />
-        <span className="text-[13px]">HuggingFace</span>
+        <span className="text-[0.8125rem] ">HuggingFace</span>
       </div>
       <div className="flex flex-col items-center gap-2">
         <AISystemIcon type="Anthropic" />
-        <span className="text-[13px]">Anthropic</span>
+        <span className="text-[0.8125rem] ">Anthropic</span>
       </div>
       <div className="flex flex-col items-center gap-2">
         <AISystemIcon type="Remote" />
-        <span className="text-[13px]">Remote</span>
+        <span className="text-[0.8125rem] ">Remote</span>
       </div>
       <div className="flex flex-col items-center gap-2">
         <AISystemIcon type="Local" />
-        <span className="text-[13px]">Local</span>
+        <span className="text-[0.8125rem] ">Local</span>
       </div>
       <div className="flex flex-col items-center gap-2">
         <AISystemIcon type="AWS" />
-        <span className="text-[13px]">AWS</span>
+        <span className="text-[0.8125rem] ">AWS</span>
       </div>
       <div className="flex flex-col items-center gap-2">
         <AISystemIcon type="DynamoAI" />
-        <span className="text-[13px]">DynamoAI</span>
+        <span className="text-[0.8125rem] ">DynamoAI</span>
       </div>
     </div>
   ),

@@ -45,7 +45,7 @@ export const FileItem = ({ file, variant, onRemove }: FileItemProps) => {
           return (
             <div className="flex items-center gap-1">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-              <span className="text-[13px] italic text-gray-600">
+              <span className="text-[0.8125rem]  italic text-gray-600">
                 Uploading ({(file.uploadProgress / 100 * file.file.size / (1024 * 1024)).toFixed(1)} MB of {(file.file.size / (1024 * 1024)).toFixed(1)} MB)
               </span>
             </div>
@@ -55,7 +55,7 @@ export const FileItem = ({ file, variant, onRemove }: FileItemProps) => {
           return (
             <div className="flex items-center gap-1">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-              <span className="text-[13px] italic text-gray-600">Validating the csv file</span>
+              <span className="text-[0.8125rem]  italic text-gray-600">Validating the csv file</span>
             </div>
           );
         }
@@ -64,7 +64,7 @@ export const FileItem = ({ file, variant, onRemove }: FileItemProps) => {
         return (
           <div className="flex items-center gap-1">
             <AlertTriangle className="h-4 w-4 text-red-600" />
-            <span className="text-[13px] italic text-red-600">
+            <span className="text-[0.8125rem]  italic text-red-600">
               All rows are invalid. Please check the file format.
             </span>
           </div>
@@ -73,7 +73,7 @@ export const FileItem = ({ file, variant, onRemove }: FileItemProps) => {
         return (
           <div className="flex items-center gap-1">
             <CheckCircle className="h-4 w-4 text-green-500" />
-            <span className="text-[13px] italic text-gray-600">
+            <span className="text-[0.8125rem]  italic text-gray-600">
               {file.parseResult?.validCount} Valid Rows • {(file.file.size / (1024 * 1024)).toFixed(1)} MB
             </span>
           </div>
@@ -96,7 +96,7 @@ export const FileItem = ({ file, variant, onRemove }: FileItemProps) => {
         </div>
       </div>
       <div className="flex-1 min-h-[48px] flex flex-col justify-center gap-0.5">
-        <p className="text-[13px] text-black leading-5">{file.file.name}</p>
+        <p className="text-[0.8125rem]  text-black leading-5">{file.file.name}</p>
         {getStatusContent()}
       </div>
       <button

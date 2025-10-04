@@ -97,7 +97,7 @@ export function ModelsListSlot({
           <div className="text-gray-600 mb-2">
             {emptyMessage}
           </div>
-          <div className="text-[13px] text-gray-600">
+          <div className="text-[0.8125rem]  text-gray-600">
             Use the "Fetch Models" action to discover available models
           </div>
         </div>
@@ -108,7 +108,7 @@ export function ModelsListSlot({
   return (
     <div className={cn('p-4', className)}>
       <div className="space-y-2">
-        <h4 className="font-450 text-[13px]">Available Models ({models.length})</h4>
+        <h4 className="font-450 text-[0.8125rem] ">Available Models ({models.length})</h4>
         <div className="grid grid-cols-1 gap-2">
           {models
             .sort((a: any, b: any) => new Date(b.created).getTime() - new Date(a.created).getTime())
@@ -117,20 +117,20 @@ export function ModelsListSlot({
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                   <div>
-                    <div className="font-450 text-[13px]">{model.id}</div>
-                    <div className="text-[13px] text-gray-600">
+                    <div className="font-450 text-[0.8125rem] ">{model.id}</div>
+                    <div className="text-[0.8125rem]  text-gray-600">
                       Created: {formatModelDate(model.created)}
                     </div>
                   </div>
                 </div>
-                <div className="text-[13px] text-gray-600">
+                <div className="text-[0.8125rem]  text-gray-600">
                   {typeof model.object === 'string' ? model.object : 'model'}
                 </div>
               </div>
             ))}
         </div>
         {lastFetched && (
-          <p className="text-[13px] text-gray-600 mt-2">
+          <p className="text-[0.8125rem]  text-gray-600 mt-2">
             Last updated: {lastFetched}
           </p>
         )}
@@ -154,7 +154,7 @@ export function TableSlot({ data = [], columns, className = '' }: TableSlotProps
   if (data.length === 0) {
     return (
       <div className={cn('flex items-center justify-center py-4', className)}>
-        <div className="text-[13px] text-gray-600">No data available</div>
+        <div className="text-[0.8125rem]  text-gray-600">No data available</div>
       </div>
     )
   }
@@ -162,7 +162,7 @@ export function TableSlot({ data = [], columns, className = '' }: TableSlotProps
   return (
     <div className={cn('p-4', className)}>
       <div className="overflow-x-auto">
-        <table className="w-full text-[13px]">
+        <table className="w-full text-[0.8125rem] ">
           <thead>
             <tr className="border-b">
               {columns.map((column) => (

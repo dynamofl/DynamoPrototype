@@ -122,18 +122,18 @@ export function AISystemsTable({ data, loading = false }: AISystemsTableProps) {
                 <TableCell className="font-450 ">
                   <div className="flex items-center space-x-1">
                     <AISystemIcon type={system.icon} />
-                    <span className="text-[13px] font-450 hover:underline cursor-pointer">{system.name}</span>
+                    <span className="text-[0.8125rem]  font-450 hover:underline cursor-pointer">{system.name}</span>
                   </div>
                 </TableCell>
-                <TableCell className="text-[13px]">
+                <TableCell className="text-[0.8125rem] ">
                   {system.project === "-" ? (
                     <span className="text-gray-600">-</span>
                   ) : (
                     <Badge variant="outline">{system.project}</Badge>
                   )}
                 </TableCell>
-                <TableCell className="text-[13px] text-gray-600">{system.owner}</TableCell>
-                <TableCell className="text-[13px] text-gray-600">{system.createdAt}</TableCell>
+                <TableCell className="text-[0.8125rem]  text-gray-600">{system.owner}</TableCell>
+                <TableCell className="text-[0.8125rem]  text-gray-600">{system.createdAt}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end space-x-2">
                     {/* <div className="flex items-center space-x-1">
@@ -183,11 +183,11 @@ export function AISystemsTable({ data, loading = false }: AISystemsTableProps) {
 
       {/* Pagination */}
       <div className="flex items-center justify-between px-6">
-        <p className="text-[13px] text-gray-600">
+        <p className="text-[0.8125rem]  text-gray-600">
           Rows per page: 20
         </p>
         <div className="flex items-center space-x-2">
-          <p className="text-[13px] text-gray-600">
+          <p className="text-[0.8125rem]  text-gray-600">
             {startIndex + 1} - {endIndex} of {data.length}
           </p>
           <div className="flex items-center space-x-1">

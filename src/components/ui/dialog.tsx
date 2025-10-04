@@ -242,7 +242,7 @@ const DialogFooterButtonSet = React.forwardRef<
       <button
         type="button"
         onClick={onSecondaryClick}
-        className="px-3 py-2 text-[13px] font-medium text-gray-600 bg-transparent hover:bg-black/5 rounded-md transition-colors leading-4"
+        className="px-3 py-2 text-[0.8125rem]  font-medium text-gray-600 bg-transparent hover:bg-black/5 rounded-md transition-colors leading-4"
       >
         {secondaryText}
       </button>
@@ -251,7 +251,7 @@ const DialogFooterButtonSet = React.forwardRef<
       type="button"
       onClick={onPrimaryClick}
       className={cn(
-        "px-3 py-2 text-[13px] font-medium text-blue-50 rounded-md transition-colors leading-4",
+        "px-3 py-2 text-[0.8125rem]  font-medium text-blue-50 rounded-md transition-colors leading-4",
         variant === "default" && "",
         variant === "danger" && "bg-red-600 hover:bg-red-700",
         variant === "success" && "bg-green-600 hover:bg-green-700"
@@ -270,7 +270,7 @@ const DialogTitle = React.forwardRef<
   <DialogPrimitive.Title
     ref={ref}
     className={cn(
-      "text-[13px] font-[550] leading-5 tracking-[0.07px] text-gray-800",
+      "text-[0.8125rem]  font-[550] leading-5 tracking-[0.07px] text-gray-800",
       className
     )}
     {...props}
@@ -284,7 +284,7 @@ const DialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn("text-[13px] text-muted-foreground", className)}
+    className={cn("text-[0.8125rem]  text-muted-foreground", className)}
     {...props}
   />
 ))

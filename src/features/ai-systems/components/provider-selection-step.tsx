@@ -19,7 +19,7 @@ export function ProviderSelectionStep({
   return (
     <div className="space-y-3">
       <div className="border-gray-100">
-        <p className="text-[13px] text-gray-600">Select AI System Provider</p>
+        <p className="text-[0.8125rem]  text-gray-600">Select AI System Provider</p>
       </div>
 
       <div className="space-y-4">
@@ -35,7 +35,7 @@ export function ProviderSelectionStep({
                   type={provider.icon as any}
                   className="w-8 h-8"
                 />
-                <p className="font-450 text-gray-800 text-[13px]">
+                <p className="font-450 text-gray-800 text-[0.8125rem] ">
                   {provider.name}
                 </p>
               </div>
@@ -49,7 +49,7 @@ export function ProviderSelectionStep({
             <div className="text-gray-500 mb-2">
               No AI providers available
             </div>
-            <div className="text-[13px] text-gray-400">
+            <div className="text-[0.8125rem]  text-gray-400">
               Please configure API keys in Settings first
             </div>
           </div>

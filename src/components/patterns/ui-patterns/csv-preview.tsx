@@ -110,15 +110,15 @@ export function CSVPreview({ parseResult, onImportRows, className }: CSVPreviewP
           <div className="grid grid-cols-3 gap-6 mb-6">
             <div className="text-center p-4 bg-muted/50 rounded-lg">
               <p className="text-3xl font-450">{parseResult.totalRows}</p>
-              <p className="text-[13px] text-gray-600">Total Rows</p>
+              <p className="text-[0.8125rem]  text-gray-600">Total Rows</p>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
               <p className="text-3xl font-450 text-green-600">{parseResult.validCount}</p>
-              <p className="text-[13px] text-gray-600">Valid Rows</p>
+              <p className="text-[0.8125rem]  text-gray-600">Valid Rows</p>
             </div>
             <div className="text-center p-4 bg-red-50 rounded-lg">
               <p className="text-3xl font-450 text-red-600">{parseResult.invalidCount}</p>
-              <p className="text-[13px] text-gray-600">Invalid Rows</p>
+              <p className="text-[0.8125rem]  text-gray-600">Invalid Rows</p>
             </div>
           </div>
 
@@ -249,7 +249,7 @@ export function CSVPreview({ parseResult, onImportRows, className }: CSVPreviewP
                                 )}
                               </div>
                             ) : (
-                              <span className="text-green-600 text-[13px]">✓ Valid</span>
+                              <span className="text-green-600 text-[0.8125rem] ">✓ Valid</span>
                             )}
                           </TableCell>
                         </TableRow>
@@ -274,7 +274,7 @@ export function CSVPreview({ parseResult, onImportRows, className }: CSVPreviewP
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
             <strong>Validation Issues Found:</strong>
-            <ul className="mt-2 space-y-1 text-[13px]">
+            <ul className="mt-2 space-y-1 text-[0.8125rem] ">
               {!parseResult.hasRequiredColumns && (
                 <li>• Missing required columns: {parseResult.missingColumns.join(', ')}</li>
               )}

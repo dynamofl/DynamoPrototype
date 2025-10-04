@@ -80,7 +80,7 @@ export function MultiBadgeCell({
   if (badges.length === 0) {
     return (
       <div className={cn('min-h-[32px] flex items-center', className)}>
-        <span className="text-[13px] text-gray-400">No roles</span>
+        <span className="text-[0.8125rem]  text-gray-400">No roles</span>
       </div>
     )
   }

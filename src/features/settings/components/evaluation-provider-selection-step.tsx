@@ -39,7 +39,7 @@ export function EvaluationProviderSelectionStep({
   return (
     <div className="space-y-3">
       <div className="border-gray-100">
-        <p className="text-[13px] text-gray-600">Select Evaluation Provider</p>
+        <p className="text-[0.8125rem]  text-gray-600">Select Evaluation Provider</p>
       </div>
 
       <div className="space-y-4">
@@ -55,7 +55,7 @@ export function EvaluationProviderSelectionStep({
                   type={provider.icon as any}
                   className="w-8 h-8"
                 />
-                <p className="font-450 text-gray-800 text-[13px]">
+                <p className="font-450 text-gray-800 text-[0.8125rem] ">
                   {provider.name}
                 </p>
               </div>

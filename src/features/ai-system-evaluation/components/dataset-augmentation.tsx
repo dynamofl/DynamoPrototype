@@ -126,7 +126,7 @@ export function DatasetAugmentation({
           <h2 className="text-lg font-450 text-gray-900">
             Augment Test Dataset (Optional)
           </h2>
-          <p className="text-[13px] text-gray-600">
+          <p className="text-[0.8125rem]  text-gray-600">
             Apply perturbations to your test dataset to enhance coverage and test
             system robustness against variations.
           </p>
@@ -168,7 +168,7 @@ export function DatasetAugmentation({
                       className="flex-1 cursor-pointer"
                     >
                       <div className="flex items-center gap-1.5 mb-2">
-                        <span className="text-[13px] font-450 text-gray-900">
+                        <span className="text-[0.8125rem]  font-450 text-gray-900">
                           {option.title}
                         </span>
                         <Tooltip delayDuration={200}>

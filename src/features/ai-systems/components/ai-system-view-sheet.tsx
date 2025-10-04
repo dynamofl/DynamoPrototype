@@ -99,7 +99,7 @@ export function AISystemViewSheet({
                 className="w-8 h-8"
               />
               <div className="flex-1">
-                <p className="text-[13px] font-450 text-gray-900">
+                <p className="text-[0.8125rem]  font-450 text-gray-900">
                   {currentProvider.name}
                 </p>
                 <p className="text-xs text-gray-500 mt-0.5">
@@ -113,7 +113,7 @@ export function AISystemViewSheet({
           <div className="space-y-2">
             <Label>System Name</Label>
             <div className="px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
-              <p className="text-[13px] text-gray-900">
+              <p className="text-[0.8125rem]  text-gray-900">
                 {aiSystem.name}
               </p>
             </div>
@@ -126,7 +126,7 @@ export function AISystemViewSheet({
               <div className="flex space-x-3 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
                 <KeyRound className="w-4 h-4 text-gray-500 mt-1" />
                 <div className="flex-1">
-                  <p className="text-[13px] font-450 text-gray-900">
+                  <p className="text-[0.8125rem]  font-450 text-gray-900">
                     {currentAPIKey.name}
                   </p>
                   <div className="text-xs text-gray-500 mt-1">
@@ -150,7 +150,7 @@ export function AISystemViewSheet({
           <div className="space-y-2">
             <Label>Model</Label>
             <div className="px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
-              <p className="text-[13px] font-450 text-gray-900">
+              <p className="text-[0.8125rem]  font-450 text-gray-900">
                 {aiSystem.selectedModel || "Unknown Model"}
               </p>
               {aiSystem.modelDetails?.name && aiSystem.modelDetails.name !== aiSystem.selectedModel && (
@@ -169,7 +169,7 @@ export function AISystemViewSheet({
                 <div className={`w-2 h-2 rounded-full ${
                   aiSystem.hasValidAPIKey ? 'bg-green-600' : 'bg-gray-400'
                 }`} />
-                <p className="text-[13px] text-gray-900">
+                <p className="text-[0.8125rem]  text-gray-900">
                   {aiSystem.hasValidAPIKey ? 'Connected' : 'Disconnected'}
                 </p>
               </div>
@@ -180,7 +180,7 @@ export function AISystemViewSheet({
           <div className="space-y-2">
             <Label>Created At</Label>
             <div className="px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
-              <p className="text-[13px] text-gray-900">
+              <p className="text-[0.8125rem]  text-gray-900">
                 {aiSystem.createdAt}
               </p>
             </div>
@@ -191,7 +191,7 @@ export function AISystemViewSheet({
             <div className="space-y-2">
               <Label>Guardrails</Label>
               <div className="px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
-                <p className="text-[13px] text-gray-900">
+                <p className="text-[0.8125rem]  text-gray-900">
                   {aiSystem.hasGuardrails ? 'Enabled' : 'Disabled'}
                 </p>
               </div>
@@ -203,7 +203,7 @@ export function AISystemViewSheet({
             <div className="space-y-2">
               <Label>Evaluation Status</Label>
               <div className="px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
-                <p className="text-[13px] text-gray-900">
+                <p className="text-[0.8125rem]  text-gray-900">
                   {aiSystem.isEvaluated ? 'Evaluated' : 'Not Evaluated'}
                 </p>
               </div>

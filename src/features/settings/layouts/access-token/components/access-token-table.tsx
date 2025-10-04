@@ -105,23 +105,23 @@ export function AccessTokenTable({
               <TableCell>
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   {renderProviderIcon(provider.provider)}
-                  <span className="text-[13px] font-450 text-gray-900 truncate">
+                  <span className="text-[0.8125rem]  font-450 text-gray-900 truncate">
                     {provider.provider}
                   </span>
                 </div>
               </TableCell>
               <TableCell>
-                <span className="text-[13px] text-gray-900">
+                <span className="text-[0.8125rem]  text-gray-900">
                   {provider.availableKeys === 0 ? '-' : provider.availableKeys}
                 </span>
               </TableCell>
               <TableCell>
-                <span className="text-[13px] text-gray-900">
+                <span className="text-[0.8125rem]  text-gray-900">
                   {provider.aiSystemUsage === 0 ? '-' : provider.aiSystemUsage}
                 </span>
               </TableCell>
               <TableCell>
-                <span className="text-[13px] text-gray-900">
+                <span className="text-[0.8125rem]  text-gray-900">
                   {provider.lastUpdated || '-'}
                 </span>
               </TableCell>

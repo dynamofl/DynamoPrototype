@@ -171,7 +171,7 @@ export function EvaluationSettingsContent() {
                   {/* Card Header */}
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="text-[13px] text-450 text-gray-900 mb-1">{model.name}</h3>
+                      <h3 className="text-[0.8125rem]  text-450 text-gray-900 mb-1">{model.name}</h3>
                       <div className="flex items-center gap-1 text-xs text-gray-600">
                         <span>{model.provider}</span>
                         <span>•</span>

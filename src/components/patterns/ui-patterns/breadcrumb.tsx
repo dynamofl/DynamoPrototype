@@ -46,7 +46,7 @@ export function Breadcrumb() {
   }
   
   return (
-    <nav className="flex items-center space-x-1 text-[13px] text-gray-600 px-6 py-2">
+    <nav className="flex items-center space-x-1 text-[0.8125rem]  text-gray-600 px-6 py-2">
       <Link
         to="/ai-systems"
         className="flex items-center hover:text-gray-900 transition-colors"

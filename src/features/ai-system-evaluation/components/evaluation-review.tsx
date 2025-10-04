@@ -72,7 +72,7 @@ export function EvaluationReview({
       {/* Header */}
       <div className="space-y-1">
         <h2 className="text-lg font-450 text-gray-900">Review and Evaluate</h2>
-        <p className="text-[13px] text-gray-600">
+        <p className="text-[0.8125rem]  text-gray-600">
           Review your evaluation configuration before running it.
         </p>
       </div>
@@ -83,7 +83,7 @@ export function EvaluationReview({
         <div className="border-b border-gray-200 pb-3">
           <div className="flex  justify-between mb-3 border-b border-gray-200 pb-3">
             <div className="flex items-center gap-2">
-              <span className="text-[13px] font-450 text-gray-900">{data.name}</span>
+              <span className="text-[0.8125rem]  font-450 text-gray-900">{data.name}</span>
               <Badge variant="secondary" className="text-xs">
                 {data.type === "compliance" ? "Compliance Evaluation" : "Jailbreak Evaluation"}
               </Badge>
@@ -106,17 +106,17 @@ export function EvaluationReview({
             {/* Evaluating AI System */}
             {evaluatingSystem && (
               <div>
-                <p className="text-[13px] font-450 text-gray-600 my-2">Evaluating AI System</p>
+                <p className="text-[0.8125rem]  font-450 text-gray-600 my-2">Evaluating AI System</p>
                 <div className="flex items-center gap-2 py-1.5">
                   <div className="flex items-center gap-2">
                   <AISystemIcon
                     type={evaluatingSystem.icon}
                     className="h-4 w-4"
                   />
-                  <span className="text-[13px] text-gray-900">{evaluatingSystem.name}</span>
+                  <span className="text-[0.8125rem]  text-gray-900">{evaluatingSystem.name}</span>
                   </div>
 
-                  <p className="text-[13px] text-gray-600"> ({evaluatingSystem.providerName} • {evaluatingSystem.selectedModel})</p>
+                  <p className="text-[0.8125rem]  text-gray-600"> ({evaluatingSystem.providerName} • {evaluatingSystem.selectedModel})</p>
            
                 </div>
               </div>
@@ -132,7 +132,7 @@ export function EvaluationReview({
                       className="flex items-center gap-2 py-1.5"
                     >
                       <PolicyIcon className="h-4 w-4 text-gray-500" />
-                      <span className="text-[13px] text-gray-900">{guardrail.name}</span>
+                      <span className="text-[0.8125rem]  text-gray-900">{guardrail.name}</span>
                       {guardrail.category && (
                         <Badge variant="secondary" className="">
                           {guardrail.category}
@@ -153,7 +153,7 @@ export function EvaluationReview({
             : ""
         }`}>
           <div className="flex items-center justify-between">
-            <h3 className="text-[13px] font-450 text-gray-600">Test Dataset</h3>
+            <h3 className="text-[0.8125rem]  font-450 text-gray-600">Test Dataset</h3>
             <Button
               variant="ghost"
               size="sm"
@@ -175,7 +175,7 @@ export function EvaluationReview({
                   return (
                     <div
                       key={policy.id}
-                      className="flex items-center gap-2 text-[13px]  py-1.5"
+                      className="flex items-center gap-2 text-[0.8125rem]   py-1.5"
                     >
                       <span className="text-gray-900">{policy.name}</span>
                       {policy.category && (
@@ -204,7 +204,7 @@ export function EvaluationReview({
         {data.type === "compliance" && data.perturbations && data.perturbations.length > 0 && (
           <div className="pb-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-[13px] font-450 text-gray-600">Dataset Augmentation</h3>
+              <h3 className="text-[0.8125rem]  font-450 text-gray-600">Dataset Augmentation</h3>
               <Button
                 variant="ghost"
                 size="sm"
@@ -226,7 +226,7 @@ export function EvaluationReview({
                 return (
                   <div
                     key={perturbation.type}
-                    className="flex items-center justify-between text-[13px] py-1.5"
+                    className="flex items-center justify-between text-[0.8125rem]  py-1.5"
                   >
                     <span className="text-gray-900">{labels[perturbation.type]}</span>
                     <span className="text-gray-600">
@@ -243,7 +243,7 @@ export function EvaluationReview({
         {/* {data.type === "compliance" && (
           <div className="">
             <div className="flex items-center justify-between">
-              <h3 className="text-[13px] font-450 text-gray-600">Guardrails</h3>
+              <h3 className="text-[0.8125rem]  font-450 text-gray-600">Guardrails</h3>
               <Button
                 variant="ghost"
                 size="sm"
@@ -260,7 +260,7 @@ export function EvaluationReview({
                   {selectedGuardrails.map((guardrail) => (
                     <div
                       key={guardrail.id}
-                      className="flex items-center gap-2 text-[13px] py-1.5"
+                      className="flex items-center gap-2 text-[0.8125rem]  py-1.5"
                     >
                       <span className="text-gray-900">{guardrail.name}</span>
                       {guardrail.category && (
@@ -281,7 +281,7 @@ export function EvaluationReview({
         {data.type === "jailbreak" && (
           <div className="">
             <div className="flex items-center justify-between">
-              <h3 className="text-[13px] font-450 text-gray-600">AI Systems</h3>
+              <h3 className="text-[0.8125rem]  font-450 text-gray-600">AI Systems</h3>
               <Button
                 variant="ghost"
                 size="sm"
@@ -298,7 +298,7 @@ export function EvaluationReview({
                   {selectedAISystems.map((system) => (
                     <div
                       key={system.id}
-                      className="flex items-center gap-2 text-[13px] py-1.5"
+                      className="flex items-center gap-2 text-[0.8125rem]  py-1.5"
                     >
                       <AISystemIcon
                         type={system.icon}

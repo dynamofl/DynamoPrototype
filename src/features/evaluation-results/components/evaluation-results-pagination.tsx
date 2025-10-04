@@ -47,13 +47,13 @@ export function EvaluationResultsPagination({
       {/* Left side - Navigate To and Quick Navigation - Only show if enabled */}
       {/* {showQuickNavigation && (
         <div className="flex items-center gap-4">
-          <div className="text-[13px] text-gray-600">
+          <div className="text-[0.8125rem]  text-gray-600">
             Navigate To:
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-[13px] text-gray-600">First</span>
+            <span className="text-[0.8125rem]  text-gray-600">First</span>
           </div>
-          <div className="text-[13px] text-gray-600">
+          <div className="text-[0.8125rem]  text-gray-600">
             Quick Navigation
           </div>
         </div>
@@ -63,7 +63,7 @@ export function EvaluationResultsPagination({
       <div className={`flex items-center gap-4 ${!showQuickNavigation ? 'ml-auto' : ''}`}>
         {/* Rows per page */}
         <div className="flex items-center gap-2">
-          <span className="text-[13px] text-gray-600">Rows per page:</span>
+          <span className="text-[0.8125rem]  text-gray-600">Rows per page:</span>
           <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
             <SelectTrigger className="w-20">
               <SelectValue />
@@ -79,7 +79,7 @@ export function EvaluationResultsPagination({
         </div>
 
         {/* Page info */}
-        <div className="text-[13px] text-gray-600">
+        <div className="text-[0.8125rem]  text-gray-600">
           {startItem} - {endItem} of {total}
         </div>
 

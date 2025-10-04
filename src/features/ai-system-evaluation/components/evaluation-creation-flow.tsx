@@ -99,7 +99,7 @@ export function EvaluationCreationFlow({
                     {/* Step Badge */}
                     <div className="flex items-center gap-2">
                       <div
-                        className={`flex items-center justify-center w-6 h-6 rounded-full text-[13px] font-450 transition-colors ${
+                        className={`flex items-center justify-center w-6 h-6 rounded-full text-[0.8125rem]  font-450 transition-colors ${
                           isActive
                             ? "bg-blue-100 text-blue-800"
                             : isCompleted
@@ -113,7 +113,7 @@ export function EvaluationCreationFlow({
                           index + 1
                         )}
                       </div>
-                      <span className={`text-[13px] font-450 pr-2 ${
+                      <span className={`text-[0.8125rem]  font-450 pr-2 ${
                         isActive ? "text-gray-900" : "text-gray-600"
                       }`}>
                         {step.title}

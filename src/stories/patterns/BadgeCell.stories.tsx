@@ -164,7 +164,7 @@ export const AllVariants: Story = {
   render: () => (
     <div className="space-y-4 w-80">
       <div className="space-y-2">
-        <h3 className="text-[13px] font-medium">Status Badges</h3>
+        <h3 className="text-[0.8125rem]  font-medium">Status Badges</h3>
         <div className="space-y-2">
           <BadgeCell
             value="active"
@@ -194,7 +194,7 @@ export const AllVariants: Story = {
       </div>
       
       <div className="space-y-2">
-        <h3 className="text-[13px] font-medium">Custom Mappings</h3>
+        <h3 className="text-[0.8125rem]  font-medium">Custom Mappings</h3>
         <div className="space-y-2">
           <BadgeCell
             value="production"

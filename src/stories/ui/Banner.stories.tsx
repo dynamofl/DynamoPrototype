@@ -475,7 +475,7 @@ export const ContentVisibility: Story = {
   render: () => (
     <div className="space-y-4 w-96">
       <div>
-        <h4 className="text-[13px] font-medium mb-2">Both Title and Description</h4>
+        <h4 className="text-[0.8125rem]  font-medium mb-2">Both Title and Description</h4>
         <Banner
           message="Complete Banner"
           description="This shows both title and description text"
@@ -494,7 +494,7 @@ export const ContentVisibility: Story = {
       </div>
       
       <div>
-        <h4 className="text-[13px] font-medium mb-2">Title Only</h4>
+        <h4 className="text-[0.8125rem]  font-medium mb-2">Title Only</h4>
         <Banner
           message="Title Only Banner"
           description="This description is hidden"
@@ -513,7 +513,7 @@ export const ContentVisibility: Story = {
       </div>
       
       <div>
-        <h4 className="text-[13px] font-medium mb-2">Description Only</h4>
+        <h4 className="text-[0.8125rem]  font-medium mb-2">Description Only</h4>
         <Banner
           message="This title is hidden"
           description="This banner shows only the description text without a title"
@@ -532,7 +532,7 @@ export const ContentVisibility: Story = {
       </div>
       
       <div>
-        <h4 className="text-[13px] font-medium mb-2">Actions Only (No Text)</h4>
+        <h4 className="text-[0.8125rem]  font-medium mb-2">Actions Only (No Text)</h4>
         <Banner
           message="Hidden title"
           description="Hidden description"
@@ -565,7 +565,7 @@ export const WidthVariants: Story = {
   render: () => (
     <div className="p-6 space-y-8 w-full bg-gray-50 min-h-screen">
       <div className="bg-white p-4 rounded border">
-        <h4 className="text-[13px] font-medium mb-4">Width: "fit" (auto-width with max-width)</h4>
+        <h4 className="text-[0.8125rem]  font-medium mb-4">Width: "fit" (auto-width with max-width)</h4>
         <div className="border-2 border-dashed border-blue-200 p-4">
           <p className="text-xs text-blue-600 mb-2">Container (full width available)</p>
           <Banner
@@ -586,7 +586,7 @@ export const WidthVariants: Story = {
       </div>
       
       <div className="bg-white p-4 rounded border">
-        <h4 className="text-[13px] font-medium mb-4">Width: "full" (100% container width)</h4>
+        <h4 className="text-[0.8125rem]  font-medium mb-4">Width: "full" (100% container width)</h4>
         <div className="border-2 border-dashed border-green-200 p-4">
           <p className="text-xs text-green-600 mb-2">Container (full width available)</p>
           <Banner
@@ -607,7 +607,7 @@ export const WidthVariants: Story = {
       </div>
       
       <div className="bg-white p-4 rounded border">
-        <h4 className="text-[13px] font-medium mb-4">Side-by-Side Comparison</h4>
+        <h4 className="text-[0.8125rem]  font-medium mb-4">Side-by-Side Comparison</h4>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div>
             <div className="border-2 border-dashed border-blue-200 p-4">
@@ -668,7 +668,7 @@ export const WidthControl: Story = {
   },
   render: (args) => (
     <div className="w-full border-2 border-dashed border-gray-300 p-6 bg-gray-50">
-      <p className="text-[13px] text-gray-600 mb-4">
+      <p className="text-[0.8125rem]  text-gray-600 mb-4">
         Container (dashed border shows available space)
       </p>
       <Banner {...args} />

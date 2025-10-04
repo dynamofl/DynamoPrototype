@@ -18,19 +18,19 @@ export const Default: Story = {
     <RadioGroup defaultValue="option1">
       <div className="flex items-center space-x-2">
         <RadioGroupItem value="option1" id="option1" />
-        <label htmlFor="option1" className="text-[13px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+        <label htmlFor="option1" className="text-[0.8125rem]  font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
           Option 1
         </label>
       </div>
       <div className="flex items-center space-x-2">
         <RadioGroupItem value="option2" id="option2" />
-        <label htmlFor="option2" className="text-[13px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+        <label htmlFor="option2" className="text-[0.8125rem]  font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
           Option 2
         </label>
       </div>
       <div className="flex items-center space-x-2">
         <RadioGroupItem value="option3" id="option3" />
-        <label htmlFor="option3" className="text-[13px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+        <label htmlFor="option3" className="text-[0.8125rem]  font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
           Option 3
         </label>
       </div>
@@ -44,7 +44,7 @@ export const WithDescriptions: Story = {
       <div className="flex items-center space-x-2">
         <RadioGroupItem value="default" id="r1" />
         <div className="grid gap-1.5 leading-none">
-          <label htmlFor="r1" className="text-[13px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+          <label htmlFor="r1" className="text-[0.8125rem]  font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
             Default
           </label>
           <p className="text-xs text-muted-foreground">
@@ -55,7 +55,7 @@ export const WithDescriptions: Story = {
       <div className="flex items-center space-x-2">
         <RadioGroupItem value="comfortable" id="r2" />
         <div className="grid gap-1.5 leading-none">
-          <label htmlFor="r2" className="text-[13px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+          <label htmlFor="r2" className="text-[0.8125rem]  font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
             Comfortable
           </label>
           <p className="text-xs text-muted-foreground">
@@ -66,7 +66,7 @@ export const WithDescriptions: Story = {
       <div className="flex items-center space-x-2">
         <RadioGroupItem value="compact" id="r3" />
         <div className="grid gap-1.5 leading-none">
-          <label htmlFor="r3" className="text-[13px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+          <label htmlFor="r3" className="text-[0.8125rem]  font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
             Compact
           </label>
           <p className="text-xs text-muted-foreground">
@@ -83,19 +83,19 @@ export const Disabled: Story = {
     <RadioGroup defaultValue="option1" className="space-y-3">
       <div className="flex items-center space-x-2">
         <RadioGroupItem value="option1" id="d1" />
-        <label htmlFor="d1" className="text-[13px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+        <label htmlFor="d1" className="text-[0.8125rem]  font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
           Option 1
         </label>
       </div>
       <div className="flex items-center space-x-2">
         <RadioGroupItem value="option2" id="d2" disabled />
-        <label htmlFor="d2" className="text-[13px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+        <label htmlFor="d2" className="text-[0.8125rem]  font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
           Option 2 (disabled)
         </label>
       </div>
       <div className="flex items-center space-x-2">
         <RadioGroupItem value="option3" id="d3" />
-        <label htmlFor="d3" className="text-[13px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+        <label htmlFor="d3" className="text-[0.8125rem]  font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
           Option 3
         </label>
       </div>
@@ -113,7 +113,7 @@ export const PaymentMethod: Story = {
             <span className="text-white text-xs font-bold">💳</span>
           </div>
           <div>
-            <label htmlFor="card" className="text-[13px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            <label htmlFor="card" className="text-[0.8125rem]  font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               Credit Card
             </label>
             <p className="text-xs text-muted-foreground">Pay with your credit card</p>
@@ -128,7 +128,7 @@ export const PaymentMethod: Story = {
             <span className="text-white text-xs font-bold">P</span>
           </div>
           <div>
-            <label htmlFor="paypal" className="text-[13px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            <label htmlFor="paypal" className="text-[0.8125rem]  font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               PayPal
             </label>
             <p className="text-xs text-muted-foreground">Pay with your PayPal account</p>
@@ -143,7 +143,7 @@ export const PaymentMethod: Story = {
             <span className="text-white text-xs font-bold">🍎</span>
           </div>
           <div>
-            <label htmlFor="apple" className="text-[13px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            <label htmlFor="apple" className="text-[0.8125rem]  font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               Apple Pay
             </label>
             <p className="text-xs text-muted-foreground">Pay with Apple Pay</p>
@@ -162,19 +162,19 @@ export const SettingsExample: Story = {
         <RadioGroup defaultValue="system" className="space-y-3">
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="light" id="light" />
-            <label htmlFor="light" className="text-[13px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            <label htmlFor="light" className="text-[0.8125rem]  font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               Light
             </label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="dark" id="dark" />
-            <label htmlFor="dark" className="text-[13px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            <label htmlFor="dark" className="text-[0.8125rem]  font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               Dark
             </label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="system" id="system" />
-            <label htmlFor="system" className="text-[13px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            <label htmlFor="system" className="text-[0.8125rem]  font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               System
             </label>
           </div>
@@ -186,19 +186,19 @@ export const SettingsExample: Story = {
         <RadioGroup defaultValue="en" className="space-y-3">
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="en" id="en" />
-            <label htmlFor="en" className="text-[13px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            <label htmlFor="en" className="text-[0.8125rem]  font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               English
             </label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="es" id="es" />
-            <label htmlFor="es" className="text-[13px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            <label htmlFor="es" className="text-[0.8125rem]  font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               Español
             </label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="fr" id="fr" />
-            <label htmlFor="fr" className="text-[13px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            <label htmlFor="fr" className="text-[0.8125rem]  font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               Français
             </label>
           </div>

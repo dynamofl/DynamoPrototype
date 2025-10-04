@@ -84,7 +84,7 @@ export const DifferentSizes: Story = {
   render: () => (
     <div className="space-y-4">
       <div className="flex items-center space-x-4">
-        <span className="text-[13px] w-16">Small:</span>
+        <span className="text-[0.8125rem]  w-16">Small:</span>
         <OpenAIInlineIcon className="w-4 h-4" />
         <RemoteInlineIcon className="w-4 h-4" />
         <LocalInlineIcon className="w-4 h-4" />
@@ -92,7 +92,7 @@ export const DifferentSizes: Story = {
       </div>
       
       <div className="flex items-center space-x-4">
-        <span className="text-[13px] w-16">Default:</span>
+        <span className="text-[0.8125rem]  w-16">Default:</span>
         <OpenAIInlineIcon />
         <RemoteInlineIcon />
         <LocalInlineIcon />
@@ -100,7 +100,7 @@ export const DifferentSizes: Story = {
       </div>
       
       <div className="flex items-center space-x-4">
-        <span className="text-[13px] w-16">Large:</span>
+        <span className="text-[0.8125rem]  w-16">Large:</span>
         <OpenAIInlineIcon className="w-8 h-8" />
         <RemoteInlineIcon className="w-8 h-8" />
         <LocalInlineIcon className="w-8 h-8" />
@@ -115,22 +115,22 @@ export const InButtons: Story = {
     <div className="flex flex-wrap gap-2">
       <button className="flex items-center space-x-2 px-3 py-2 border rounded-md hover:bg-gray-50">
         <OpenAIInlineIcon />
-        <span className="text-[13px]">OpenAI</span>
+        <span className="text-[0.8125rem] ">OpenAI</span>
       </button>
       
       <button className="flex items-center space-x-2 px-3 py-2 border rounded-md hover:bg-gray-50">
         <RemoteInlineIcon />
-        <span className="text-[13px]">Remote</span>
+        <span className="text-[0.8125rem] ">Remote</span>
       </button>
       
       <button className="flex items-center space-x-2 px-3 py-2 border rounded-md hover:bg-gray-50">
         <LocalInlineIcon />
-        <span className="text-[13px]">Local</span>
+        <span className="text-[0.8125rem] ">Local</span>
       </button>
       
       <button className="flex items-center space-x-2 px-3 py-2 border rounded-md hover:bg-gray-50">
         <AnthropicInlineIcon />
-        <span className="text-[13px]">Anthropic</span>
+        <span className="text-[0.8125rem] ">Anthropic</span>
       </button>
     </div>
   ),
@@ -142,7 +142,7 @@ export const InList: Story = {
       <div className="flex items-center space-x-3 p-2 border rounded-md">
         <OpenAIInlineIcon className="text-green-600" />
         <div>
-          <p className="text-[13px] font-medium">GPT-4 System</p>
+          <p className="text-[0.8125rem]  font-medium">GPT-4 System</p>
           <p className="text-xs text-muted-foreground">OpenAI Provider</p>
         </div>
       </div>
@@ -150,7 +150,7 @@ export const InList: Story = {
       <div className="flex items-center space-x-3 p-2 border rounded-md">
         <RemoteInlineIcon className="text-blue-600" />
         <div>
-          <p className="text-[13px] font-medium">Remote API</p>
+          <p className="text-[0.8125rem]  font-medium">Remote API</p>
           <p className="text-xs text-muted-foreground">External Service</p>
         </div>
       </div>
@@ -158,7 +158,7 @@ export const InList: Story = {
       <div className="flex items-center space-x-3 p-2 border rounded-md">
         <LocalInlineIcon className="text-purple-600" />
         <div>
-          <p className="text-[13px] font-medium">Local Model</p>
+          <p className="text-[0.8125rem]  font-medium">Local Model</p>
           <p className="text-xs text-muted-foreground">On-premise</p>
         </div>
       </div>
@@ -166,7 +166,7 @@ export const InList: Story = {
       <div className="flex items-center space-x-3 p-2 border rounded-md">
         <AnthropicInlineIcon className="text-orange-600" />
         <div>
-          <p className="text-[13px] font-medium">Claude System</p>
+          <p className="text-[0.8125rem]  font-medium">Claude System</p>
           <p className="text-xs text-muted-foreground">Anthropic Provider</p>
         </div>
       </div>

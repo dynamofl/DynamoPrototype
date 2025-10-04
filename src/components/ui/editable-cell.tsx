@@ -157,7 +157,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({
           >
             {/* Fixed width cell content - always visible */}
             <div 
-              className="grid-cell w-full h-full text-[13px] cursor-pointer rounded flex items-start"
+              className="grid-cell w-full h-full text-[0.8125rem]  cursor-pointer rounded flex items-start"
               onClick={handleFocus}
               style={{ 
                 height: config.height, 
@@ -213,7 +213,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({
                   onMouseLeave={(e) => e.stopPropagation()}
                   onMouseMove={(e) => e.stopPropagation()}
                   onClick={(e) => e.stopPropagation()}
-                  className="w-full resize-none text-[13px] border-0 focus:ring-0 focus:outline-none p-2 whitespace-pre-wrap"
+                  className="w-full resize-none text-[0.8125rem]  border-0 focus:ring-0 focus:outline-none p-2 whitespace-pre-wrap"
                   style={{ 
                     minHeight: config.overlayHeight,
                     height: `${overlayHeight - 16}px`

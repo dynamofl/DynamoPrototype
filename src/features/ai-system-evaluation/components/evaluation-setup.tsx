@@ -179,7 +179,7 @@ export function EvaluationSetup({
                 />
               </div>
               <div className="flex-1">
-                <span className="text-[13px] font-450 text-gray-900">
+                <span className="text-[0.8125rem]  font-450 text-gray-900">
                   {evaluatingSystem.name}
                 </span>
                 <div className="flex items-center gap-2">
@@ -234,7 +234,7 @@ export function EvaluationSetup({
                 <div className="max-h-80 overflow-y-auto">
                   {filteredGuardrails.length === 0 ? (
                     <div className="p-8 text-center">
-                      <p className="text-[13px] text-gray-500">
+                      <p className="text-[0.8125rem]  text-gray-500">
                         {searchQuery
                           ? "No guardrails found matching your search."
                           : "No guardrails available."}
@@ -267,7 +267,7 @@ export function EvaluationSetup({
                             className="flex-1 cursor-pointer"
                           >
                             <div className="flex items-center gap-2">
-                              <span className="text-[13px] font-450 text-gray-900">
+                              <span className="text-[0.8125rem]  font-450 text-gray-900">
                                 {guardrail.name}
                               </span>
                               {guardrail.category && (
@@ -303,7 +303,7 @@ export function EvaluationSetup({
                 {/* Footer */}
                 {selectedGuardrails.length > 0 && (
                   <div className="p-3 border-t bg-gray-50">
-                    <div className="flex items-center justify-between text-[13px] text-gray-600">
+                    <div className="flex items-center justify-between text-[0.8125rem]  text-gray-600">
                       <span>
                         {selectedGuardrails.length} Guardrail
                         {selectedGuardrails.length !== 1 ? "s" : ""} selected
@@ -337,7 +337,7 @@ export function EvaluationSetup({
                 >
                   <PolicyIcon className="h-4 w-4 text-gray-500" />
                   <div className="flex-1 flex items-center gap-2">
-                    <span className="text-[13px] font-400">{guardrail.name}</span>
+                    <span className="text-[0.8125rem]  font-400">{guardrail.name}</span>
                     {guardrail.category && (
                       <Badge variant="outline" className="text-xs">
                         {guardrail.category}
@@ -398,7 +398,7 @@ export function EvaluationSetup({
                 >
                   Compliance
                 </label>
-                <p className="text-[13px] text-gray-600 mt-1">
+                <p className="text-[0.8125rem]  text-gray-600 mt-1">
                   Test against regulatory and organizational compliance requirements
                 </p>
               </div>
@@ -417,7 +417,7 @@ export function EvaluationSetup({
                 >
                   Jailbreak
                 </label>
-                <p className="text-[13px] text-gray-600 mt-1">
+                <p className="text-[0.8125rem]  text-gray-600 mt-1">
                   Evaluate resilience against adversarial attacks and prompt injection
                 </p>
               </div>

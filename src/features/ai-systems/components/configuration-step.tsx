@@ -76,7 +76,7 @@ export function ConfigurationStep({
         {/* Validation Error Display */}
         {validationError && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-[13px] text-red-600">{validationError}</p>
+            <p className="text-[0.8125rem]  text-red-600">{validationError}</p>
           </div>
         )}
 
@@ -85,7 +85,7 @@ export function ConfigurationStep({
           <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <div className="flex items-center space-x-2">
               <RefreshCw className="h-4 w-4 animate-spin text-blue-600" />
-              <p className="text-[13px] text-blue-600">Connecting to AI system...</p>
+              <p className="text-[0.8125rem]  text-blue-600">Connecting to AI system...</p>
             </div>
           </div>
         )} */}
@@ -99,7 +99,7 @@ export function ConfigurationStep({
               className="w-8 h-8"
             />
             <div className="flex-1">
-              <p className="text-[13px] font-450 text-gray-900">
+              <p className="text-[0.8125rem]  font-450 text-gray-900">
                 {selectedProvider.name}
               </p>
             </div>
@@ -147,7 +147,7 @@ export function ConfigurationStep({
                         <div className="flex space-x-3 flex-1">
                           <KeyRound className="w-4 h-4 text-gray-500 mt-1.5" />
                           <div className="flex-1">
-                            <Label htmlFor={apiKey.id} className="font-450 text-[13px] text-gray-900 cursor-pointer">
+                            <Label htmlFor={apiKey.id} className="font-450 text-[0.8125rem]  text-gray-900 cursor-pointer">
                               {apiKey.name}
                             </Label>
                             <div className="text-xs text-gray-500 mt-1">
@@ -410,7 +410,7 @@ export function ConfigurationStep({
                 {isFetchingModels ? (
                   <div className="flex items-center justify-center py-4">
                     <RefreshCw className="h-4 w-4 animate-spin mr-2" />
-                    <span className="text-[13px] text-gray-600">Loading models...</span>
+                    <span className="text-[0.8125rem]  text-gray-600">Loading models...</span>
                   </div>
                 ) : (
                   availableModels.map((model) => (

@@ -25,7 +25,7 @@ const TipsSection = ({ isExpanded, onToggle }: TipsSectionProps) => {
       >
         <div className="flex items-center gap-3">
           <Lightbulb className="h-4 w-4 text-gray-600" />
-          <h3 className="text-[13px] font-450 text-gray-900">Tips for preparing your CSV</h3>
+          <h3 className="text-[0.8125rem]  font-450 text-gray-900">Tips for preparing your CSV</h3>
         </div>
         <ChevronDown
           className={`h-4 w-4 text-gray-600 transition-transform duration-200 ${
@@ -521,12 +521,12 @@ export function UploadPromptsSheet({
                   <div className="bg-gray-100 rounded-full p-2 mb-2">
                     <Upload className="h-5 w-5 text-gray-600" />
                   </div>
-                  <p className="text-[13px] font-450 text-gray-900 mb-1">
+                  <p className="text-[0.8125rem]  font-450 text-gray-900 mb-1">
                     Drag and drop your .csv files here
                   </p>
                   <div className="flex items-center gap-1">
-                    <span className="text-[13px] text-gray-600">Or</span>
-                    <span className="text-[13px] font-450 text-blue-600 underline">Browse File</span>
+                    <span className="text-[0.8125rem]  text-gray-600">Or</span>
+                    <span className="text-[0.8125rem]  font-450 text-blue-600 underline">Browse File</span>
                   </div>
                 </label>
               </div>
@@ -541,7 +541,7 @@ export function UploadPromptsSheet({
                 <FileText className="h-4 w-4 text-gray-600" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[13px] font-450 text-gray-900">
+                  <span className="text-[0.8125rem]  font-450 text-gray-900">
                     {selectedFile?.name || existingFileName}
                   </span>
                   {parsedResult && (
@@ -574,10 +574,10 @@ export function UploadPromptsSheet({
           {error && (
             <div className="p-3 bg-red-50 rounded-lg flex items-start gap-3">
               <div className="flex-1 min-w-0 space-y-1">
-                <p className="text-[13px] font-450 text-red-600 truncate">
+                <p className="text-[0.8125rem]  font-450 text-red-600 truncate">
                   {error.split(':')[0]}
                 </p>
-                <p className="text-[13px] text-red-600">
+                <p className="text-[0.8125rem]  text-red-600">
                   {error.split(':').slice(1).join(':').trim()}
                 </p>
               </div>
@@ -595,7 +595,7 @@ export function UploadPromptsSheet({
         {showMapping && csvData && (
           <div className="pt-2 space-y-2">
             <div className="space-y-2">
-              <p className="text-[13px] text-gray-600">
+              <p className="text-[0.8125rem]  text-gray-600">
                 Map your CSV columns to the expected fields.
               </p>
             </div>
@@ -610,12 +610,12 @@ export function UploadPromptsSheet({
                   value={mappedColumns.adversarialPrompt}
                   onValueChange={(value) => handleColumnChange('adversarialPrompt', value)}
                 >
-                  <SelectTrigger className="text-[13px]">
+                  <SelectTrigger className="text-[0.8125rem] ">
                     <SelectValue placeholder="Select column from your csv..." />
                   </SelectTrigger>
                   <SelectContent>
                     {csvData.headers.map((header) => (
-                      <SelectItem key={header} value={header} className="text-[13px]">
+                      <SelectItem key={header} value={header} className="text-[0.8125rem] ">
                         {header}
                       </SelectItem>
                     ))}
@@ -631,12 +631,12 @@ export function UploadPromptsSheet({
                   value={mappedColumns.attackArea}
                   onValueChange={(value) => handleColumnChange('attackArea', value)}
                 >
-                  <SelectTrigger className="text-[13px]">
+                  <SelectTrigger className="text-[0.8125rem] ">
                     <SelectValue placeholder="Select column from your csv..." />
                   </SelectTrigger>
                   <SelectContent>
                     {csvData.headers.map((header) => (
-                      <SelectItem key={header} value={header} className="text-[13px]">
+                      <SelectItem key={header} value={header} className="text-[0.8125rem] ">
                         {header}
                       </SelectItem>
                     ))}
@@ -693,7 +693,7 @@ export function UploadPromptsSheet({
                   : 'text-amber-700 '
               }`} />
               </div>
-                <p className={`text-[13px] ${
+                <p className={`text-[0.8125rem]  ${
                   validationResult?.validCount === 0
                     ? 'text-gray-900'
                     : 'text-gray-900'

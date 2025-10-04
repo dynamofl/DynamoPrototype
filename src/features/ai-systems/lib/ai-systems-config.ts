@@ -43,7 +43,7 @@ const renderAISystemName = (_value: string, row: any) => {
     }),
     React.createElement('span', {
       key: 'text',
-      className: 'text-[13px] font-450 text-gray-900 truncate'
+      className: 'text-[0.8125rem]  font-450 text-gray-900 truncate'
     }, row.name)
   ])
 }

@@ -114,7 +114,7 @@ export function DatasetSelection({
         <h2 className="text-lg font-450 text-gray-900">
           Generate Test Dataset from Policies
         </h2>
-        <p className="text-[13px] text-gray-600">
+        <p className="text-[0.8125rem]  text-gray-600">
           Choose policies to generate test datasets. Each policy will generate an
           estimated number of prompts for the benchmark.
         </p>
@@ -152,7 +152,7 @@ export function DatasetSelection({
           <div className="max-h-96 overflow-y-auto">
             {filteredPolicies.length === 0 ? (
               <div className="p-8 text-center">
-                <p className="text-[13px] text-gray-500">
+                <p className="text-[0.8125rem]  text-gray-500">
                   {searchQuery
                     ? "No policies found matching your search."
                     : "No policies available."}
@@ -191,7 +191,7 @@ export function DatasetSelection({
                       className="flex-1 cursor-pointer"
                     >
                       <div className="flex items-center gap-2">
-                        <span className="text-[13px] font-450 text-gray-900">
+                        <span className="text-[0.8125rem]  font-450 text-gray-900">
                           {policy.name}
                         </span>
                         {policy.category && (

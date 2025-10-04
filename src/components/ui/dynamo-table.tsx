@@ -464,7 +464,7 @@ export const DynamoTable: React.FC<DynamoTableProps> = ({
               {columns.map((column) => (
                 <TableHead 
                   key={column.key} 
-                  className="h-10 px-4 font-450 text-[13px] text-gray-900"
+                  className="h-10 px-4 font-450 text-[0.8125rem]  text-gray-900"
                   style={{ width: column.width }}
                 >
                   {column.title}
@@ -478,7 +478,7 @@ export const DynamoTable: React.FC<DynamoTableProps> = ({
                 {columns.map((column, colIndex) => (
                   <TableCell 
                     key={column.key}
-                    className="h-12 px-4 py-2 text-gray-900 text-[13px]"
+                    className="h-12 px-4 py-2 text-gray-900 text-[0.8125rem] "
                     style={{ width: column.width }}
                   >
                     {renderCellContent(row, column, rowIndex, colIndex)}

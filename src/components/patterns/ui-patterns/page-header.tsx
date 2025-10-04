@@ -40,7 +40,7 @@ export function PageHeader({
             {title}
           </h1>
           {description && (
-            <p className={cn("text-[13px] text-muted-foreground", descriptionClassName)}>
+            <p className={cn("text-[0.8125rem]  text-muted-foreground", descriptionClassName)}>
               {description}
             </p>
           )}

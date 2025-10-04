@@ -74,7 +74,7 @@ export function ResultsSection({
             <div className="flex items-center justify-between">
               <Label>Evaluation Prompts</Label>
               {totalPages > 1 && (
-                <div className="text-[13px] text-muted-foreground">
+                <div className="text-[0.8125rem]  text-muted-foreground">
                   Showing {startIndex + 1}-{Math.min(startIndex + 20, prompts.length)} of {prompts.length} entries
                 </div>
               )}
@@ -174,7 +174,7 @@ export function ResultsSection({
             </h3>
             <div className="grid grid-cols-3 gap-4">
               <div className="p-3 bg-muted rounded-md">
-                <p className="text-[13px] text-muted-foreground">
+                <p className="text-[0.8125rem]  text-muted-foreground">
                   Total Prompts
                 </p>
                 <p className="text-2xl font-450">
@@ -182,13 +182,13 @@ export function ResultsSection({
                 </p>
               </div>
               <div className="p-3 bg-muted rounded-md">
-                <p className="text-[13px] text-muted-foreground">Blocked</p>
+                <p className="text-[0.8125rem]  text-muted-foreground">Blocked</p>
                 <p className="text-2xl font-450 text-red-600">
                   {result.overallMetrics.totalBlocked}
                 </p>
               </div>
               <div className="p-3 bg-muted rounded-md">
-                <p className="text-[13px] text-muted-foreground">Passed</p>
+                <p className="text-[0.8125rem]  text-muted-foreground">Passed</p>
                 <p className="text-2xl font-450 text-green-600">
                   {result.overallMetrics.totalPassed}
                 </p>
@@ -196,7 +196,7 @@ export function ResultsSection({
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div className="p-3 bg-muted rounded-md">
-                <p className="text-[13px] text-muted-foreground">
+                <p className="text-[0.8125rem]  text-muted-foreground">
                   Avg Accuracy
                 </p>
                 <p className="text-2xl font-450">
@@ -207,7 +207,7 @@ export function ResultsSection({
                 </p>
               </div>
               <div className="p-3 bg-muted rounded-md">
-                <p className="text-[13px] text-muted-foreground">
+                <p className="text-[0.8125rem]  text-muted-foreground">
                   Avg Precision
                 </p>
                 <p className="text-2xl font-450">
@@ -218,7 +218,7 @@ export function ResultsSection({
                 </p>
               </div>
               <div className="p-3 bg-muted rounded-md">
-                <p className="text-[13px] text-muted-foreground">
+                <p className="text-[0.8125rem]  text-muted-foreground">
                   Avg Recall
                 </p>
                 <p className="text-2xl font-450">
@@ -246,25 +246,25 @@ export function ResultsSection({
                 >
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-[13px] font-450 text-muted-foreground">
+                      <p className="text-[0.8125rem]  font-450 text-muted-foreground">
                         Prompt:
                       </p>
-                      <p className="text-[13px] line-clamp-2">
+                      <p className="text-[0.8125rem]  line-clamp-2">
                         {promptResult.prompt}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[13px] font-450 text-muted-foreground">
+                      <p className="text-[0.8125rem]  font-450 text-muted-foreground">
                         Topic:
                       </p>
-                      <p className="text-[13px]">
+                      <p className="text-[0.8125rem] ">
                         {promptResult.topic || "any"}
                       </p>
                     </div>
                   </div>
                   <div className="grid grid-cols-4 gap-4">
                     <div>
-                      <p className="text-[13px] font-450 text-muted-foreground">
+                      <p className="text-[0.8125rem]  font-450 text-muted-foreground">
                         Expected:
                       </p>
                       <Badge
@@ -281,7 +281,7 @@ export function ResultsSection({
                       </Badge>
                     </div>
                     <div>
-                      <p className="text-[13px] font-450 text-muted-foreground">
+                      <p className="text-[0.8125rem]  font-450 text-muted-foreground">
                         Result:
                       </p>
                       <Badge
@@ -297,10 +297,10 @@ export function ResultsSection({
                       </Badge>
                     </div>
                     <div>
-                      <p className="text-[13px] font-450 text-muted-foreground">
+                      <p className="text-[0.8125rem]  font-450 text-muted-foreground">
                         Accuracy:
                       </p>
-                      <span className="text-[13px]">
+                      <span className="text-[0.8125rem] ">
                         {promptResult.localScores.accuracy !==
                         undefined
                           ? `${(
@@ -310,10 +310,10 @@ export function ResultsSection({
                       </span>
                     </div>
                     <div>
-                      <p className="text-[13px] font-450 text-muted-foreground">
+                      <p className="text-[0.8125rem]  font-450 text-muted-foreground">
                         Precision:
                       </p>
-                      <span className="text-[13px]">
+                      <span className="text-[0.8125rem] ">
                         {promptResult.localScores.precision !==
                         undefined
                           ? `${(
@@ -326,7 +326,7 @@ export function ResultsSection({
                   {promptResult.guardrailResults &&
                     promptResult.guardrailResults.length > 0 && (
                       <div>
-                        <p className="text-[13px] font-450 text-muted-foreground mb-2">
+                        <p className="text-[0.8125rem]  font-450 text-muted-foreground mb-2">
                           Guardrails:
                         </p>
                         <div className="space-y-1">
@@ -400,7 +400,7 @@ export function ResultsSection({
                                 <div className="flex items-start justify-between">
                                   <div className="space-y-2 flex-1">
                                     <div className="flex items-center space-x-2">
-                                      <span className="font-450 text-[13px]">
+                                      <span className="font-450 text-[0.8125rem] ">
                                         {guardrail.guardrailName}
                                       </span>
                                       <Badge
@@ -465,7 +465,7 @@ export function ResultsSection({
                   Prompt: {promptResult.prompt.substring(0, 50)}...
                 </h4>
                 <div className="p-4 bg-muted rounded-md border">
-                  <pre className="whitespace-pre-wrap text-[13px]">
+                  <pre className="whitespace-pre-wrap text-[0.8125rem] ">
                     {promptResult.candidateResponse}
                   </pre>
                 </div>
@@ -474,7 +474,7 @@ export function ResultsSection({
           </div>
 
           {/* Timestamp */}
-          <div className="text-[13px] text-muted-foreground flex items-center gap-2">
+          <div className="text-[0.8125rem]  text-muted-foreground flex items-center gap-2">
             <Clock className="h-4 w-4" />
             Evaluated at {new Date(result.timestamp).toLocaleString()}
           </div>

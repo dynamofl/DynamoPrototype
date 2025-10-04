@@ -67,7 +67,7 @@ export function GuardrailSelection({
         <h2 className="text-lg font-450 text-gray-900">
           Add Guardrails for Moderation (Optional)
         </h2>
-        <p className="text-[13px] text-gray-600">
+        <p className="text-[0.8125rem]  text-gray-600">
           Optionally add guardrails to protect your AI system by adding a safety layer
           during evaluation.
         </p>
@@ -119,7 +119,7 @@ export function GuardrailSelection({
           <div className="max-h-96 overflow-y-auto">
             {filteredGuardrails.length === 0 ? (
               <div className="p-8 text-center">
-                <p className="text-[13px] text-gray-500">
+                <p className="text-[0.8125rem]  text-gray-500">
                   {searchQuery
                     ? "No guardrails found matching your search."
                     : "No guardrails available."}
@@ -157,7 +157,7 @@ export function GuardrailSelection({
                       className="flex-1 cursor-pointer"
                     >
                       <div className="flex items-center gap-2">
-                        <span className="text-[13px] font-450 text-gray-900">
+                        <span className="text-[0.8125rem]  font-450 text-gray-900">
                           {guardrail.name}
                         </span>
                         {guardrail.category && (

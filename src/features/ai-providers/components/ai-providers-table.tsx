@@ -65,7 +65,7 @@ export function AIProvidersTable({ className = '' }: AIProvidersTableProps) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">AI Providers</h2>
-          <p className="text-[13px] text-gray-600">
+          <p className="text-[0.8125rem]  text-gray-600">
             Manage your AI service providers and their configurations
           </p>
         </div>
@@ -115,20 +115,20 @@ export function AIProvidersTable({ className = '' }: AIProvidersTableProps) {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-[13px] font-450 text-gray-600">Name</label>
-                <p className="text-[13px] text-gray-900">{viewingProvider.name}</p>
+                <label className="text-[0.8125rem]  font-450 text-gray-600">Name</label>
+                <p className="text-[0.8125rem]  text-gray-900">{viewingProvider.name}</p>
               </div>
               <div>
-                <label className="text-[13px] font-450 text-gray-600">Type</label>
-                <p className="text-[13px] text-gray-900">{viewingProvider.type}</p>
+                <label className="text-[0.8125rem]  font-450 text-gray-600">Type</label>
+                <p className="text-[0.8125rem]  text-gray-900">{viewingProvider.type}</p>
               </div>
               <div>
-                <label className="text-[13px] font-450 text-gray-600">Status</label>
-                <p className="text-[13px] text-gray-900">{viewingProvider.status}</p>
+                <label className="text-[0.8125rem]  font-450 text-gray-600">Status</label>
+                <p className="text-[0.8125rem]  text-gray-900">{viewingProvider.status}</p>
               </div>
               <div>
-                <label className="text-[13px] font-450 text-gray-600">Models</label>
-                <p className="text-[13px] text-gray-900">{viewingProvider.models?.length || 0}</p>
+                <label className="text-[0.8125rem]  font-450 text-gray-600">Models</label>
+                <p className="text-[0.8125rem]  text-gray-900">{viewingProvider.models?.length || 0}</p>
               </div>
             </div>
           </div>
@@ -147,12 +147,12 @@ export function AIProvidersTable({ className = '' }: AIProvidersTableProps) {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-[13px] font-450 text-gray-600">Name</label>
-                <p className="text-[13px] text-gray-900">{editingProvider.name}</p>
+                <label className="text-[0.8125rem]  font-450 text-gray-600">Name</label>
+                <p className="text-[0.8125rem]  text-gray-900">{editingProvider.name}</p>
               </div>
               <div>
-                <label className="text-[13px] font-450 text-gray-600">Type</label>
-                <p className="text-[13px] text-gray-900">{editingProvider.type}</p>
+                <label className="text-[0.8125rem]  font-450 text-gray-600">Type</label>
+                <p className="text-[0.8125rem]  text-gray-900">{editingProvider.type}</p>
               </div>
             </div>
             {/* Edit form content will go here */}

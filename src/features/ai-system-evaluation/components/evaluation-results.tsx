@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Download, Eye } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { Download, Eye, X } from "lucide-react";
 import type { JailbreakEvaluationOutput } from "../types/jailbreak-evaluation";
 import {
   Sheet,
@@ -7,20 +8,45 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 
 interface EvaluationResultsProps {
   results: JailbreakEvaluationOutput;
   onExport?: (format: 'json' | 'csv') => void;
+  onClose?: () => void;
+  currentTab?: string;
+  onTabChange?: (tab: 'summary' | 'data') => void;
 }
 
-export function EvaluationResults({ results, onExport }: EvaluationResultsProps) {
-  const [selectedTab, setSelectedTab] = useState<'summary' | 'data'>('summary');
+export function EvaluationResults({ results, onExport, onClose, currentTab: propTab, onTabChange }: EvaluationResultsProps) {
+  const navigate = useNavigate();
+  const { systemName, evaluationId } = useParams<{ systemName: string; evaluationId?: string }>();
+  const [selectedTab, setSelectedTab] = useState<'summary' | 'data'>((propTab as 'summary' | 'data') || 'summary');
+
+  // Update selectedTab when propTab changes
+  useEffect(() => {
+    if (propTab === 'summary' || propTab === 'data') {
+      setSelectedTab(propTab);
+    }
+  }, [propTab]);
   const [selectedRow, setSelectedRow] = useState<number | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
   const handleRowClick = (index: number) => {
     setSelectedRow(index);
     setDetailsOpen(true);
+  };
+
+  const handleTabChange = (tab: 'summary' | 'data') => {
+    if (onTabChange) {
+      onTabChange(tab);
+    } else if (systemName && evaluationId) {
+      // Update URL with new tab
+      navigate(`/ai-systems/${encodeURIComponent(systemName)}/evaluation/${evaluationId}/${tab}`);
+    } else {
+      // Fallback to local state
+      setSelectedTab(tab);
+    }
   };
 
   const selectedResult = selectedRow !== null ? results.results[selectedRow] : null;
@@ -50,6 +76,16 @@ export function EvaluationResults({ results, onExport }: EvaluationResultsProps)
             <Download className="h-4 w-4" />
             Export CSV
           </button>
+          {onClose && (
+            <Button
+              onClick={onClose}
+              variant="ghost"
+              size="icon"
+              className="ml-2"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
 
@@ -62,7 +98,7 @@ export function EvaluationResults({ results, onExport }: EvaluationResultsProps)
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setSelectedTab(tab.id as any)}
+              onClick={() => handleTabChange(tab.id as 'summary' | 'data')}
               className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
                 selectedTab === tab.id
                   ? 'border-blue-600 text-blue-600'

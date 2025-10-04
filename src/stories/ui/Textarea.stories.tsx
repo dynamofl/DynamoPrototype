@@ -61,7 +61,7 @@ export const Large: Story = {
 export const WithLabel: Story = {
   render: () => (
     <div className="space-y-2 w-80">
-      <label htmlFor="message" className="text-[13px] font-medium">
+      <label htmlFor="message" className="text-[0.8125rem]  font-medium">
         Message
       </label>
       <Textarea
@@ -77,31 +77,31 @@ export const FormExample: Story = {
   render: () => (
     <form className="space-y-4 w-96">
       <div className="space-y-2">
-        <label htmlFor="name" className="text-[13px] font-medium">
+        <label htmlFor="name" className="text-[0.8125rem]  font-medium">
           Name
         </label>
         <input
           id="name"
           type="text"
           placeholder="Enter your name"
-          className="flex h-10 w-full rounded-md border border-input bg-gray-0 px-3 py-2 text-[13px] ring-offset-background file:border-0 file:bg-transparent file:text-[13px] file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex h-10 w-full rounded-md border border-input bg-gray-0 px-3 py-2 text-[0.8125rem]  ring-offset-background file:border-0 file:bg-transparent file:text-[0.8125rem]  file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         />
       </div>
       
       <div className="space-y-2">
-        <label htmlFor="email" className="text-[13px] font-medium">
+        <label htmlFor="email" className="text-[0.8125rem]  font-medium">
           Email
         </label>
         <input
           id="email"
           type="email"
           placeholder="Enter your email"
-          className="flex h-10 w-full rounded-md border border-input bg-gray-0 px-3 py-2 text-[13px] ring-offset-background file:border-0 file:bg-transparent file:text-[13px] file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex h-10 w-full rounded-md border border-input bg-gray-0 px-3 py-2 text-[0.8125rem]  ring-offset-background file:border-0 file:bg-transparent file:text-[0.8125rem]  file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         />
       </div>
       
       <div className="space-y-2">
-        <label htmlFor="message" className="text-[13px] font-medium">
+        <label htmlFor="message" className="text-[0.8125rem]  font-medium">
           Message
         </label>
         <Textarea
@@ -112,7 +112,7 @@ export const FormExample: Story = {
       </div>
       
       <div className="space-y-2">
-        <label htmlFor="notes" className="text-[13px] font-medium">
+        <label htmlFor="notes" className="text-[0.8125rem]  font-medium">
           Additional Notes (Optional)
         </label>
         <Textarea
@@ -129,17 +129,17 @@ export const DifferentSizes: Story = {
   render: () => (
     <div className="space-y-4 w-96">
       <div className="space-y-2">
-        <label className="text-[13px] font-medium">Small (2 rows)</label>
+        <label className="text-[0.8125rem]  font-medium">Small (2 rows)</label>
         <Textarea placeholder="Small textarea" rows={2} />
       </div>
       
       <div className="space-y-2">
-        <label className="text-[13px] font-medium">Medium (4 rows)</label>
+        <label className="text-[0.8125rem]  font-medium">Medium (4 rows)</label>
         <Textarea placeholder="Medium textarea" rows={4} />
       </div>
       
       <div className="space-y-2">
-        <label className="text-[13px] font-medium">Large (8 rows)</label>
+        <label className="text-[0.8125rem]  font-medium">Large (8 rows)</label>
         <Textarea placeholder="Large textarea" rows={8} />
       </div>
     </div>

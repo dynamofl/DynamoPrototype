@@ -36,7 +36,7 @@ export function AvatarCell({
   const getAvatarSizeClass = () => {
     switch (avatarSize) {
       case 'sm': return 'h-6 w-6 text-xs'
-      case 'lg': return 'h-10 w-10 text-[13px]'
+      case 'lg': return 'h-10 w-10 text-[0.8125rem] '
       default: return 'h-7 w-7 text-xs'
     }
   }
@@ -92,11 +92,11 @@ export function AvatarCell({
       {/* Name */}
       <div className="flex-1 min-w-0">
         {isPendingMember ? (
-          <span className="text-[13px] font-450 italic text-gray-500">
+          <span className="text-[0.8125rem]  font-450 italic text-gray-500">
             Pending Member
           </span>
         ) : (
-          <span className="text-[13px] font-450 text-gray-900 truncate">
+          <span className="text-[0.8125rem]  font-450 text-gray-900 truncate">
             {displayName}
           </span>
         )}

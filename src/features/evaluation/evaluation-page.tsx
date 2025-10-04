@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 
 // Modularized components
 import {
@@ -7,6 +8,8 @@ import {
   ResultsSection,
   LoadingState,
   EvaluationHeader,
+  EvaluationHistoryTable,
+  EvaluationProgressSidebar,
 } from "./components";
 
 // Utilities
@@ -33,6 +36,8 @@ import type {
 } from "@/features/evaluation/types/evaluation";
 import type { Guardrail } from "@/types";
 import { useGuardrails } from "@/features/guardrails/lib/useGuardrails";
+import { EvaluationTestStorage } from "@/features/evaluation/lib/evaluation-test-storage";
+import type { EvaluationTest } from "@/features/evaluation/types/evaluation-test";
 
 // Define MetricToggles locally to avoid import issues
 interface MetricToggles {
@@ -67,6 +72,10 @@ interface AIProvider {
 }
 
 export function EvaluationSandbox() {
+  const { testId } = useParams<{ testId: string }>();
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [providers, setProviders] = useState<AIProvider[]>([]);
   const [config, setConfig] = useState<EvaluationConfig>({
     candidateModel: "",
@@ -100,11 +109,33 @@ export function EvaluationSandbox() {
   // Use shared guardrails hook
   const { guardrails: availableGuardrails } = useGuardrails();
 
+  // History and progress state - derived from URL
+  const showHistory = location.pathname.includes('/list') || !!testId;
+  const [evaluationTests, setEvaluationTests] = useState<EvaluationTest[]>([]);
+  const [selectedTestForProgress, setSelectedTestForProgress] = useState<EvaluationTest | null>(null);
+  const [showProgressSidebar, setShowProgressSidebar] = useState(false);
+
   // Load providers from secure storage on component mount
   useEffect(() => {
     const storedProviders = APIKeyStorage.loadProviders();
     setProviders(storedProviders);
-  }, []);
+
+    // Load evaluation tests
+    const tests = EvaluationTestStorage.loadTests();
+    setEvaluationTests(tests);
+
+    // If testId is in URL, load that specific test
+    if (testId) {
+      const test = EvaluationTestStorage.getTest(testId);
+      if (test) {
+        if (test.result) {
+          setResult(test.result);
+        }
+        setEvaluationInput(test.input);
+        setConfig(test.config);
+      }
+    }
+  }, [testId]);
 
   // Set default models when available models change
   useEffect(() => {
@@ -223,7 +254,7 @@ export function EvaluationSandbox() {
         p.userMarkedAdversarial &&
         p.userMarkedAdversarial !== ""
     );
-    
+
     if (completePrompts.length === 0) {
       setError(
         "Please provide at least one complete prompt with adversarial status selected"
@@ -262,27 +293,71 @@ export function EvaluationSandbox() {
     setIsLoading(true);
     setError(null);
 
+    // Create enhanced config with guardrails
+    const enhancedConfig = {
+      ...config,
+      guardrails: selectedGuardrails,
+    };
+
+    // Filter to only include complete prompts for evaluation
+    const filteredEvaluationInput = {
+      ...evaluationInput,
+      prompts: completePrompts,
+    };
+
+    // Create new test record
+    const newTest: EvaluationTest = {
+      id: crypto.randomUUID(),
+      name: `Evaluation ${new Date().toLocaleString()}`,
+      status: 'in_progress',
+      config: enhancedConfig,
+      input: filteredEvaluationInput,
+      progress: {
+        current: 0,
+        total: completePrompts.length,
+      },
+      createdAt: new Date().toISOString(),
+      startedAt: new Date().toISOString(),
+    };
+
+    // Save test to storage
+    const savedTest = EvaluationTestStorage.addTest(newTest);
+    console.log('Saved test:', savedTest);
+    const allTests = EvaluationTestStorage.loadTests();
+    console.log('All tests after save:', allTests);
+    setEvaluationTests(allTests);
+
+    // Navigate to history view when evaluation starts
+    navigate('/evaluation-sandbox/list');
+
     try {
-      // Create enhanced config with guardrails
-      const enhancedConfig = {
-        ...config,
-        guardrails: selectedGuardrails,
-      };
-
-      // Filter to only include complete prompts for evaluation
-      const filteredEvaluationInput = {
-        ...evaluationInput,
-        prompts: completePrompts,
-      };
-
       const evaluationResult = await runEvaluation(
         filteredEvaluationInput,
         enhancedConfig,
         metricsEnabled
       );
+
       setResult(evaluationResult);
+
+      // Update test with result
+      EvaluationTestStorage.updateTestStatus(savedTest.id, 'completed', {
+        result: evaluationResult,
+        completedAt: new Date().toISOString(),
+      });
+
+      const updatedTests = EvaluationTestStorage.loadTests();
+      setEvaluationTests(updatedTests);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Evaluation failed");
+      const errorMessage = err instanceof Error ? err.message : "Evaluation failed";
+      setError(errorMessage);
+
+      // Update test as failed
+      EvaluationTestStorage.updateTestStatus(savedTest.id, 'failed', {
+        error: errorMessage,
+      });
+
+      const updatedTests = EvaluationTestStorage.loadTests();
+      setEvaluationTests(updatedTests);
     } finally {
       setIsLoading(false);
     }
@@ -345,8 +420,59 @@ export function EvaluationSandbox() {
       availableModels[0].id === "no-models");
 
   const handleShowHistory = () => {
-    // TODO: Implement history view
-    console.log("Show history clicked");
+    // Reload tests from storage when showing history
+    const tests = EvaluationTestStorage.loadTests();
+    console.log('Loading tests from storage:', tests);
+    console.log('Number of tests:', tests.length);
+    setEvaluationTests(tests);
+
+    // If there are no tests, don't toggle to history view (stay in creation flow)
+    // If there are tests, show history
+    if (tests.length > 0) {
+      navigate('/evaluation-sandbox/list');
+    } else {
+      // If already in history view and no tests, go back to creation
+      navigate('/evaluation-sandbox');
+    }
+  };
+
+  const handleViewReport = (test: EvaluationTest) => {
+    if (test.result) {
+      setResult(test.result);
+      setEvaluationInput(test.input);
+      setConfig(test.config);
+      navigate(`/evaluation-sandbox/${test.id}`);
+    }
+  };
+
+  const handleViewData = (test: EvaluationTest) => {
+    setEvaluationInput(test.input);
+    setConfig(test.config);
+    setResult(null);
+    navigate(`/evaluation-sandbox/${test.id}`);
+  };
+
+  const handleShowProgress = (test: EvaluationTest) => {
+    setSelectedTestForProgress(test);
+    setShowProgressSidebar(true);
+  };
+
+  const handleTestDetails = (test: EvaluationTest) => {
+    setEvaluationInput(test.input);
+    setConfig(test.config);
+    setResult(null);
+    navigate(`/evaluation-sandbox/${test.id}`);
+  };
+
+  const handleNewEvaluation = () => {
+    // Reset to initial state for new evaluation
+    setEvaluationInput({
+      prompts: INITIAL_PROMPTS,
+    });
+    setResult(null);
+    setError(null);
+    setCurrentPage(1);
+    navigate('/evaluation-sandbox/new');
   };
 
   return (
@@ -356,65 +482,90 @@ export function EvaluationSandbox() {
         <EvaluationHeader
           onRunEvaluation={handleSubmit}
           onShowHistory={handleShowHistory}
+          onNewEvaluation={handleNewEvaluation}
           isLoading={isLoading}
           isDisabled={isEvaluationDisabled}
-          
+          showHistory={showHistory}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 flex-1 border-t border-gray-200">
-          {/* Configuration Panel */}
-          <ConfigurationPanel
-            config={config}
-            onConfigChange={setConfig}
-            availableModels={availableModels}
-            selectedGuardrails={selectedGuardrails}
-            onAddGuardrail={addGuardrail}
-            onRemoveGuardrail={removeGuardrail}
-            availableGuardrails={availableGuardrails}
-            isAddingGuardrail={isAddingGuardrail}
-            onIsAddingGuardrailChange={setIsAddingGuardrail}
-            metricsEnabled={metricsEnabled}
-            onMetricsChange={setMetricsEnabled}
-          />
-
-          {/* Main Content Area */}
-          <div className="lg:col-span-2">
-            {result ? (
-              <ResultsSection
-                result={result}
-                prompts={evaluationInput.prompts}
-                currentPagePrompts={paginationHelpers.currentPagePrompts}
-                totalPages={paginationHelpers.totalPages}
-                currentPage={currentPage}
-                startIndex={paginationHelpers.startIndex}
-                onAddPrompt={addPrompt}
-                onTableDataChange={handleTableDataChangeFn}
-                        onCellAction={handleCellAction}
-                onGoToPage={goToPage}
-                onGoToPrevious={goToPrevious}
-                onGoToNext={goToNext}
-              />
-            ) : isLoading ? (
-              <LoadingState />
-            ) : (
-              <InputDataSection
-                prompts={evaluationInput.prompts}
-                currentPagePrompts={paginationHelpers.currentPagePrompts}
-                totalPages={paginationHelpers.totalPages}
-                currentPage={currentPage}
-                startIndex={paginationHelpers.startIndex}
-                onAddPrompt={addPrompt}
-                onCSVImport={handleCSVImport}
-                onTableDataChange={handleTableDataChangeFn}
-                        onCellAction={handleCellAction}
-                onGoToPage={goToPage}
-                onGoToPrevious={goToPrevious}
-                onGoToNext={goToNext}
-                error={error}
-              />
-            )}
+        {/* Show history table or main content */}
+        {showHistory ? (
+          <div className="flex-1 p-6 border-t border-gray-200">
+            <div className="mb-4">
+              <h2 className="text-2xl font-semibold text-gray-900">Evaluation History</h2>
+              <p className="text-sm text-gray-600 mt-1">View and manage your evaluation tests</p>
+            </div>
+            <EvaluationHistoryTable
+              tests={evaluationTests}
+              onViewReport={handleViewReport}
+              onViewData={handleViewData}
+              onShowProgress={handleShowProgress}
+              onTestDetails={handleTestDetails}
+            />
           </div>
-        </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 flex-1 border-t border-gray-200">
+            {/* Configuration Panel */}
+            <ConfigurationPanel
+              config={config}
+              onConfigChange={setConfig}
+              availableModels={availableModels}
+              selectedGuardrails={selectedGuardrails}
+              onAddGuardrail={addGuardrail}
+              onRemoveGuardrail={removeGuardrail}
+              availableGuardrails={availableGuardrails}
+              isAddingGuardrail={isAddingGuardrail}
+              onIsAddingGuardrailChange={setIsAddingGuardrail}
+              metricsEnabled={metricsEnabled}
+              onMetricsChange={setMetricsEnabled}
+            />
+
+            {/* Main Content Area */}
+            <div className="lg:col-span-2">
+              {result ? (
+                <ResultsSection
+                  result={result}
+                  prompts={evaluationInput.prompts}
+                  currentPagePrompts={paginationHelpers.currentPagePrompts}
+                  totalPages={paginationHelpers.totalPages}
+                  currentPage={currentPage}
+                  startIndex={paginationHelpers.startIndex}
+                  onAddPrompt={addPrompt}
+                  onTableDataChange={handleTableDataChangeFn}
+                  onCellAction={handleCellAction}
+                  onGoToPage={goToPage}
+                  onGoToPrevious={goToPrevious}
+                  onGoToNext={goToNext}
+                />
+              ) : isLoading ? (
+                <LoadingState />
+              ) : (
+                <InputDataSection
+                  prompts={evaluationInput.prompts}
+                  currentPagePrompts={paginationHelpers.currentPagePrompts}
+                  totalPages={paginationHelpers.totalPages}
+                  currentPage={currentPage}
+                  startIndex={paginationHelpers.startIndex}
+                  onAddPrompt={addPrompt}
+                  onCSVImport={handleCSVImport}
+                  onTableDataChange={handleTableDataChangeFn}
+                  onCellAction={handleCellAction}
+                  onGoToPage={goToPage}
+                  onGoToPrevious={goToPrevious}
+                  onGoToNext={goToNext}
+                  error={error}
+                />
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Progress Sidebar */}
+        <EvaluationProgressSidebar
+          test={selectedTestForProgress}
+          open={showProgressSidebar}
+          onOpenChange={setShowProgressSidebar}
+        />
       </div>
     </div>
   );

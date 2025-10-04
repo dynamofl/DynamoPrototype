@@ -52,7 +52,7 @@ const MockAppBar = ({ experimentsEnabled = false }: { experimentsEnabled?: boole
                   key={item.name}
                   to={item.path}
                   className={({ isActive }) => cn(
-                    "inline-flex items-center px-2 py-1 rounded-md text-[13px] font-450 transition-colors hover:text-foreground relative",
+                    "inline-flex items-center px-2 py-1 rounded-md text-[0.8125rem]  font-450 transition-colors hover:text-foreground relative",
                     isActive
                       ? "text-gray-800 bg-gray-100"
                       : "text-gray-600 hover:bg-gray-50"
@@ -66,7 +66,7 @@ const MockAppBar = ({ experimentsEnabled = false }: { experimentsEnabled?: boole
 
           <div className="flex items-center gap-4">
             <div className="hidden md:flex items-center gap-2">
-              <span className="text-[13px] font-450 text-gray-600">Experiments</span>
+              <span className="text-[0.8125rem]  font-450 text-gray-600">Experiments</span>
               <Switch
                 checked={experimentsEnabled}
                 onCheckedChange={(checked) => console.log('Experiments:', checked)}
@@ -79,7 +79,7 @@ const MockAppBar = ({ experimentsEnabled = false }: { experimentsEnabled?: boole
                   variant="ghost"
                   className="w-8 h-8  bg-gray-200 hover:bg-gray-300 text-primary-foreground rounded-full p-0"
                 >
-                  <span className="text-gray-800 font-450 text-[13px]">PK</span>
+                  <span className="text-gray-800 font-450 text-[0.8125rem] ">PK</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">

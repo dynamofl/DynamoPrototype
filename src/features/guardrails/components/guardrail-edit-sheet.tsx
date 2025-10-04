@@ -295,7 +295,7 @@ export function GuardrailEditSheet({
             <TabsContent value="allowed" className="mt-4">
               <Textarea
                 placeholder="• Start typing allowed behaviors&#10;"
-                className="min-h-[240px] max-h-[400px] text-[13px] resize-none overflow-y-auto"
+                className="min-h-[240px] max-h-[400px] text-[0.8125rem]  resize-none overflow-y-auto"
                 style={{ height: 'auto', minHeight: '240px' }}
                 value={(editingGuardrail.allowedBehavior as string) || ''}
                 onChange={(e) => {
@@ -314,7 +314,7 @@ export function GuardrailEditSheet({
             <TabsContent value="disallowed" className="mt-4">
               <Textarea
                 placeholder="• Start typing disallowed behaviors&#10;"
-                className="min-h-[240px] max-h-[400px] text-[13px] resize-none overflow-y-auto"
+                className="min-h-[240px] max-h-[400px] text-[0.8125rem]  resize-none overflow-y-auto"
                 style={{ height: 'auto', minHeight: '240px' }}
                 value={(editingGuardrail.disallowedBehavior as string) || ''}
                 onChange={(e) => {
@@ -349,7 +349,7 @@ export function GuardrailEditSheet({
         </div>
 
         {validationError && (
-          <div className="text-[13px] text-red-600 bg-red-50 p-3 rounded-md">
+          <div className="text-[0.8125rem]  text-red-600 bg-red-50 p-3 rounded-md">
             {validationError}
           </div>
         )}

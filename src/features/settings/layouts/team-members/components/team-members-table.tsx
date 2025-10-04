@@ -132,13 +132,13 @@ export function TeamMembersTable({
                       {getInitials(member.name)}
                     </span>
                   </div>
-                  <span className="text-[13px] font-450 text-gray-900">
+                  <span className="text-[0.8125rem]  font-450 text-gray-900">
                     {member.name}
                   </span>
                 </div>
               </TableCell>
               <TableCell>
-                <span className="text-[13px] text-gray-900">
+                <span className="text-[0.8125rem]  text-gray-900">
                   {member.email}
                 </span>
               </TableCell>
@@ -146,7 +146,7 @@ export function TeamMembersTable({
                 {renderRoleBadges(member.roles)}
               </TableCell>
               <TableCell>
-                <span className="text-[13px] text-gray-900">
+                <span className="text-[0.8125rem]  text-gray-900">
                   {formatDate(member.addedOn)}
                 </span>
               </TableCell>

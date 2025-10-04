@@ -160,12 +160,12 @@ export function CSVUpload({ onUploadComplete, onError, onFilesChange, className 
             <div className="bg-gray-100 rounded-full p-2 mb-2">
               <Upload className="h-5 w-5 text-gray-600" />
             </div>
-            <p className="text-[13px] font-450 text-gray-900 mb-1">
+            <p className="text-[0.8125rem]  font-450 text-gray-900 mb-1">
               {isDragActive ? "Drop your .csv files here" : "Drag and drop your .csv files here"}
             </p>
             <div className="flex items-center gap-1">
-              <span className="text-[13px] text-gray-600">Or</span>
-              <button className="text-[13px] font-450 text-blue-600 underline">Browse File</button>
+              <span className="text-[0.8125rem]  text-gray-600">Or</span>
+              <button className="text-[0.8125rem]  font-450 text-blue-600 underline">Browse File</button>
             </div>
           </div>
         </div>
@@ -205,7 +205,7 @@ export function CSVUpload({ onUploadComplete, onError, onFilesChange, className 
           {/* Validated Files (files with at least one valid row) */}
           {uploadState.files.some(f => f.parseResult && f.parseResult.validCount > 0) && (
             <div className="space-y-2">
-              <h3 className="text-[13px] font-450 text-gray-900 leading-4">
+              <h3 className="text-[0.8125rem]  font-450 text-gray-900 leading-4">
                 Validated Files ({uploadState.files.filter(f => f.parseResult && f.parseResult.validCount > 0).length})
               </h3>
               <div className="space-y-2">

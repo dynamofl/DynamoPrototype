@@ -71,7 +71,7 @@ export function CreateDialog({
             >
               <X className="h-4 w-4" />
             </button>
-            <DialogTitle className="text-[13px] font-450 text-gray-900 leading-5">
+            <DialogTitle className="text-[0.8125rem]  font-450 text-gray-900 leading-5">
               {title}
             </DialogTitle>
           </div>

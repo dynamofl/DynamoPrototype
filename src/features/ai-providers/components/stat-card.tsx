@@ -39,7 +39,7 @@ export function StatCard({ title, value, info, variant = 'default' }: StatCardPr
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button className="text-[13px] font-450 text-muted-foreground border-b border-dashed border-gray-300 hover:text-foreground transition-colors cursor-help">
+                      <button className="text-[0.8125rem]  font-450 text-muted-foreground border-b border-dashed border-gray-300 hover:text-foreground transition-colors cursor-help">
                         {title}
                       </button>
                     </TooltipTrigger>
@@ -49,7 +49,7 @@ export function StatCard({ title, value, info, variant = 'default' }: StatCardPr
                   </Tooltip>
                 </TooltipProvider>
               ) : (
-                <p className="text-[13px] font-450 text-muted-foreground border-b border-dashed border-gray-300">{title}</p>
+                <p className="text-[0.8125rem]  font-450 text-muted-foreground border-b border-dashed border-gray-300">{title}</p>
               )}
             </div>
             <p className={cn("text-lg font-450", getValueColor())}>{value}</p>

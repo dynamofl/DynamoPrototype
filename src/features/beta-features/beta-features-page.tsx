@@ -45,7 +45,7 @@ export function BetaFeaturesPage() {
           >
             <div className="absolute inset-0 bg-black/40" />
             <div className="relative z-10 mx-auto max-w-3xl space-y-4">
-              <p className="text-[13px] font-450 uppercase tracking-wider text-white">
+              <p className="text-[0.8125rem]  font-450 uppercase tracking-wider text-white">
                 Beta Features
               </p>
               <h1 className="text-4xl font-450 text-white md:text-4xl">
@@ -86,11 +86,11 @@ export function BetaFeaturesPage() {
                       </CardHeader>
 
                       <CardContent className="space-y-2 p-0">
-                        <CardDescription className="text-[13px] leading-relaxed text-gray-600">
+                        <CardDescription className="text-[0.8125rem]  leading-relaxed text-gray-600">
                           {feature.description}
                         </CardDescription>
 
-                          {/* <div className="flex items-center justify-between pt-2 text-[13px] font-450 text-gray-900">
+                          {/* <div className="flex items-center justify-between pt-2 text-[0.8125rem]  font-450 text-gray-900">
                             <span>Explore {feature.title}</span>
                             <span className="text-lg">→</span>
                           </div> */}

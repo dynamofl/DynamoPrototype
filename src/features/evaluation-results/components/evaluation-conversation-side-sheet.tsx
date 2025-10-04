@@ -43,12 +43,12 @@ export function EvaluationConversationSideSheet({
         {/* Custom Header */}
         <div className="flex-shrink-0 border-b border-gray-200 p-4 bg-gray-50">
           <div className="flex items-center justify-between">
-            <h2 className="text-[13px] font-medium text-foreground">
+            <h2 className="text-[0.8125rem]  font-medium text-foreground">
               Conversation Details
             </h2>
             <div className="flex items-center gap-2">
               {/* Position indicator */}
-              <div className="text-[13px] text-gray-500">
+              <div className="text-[0.8125rem]  text-gray-500">
                 {position}/{total}
               </div>
               

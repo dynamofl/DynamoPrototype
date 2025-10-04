@@ -1,18 +1,22 @@
 import { PageHeader } from '@/components/patterns'
-import { Play, History } from 'lucide-react'
+import { Play, History, Plus } from 'lucide-react'
 
 export interface EvaluationHeaderProps {
   onRunEvaluation: () => void
   onShowHistory: () => void
+  onNewEvaluation?: () => void
   isLoading: boolean
   isDisabled: boolean
+  showHistory: boolean
 }
 
 export function EvaluationHeader({
   onRunEvaluation,
   onShowHistory,
+  onNewEvaluation,
   isLoading,
-  isDisabled
+  isDisabled,
+  showHistory
 }: EvaluationHeaderProps) {
   return (
     <PageHeader
@@ -20,15 +24,15 @@ export function EvaluationHeader({
       description="Test and evaluate AI models with different configurations"
       actions={[
         {
-          icon: Play,
-          label: isLoading ? "Evaluating..." : "Run Evaluation",
-          onClick: onRunEvaluation,
+          icon: showHistory ? Plus : Play,
+          label: showHistory ? "New Evaluation" : (isLoading ? "Evaluating..." : "Run Evaluation"),
+          onClick: showHistory ? onNewEvaluation : onRunEvaluation,
           variant: 'default',
-          disabled: isDisabled
+          disabled: !showHistory && isDisabled
         },
         {
           icon: History,
-          label: "Show History",
+          label: showHistory ? "Hide History" : "Manage Evaluations",
           onClick: onShowHistory,
           variant: 'outline'
         }

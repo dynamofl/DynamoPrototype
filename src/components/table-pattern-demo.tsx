@@ -332,7 +332,7 @@ export function TablePatternDemo() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <h4 className="font-semibold mb-2">Storage System</h4>
-              <ul className="text-[13px] text-gray-600 space-y-1">
+              <ul className="text-[0.8125rem]  text-gray-600 space-y-1">
                 <li>• Session storage for temporary data</li>
                 <li>• Persistent storage for regular data</li>
                 <li>• Secure storage for sensitive data</li>
@@ -341,7 +341,7 @@ export function TablePatternDemo() {
             </div>
                <div>
                  <h4 className="font-semibold mb-2">Cell Types & Editing Modes</h4>
-                 <ul className="text-[13px] text-gray-600 space-y-1">
+                 <ul className="text-[0.8125rem]  text-gray-600 space-y-1">
                    <li>• Free text with multiline support</li>
                    <li>• Dropdown with custom options</li>
                    <li>• Switch for boolean values</li>
@@ -357,7 +357,7 @@ export function TablePatternDemo() {
                </div>
             <div>
               <h4 className="font-semibold mb-2">Advanced Features</h4>
-              <ul className="text-[13px] text-gray-600 space-y-1">
+              <ul className="text-[0.8125rem]  text-gray-600 space-y-1">
                 <li>• Pagination with customizable page sizes</li>
                 <li>• Expandable rows with custom content</li>
                 <li>• Data validation and error handling</li>
@@ -366,7 +366,7 @@ export function TablePatternDemo() {
             </div>
             <div>
               <h4 className="font-semibold mb-2">Configuration</h4>
-              <ul className="text-[13px] text-gray-600 space-y-1">
+              <ul className="text-[0.8125rem]  text-gray-600 space-y-1">
                 <li>• Type-safe configuration system</li>
                 <li>• Reusable column definitions</li>
                 <li>• Flexible storage options</li>

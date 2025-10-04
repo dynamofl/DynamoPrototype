@@ -125,8 +125,8 @@ export function GuardrailViewSheet({
 
         {/* Description */}
         <div className="space-y-2">
-          <Label className="text-[13px] font-450 text-gray-600">Description</Label>
-          <p className="text-[13px] text-gray-900 whitespace-pre-wrap">{guardrail.description || 'No description provided'}</p>
+          <Label className="text-[0.8125rem]  font-450 text-gray-600">Description</Label>
+          <p className="text-[0.8125rem]  text-gray-900 whitespace-pre-wrap">{guardrail.description || 'No description provided'}</p>
         </div>
 
         {/* Behavior Tabs */}
@@ -144,11 +144,11 @@ export function GuardrailViewSheet({
             <TabsContent value="allowed" className="mt-4">
               <div className="p-3 rounded-md border border-gray-200">
                 {guardrail.allowedBehavior ? (
-                  <div className="text-[13px] text-gray-900 whitespace-pre-wrap ">
+                  <div className="text-[0.8125rem]  text-gray-900 whitespace-pre-wrap ">
                     {guardrail.allowedBehavior}
                   </div>
                 ) : (
-                  <p className="text-[13px] text-gray-500">No allowed behaviors defined</p>
+                  <p className="text-[0.8125rem]  text-gray-500">No allowed behaviors defined</p>
                 )}
               </div>
             </TabsContent>
@@ -156,11 +156,11 @@ export function GuardrailViewSheet({
             <TabsContent value="disallowed" className="mt-4">
               <div className="p-3 rounded-md border border-gray-200">
                 {guardrail.disallowedBehavior ? (
-                  <div className="text-[13px] text-gray-900 whitespace-pre-wrap ">
+                  <div className="text-[0.8125rem]  text-gray-900 whitespace-pre-wrap ">
                     {guardrail.disallowedBehavior}
                   </div>
                 ) : (
-                  <p className="text-[13px] text-gray-500">No disallowed behaviors defined</p>
+                  <p className="text-[0.8125rem]  text-gray-500">No disallowed behaviors defined</p>
                 )}
               </div>
             </TabsContent>

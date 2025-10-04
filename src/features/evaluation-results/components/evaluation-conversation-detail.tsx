@@ -60,7 +60,7 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
 
       return (
         <div key={index} className="inline-flex items-center text-gray-600 gap-1 p-1 bg-gray-100 rounded hover:bg-gray-200 transition-colors cursor-pointer">
-          <span className="text-[13px]">{getFrameworkIcon(framework.framework)}</span>
+          <span className="text-[0.8125rem] ">{getFrameworkIcon(framework.framework)}</span>
           <span className="text-xs font-450 truncate max-w-40">
             {framework.name}
           </span>
@@ -148,7 +148,7 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
               </div>
               <div className="flex items-center gap-2">
                 {getSeverityIcon(record.severity)}
-                <span className="text-[13px] font-450 text-gray-900 truncate">
+                <span className="text-[0.8125rem]  font-450 text-gray-900 truncate">
                   {record.attackType}
                 </span>
               </div>
@@ -162,7 +162,7 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
               </div>
               <div className="flex items-center gap-2">
                 {getStatusIcon(record.inputGuardrailResultAggregate)}
-                <span className="text-[13px] font-450 text-gray-900">
+                <span className="text-[0.8125rem]  font-450 text-gray-900">
                   {record.inputGuardrailResultAggregate}
                 </span>
               </div>
@@ -176,7 +176,7 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
               </div>
               <div className="flex items-center gap-2">
                 {getStatusIcon(record.aiSystemResponseType)}
-                <span className="text-[13px] font-450 text-gray-900">
+                <span className="text-[0.8125rem]  font-450 text-gray-900">
                   {record.aiSystemResponseType}
                 </span>
               </div>
@@ -189,7 +189,7 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
           <h3 className="text-[11px] font-450 text-gray-500 uppercase tracking-wide">
             Base Prompt
           </h3>
-          <div className="text-[13px] text-gray-900 leading-relaxed">
+          <div className="text-[0.8125rem]  text-gray-900 leading-relaxed">
             {record.basePrompt}
           </div>
         </section>
@@ -250,12 +250,12 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
             {conversationMessages.map((message, index) => (
               <div key={index} className="space-y-2 w-full">
                 <div className="w-full">
-                  <p className="text-[13px] font-400 leading-5 text-gray-500">
+                  <p className="text-[0.8125rem]  font-400 leading-5 text-gray-500">
                     {getRoleLabel(message.role)}
                   </p>
                 </div>
                 <div className="w-full">
-                  <p className="text-[13px] font-400 leading-5 text-gray-900 whitespace-pre-wrap">
+                  <p className="text-[0.8125rem]  font-400 leading-5 text-gray-900 whitespace-pre-wrap">
                     {message.message}
                   </p>
                 </div>
@@ -287,7 +287,7 @@ export function EvaluationConversationDetail({ record }: EvaluationConversationD
           <h3 className="text-[11px] font-450 text-gray-500 uppercase tracking-wide">
             AI System Response
           </h3>
-          <div className="text-[13px] text-gray-900 leading-relaxed">
+          <div className="text-[0.8125rem]  text-gray-900 leading-relaxed">
             {record.aiSystemResponse}
           </div>
           <div className="border border-gray-200 rounded-md p-1">

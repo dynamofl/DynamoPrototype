@@ -32,7 +32,7 @@ export function SuccessStep({ createdSystem }: SuccessStepProps) {
               className="w-5 h-5"
               
             />
-              <span className="text-[13px] text-gray-600">
+              <span className="text-[0.8125rem]  text-gray-600">
                 {createdSystem?.name}
               </span>
               
@@ -42,7 +42,7 @@ export function SuccessStep({ createdSystem }: SuccessStepProps) {
 
         {/* Next Steps */}
         <div className="space-y-3">
-          <p className="text-[13px] font-400 text-gray-600">
+          <p className="text-[0.8125rem]  font-400 text-gray-600">
             You can start doing following tasks with your AI System
           </p>
           <div className="bg-gray-0 border border-gray-200 rounded-lg">
@@ -52,10 +52,10 @@ export function SuccessStep({ createdSystem }: SuccessStepProps) {
                 <FolderOpen className="w-4 h-4 text-gray-500" />
               </div>
               <div className="flex-1 space-y-1">
-                <h4 className="text-[13px] font-450 text-gray-900">
+                <h4 className="text-[0.8125rem]  font-450 text-gray-900">
                   Add Your AI System to a Project
                 </h4>
-                <p className="text-[13px] text-gray-500">
+                <p className="text-[0.8125rem]  text-gray-500">
                   Integrate the connected AI system into your project
                 </p>
               </div>
@@ -68,10 +68,10 @@ export function SuccessStep({ createdSystem }: SuccessStepProps) {
                 <CircleGauge className="w-4 h-4 text-gray-500" />
               </div>
               <div className="flex-1 space-y-1">
-                <h4 className="text-[13px] font-450 text-gray-900">
+                <h4 className="text-[0.8125rem]  font-450 text-gray-900">
                   Evaluate Your AI System
                 </h4>
-                <p className="text-[13px] text-gray-500">
+                <p className="text-[0.8125rem]  text-gray-500">
                   Run evaluations to check compliance, uncover vulnerabilities, and autogenerates documentation needed for regulatory and risk audits
                 </p>
               </div>
@@ -84,10 +84,10 @@ export function SuccessStep({ createdSystem }: SuccessStepProps) {
                 <Shield className="w-4 h-4 text-gray-500" />
               </div>
               <div className="flex-1 space-y-1">
-                <h4 className="text-[13px] font-450 text-gray-900">
+                <h4 className="text-[0.8125rem]  font-450 text-gray-900">
                   Add Guardrails to Your AI System
                 </h4>
-                <p className="text-[13px] text-gray-500">
+                <p className="text-[0.8125rem]  text-gray-500">
                   Set up rules and safeguards to keep your AI System safe, controlled, and aligned with your goals.
                 </p>
               </div>

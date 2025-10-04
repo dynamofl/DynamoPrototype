@@ -68,7 +68,7 @@ export function AISystemSelection({
         <h2 className="text-lg font-450 text-gray-900">
           Select AI Systems to Test
         </h2>
-        <p className="text-[13px] text-gray-600">
+        <p className="text-[0.8125rem]  text-gray-600">
           Choose the AI systems you want to evaluate for jailbreak vulnerabilities.
         </p>
       </div>
@@ -105,7 +105,7 @@ export function AISystemSelection({
           <div className="max-h-96 overflow-y-auto">
             {filteredSystems.length === 0 ? (
               <div className="p-8 text-center">
-                <p className="text-[13px] text-gray-500">
+                <p className="text-[0.8125rem]  text-gray-500">
                   {searchQuery
                     ? "No AI systems found matching your search."
                     : "No AI systems available."}
@@ -141,7 +141,7 @@ export function AISystemSelection({
                           provider={system.provider}
                           className="h-4 w-4"
                         />
-                        <span className="text-[13px] font-450 text-gray-900">
+                        <span className="text-[0.8125rem]  font-450 text-gray-900">
                           {system.name}
                         </span>
                         <Badge variant="secondary" className="text-xs">

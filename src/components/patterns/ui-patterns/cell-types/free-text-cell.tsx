@@ -63,7 +63,7 @@ export function FreeTextCell({
         className={`cell-content w-full h-full flex items-center p-0 cursor-default outline-none border border-transparent rounded border-gray-200 bg-transparent transition-all duration-200 ease-in-out ${className}`}
       >
         <div className="w-full overflow-hidden">
-          <div className="whitespace-pre-line line-clamp-1 text-ellipsis overflow-hidden text-[13px]">
+          <div className="whitespace-pre-line line-clamp-1 text-ellipsis overflow-hidden text-[0.8125rem] ">
             {displayValue || (
               <span className="text-gray-400 italic">
                 {column.placeholder}
@@ -92,7 +92,7 @@ export function FreeTextCell({
       onClick={startEditing}
     >
       <div className="w-full overflow-hidden">
-        <div className="whitespace-pre-line line-clamp-1 text-ellipsis overflow-hidden text-[13px]">
+        <div className="whitespace-pre-line line-clamp-1 text-ellipsis overflow-hidden text-[0.8125rem] ">
           {displayValue || (
             <span className="text-gray-400 italic">
               {column.placeholder}

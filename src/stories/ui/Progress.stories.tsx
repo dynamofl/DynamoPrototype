@@ -51,7 +51,7 @@ export const Complete: Story = {
 export const WithLabel: Story = {
   render: () => (
     <div className="space-y-2 w-80">
-      <div className="flex justify-between text-[13px]">
+      <div className="flex justify-between text-[0.8125rem] ">
         <span>Progress</span>
         <span>33%</span>
       </div>
@@ -64,7 +64,7 @@ export const LoadingExample: Story = {
   render: () => (
     <div className="space-y-4 w-80">
       <div className="space-y-2">
-        <div className="flex justify-between text-[13px]">
+        <div className="flex justify-between text-[0.8125rem] ">
           <span>Uploading files...</span>
           <span>45%</span>
         </div>
@@ -72,7 +72,7 @@ export const LoadingExample: Story = {
       </div>
       
       <div className="space-y-2">
-        <div className="flex justify-between text-[13px]">
+        <div className="flex justify-between text-[0.8125rem] ">
           <span>Processing data...</span>
           <span>78%</span>
         </div>
@@ -80,7 +80,7 @@ export const LoadingExample: Story = {
       </div>
       
       <div className="space-y-2">
-        <div className="flex justify-between text-[13px]">
+        <div className="flex justify-between text-[0.8125rem] ">
           <span>Finalizing...</span>
           <span>100%</span>
         </div>
@@ -94,7 +94,7 @@ export const DifferentValues: Story = {
   render: () => (
     <div className="space-y-6 w-80">
       <div className="space-y-2">
-        <div className="flex justify-between text-[13px]">
+        <div className="flex justify-between text-[0.8125rem] ">
           <span>Starting</span>
           <span>0%</span>
         </div>
@@ -102,7 +102,7 @@ export const DifferentValues: Story = {
       </div>
       
       <div className="space-y-2">
-        <div className="flex justify-between text-[13px]">
+        <div className="flex justify-between text-[0.8125rem] ">
           <span>In Progress</span>
           <span>25%</span>
         </div>
@@ -110,7 +110,7 @@ export const DifferentValues: Story = {
       </div>
       
       <div className="space-y-2">
-        <div className="flex justify-between text-[13px]">
+        <div className="flex justify-between text-[0.8125rem] ">
           <span>Halfway</span>
           <span>50%</span>
         </div>
@@ -118,7 +118,7 @@ export const DifferentValues: Story = {
       </div>
       
       <div className="space-y-2">
-        <div className="flex justify-between text-[13px]">
+        <div className="flex justify-between text-[0.8125rem] ">
           <span>Almost Done</span>
           <span>75%</span>
         </div>
@@ -126,7 +126,7 @@ export const DifferentValues: Story = {
       </div>
       
       <div className="space-y-2">
-        <div className="flex justify-between text-[13px]">
+        <div className="flex justify-between text-[0.8125rem] ">
           <span>Complete</span>
           <span>100%</span>
         </div>
@@ -143,7 +143,7 @@ export const TaskProgress: Story = {
       
       <div className="space-y-3">
         <div className="space-y-1">
-          <div className="flex justify-between text-[13px]">
+          <div className="flex justify-between text-[0.8125rem] ">
             <span>Design Phase</span>
             <span>100%</span>
           </div>
@@ -151,7 +151,7 @@ export const TaskProgress: Story = {
         </div>
         
         <div className="space-y-1">
-          <div className="flex justify-between text-[13px]">
+          <div className="flex justify-between text-[0.8125rem] ">
             <span>Development</span>
             <span>65%</span>
           </div>
@@ -159,7 +159,7 @@ export const TaskProgress: Story = {
         </div>
         
         <div className="space-y-1">
-          <div className="flex justify-between text-[13px]">
+          <div className="flex justify-between text-[0.8125rem] ">
             <span>Testing</span>
             <span>30%</span>
           </div>
@@ -167,7 +167,7 @@ export const TaskProgress: Story = {
         </div>
         
         <div className="space-y-1">
-          <div className="flex justify-between text-[13px]">
+          <div className="flex justify-between text-[0.8125rem] ">
             <span>Deployment</span>
             <span>0%</span>
           </div>

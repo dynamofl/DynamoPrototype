@@ -87,7 +87,7 @@ export function DateCell({
       <div className={`min-h-[32px] flex items-center ${className}`}>
         <div className="flex items-center gap-2">
           <CalendarIcon className="h-4 w-4 text-gray-400" />
-          <span className="text-[13px]">
+          <span className="text-[0.8125rem] ">
             {formatDate(dateValue)}
           </span>
         </div>
@@ -131,7 +131,7 @@ export function DateCell({
     <div className={`min-h-[32px] flex items-center justify-between group ${className}`}>
       <div className="flex items-center gap-2">
         <CalendarIcon className="h-4 w-4 text-gray-400" />
-        <span className="text-[13px]">
+        <span className="text-[0.8125rem] ">
           {formatDate(dateValue)}
         </span>
       </div>

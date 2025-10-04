@@ -59,24 +59,24 @@ export function ProviderViewSheet({
       <div className="space-y-6 mt-6">
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label className="text-[13px] font-450 text-muted-foreground">Provider Name</Label>
-            <p className="text-[13px]">{provider.name}</p>
+            <Label className="text-[0.8125rem]  font-450 text-muted-foreground">Provider Name</Label>
+            <p className="text-[0.8125rem] ">{provider.name}</p>
           </div>
           
           <div className="space-y-2">
-            <Label className="text-[13px] font-450 text-muted-foreground">Type</Label>
+            <Label className="text-[0.8125rem]  font-450 text-muted-foreground">Type</Label>
             <Badge variant="outline">{provider.type}</Badge>
           </div>
           
           <div className="space-y-2">
-            <Label className="text-[13px] font-450 text-muted-foreground">Status</Label>
+            <Label className="text-[0.8125rem]  font-450 text-muted-foreground">Status</Label>
             {getStatusBadge(provider.status)}
           </div>
           
           <div className="space-y-2">
-            <Label className="text-[13px] font-450 text-muted-foreground">API Key</Label>
+            <Label className="text-[0.8125rem]  font-450 text-muted-foreground">API Key</Label>
             <div className="flex items-center space-x-2">
-              <span className="font-mono text-[13px] bg-muted px-2 py-1 rounded">
+              <span className="font-mono text-[0.8125rem]  bg-muted px-2 py-1 rounded">
                 {provider.apiKey.slice(0, 7)}...{provider.apiKey.slice(-4)}
               </span>
               <Button
@@ -92,34 +92,34 @@ export function ProviderViewSheet({
               </Button>
             </div>
             {showApiKey && (
-              <p className="font-mono text-[13px] bg-muted px-2 py-1 rounded mt-2">
+              <p className="font-mono text-[0.8125rem]  bg-muted px-2 py-1 rounded mt-2">
                 {provider.apiKey}
               </p>
             )}
           </div>
           
           <div className="space-y-2">
-            <Label className="text-[13px] font-450 text-muted-foreground">Created</Label>
-            <p className="text-[13px]">{provider.createdAt}</p>
+            <Label className="text-[0.8125rem]  font-450 text-muted-foreground">Created</Label>
+            <p className="text-[0.8125rem] ">{provider.createdAt}</p>
           </div>
           
           {provider.lastUsed && (
             <div className="space-y-2">
-              <Label className="text-[13px] font-450 text-muted-foreground">Last Used</Label>
-              <p className="text-[13px]">{provider.lastUsed}</p>
+              <Label className="text-[0.8125rem]  font-450 text-muted-foreground">Last Used</Label>
+              <p className="text-[0.8125rem] ">{provider.lastUsed}</p>
             </div>
           )}
           
           <div className="space-y-2">
-            <Label className="text-[13px] font-450 text-muted-foreground">Usage Count</Label>
-            <p className="text-[13px]">{provider.usageCount}</p>
+            <Label className="text-[0.8125rem]  font-450 text-muted-foreground">Usage Count</Label>
+            <p className="text-[0.8125rem] ">{provider.usageCount}</p>
           </div>
         </div>
 
         {provider.models && provider.models.length > 0 && (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label className="text-[13px] font-450 text-muted-foreground">
+              <Label className="text-[0.8125rem]  font-450 text-muted-foreground">
                 Available Models ({provider.models.length})
               </Label>
               <div className="max-h-48 overflow-y-auto border rounded-md p-3 space-y-2">
@@ -128,7 +128,7 @@ export function ProviderViewSheet({
                   .map((model: any) => (
                   <div key={model.id} className="flex items-center justify-between py-2 border-b last:border-b-0">
                     <div>
-                      <div className="font-450 text-[13px]">{model.id}</div>
+                      <div className="font-450 text-[0.8125rem] ">{model.id}</div>
                       <div className="text-xs text-muted-foreground">
                         Created: {formatModelDate(model.created)}
                       </div>

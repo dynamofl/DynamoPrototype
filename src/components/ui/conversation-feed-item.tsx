@@ -67,7 +67,7 @@ const ConversationFeedItem = React.forwardRef<
         </div>
       </div>
       <div className="flex flex-col justify-center w-full">
-        <p className="text-[13px] font-normal leading-5 text-gray-800">
+        <p className="text-[0.8125rem]  font-normal leading-5 text-gray-800">
           {content}
         </p>
       </div>

@@ -222,7 +222,7 @@ export function ConfigurationPanel({
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center space-x-2 mb-1">
                                       <span
-                                        className={`text-[13px] font-400 ${
+                                        className={`text-[0.8125rem]  font-400 ${
                                           isSelected ? "text-gray-900" : ""
                                         }`}
                                       >
@@ -250,7 +250,7 @@ export function ConfigurationPanel({
                       </CommandList>
                       {selectedGuardrails.length > 0 && (
                         <div className="p-3 border-t bg-muted/30">
-                          <div className="flex items-center justify-between text-[13px] text-muted-foreground">
+                          <div className="flex items-center justify-between text-[0.8125rem]  text-muted-foreground">
                             <span>
                               {selectedGuardrails.length} Guardrail
                               {selectedGuardrails.length !== 1 ? "s" : ""} selected
@@ -284,7 +284,7 @@ export function ConfigurationPanel({
                   >
                     <div className="flex items-center space-x-2">
                       <Info className="h-4 w-4 text-gray-500" />
-                      <span className="text-[13px] font-400">{guardrail.name}</span>
+                      <span className="text-[0.8125rem]  font-400">{guardrail.name}</span>
                     </div>
                     <div className="flex items-center space-x-3">
                       {guardrail.category && (

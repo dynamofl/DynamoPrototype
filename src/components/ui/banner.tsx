@@ -94,7 +94,7 @@ const Banner = React.forwardRef<HTMLDivElement, BannerProps>(
             <div className="flex gap-1.5 items-start w-full">
               <div className="flex-1 flex flex-col gap-1 min-w-0">
                 {showTitle && message && (
-                  <p className="text-[13px] font-450 leading-5 text-gray-900 tracking-[0.065px]">
+                  <p className="text-[0.8125rem]  font-450 leading-5 text-gray-900 tracking-[0.065px]">
                     {message}
                   </p>
                 )}

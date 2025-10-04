@@ -84,25 +84,25 @@ export function AppBar({
           </Link>
 
           {/* Separator */}
-          <span className="text-gray-500 text-[13px] font-450">/</span>
+          <span className="text-gray-500 text-[0.8125rem]  font-450">/</span>
 
           {/* Breadcrumb Items */}
           {breadcrumbs.map((item, index) => (
             <div key={item.path} className="flex items-center gap-3 animate-in fade-in slide-in-from-right-2 duration-150" style={{ animationDelay: `${index * 50}ms` }}>
               {item.current ? (
-                <span className="text-gray-600 text-[13px] font-450">
+                <span className="text-gray-600 text-[0.8125rem]  font-450">
                   {item.name}
                 </span>
               ) : (
                 <Link
                   to={item.path}
-                  className="text-gray-600 text-[13px] font-450 px-2 py-1.5 rounded-full hover:bg-gray-100"
+                  className="text-gray-600 text-[0.8125rem]  font-450 px-2 py-1.5 rounded-full hover:bg-gray-100"
                 >
                   {item.name}
                 </Link>
               )}
               {index < breadcrumbs.length - 1 && (
-                <span className="text-gray-500 text-[13px] font-450">/</span>
+                <span className="text-gray-500 text-[0.8125rem]  font-450">/</span>
               )}
             </div>
           ))}
@@ -110,9 +110,9 @@ export function AppBar({
           {/* Current Section with Badge and Dropdown */}
           {currentSection && (
             <>
-              <span className="text-gray-500 text-[13px] font-450">/</span>
+              <span className="text-gray-500 text-[0.8125rem]  font-450">/</span>
               <div className="flex items-center gap-1 px-2 rounded-full hover:bg-gray-100 cursor-pointer animate-in fade-in slide-in-from-right-2 duration-150" style={{ animationDelay: `${breadcrumbs.length * 50}ms` }}>
-                <span className="text-gray-800 text-[13px] font-450">
+                <span className="text-gray-800 text-[0.8125rem]  font-450">
                   {currentSection.name}
                 </span>
                 {currentSection.badge && (
@@ -147,7 +147,7 @@ export function AppBar({
                   <NavLink
                     to={item.path}
                     className={({ isActive }) => cn(
-                      "h-8 px-3 text-[13px] font-450 flex items-center gap-2 rounded-full transition-colors hover:bg-gray-200",
+                      "h-8 px-3 text-[0.8125rem]  font-450 flex items-center gap-2 rounded-full transition-colors hover:bg-gray-200",
                       isActive
                         ? "text-gray-800"
                         : "text-gray-600"
@@ -187,8 +187,8 @@ export function AppBar({
                     variant={button.variant === 'secondary' ? 'outline' : 'default'}
                     className={cn(
                       "h-7 px-2 text-[12px] font-450 flex items-center gap-2 animate-in fade-in duration-150 ",
-                      button.variant === 'primary' && "bg-blue-600 text-white hover:bg-blue-700",
-                      button.variant === 'secondary' && "text-gray-800 border-gray-200"
+                      button.variant === 'primary',
+                      button.variant === 'secondary'
                     )}
                     style={{ animationDelay: `${index * 75}ms` }}
                   >
@@ -208,7 +208,7 @@ export function AppBar({
             <NavLink
               to="/beta-features"
               className={({ isActive }) => cn(
-                "h-8 px-3 text-[13px] font-450 flex items-center gap-2 rounded-full transition-colors hover:bg-gray-200",
+                "h-8 px-3 text-[0.8125rem]  font-450 flex items-center gap-2 rounded-full transition-colors hover:bg-gray-200",
                 isActive
                   ? "text-gray-800"
                   : "text-gray-600"
@@ -225,7 +225,7 @@ export function AppBar({
                   variant="ghost"
                   className="w-8 h-8 bg-gray-200 hover:bg-gray-300 text-primary-foreground rounded-full p-0"
                 >
-                  <span className="text-gray-800 font-450 text-[13px]">
+                  <span className="text-gray-800 font-450 text-[0.8125rem] ">
                     PK
                   </span>
                 </Button>

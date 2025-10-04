@@ -23,15 +23,15 @@ export const Default: Story = {
       <TabsContent value="account">
         <div className="space-y-2">
           <h3 className="text-lg font-medium">Account</h3>
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-[0.8125rem]  text-muted-foreground">
             Make changes to your account here. Click save when you're done.
           </p>
           <div className="space-y-2">
-            <label className="text-[13px] font-medium">Name</label>
+            <label className="text-[0.8125rem]  font-medium">Name</label>
             <input
               type="text"
               defaultValue="John Doe"
-              className="flex h-10 w-full rounded-md border border-input bg-gray-0 px-3 py-2 text-[13px] ring-offset-background file:border-0 file:bg-transparent file:text-[13px] file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-10 w-full rounded-md border border-input bg-gray-0 px-3 py-2 text-[0.8125rem]  ring-offset-background file:border-0 file:bg-transparent file:text-[0.8125rem]  file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
         </div>
@@ -39,14 +39,14 @@ export const Default: Story = {
       <TabsContent value="password">
         <div className="space-y-2">
           <h3 className="text-lg font-medium">Password</h3>
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-[0.8125rem]  text-muted-foreground">
             Change your password here. After saving, you'll be logged out.
           </p>
           <div className="space-y-2">
-            <label className="text-[13px] font-medium">Current Password</label>
+            <label className="text-[0.8125rem]  font-medium">Current Password</label>
             <input
               type="password"
-              className="flex h-10 w-full rounded-md border border-input bg-gray-0 px-3 py-2 text-[13px] ring-offset-background file:border-0 file:bg-transparent file:text-[13px] file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-10 w-full rounded-md border border-input bg-gray-0 px-3 py-2 text-[0.8125rem]  ring-offset-background file:border-0 file:bg-transparent file:text-[0.8125rem]  file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
         </div>
@@ -66,7 +66,7 @@ export const ThreeTabs: Story = {
       <TabsContent value="overview">
         <div className="space-y-2">
           <h3 className="text-lg font-medium">Overview</h3>
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-[0.8125rem]  text-muted-foreground">
             Get a high-level view of your dashboard metrics and key performance indicators.
           </p>
           <div className="grid grid-cols-2 gap-4 mt-4">
@@ -84,22 +84,22 @@ export const ThreeTabs: Story = {
       <TabsContent value="analytics">
         <div className="space-y-2">
           <h3 className="text-lg font-medium">Analytics</h3>
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-[0.8125rem]  text-muted-foreground">
             Detailed analytics and insights about your application usage.
           </p>
           <div className="mt-4 p-4 border rounded-lg">
-            <p className="text-[13px] text-muted-foreground">Analytics content would go here...</p>
+            <p className="text-[0.8125rem]  text-muted-foreground">Analytics content would go here...</p>
           </div>
         </div>
       </TabsContent>
       <TabsContent value="reports">
         <div className="space-y-2">
           <h3 className="text-lg font-medium">Reports</h3>
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-[0.8125rem]  text-muted-foreground">
             Generate and download various reports for your business needs.
           </p>
           <div className="mt-4 p-4 border rounded-lg">
-            <p className="text-[13px] text-muted-foreground">Reports content would go here...</p>
+            <p className="text-[0.8125rem]  text-muted-foreground">Reports content would go here...</p>
           </div>
         </div>
       </TabsContent>
@@ -119,7 +119,7 @@ export const VerticalTabs: Story = {
       <TabsContent value="profile" className="mt-0">
         <div className="space-y-2">
           <h3 className="text-lg font-medium">Profile</h3>
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-[0.8125rem]  text-muted-foreground">
             Manage your profile information and preferences.
           </p>
         </div>
@@ -127,7 +127,7 @@ export const VerticalTabs: Story = {
       <TabsContent value="settings" className="mt-0">
         <div className="space-y-2">
           <h3 className="text-lg font-medium">Settings</h3>
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-[0.8125rem]  text-muted-foreground">
             Configure your application settings and preferences.
           </p>
         </div>
@@ -135,7 +135,7 @@ export const VerticalTabs: Story = {
       <TabsContent value="billing" className="mt-0">
         <div className="space-y-2">
           <h3 className="text-lg font-medium">Billing</h3>
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-[0.8125rem]  text-muted-foreground">
             Manage your subscription and billing information.
           </p>
         </div>
@@ -143,7 +143,7 @@ export const VerticalTabs: Story = {
       <TabsContent value="notifications" className="mt-0">
         <div className="space-y-2">
           <h3 className="text-lg font-medium">Notifications</h3>
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-[0.8125rem]  text-muted-foreground">
             Control how and when you receive notifications.
           </p>
         </div>
@@ -163,7 +163,7 @@ export const DisabledTab: Story = {
       <TabsContent value="active">
         <div className="space-y-2">
           <h3 className="text-lg font-medium">Active Tab</h3>
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-[0.8125rem]  text-muted-foreground">
             This is the active tab content.
           </p>
         </div>
@@ -171,7 +171,7 @@ export const DisabledTab: Story = {
       <TabsContent value="disabled">
         <div className="space-y-2">
           <h3 className="text-lg font-medium">Disabled Tab</h3>
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-[0.8125rem]  text-muted-foreground">
             This tab is disabled and cannot be accessed.
           </p>
         </div>
@@ -179,7 +179,7 @@ export const DisabledTab: Story = {
       <TabsContent value="another">
         <div className="space-y-2">
           <h3 className="text-lg font-medium">Another Tab</h3>
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-[0.8125rem]  text-muted-foreground">
             This is another tab with content.
           </p>
         </div>

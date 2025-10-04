@@ -80,7 +80,7 @@ export const accessTokenColumns: TableColumn[] = [
             type={iconType} 
             className="w-7 h-7 rounded-lg border border-gray-200 p-1 flex-shrink-0" 
           />
-          <span className="text-[13px] font-450 text-gray-900 truncate">
+          <span className="text-[0.8125rem]  font-450 text-gray-900 truncate">
             {row.provider}
           </span>
         </div>

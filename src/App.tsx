@@ -22,6 +22,8 @@ function App() {
       <Route path="/settings" element={<SettingsPage />} />
 
       {/* AI System Evaluation Route - Separate layout with breadcrumb app bar */}
+      <Route path="/ai-systems/:systemName/evaluation/:evaluationId/:tab" element={<AISystemEvaluationPage />} />
+      <Route path="/ai-systems/:systemName/evaluation/:evaluationId" element={<AISystemEvaluationPage />} />
       <Route path="/ai-systems/:systemName/evaluation" element={<AISystemEvaluationPage />} />
 
       {/* All other routes with default layout */}
@@ -45,8 +47,11 @@ function App() {
               {/* Beta Features Route */}
               <Route path="/beta-features" element={<BetaFeaturesPage />} />
               
-              {/* Evaluation Sandbox Route */}
+              {/* Evaluation Sandbox Routes */}
               <Route path="/evaluation-sandbox" element={<EvaluationPage />} />
+              <Route path="/evaluation-sandbox/new" element={<EvaluationPage />} />
+              <Route path="/evaluation-sandbox/list" element={<EvaluationPage />} />
+              <Route path="/evaluation-sandbox/:testId" element={<EvaluationPage />} />
               
               {/* Evaluation Results Route */}
               <Route path="/evaluation-results" element={<EvaluationResultsPage />} />
