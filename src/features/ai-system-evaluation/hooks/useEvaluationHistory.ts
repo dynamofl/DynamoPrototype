@@ -19,6 +19,7 @@ export function mapSupabaseToEvaluationTests(
     aiSystemId: evaluation.aiSystemId,
     aiSystemName: aiSystem.name,
     createdAt: evaluation.createdAt,
+    startedAt: evaluation.startedAt,
     completedAt: evaluation.completedAt,
     config: {
       candidateModel: aiSystem.selectedModel || 'Unknown',
@@ -92,6 +93,7 @@ export function useEvaluationHistory(aiSystem: AISystem | null) {
       const updated: EvaluationTest = {
         ...existing,
         status: updatedEvaluation.status,
+        startedAt: updatedEvaluation.started_at || existing.startedAt,
         completedAt: updatedEvaluation.completed_at,
         progress: {
           current: updatedEvaluation.completed_prompts || 0,

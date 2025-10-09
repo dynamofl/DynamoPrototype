@@ -24,6 +24,7 @@ export interface EvaluationSummary {
   totalPrompts: number;
   completedPrompts: number;
   createdAt: string;
+  startedAt?: string;
   completedAt?: string;
   summaryMetrics?: any;
 }
@@ -163,6 +164,7 @@ export class EvaluationService {
       totalPrompts: evaluation.total_prompts,
       completedPrompts: evaluation.completed_prompts,
       createdAt: evaluation.created_at,
+      startedAt: evaluation.started_at,
       completedAt: evaluation.completed_at,
       summaryMetrics: evaluation.summary_metrics
     }));

@@ -25,6 +25,7 @@ export class EvaluationStorageAdapter {
       numSamples: results.results.length
     };
 
+    const now = new Date().toISOString();
     const test: EvaluationTest = {
       id: results.evaluationId,
       name: evaluationData.name,
@@ -81,7 +82,8 @@ export class EvaluationStorageAdapter {
         timestamp: results.timestamp
       },
       createdAt: results.timestamp,
-      completedAt: new Date().toISOString(),
+      startedAt: results.timestamp, // Set start time when test begins
+      completedAt: now, // Set completion time
       metadata: {
         evaluationData,
         jailbreakResults: results // Store complete jailbreak results for later retrieval
@@ -99,10 +101,11 @@ export class EvaluationStorageAdapter {
     evaluationId: string,
     aiSystemName: string
   ): EvaluationTest {
+    const now = new Date().toISOString();
     const test: EvaluationTest = {
       id: evaluationId,
       name: evaluationData.name,
-      status: 'in_progress',
+      status: 'running',
       config: {
         candidateModel: aiSystemName,
         judgeModel: 'Internal Judge Model',
@@ -117,7 +120,8 @@ export class EvaluationStorageAdapter {
       metadata: {
         evaluationData // Store for resuming
       },
-      createdAt: new Date().toISOString()
+      createdAt: now,
+      startedAt: now // Set start time when test is created
     };
 
     return EvaluationTestStorage.addTest(test);

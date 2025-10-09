@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Download, Eye, X } from "lucide-react";
+import { ArrowDownToLine, Eye, ChevronDown } from "lucide-react";
 import type { JailbreakEvaluationOutput } from "../types/jailbreak-evaluation";
 import {
   Sheet,
@@ -9,6 +9,13 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { OverlayHeader } from "@/components/patterns";
 import { toUrlSlug } from "@/lib/utils";
 
 interface EvaluationResultsProps {
@@ -56,40 +63,33 @@ export function EvaluationResults({ results, evaluationName, onExport, onClose, 
   return (
     <div className="flex flex-col h-full">
       {/* Header with Export */}
-      <div className="flex items-center justify-between p-6 border-b border-gray-200">
-        <div>
-          <h2 className="text-2xl font-semibold text-gray-900">{evaluationName || 'Evaluation Results'}</h2>
-          <p className="text-sm text-gray-600 mt-1">
-            Completed {new Date(results.timestamp).toLocaleString()}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => onExport?.('json')}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-0 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-700"
-          >
-            <Download className="h-4 w-4" />
-            Export JSON
-          </button>
-          <button
-            onClick={() => onExport?.('csv')}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-0 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-700"
-          >
-            <Download className="h-4 w-4" />
-            Export CSV
-          </button>
-          {onClose && (
-            <Button
-              onClick={onClose}
-              variant="ghost"
-              size="icon"
-              className="ml-2"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-      </div>
+      <OverlayHeader
+        title={evaluationName || 'Evaluation Results'}
+        onClose={onClose}
+        actions={
+          <div className="flex gap-2 align-center items-center">
+            <Button variant="secondary" size="sm" className="gap-1 py-1">
+              <ArrowDownToLine className="w-4 h-4"/>
+               Download Report</Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="">
+                Export Result
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onExport?.('json')}>
+                Export as JSON
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onExport?.('csv')}>
+                Export as CSV
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          </div>
+          
+        }
+      />
 
       {/* Tabs */}
       <div className="border-b border-gray-200 px-6">

@@ -1,14 +1,20 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { motion, AnimatePresence, easeInOut } from "framer-motion";
 
 // Components
-import { AppBar } from "@/components/patterns";
+import { AppBar, OverlayHeader } from "@/components/patterns";
 import type { BreadcrumbItem, AppBarActionButton } from "@/components/patterns";
-import { Plus, X, Minus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EvaluationCreationFlow, EvaluationInProgress, EvaluationResults } from "./components";
-import { EvaluationHistoryTable } from "@/features/evaluation/components/evaluation-history-table";
+import {
+  EvaluationCreationFlow,
+  EvaluationInProgress,
+  EvaluationResults,
+  EvaluationHistoryTableDirect,
+  EvaluationHistoryHeader
+} from "./components";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -71,6 +77,9 @@ export function AISystemEvaluationUnifiedPage() {
   // Delete confirmation dialog state
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [evaluationToDelete, setEvaluationToDelete] = useState<EvaluationTest | null>(null);
+
+  // Selection state
+  const [selectedRows, setSelectedRows] = useState<string[]>([]);
 
   // Initial load - wait for async data before deciding what to show
   useEffect(() => {
@@ -499,6 +508,20 @@ export function AISystemEvaluationUnifiedPage() {
     setIsDeleteDialogOpen(true);
   }, []);
 
+  // Handle row selection
+  const handleRowSelect = useCallback((id: string, selected: boolean) => {
+    setSelectedRows(prev =>
+      selected
+        ? [...prev, id]
+        : prev.filter(rowId => rowId !== id)
+    )
+  }, []);
+
+  // Handle select all
+  const handleSelectAll = useCallback((selected: boolean) => {
+    setSelectedRows(selected ? evaluationHistory.map(test => test.id) : [])
+  }, [evaluationHistory]);
+
   const handleDeleteConfirm = async () => {
     if (!evaluationToDelete) return;
 
@@ -578,14 +601,8 @@ export function AISystemEvaluationUnifiedPage() {
     { name: "AI Systems", path: "/ai-systems" },
   ];
 
-  const actionButtons: AppBarActionButton[] = hasEvaluations ? [
-    {
-      label: 'New Evaluation',
-      onClick: handleCreateEvaluation,
-      variant: 'primary',
-      icon: <Plus className="h-3 w-3" />,
-    },
-  ] : [];
+  // Remove action buttons from AppBar - button is now in the header
+  const actionButtons: AppBarActionButton[] = [];
 
   // Show loading state if either AI system or history is loading
   // Also show loading if we're still determining whether to show creation flow
@@ -599,9 +616,36 @@ export function AISystemEvaluationUnifiedPage() {
           breadcrumbs={breadcrumbs}
           currentSection={{ name: "Loading...", badge: "Evaluation" }}
         />
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-gray-500">Loading evaluations...</p>
-        </div>
+        <main className="flex-1 border rounded-lg shadow m-2 mt-0 bg-gray-0">
+          <div className="space-y-3 py-3">
+            {/* Header Skeleton */}
+            <div className="px-4">
+              <Skeleton className="h-8 w-48" />
+            </div>
+
+            {/* Filters Skeleton */}
+            <div className="px-4">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-9 w-32" />
+                <Skeleton className="h-9 w-32" />
+                <Skeleton className="h-9 flex-1 max-w-md ml-auto" />
+              </div>
+            </div>
+
+            {/* Table Skeleton */}
+            <div className="px-4">
+              <div className="space-y-3">
+                {/* Table Header */}
+                <Skeleton className="h-10 w-full" />
+
+                {/* Table Rows */}
+                {[...Array(5)].map((_, i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))}
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
@@ -625,8 +669,33 @@ export function AISystemEvaluationUnifiedPage() {
         <div className="flex flex-col h-full">
           {/* Show loading state until initialization completes */}
           {!initialized ? (
-            <div className="flex-1 flex items-center justify-center">
-              <p className="text-gray-500">Loading evaluations...</p>
+            <div className="space-y-3 py-3">
+              {/* Header Skeleton */}
+              <div className="px-4">
+                <Skeleton className="h-8 w-48" />
+              </div>
+
+              {/* Filters Skeleton */}
+              <div className="px-4">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-9 w-32" />
+                  <Skeleton className="h-9 w-32" />
+                  <Skeleton className="h-9 flex-1 max-w-md ml-auto" />
+                </div>
+              </div>
+
+              {/* Table Skeleton */}
+              <div className="px-4">
+                <div className="space-y-3">
+                  {/* Table Header */}
+                  <Skeleton className="h-10 w-full" />
+
+                  {/* Table Rows */}
+                  {[...Array(5)].map((_, i) => (
+                    <Skeleton key={i} className="h-12 w-full" />
+                  ))}
+                </div>
+              </div>
             </div>
           ) : (
             <>
@@ -640,9 +709,18 @@ export function AISystemEvaluationUnifiedPage() {
                 />
               ) : hasEvaluations ? (
                 /* Show evaluation history table when evaluations exist */
-                <div className="p-6">
-                  <EvaluationHistoryTable
-                    tests={evaluationHistory}
+                <div className="space-y-3 py-3">
+                  {/* Page Header with New Evaluation button */}
+                  <EvaluationHistoryHeader
+                    onNewEvaluation={handleCreateEvaluation}
+                  />
+
+                  {/* Evaluation Table */}
+                  <EvaluationHistoryTableDirect
+                    data={evaluationHistory}
+                    selectedRows={selectedRows}
+                    onRowSelect={handleRowSelect}
+                    onSelectAll={handleSelectAll}
                     onViewReport={handleViewResults}
                     onViewData={handleViewData}
                     onShowProgress={handleShowProgress}
@@ -657,129 +735,113 @@ export function AISystemEvaluationUnifiedPage() {
       </main>
 
       {/* Creation flow overlay (when clicking New Evaluation button) */}
-      {showCreationFlow && creationFlowVariant === "overlay" && (
-        <div className="fixed inset-0 z-50 bg-gray-0 flex flex-col">
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-0">
-            <div>
-              <h2 className="text-2xl font-semibold text-gray-900">New Evaluation</h2>
-              <p className="text-sm text-gray-600 mt-1">
-                Create a new evaluation for {aiSystem.name}
-              </p>
-            </div>
-            <Button
-              onClick={handleCancelCreation}
-              variant="ghost"
-              size="icon"
-              className="ml-2"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="flex-1 overflow-auto">
-            <EvaluationCreationFlow
-              variant="onboarding"
-              onComplete={handleEvaluationCreated}
-              onCancel={handleCancelCreation}
-              aiSystemId={aiSystem.id}
+      <AnimatePresence>
+        {showCreationFlow && creationFlowVariant === "overlay" && (
+          <motion.div
+            className="fixed inset-0 z-50 bg-gray-0 flex flex-col m-1.5 rounded-lg border shadow-sm overflow-hidden"
+            initial={{ opacity: 0.8, scaleY: 0.98 }}
+            animate={{ opacity: 1, filter: "none", scaleY: 1 }}
+            exit={{ opacity: 0, filter: "blur(10px)", scaleY: 0.98 }}
+            transition={{ duration: 0.15, ease:easeInOut }}
+          >
+            <OverlayHeader
+              title="New Evaluation"
+              onClose={handleCancelCreation}
             />
-          </div>
-        </div>
-      )}
+            <div className="flex-1 overflow-auto">
+              <EvaluationCreationFlow
+                variant="onboarding"
+                onComplete={handleEvaluationCreated}
+                onCancel={handleCancelCreation}
+                aiSystem={aiSystem}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Loading progress overlay - shown when clicking on existing running test */}
-      {loadingProgress && selectedTest && (
-        <div className="fixed inset-0 z-50 bg-gray-0 flex flex-col">
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-0">
-            <div className="flex-1">
-              <h2 className="text-2xl font-semibold text-gray-900">
-                {selectedTest.name}
-              </h2>
-              <Skeleton className="h-4 w-48 bg-gray-200 mt-2" />
+      <AnimatePresence>
+        {loadingProgress && selectedTest && (
+          <motion.div
+            className="fixed inset-0 z-50 bg-gray-0 flex flex-col m-1.5 rounded-lg border shadow-sm overflow-hidden"
+            initial={{ opacity: 0.8, scaleY: 0.98 }}
+            animate={{ opacity: 1, filter: "none", scaleY: 1 }}
+            exit={{ opacity: 0, filter: "blur(10px)", scaleY: 0.98 }}
+            transition={{ duration: 0.15, ease: "easeInOut" }}
+          >
+            <OverlayHeader
+              title={selectedTest.name}
+              onMinimize={handleMinimize}
+            />
+            <div className="flex-1 flex items-center justify-center">
+              <p className="text-gray-500">Loading Progress...</p>
             </div>
-            <Button
-              onClick={handleMinimize}
-              variant="ghost"
-              size="icon"
-              className="ml-2"
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="flex-1 flex items-center justify-center">
-            <p className="text-gray-500">Loading Progress...</p>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Running evaluation progress overlay - shown for pending/running tests or temp test */}
-      {!loadingProgress && selectedTest && (selectedTest.status === 'running' || selectedTest.status === 'pending') && (
-        <div className="fixed inset-0 z-50 bg-gray-0 flex flex-col">
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-0">
-            <div>
-              <h2 className="text-2xl font-semibold text-gray-900">
-                {selectedTest.name}
-              </h2>
-              <p className="text-sm text-gray-600 mt-1">
-                Evaluation In Progress...
-              </p>
-            </div>
-            <Button
-              onClick={handleMinimize}
-              variant="ghost"
-              size="icon"
-              className="ml-2"
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="flex-1 overflow-auto">
-            <EvaluationInProgress
-              stage={evaluationProgress.stage}
-              current={evaluationProgress.current}
-              total={evaluationProgress.total}
-              message={evaluationProgress.message}
+      <AnimatePresence>
+        {!loadingProgress && selectedTest && (selectedTest.status === 'running' || selectedTest.status === 'pending') && (
+          <motion.div
+            className="fixed inset-0 z-50 bg-gray-0 flex flex-col m-1.5 rounded-lg border shadow-sm overflow-hidden"
+            initial={{ opacity: 0.8, scaleY: 0.98 }}
+            animate={{ opacity: 1, filter: "none", scaleY: 1 }}
+            exit={{ opacity: 0, filter: "blur(10px)", scaleY: 0.98 }}
+            transition={{ duration: 0.15, ease: "easeInOut" }}
+          >
+            <OverlayHeader
+              title={selectedTest.name}
+              onMinimize={handleMinimize}
             />
-          </div>
-        </div>
-      )}
-
-      {/* Loading evaluation results overlay */}
-      {loadingResults && selectedTest && (
-        <div className="fixed inset-0 z-50 bg-gray-0 flex flex-col">
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-0">
-            <div className="flex-1">
-              <h2 className="text-2xl font-semibold text-gray-900">
-                {selectedTest.name}
-              </h2>
-              <Skeleton className="h-4 w-48 bg-gray-200 mt-2" />
+            <div className="flex-1 overflow-auto">
+              <EvaluationInProgress
+                stage={evaluationProgress.stage}
+                current={evaluationProgress.current}
+                total={evaluationProgress.total}
+                message={evaluationProgress.message}
+              />
             </div>
-            <Button
-              onClick={handleMinimize}
-              variant="ghost"
-              size="icon"
-              className="ml-2"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="flex-1 flex items-center justify-center">
-            <p className="text-gray-500">Loading Report...</p>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Completed evaluation results overlay */}
-      {evaluationResults && !loadingResults && selectedTest?.status !== 'running' && selectedTest?.status !== 'pending' && (
-        <div className="fixed inset-0 z-50 bg-gray-0">
-          <EvaluationResults
-            results={evaluationResults}
-            evaluationName={selectedTest?.name}
-            onClose={handleMinimize}
-            currentTab={tab || 'summary'}
-            onExport={handleExport}
-          />
-        </div>
-      )}
+      {/* Evaluation results overlay - shows loading or results */}
+      <AnimatePresence mode="wait">
+        {(loadingResults || evaluationResults) && selectedTest?.status !== 'running' && selectedTest?.status !== 'pending' && selectedTest && (
+          <motion.div
+            key="results-overlay"
+            className="fixed inset-0 z-50 bg-gray-0 flex flex-col m-1.5 rounded-lg border shadow-sm overflow-hidden"
+            initial={{ opacity: 0.8, scaleY: 0.98 }}
+            animate={{ opacity: 1, filter: "none", scaleY: 1 }}
+            exit={{ opacity: 0, filter: "blur(10px)", scaleY: 0.98 }}
+            transition={{ duration: 0.15, ease: "easeInOut" }}
+          >
+            {loadingResults ? (
+              /* Loading State */
+              <>
+                <OverlayHeader
+                  title={selectedTest.name}
+                  onClose={handleMinimize}
+                />
+                <div className="flex-1 flex items-center justify-center">
+                  <p className="text-gray-500">Loading Report...</p>
+                </div>
+              </>
+            ) : evaluationResults ? (
+              /* Results Content */
+              <EvaluationResults
+                results={evaluationResults}
+                evaluationName={selectedTest?.name}
+                onClose={handleMinimize}
+                currentTab={tab || 'summary'}
+                onExport={handleExport}
+              />
+            ) : null}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

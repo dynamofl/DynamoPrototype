@@ -6,14 +6,16 @@ import { DatasetAugmentation } from "./dataset-augmentation";
 import { GuardrailSelection } from "./guardrail-selection";
 import { AISystemSelection } from "./ai-system-selection";
 import { EvaluationReview } from "./evaluation-review";
-import type { EvaluationCreationData } from "../types/evaluation-creation";
-import { getStepFlow, type StepId } from "../constants/evaluation-steps";
+import type { EvaluationCreationData } from "../../types/evaluation-creation";
+import type { AISystem } from "@/features/ai-systems/types/types";
+import { getStepFlow, type StepId } from "../../constants/evaluation-steps";
 
 interface EvaluationCreationFlowProps {
   onComplete: (data: EvaluationCreationData) => void;
   onCancel: () => void;
   variant?: "overlay" | "onboarding";
-  aiSystemId?: string; // AI system being evaluated
+  aiSystemId?: string; // AI system being evaluated (deprecated - use aiSystem instead)
+  aiSystem?: AISystem; // Full AI system object being evaluated
 }
 
 export function EvaluationCreationFlow({
@@ -21,10 +23,11 @@ export function EvaluationCreationFlow({
   onCancel,
   variant = "overlay",
   aiSystemId,
+  aiSystem,
 }: EvaluationCreationFlowProps) {
   const [currentStepId, setCurrentStepId] = useState<StepId>("setup");
   const [evaluationData, setEvaluationData] = useState<Partial<EvaluationCreationData>>({
-    aiSystemIds: aiSystemId ? [aiSystemId] : undefined,
+    aiSystemIds: aiSystem?.id ? [aiSystem.id] : aiSystemId ? [aiSystemId] : undefined,
   });
   const [isTransitioning, setIsTransitioning] = useState(false);
 
@@ -64,7 +67,7 @@ export function EvaluationCreationFlow({
 
   // Wrapper styling based on variant
   const containerClasses = variant === "overlay"
-    ? "fixed inset-0  z-50 flex flex-col"
+    ? "fixed inset-0 z-50 flex flex-col m-4"
     : "w-full h-full flex flex-col";
 
   return (
@@ -156,6 +159,7 @@ export function EvaluationCreationFlow({
               onNext={handleNext}
               onCancel={onCancel}
               variant={variant}
+              aiSystem={aiSystem}
             />
           )}
           {currentStepId === "dataset-selection" && (

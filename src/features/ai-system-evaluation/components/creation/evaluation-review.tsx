@@ -1,14 +1,12 @@
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Play, Edit2 } from "lucide-react";
 import { useGuardrailsSupabase } from "@/features/guardrails/lib/useGuardrailsSupabase";
-import { AISystemsStorage } from "@/features/ai-systems/lib";
+import { useAISystemsSupabase } from "@/features/ai-systems/lib/useAISystemsSupabase";
 import { AISystemIcon } from "@/components/patterns/ui-patterns/ai-system-icon";
 import { PolicyIcon } from "@/assets/icons/policy-icon";
 import type { EvaluationCreationStepProps } from "../types/evaluation-creation";
 import type { StepId } from "../constants/evaluation-steps";
-import type { AISystem } from "@/features/ai-systems/types/types";
 
 interface EvaluationReviewProps extends EvaluationCreationStepProps {
   onEditStep: (stepId: StepId) => void;
@@ -22,17 +20,7 @@ export function EvaluationReview({
   onComplete,
 }: EvaluationReviewProps) {
   const { guardrails: allGuardrails } = useGuardrailsSupabase();
-  const [allAISystems, setAllAISystems] = useState<AISystem[]>([]);
-
-  // Load AI systems on mount
-  useEffect(() => {
-    const loadAISystems = async () => {
-      const storage = new AISystemsStorage();
-      const systems = await storage.getAISystems();
-      setAllAISystems(systems);
-    };
-    loadAISystems();
-  }, []);
+  const { aiSystems: allAISystems } = useAISystemsSupabase();
 
   // Get selected policies/guardrails/systems
   const selectedPolicies = allGuardrails.filter((g) =>

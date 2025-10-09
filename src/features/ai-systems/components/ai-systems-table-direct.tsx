@@ -222,7 +222,7 @@ export function AISystemsTableDirect({
             <TableHead className="font-450">Owner</TableHead>
             <TableHead className="font-450">Created At</TableHead>
             <TableHead className="font-450">Status</TableHead>
-            <TableHead className="w-[200px] font-450">Actions</TableHead>
+            <TableHead className="w-[200px] font-450"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

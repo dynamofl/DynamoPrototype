@@ -1,14 +1,13 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { AISystemsStorage } from "@/features/ai-systems/lib";
+import { useAISystemsSupabase } from "@/features/ai-systems/lib/useAISystemsSupabase";
 import { AISystemIcon } from "@/components/patterns/ui-patterns/ai-system-icon";
 import type { EvaluationCreationStepProps } from "../types/evaluation-creation";
-import type { AISystem } from "@/features/ai-systems/types/types";
 
 export function AISystemSelection({
   data,
@@ -17,21 +16,11 @@ export function AISystemSelection({
   onBack,
   variant = "overlay",
 }: EvaluationCreationStepProps) {
-  const [aiSystems, setAISystems] = useState<AISystem[]>([]);
+  const { aiSystems } = useAISystemsSupabase();
   const [selectedSystemIds, setSelectedSystemIds] = useState<string[]>(
     data.aiSystemIds || []
   );
   const [searchQuery, setSearchQuery] = useState("");
-
-  // Load AI systems on mount
-  useEffect(() => {
-    const loadAISystems = async () => {
-      const storage = new AISystemsStorage();
-      const systems = await storage.getAISystems();
-      setAISystems(systems);
-    };
-    loadAISystems();
-  }, []);
 
   // Filter AI systems based on search query
   const filteredSystems = useMemo(() => {
@@ -41,8 +30,8 @@ export function AISystemSelection({
     return aiSystems.filter(
       (system) =>
         system.name.toLowerCase().includes(query) ||
-        system.provider.toLowerCase().includes(query) ||
-        system.model.toLowerCase().includes(query)
+        system.providerName.toLowerCase().includes(query) ||
+        system.selectedModel.toLowerCase().includes(query)
     );
   }, [aiSystems, searchQuery]);
 
@@ -138,18 +127,18 @@ export function AISystemSelection({
                     >
                       <div className="flex items-center gap-2">
                         <AISystemIcon
-                          provider={system.provider}
+                          type={system.icon}
                           className="h-4 w-4"
                         />
                         <span className="text-[0.8125rem]  font-450 text-gray-900">
                           {system.name}
                         </span>
                         <Badge variant="secondary" className="text-xs">
-                          {system.provider}
+                          {system.providerName}
                         </Badge>
                       </div>
                       <p className="text-xs text-gray-600 mt-1">
-                        {system.model}
+                        {system.selectedModel}
                       </p>
                     </label>
                   </div>

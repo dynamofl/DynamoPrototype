@@ -1,10 +1,12 @@
 import type { EvaluationConfig, EvaluationInput, EvaluationResult } from './evaluation';
 
 export type EvaluationTestStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+export type EvaluationTestType = 'compliance' | 'jailbreak';
 
 export interface EvaluationTest {
   id: string;
   name: string;
+  type?: EvaluationTestType;
   status: EvaluationTestStatus;
   config: EvaluationConfig;
   input: EvaluationInput;

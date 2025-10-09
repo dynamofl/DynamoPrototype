@@ -6,8 +6,7 @@ import { AppBar } from "@/components/patterns";
 import type { BreadcrumbItem, AppBarActionButton } from "@/components/patterns";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { EvaluationCreationFlow } from "./components";
-import { EvaluationHistoryTableDirect } from "@/features/evaluation/components/evaluation-history-table-direct";
+import { EvaluationCreationFlow, EvaluationHistoryTableDirect } from "./components";
 
 // Hooks
 import { useAISystemLoader } from "./hooks/useAISystemLoader";
@@ -250,7 +249,13 @@ export function AISystemEvaluationListPage() {
             />
           ) : hasEvaluations ? (
             /* Show evaluations list when evaluations exist */
-            <div className="pt-3">
+            <>
+              {/* Page Header - above filters */}
+              <div className="px-4 pt-6 pb-4 border-b border-gray-200">
+                <h1 className="text-2xl font-semibold text-gray-900">Evaluation</h1>
+              </div>
+
+              {/* Evaluation Table with Filters */}
               <EvaluationHistoryTableDirect
                 data={evaluationHistory}
                 selectedRows={selectedRows}
@@ -261,7 +266,7 @@ export function AISystemEvaluationListPage() {
                 onShowProgress={handleShowProgress}
                 onTestDetails={handleTestDetails}
               />
-            </div>
+            </>
           ) : null}
         </div>
       </main>

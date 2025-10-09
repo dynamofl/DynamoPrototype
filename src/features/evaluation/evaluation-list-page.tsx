@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 // Components
-import { EvaluationHeader, EvaluationHistoryTableDirect, EvaluationProgressSidebar } from "./components";
+import { EvaluationHistoryHeader, EvaluationHistoryTableDirect } from "@/features/ai-system-evaluation/components";
+import { EvaluationProgressSidebar } from "./components";
 
 // Types and services
 import { EvaluationTestStorage } from "@/features/evaluation/lib/evaluation-test-storage";
@@ -50,12 +51,6 @@ export function EvaluationListPage() {
     navigate('/evaluation-sandbox/new');
   };
 
-  const handleShowHistory = () => {
-    // Already on history page, refresh the list
-    const tests = EvaluationTestStorage.loadTests();
-    setEvaluationTests(tests);
-  };
-
   // Handle row selection
   const handleRowSelect = (id: string, selected: boolean) => {
     setSelectedRows(prev =>
@@ -75,13 +70,8 @@ export function EvaluationListPage() {
       <main className="mx-auto">
         <div className="space-y-3 py-3">
           {/* Page Header */}
-          <EvaluationHeader
-            onRunEvaluation={() => navigate('/evaluation-sandbox/new')}
-            onShowHistory={handleShowHistory}
+          <EvaluationHistoryHeader
             onNewEvaluation={handleNewEvaluation}
-            isLoading={false}
-            isDisabled={false}
-            showHistory={true}
           />
 
           {/* Evaluation Table */}
