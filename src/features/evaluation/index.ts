@@ -2,8 +2,13 @@
  * Evaluation feature exports
  */
 
-// Main page component
-export { EvaluationSandbox as EvaluationPage } from './evaluation-page'
+// Main page components
+export { EvaluationCreatePage } from './evaluation-create-page'
+export { EvaluationListPage } from './evaluation-list-page'
+export { EvaluationDetailPage } from './evaluation-detail-page'
+
+// Legacy export for backwards compatibility
+export { EvaluationCreatePage as EvaluationPage } from './evaluation-create-page'
 
 // Components
 export * from './components'

@@ -42,7 +42,7 @@ export class EvaluationStorageAdapter {
         input: {
           prompts: results.results.map(r => ({
             id: `prompt-${r.policyId}`,
-            prompt: r.basePrompt,
+            prompt: r.adversarialPrompt, // Store adversarial prompt as the main prompt
             topic: r.policyName,
             userMarkedAdversarial: r.behaviorType === 'Disallowed' ? 'Adversarial' : 'Not Adversarial'
           }))
@@ -50,7 +50,7 @@ export class EvaluationStorageAdapter {
         config,
         promptResults: results.results.map(r => ({
           promptId: `prompt-${r.policyId}`,
-          prompt: r.basePrompt,
+          prompt: r.adversarialPrompt, // Store adversarial prompt
           topic: r.policyName,
           userMarkedAdversarial: r.behaviorType === 'Disallowed' ? 'Adversarial' : 'Not Adversarial',
           judgeDetectedAdversarial: r.guardrailJudgement === 'Blocked',
@@ -58,7 +58,17 @@ export class EvaluationStorageAdapter {
           confusionMatrix: {
             tp: 0, tn: 0, fp: 0, fn: 0
           },
-          localScores: {}
+          localScores: {},
+          // Store jailbreak-specific metadata
+          metadata: {
+            basePrompt: r.basePrompt,
+            adversarialPrompt: r.adversarialPrompt,
+            attackType: r.attackType,
+            behaviorType: r.behaviorType,
+            guardrailJudgement: r.guardrailJudgement,
+            modelJudgement: r.modelJudgement,
+            attackOutcome: r.attackOutcome
+          }
         })),
         overallMetrics: {
           averageAccuracy: (results.summary.attackFailures / results.summary.totalTests) * 100,
@@ -71,7 +81,11 @@ export class EvaluationStorageAdapter {
         timestamp: results.timestamp
       },
       createdAt: results.timestamp,
-      completedAt: new Date().toISOString()
+      completedAt: new Date().toISOString(),
+      metadata: {
+        evaluationData,
+        jailbreakResults: results // Store complete jailbreak results for later retrieval
+      }
     };
 
     return EvaluationTestStorage.addTest(test);
@@ -161,6 +175,13 @@ export class EvaluationStorageAdapter {
         }))
       }
     });
+  }
+
+  /**
+   * Get a test by ID
+   */
+  static getTest(testId: string): EvaluationTest | null {
+    return EvaluationTestStorage.getTest(testId);
   }
 
   /**

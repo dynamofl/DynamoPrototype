@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Play, Edit2 } from "lucide-react";
-import { useGuardrails } from "@/features/guardrails/lib/useGuardrails";
+import { useGuardrailsSupabase } from "@/features/guardrails/lib/useGuardrailsSupabase";
 import { AISystemsStorage } from "@/features/ai-systems/lib";
 import { AISystemIcon } from "@/components/patterns/ui-patterns/ai-system-icon";
 import { PolicyIcon } from "@/assets/icons/policy-icon";
@@ -21,7 +21,7 @@ export function EvaluationReview({
   onEditStep,
   onComplete,
 }: EvaluationReviewProps) {
-  const { guardrails: allGuardrails } = useGuardrails();
+  const { guardrails: allGuardrails } = useGuardrailsSupabase();
   const [allAISystems, setAllAISystems] = useState<AISystem[]>([]);
 
   // Load AI systems on mount

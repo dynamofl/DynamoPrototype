@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useGuardrails } from "@/features/guardrails/lib/useGuardrails";
+import { useGuardrailsSupabase } from "@/features/guardrails/lib/useGuardrailsSupabase";
 import { GuardrailViewSheet } from "@/features/guardrails/components";
 import { UploadPromptsSheet } from "./upload-prompts-sheet";
 import type { EvaluationCreationStepProps, PolicyDataset } from "../types/evaluation-creation";
@@ -17,7 +17,7 @@ export function DatasetSelection({
   onBack,
   variant = "overlay",
 }: EvaluationCreationStepProps) {
-  const { guardrails: allPolicies } = useGuardrails();
+  const { guardrails: allPolicies } = useGuardrailsSupabase();
   const [selectedPolicyIds, setSelectedPolicyIds] = useState<string[]>(
     data.policyIds || []
   );

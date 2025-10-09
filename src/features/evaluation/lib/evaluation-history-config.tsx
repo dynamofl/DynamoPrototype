@@ -1,6 +1,6 @@
 import type { TableColumn } from '@/types/table';
 import type { EvaluationTestSummary } from '../types/evaluation-test';
-import { CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, Clock, AlertTriangle, Trash2, Eye, Activity } from 'lucide-react';
 
 export const EVALUATION_HISTORY_COLUMNS: TableColumn[] = [
   {
@@ -31,9 +31,14 @@ export const EVALUATION_HISTORY_COLUMNS: TableColumn[] = [
         className: 'bg-green-100 text-green-800',
         icon: <CheckCircle2 className="h-3.5 w-3.5" />
       },
-      in_progress: {
+      running: {
         variant: 'secondary',
         className: 'bg-amber-100 text-amber-800',
+        icon: <Clock className="h-3.5 w-3.5" />
+      },
+      pending: {
+        variant: 'secondary',
+        className: 'bg-amber-100 text-amber-800 animate-pulse',
         icon: <Clock className="h-3.5 w-3.5" />
       },
       failed: {
@@ -43,12 +48,15 @@ export const EVALUATION_HISTORY_COLUMNS: TableColumn[] = [
     },
     format: (value: any, row: any) => {
       if (value === 'completed') return 'Completed';
-      if (value === 'in_progress') {
-        const progress = row.completedPrompts && row.totalPrompts
-          ? `Checking Compliance (${Math.round((row.completedPrompts / row.totalPrompts) * 100)}%)`
-          : 'Waiting for Resources';
-        return progress;
+      if (value === 'running') {
+        // Show detailed progress with current/total prompts
+        if (row.completedPrompts !== undefined && row.totalPrompts) {
+          const percentage = Math.round((row.completedPrompts / row.totalPrompts) * 100);
+          return `Running (${row.completedPrompts}/${row.totalPrompts} - ${percentage}%)`;
+        }
+        return 'Running Evaluation';
       }
+      if (value === 'pending') return 'Starting...';
       if (value === 'failed') return 'Evaluation Failed';
       return value;
     },
@@ -92,13 +100,50 @@ export const EVALUATION_HISTORY_COLUMNS: TableColumn[] = [
   {
     key: 'actions',
     title: '',
-    type: 'button',
-    width: '120px',
-    buttonVariant: 'ghost',
-    format: (value: any, row: EvaluationTestSummary) => {
-      if (row.status === 'completed') return 'View Results';
-      if (row.status === 'in_progress') return 'View Progress';
-      return 'View Details';
-    },
+    type: 'multiButton',
+    width: '200px',
+    multiButtonConfig: {
+      getActions: (row: EvaluationTestSummary) => {
+        const actions = [];
+
+        // View/Progress button based on status
+        if (row.status === 'completed') {
+          actions.push({
+            key: 'view',
+            label: 'View',
+            icon: <Eye className="h-4 w-4" />,
+            variant: 'ghost' as const,
+            className: 'text-gray-700'
+          });
+        } else if (row.status === 'running') {
+          actions.push({
+            key: 'progress',
+            label: 'Progress',
+            icon: <Activity className="h-4 w-4" />,
+            variant: 'ghost' as const,
+            className: 'text-amber-700'
+          });
+        } else {
+          actions.push({
+            key: 'details',
+            label: 'Details',
+            icon: <Eye className="h-4 w-4" />,
+            variant: 'ghost' as const,
+            className: 'text-gray-700'
+          });
+        }
+
+        // Delete button
+        actions.push({
+          key: 'delete',
+          label: 'Delete',
+          icon: <Trash2 className="h-4 w-4" />,
+          variant: 'ghost' as const,
+          className: 'text-red-600 hover:text-red-700'
+        });
+
+        return actions;
+      }
+    }
   },
 ];

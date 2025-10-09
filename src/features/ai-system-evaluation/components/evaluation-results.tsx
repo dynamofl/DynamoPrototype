@@ -9,16 +9,18 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { toUrlSlug } from "@/lib/utils";
 
 interface EvaluationResultsProps {
   results: JailbreakEvaluationOutput;
+  evaluationName?: string;
   onExport?: (format: 'json' | 'csv') => void;
   onClose?: () => void;
   currentTab?: string;
   onTabChange?: (tab: 'summary' | 'data') => void;
 }
 
-export function EvaluationResults({ results, onExport, onClose, currentTab: propTab, onTabChange }: EvaluationResultsProps) {
+export function EvaluationResults({ results, evaluationName, onExport, onClose, currentTab: propTab, onTabChange }: EvaluationResultsProps) {
   const navigate = useNavigate();
   const { systemName, evaluationId } = useParams<{ systemName: string; evaluationId?: string }>();
   const [selectedTab, setSelectedTab] = useState<'summary' | 'data'>((propTab as 'summary' | 'data') || 'summary');
@@ -42,7 +44,7 @@ export function EvaluationResults({ results, onExport, onClose, currentTab: prop
       onTabChange(tab);
     } else if (systemName && evaluationId) {
       // Update URL with new tab
-      navigate(`/ai-systems/${encodeURIComponent(systemName)}/evaluation/${evaluationId}/${tab}`);
+      navigate(`/ai-systems/${toUrlSlug(systemName)}/evaluation/${evaluationId}/${tab}`);
     } else {
       // Fallback to local state
       setSelectedTab(tab);
@@ -56,7 +58,7 @@ export function EvaluationResults({ results, onExport, onClose, currentTab: prop
       {/* Header with Export */}
       <div className="flex items-center justify-between p-6 border-b border-gray-200">
         <div>
-          <h2 className="text-2xl font-semibold text-gray-900">Evaluation Results</h2>
+          <h2 className="text-2xl font-semibold text-gray-900">{evaluationName || 'Evaluation Results'}</h2>
           <p className="text-sm text-gray-600 mt-1">
             Completed {new Date(results.timestamp).toLocaleString()}
           </p>

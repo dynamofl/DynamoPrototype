@@ -16,7 +16,7 @@ export class AISystemsStorage {
       type: 'secure',
       storageKey: AI_SYSTEMS_STORAGE_KEY,
       autoSave: true,
-      idGenerator: 'timestamp'
+      idGenerator: 'uuid'
     })
   }
 

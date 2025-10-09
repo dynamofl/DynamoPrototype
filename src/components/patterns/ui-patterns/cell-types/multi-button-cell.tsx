@@ -1,3 +1,4 @@
+import React from 'react';
 import { Button } from '@/components/ui/button'
 import { MoreHorizontal } from 'lucide-react'
 
@@ -26,7 +27,7 @@ interface MultiButtonCellProps {
   }
 }
 
-export function MultiButtonCell({
+export const MultiButtonCell = React.memo(function MultiButtonCell({
   value: _value,
   row,
   column: _column,
@@ -113,4 +114,13 @@ export function MultiButtonCell({
       )}
     </div>
   )
-}
+}, (prevProps, nextProps) => {
+  // Custom comparison function to prevent unnecessary re-renders
+  // Only re-render if the row status changed (which affects button labels)
+  return (
+    prevProps.row.id === nextProps.row.id &&
+    prevProps.row.status === nextProps.row.status &&
+    prevProps.disabled === nextProps.disabled &&
+    prevProps.mode === nextProps.mode
+  );
+});

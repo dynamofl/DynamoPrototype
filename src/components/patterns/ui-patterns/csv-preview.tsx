@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { CSVParseResult } from '@/types/csv';
-import type { EvaluationPrompt } from '@/types/evaluation';
+import type { EvaluationPrompt } from '@/features/evaluation/types/evaluation';
 
 interface CSVPreviewProps {
   parseResult: CSVParseResult;

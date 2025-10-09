@@ -1,6 +1,6 @@
 import type { EvaluationConfig, EvaluationInput, EvaluationResult } from './evaluation';
 
-export type EvaluationTestStatus = 'in_progress' | 'completed' | 'failed';
+export type EvaluationTestStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
 
 export interface EvaluationTest {
   id: string;

@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Play, Edit2 } from "lucide-react";
-import { useGuardrails } from "@/features/guardrails/lib/useGuardrails";
+import { useGuardrailsSupabase } from "@/features/guardrails/lib/useGuardrailsSupabase";
 import type { EvaluationCreationStepProps } from "../types/evaluation-creation";
 
 interface Step4Props extends EvaluationCreationStepProps {
@@ -15,7 +15,7 @@ export function EvaluationCreationStep4({
   onEditStep,
   onComplete,
 }: Step4Props) {
-  const { guardrails: allGuardrails } = useGuardrails();
+  const { guardrails: allGuardrails } = useGuardrailsSupabase();
 
   // Get selected policies/guardrails
   const selectedPolicies = allGuardrails.filter((g) =>

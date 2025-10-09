@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { AISystem } from './types'
+import { toUrlSlug } from '@/lib/utils'
 import {
   AISystemCreateSheet,
   AISystemEditSheet,
@@ -139,7 +140,7 @@ export function AISystemsPage() {
   // Handle manage evaluation
   const handleManageEvaluation = (system: AISystem) => {
     // Navigate to the evaluation page with system name in URL
-    navigate(`/ai-systems/${encodeURIComponent(system.name)}/evaluation`)
+    navigate(`/ai-systems/${toUrlSlug(system.name)}/evaluation`)
   }
 
   // Handle view info

@@ -72,4 +72,4 @@ export interface Guardrail {
   disallowedBehavior?: string;
 }
 
-export type { EvaluationInput, EvaluationConfig, EvaluationResult, Message } from './evaluation';
+export type { EvaluationInput, EvaluationConfig, EvaluationResult, Message } from '@/features/evaluation/types/evaluation';

@@ -1,4 +1,4 @@
-import type { EvaluationPrompt } from './evaluation';
+import type { EvaluationPrompt } from '@/features/evaluation/types/evaluation';
 
 export interface CSVValidationError {
   rowIndex: number;

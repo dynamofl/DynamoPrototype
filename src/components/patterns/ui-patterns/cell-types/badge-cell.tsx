@@ -13,7 +13,7 @@ interface BadgeCellProps extends CellProps {
   tooltip?: string
 }
 
-export function BadgeCell({
+export const BadgeCell = React.memo(function BadgeCell({
   value,
   row,
   column,
@@ -164,5 +164,16 @@ export function BadgeCell({
       </Badge>
     </div>
   )
-}
+}, (prevProps, nextProps) => {
+  // Custom comparison function to prevent unnecessary re-renders
+  // Only re-render if the value, status, or progress actually changed
+  return (
+    prevProps.value === nextProps.value &&
+    prevProps.row.status === nextProps.row.status &&
+    prevProps.row.completedPrompts === nextProps.row.completedPrompts &&
+    prevProps.row.totalPrompts === nextProps.row.totalPrompts &&
+    prevProps.disabled === nextProps.disabled &&
+    prevProps.mode === nextProps.mode
+  );
+});
 

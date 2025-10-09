@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useGuardrails } from "@/features/guardrails/lib/useGuardrails";
+import { useGuardrailsSupabase } from "@/features/guardrails/lib/useGuardrailsSupabase";
 import { GuardrailViewSheet } from "@/features/guardrails/components";
 import type { EvaluationCreationStepProps } from "../types/evaluation-creation";
 
@@ -16,7 +16,7 @@ export function EvaluationCreationStep3({
   onBack,
   variant = "overlay",
 }: EvaluationCreationStepProps) {
-  const { guardrails: allGuardrails } = useGuardrails();
+  const { guardrails: allGuardrails } = useGuardrailsSupabase();
   const [selectedGuardrailIds, setSelectedGuardrailIds] = useState<string[]>(
     data.guardrailIds || []
   );

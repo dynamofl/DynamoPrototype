@@ -3,9 +3,9 @@ import { AppBar, Breadcrumb, SmartRedirect } from '@/components/patterns'
 import { Button } from '@/components/ui/button'
 import { AIProvidersPage } from '@/features/ai-providers'
 import { AISystemsPage } from '@/features/ai-systems'
-import { AISystemEvaluationPage } from '@/features/ai-system-evaluation'
+import { AISystemEvaluationUnifiedPage } from '@/features/ai-system-evaluation'
 import { BetaFeaturesPage } from '@/features/beta-features'
-import { EvaluationPage } from '@/features/evaluation'
+import { EvaluationCreatePage, EvaluationListPage, EvaluationDetailPage } from '@/features/evaluation'
 import { EvaluationResultsPage } from '@/features/evaluation-results'
 import { GuardrailsPage } from '@/features/guardrails'
 import { ProjectsPage } from '@/features/projects'
@@ -21,10 +21,10 @@ function App() {
       {/* Settings Route - Separate layout without AppBar */}
       <Route path="/settings" element={<SettingsPage />} />
 
-      {/* AI System Evaluation Route - Separate layout with breadcrumb app bar */}
-      <Route path="/ai-systems/:systemName/evaluation/:evaluationId/:tab" element={<AISystemEvaluationPage />} />
-      <Route path="/ai-systems/:systemName/evaluation/:evaluationId" element={<AISystemEvaluationPage />} />
-      <Route path="/ai-systems/:systemName/evaluation" element={<AISystemEvaluationPage />} />
+      {/* AI System Evaluation Routes - Unified component with URL-based overlays */}
+      <Route path="/ai-systems/:systemName/evaluation/:evaluationId/:tab" element={<AISystemEvaluationUnifiedPage />} />
+      <Route path="/ai-systems/:systemName/evaluation/:evaluationId" element={<AISystemEvaluationUnifiedPage />} />
+      <Route path="/ai-systems/:systemName/evaluation" element={<AISystemEvaluationUnifiedPage />} />
 
       {/* All other routes with default layout */}
       <Route path="/*" element={
@@ -48,10 +48,10 @@ function App() {
               <Route path="/beta-features" element={<BetaFeaturesPage />} />
               
               {/* Evaluation Sandbox Routes */}
-              <Route path="/evaluation-sandbox" element={<EvaluationPage />} />
-              <Route path="/evaluation-sandbox/new" element={<EvaluationPage />} />
-              <Route path="/evaluation-sandbox/list" element={<EvaluationPage />} />
-              <Route path="/evaluation-sandbox/:testId" element={<EvaluationPage />} />
+              <Route path="/evaluation-sandbox" element={<EvaluationCreatePage />} />
+              <Route path="/evaluation-sandbox/new" element={<EvaluationCreatePage />} />
+              <Route path="/evaluation-sandbox/list" element={<EvaluationListPage />} />
+              <Route path="/evaluation-sandbox/:testId" element={<EvaluationDetailPage />} />
               
               {/* Evaluation Results Route */}
               <Route path="/evaluation-results" element={<EvaluationResultsPage />} />

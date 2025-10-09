@@ -1,4 +1,4 @@
-import type { EvaluationPrompt } from '@/types/evaluation';
+import type { EvaluationPrompt } from '@/features/evaluation/types/evaluation';
 
 export interface ImportResult {
   filledRows: number;

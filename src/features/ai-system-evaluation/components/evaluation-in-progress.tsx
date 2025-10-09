@@ -15,7 +15,7 @@ export function EvaluationInProgress({ stage, current, total, message }: Evaluat
       <div className="max-w-md w-full space-y-6">
         {/* Spinner */}
         <div className="flex justify-center">
-          <Loader2 className="h-16 w-16 text-blue-600 animate-spin" />
+          <Loader2 className="h-16 w-16 animate-spin text-blue-600" />
         </div>
 
         {/* Title */}

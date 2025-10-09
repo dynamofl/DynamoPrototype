@@ -15,20 +15,54 @@ import type { JailbreakEvaluationOutput } from "./types/jailbreak-evaluation";
 import type { EvaluationTest } from "@/features/evaluation/types/evaluation-test";
 
 // AI Systems
-import { AISystemsTableStorage, aiSystemsStorageConfig } from "@/features/ai-systems/lib";
+import { useAISystemsSupabase } from "@/features/ai-systems/lib/useAISystemsSupabase";
 import type { AISystem } from "@/features/ai-systems/types/types";
 
-// Jailbreak evaluation
-import { runJailbreakEvaluation } from "./lib/jailbreak-runner";
-import { loadPoliciesFromGuardrailIds } from "./lib/policy-converter";
+// Services and validation
 import { validateModelAssignments } from "@/features/settings/lib/model-assignment-helper";
-import { EvaluationStorageAdapter } from "./lib/evaluation-storage-adapter";
-import type { Guardrail } from "@/types";
+import { EvaluationService } from "@/lib/supabase/evaluation-service";
+import type { EvaluationSummary } from "@/lib/supabase/evaluation-service";
+import { toUrlSlug, fromUrlSlug } from "@/lib/utils";
+
+// Helper function to map Supabase evaluation format to EvaluationTest format
+function mapSupabaseToEvaluationTests(
+  supabaseHistory: EvaluationSummary[],
+  aiSystem: AISystem
+): any[] {
+  return supabaseHistory.map(evaluation => ({
+    id: evaluation.id,
+    name: evaluation.name,
+    status: evaluation.status as 'pending' | 'running' | 'completed' | 'failed' | 'cancelled',
+    aiSystemId: evaluation.aiSystemId,
+    aiSystemName: aiSystem.name,
+    createdAt: evaluation.createdAt,
+    completedAt: evaluation.completedAt,
+    config: {
+      candidateModel: aiSystem.selectedModel || 'Unknown',
+      judgeModel: 'GPT-4o' // Default judge model
+    },
+    input: {
+      prompts: [] // Prompts stored in Supabase evaluation_prompts table
+    },
+    result: evaluation.summaryMetrics ? {
+      overallMetrics: evaluation.summaryMetrics,
+      promptResults: []
+    } : undefined,
+    progress: {
+      current: evaluation.completedPrompts,
+      total: evaluation.totalPrompts,
+      currentPrompt: ''
+    }
+  }));
+}
 
 export function AISystemEvaluationPage() {
   const { systemName, evaluationId, tab } = useParams<{ systemName: string; evaluationId?: string; tab?: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
+  // Load AI systems from Supabase
+  const { aiSystems, loading: supabaseLoading } = useAISystemsSupabase();
 
   // AI System state
   const [aiSystem, setAiSystem] = useState<AISystem | null>(null);
@@ -58,43 +92,48 @@ export function AISystemEvaluationPage() {
         return;
       }
 
-      try {
-        const storage = new AISystemsTableStorage(aiSystemsStorageConfig);
-        const systems = await storage.load() as AISystem[];
+      // Wait for Supabase data to load
+      if (supabaseLoading) {
+        return;
+      }
 
-        const decodedName = decodeURIComponent(systemName);
-        const system = systems.find(s => s.name === decodedName);
+      try {
+        // Convert URL slug back to AI system name
+        const aiSystemNames = aiSystems.map(s => s.name);
+        const decodedName = fromUrlSlug(systemName, aiSystemNames);
+        const system = aiSystems.find(s => s.name === decodedName);
 
         if (system) {
           setAiSystem(system);
 
-          // Load evaluation history for this AI system
-          const history = EvaluationStorageAdapter.loadHistoryForAISystem(system.name);
+          // Load evaluation history from Supabase
+          const supabaseHistory = await EvaluationService.getEvaluationsForAISystem(system.name);
+
+          // Convert to EvaluationTest format for display
+          const history = mapSupabaseToEvaluationTests(supabaseHistory, system);
+
           setEvaluationHistory(history);
           const hasExistingEvaluations = history.length > 0;
           setHasEvaluations(hasExistingEvaluations);
 
           // Check if "new" query parameter is present
           const isNewFlow = searchParams.get('new') === 'true';
-          console.log('🔍 Checking - isNewFlow:', isNewFlow, 'evaluationId:', evaluationId, 'hasEvaluations:', hasExistingEvaluations);
 
           if (isNewFlow) {
             // Show creation flow as overlay
-            console.log('✅ MATCH - Setting creation flow overlay');
             setShowCreationFlow(true);
             setCreationFlowVariant("overlay");
             setEvaluationResults(null);
             setSelectedTest(null);
           } else if (evaluationId) {
             // If evaluationId is in URL, load and display that evaluation
-            console.log('Loading existing evaluation:', evaluationId);
             const test = history.find(t => t.id === evaluationId);
             if (test) {
               setSelectedTest(test);
               setShowCreationFlow(false);
 
               // Check if it's a running evaluation
-              if (test.status === 'in_progress') {
+              if (test.status === 'running') {
                 setEvaluationResults(null);
                 // Set progress from stored state
                 if (test.progress) {
@@ -105,33 +144,36 @@ export function AISystemEvaluationPage() {
                     message: test.progress.currentPrompt || ''
                   });
                 }
-              } else if (test.result) {
-                // Convert to JailbreakEvaluationOutput and show results
+              } else if (test.status === 'completed') {
+                // Load full evaluation results from Supabase
+                const { evaluation, prompts } = await EvaluationService.getEvaluationResults(evaluationId);
+
+                // Convert to JailbreakEvaluationOutput format
                 const jailbreakOutput: JailbreakEvaluationOutput = {
-                  evaluationId: test.id,
-                  timestamp: test.createdAt,
-                  config: {
-                    aiSystemId: test.id,
+                  evaluationId: evaluation.id,
+                  timestamp: evaluation.created_at,
+                  config: evaluation.config || {
+                    aiSystemId: evaluation.ai_system_id,
                     policies: [],
                     guardrailIds: []
                   },
-                  results: test.result.promptResults.map((promptResult, idx) => ({
-                    policyId: `policy-${idx}`,
-                    policyName: 'Policy',
-                    behaviorType: promptResult.userMarkedAdversarial === 'Adversarial' ? 'Disallowed' : 'Allowed',
-                    basePrompt: promptResult.prompt,
-                    attackType: 'Typos',
-                    adversarialPrompt: promptResult.prompt,
-                    systemResponse: promptResult.candidateResponse,
-                    guardrailJudgement: promptResult.judgeDetectedAdversarial ? 'Blocked' : 'Allowed',
-                    modelJudgement: 'Answered',
-                    attackOutcome: promptResult.judgeDetectedAdversarial ? 'Attack Failure' : 'Attack Success'
+                  results: prompts.map(prompt => ({
+                    policyId: prompt.policy_id || 'unknown',
+                    policyName: prompt.policy_name || 'Policy',
+                    behaviorType: prompt.behavior_type || 'Disallowed',
+                    basePrompt: prompt.base_prompt || '',
+                    attackType: prompt.attack_type || 'Unknown',
+                    adversarialPrompt: prompt.adversarial_prompt || prompt.base_prompt || '',
+                    systemResponse: prompt.system_response || '',
+                    guardrailJudgement: prompt.guardrail_judgement || 'Unknown',
+                    modelJudgement: prompt.model_judgement || 'Unknown',
+                    attackOutcome: prompt.attack_outcome || 'Unknown'
                   })),
-                  summary: {
-                    totalTests: test.result.overallMetrics.totalPrompts,
-                    attackSuccesses: test.result.overallMetrics.totalPassed || 0,
-                    attackFailures: test.result.overallMetrics.totalBlocked || 0,
-                    successRate: test.result.overallMetrics.averageAccuracy || 0,
+                  summary: evaluation.summary_metrics || {
+                    totalTests: prompts.length,
+                    attackSuccesses: 0,
+                    attackFailures: 0,
+                    successRate: 0,
                     byPolicy: {},
                     byAttackType: {},
                     byBehaviorType: {}
@@ -141,7 +183,7 @@ export function AISystemEvaluationPage() {
               }
             } else {
               // Evaluation not found, redirect to evaluation list
-              navigate(`/ai-systems/${encodeURIComponent(system.name)}/evaluation`);
+              navigate(`/ai-systems/${toUrlSlug(system.name)}/evaluation`);
             }
           } else {
             // No evaluationId in URL - clear results and show appropriate view
@@ -167,85 +209,128 @@ export function AISystemEvaluationPage() {
     };
 
     loadAISystem();
-  }, [systemName, evaluationId, tab, searchParams, navigate]);
+  }, [systemName, evaluationId, tab, searchParams.get('new'), supabaseLoading, navigate]);
 
-  // Auto-resume in-progress evaluations
+  // Subscribe to ALL running evaluations for real-time table updates
+  // ONLY when NOT viewing a specific evaluation (to avoid duplicate subscriptions)
   useEffect(() => {
-    if (!selectedTest || selectedTest.status !== 'in_progress' || !aiSystem) {
+    if (!aiSystem || evaluationHistory.length === 0 || evaluationId) {
+      return; // Skip if viewing a specific evaluation
+    }
+
+    // Find all running evaluations
+    const runningEvaluations = evaluationHistory.filter(test => test.status === 'running');
+
+    if (runningEvaluations.length === 0) {
       return;
     }
 
-    // Check if we have the necessary data to resume
-    if (!selectedTest.metadata?.evaluationData) {
-      console.warn('Cannot resume evaluation: missing evaluation data');
-      return;
-    }
+    // Subscribe to each running evaluation
+    const unsubscribers = runningEvaluations.map(evaluation =>
+      EvaluationService.subscribeToEvaluation(
+        evaluation.id,
+        (progress) => {
+          // Update the history table
+          setEvaluationHistory(prev => prev.map(test =>
+            test.id === evaluation.id
+              ? {
+                  ...test,
+                  status: progress.status as any,
+                  progress: {
+                    current: progress.completed,
+                    total: progress.total,
+                    currentPrompt: progress.currentPrompt || ''
+                  }
+                }
+              : test
+          ));
 
-    // Resume the evaluation
-    const data = selectedTest.metadata.evaluationData as EvaluationCreationData;
-
-    const runEvaluation = async () => {
-      try {
-        // Convert policies and guardrails
-        const policies = loadPoliciesFromGuardrailIds(data.policyIds);
-
-        // Load guardrails
-        const guardrailsData = localStorage.getItem('guardrails');
-        const allGuardrails: Guardrail[] = guardrailsData ? JSON.parse(guardrailsData) : [];
-        const selectedGuardrails = data.guardrailIds
-          ? allGuardrails.filter(g => data.guardrailIds?.includes(g.id))
-          : [];
-
-        // Run jailbreak evaluation
-        const results = await runJailbreakEvaluation(
-          {
-            aiSystemId: data.aiSystemIds?.[0] || '',
-            policies,
-            guardrailIds: data.guardrailIds,
-          },
-          selectedGuardrails,
-          (progress) => {
-            setEvaluationProgress(progress);
-            // Update progress in storage
-            EvaluationStorageAdapter.updateTestProgress(selectedTest.id, progress.current, progress.total, progress.message);
+          // If completed, reload full data
+          if (progress.status === 'completed' || progress.status === 'failed') {
+            (async () => {
+              const supabaseHistory = await EvaluationService.getEvaluationsForAISystem(aiSystem.name);
+              const history = mapSupabaseToEvaluationTests(supabaseHistory, aiSystem);
+              setEvaluationHistory(history);
+            })();
           }
-        );
+        }
+      )
+    );
 
-        // Add evaluationId to results
-        results.evaluationId = selectedTest.id;
-
-        // Update storage with results
-        EvaluationStorageAdapter.updateTestWithResults(selectedTest.id, results);
-
-        // Reload history
-        const history = EvaluationStorageAdapter.loadHistoryForAISystem(aiSystem.name);
-        setEvaluationHistory(history);
-
-        // Navigate back to evaluation list
-        navigate(`/ai-systems/${encodeURIComponent(aiSystem.name)}/evaluation`);
-      } catch (error) {
-        console.error('Evaluation failed:', error);
-        alert(`Evaluation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      }
+    return () => {
+      unsubscribers.forEach(unsub => unsub());
     };
+  }, [aiSystem?.name, evaluationId, evaluationHistory.filter(e => e.status === 'running').map(e => e.id).join(',')]);
 
-    runEvaluation();
-  }, [selectedTest, aiSystem]); // Only run when selectedTest or aiSystem changes
+  // Subscribe to real-time evaluation progress updates from backend (for progress overlay)
+  // This subscribes ONLY when viewing a specific evaluation
+  useEffect(() => {
+    if (!selectedTest || selectedTest.status !== 'running' || !evaluationId) {
+      return;
+    }
+
+    // Subscribe to real-time updates
+    const unsubscribe = EvaluationService.subscribeToEvaluation(
+      selectedTest.id,
+      (progress) => {
+        setEvaluationProgress({
+          stage: progress.currentStage || 'Running evaluation',
+          current: progress.completed,
+          total: progress.total,
+          message: progress.currentPrompt || ''
+        });
+
+        setEvaluationHistory(prev => prev.map(test =>
+          test.id === selectedTest.id
+            ? {
+                ...test,
+                progress: {
+                  current: progress.completed,
+                  total: progress.total,
+                  currentPrompt: progress.currentPrompt || ''
+                }
+              }
+            : test
+        ));
+
+        // If evaluation completed, reload the data
+        if (progress.status === 'completed' || progress.status === 'failed') {
+          // Reload from Supabase instead of localStorage
+          if (aiSystem) {
+            (async () => {
+              const supabaseHistory = await EvaluationService.getEvaluationsForAISystem(aiSystem.name);
+              const history = mapSupabaseToEvaluationTests(supabaseHistory, aiSystem);
+              const updatedTest = history.find(t => t.id === selectedTest.id);
+
+              if (updatedTest) {
+                setSelectedTest(updatedTest);
+                setEvaluationHistory(history); // Also update the table
+
+                // Navigate back to list view to show completed status
+                navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation`);
+              }
+            })();
+          }
+        }
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
+  }, [selectedTest?.id, selectedTest?.status, aiSystem?.name]);
 
   // Handler functions
   const handleCreateEvaluation = () => {
     if (aiSystem) {
       // Navigate to the new evaluation URL with query parameter
-      navigate(`/ai-systems/${encodeURIComponent(aiSystem.name)}/evaluation?new=true`);
+      navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation?new=true`);
     }
   };
 
   const handleEvaluationCreated = async (data: EvaluationCreationData) => {
-    console.log("Evaluation created:", data);
-
     // Only run jailbreak evaluation for jailbreak type
     if (data.type !== 'jailbreak') {
-      console.log('Non-jailbreak evaluation type - skipping auto-run');
       setShowCreationFlow(false);
       setHasEvaluations(true);
       return;
@@ -260,67 +345,32 @@ export function AISystemEvaluationPage() {
 
     if (!aiSystem) return;
 
-    // Generate evaluation ID
-    const evaluationId = `eval-${Date.now()}`;
-
-    // Create in-progress test entry
-    EvaluationStorageAdapter.createInProgressTest(data, evaluationId, aiSystem.name);
-
-    // Navigate to the running evaluation URL
-    navigate(`/ai-systems/${encodeURIComponent(aiSystem.name)}/evaluation/${evaluationId}`);
-
     // Close creation flow
     setShowCreationFlow(false);
 
     try {
-      // Convert policies and guardrails
-      const policies = loadPoliciesFromGuardrailIds(data.policyIds);
+      // Create evaluation in backend - it will run automatically
+      const result = await EvaluationService.createEvaluation(data, aiSystem.id);
 
-      // Load guardrails
-      const guardrailsData = localStorage.getItem('guardrails');
-      const allGuardrails: Guardrail[] = guardrailsData ? JSON.parse(guardrailsData) : [];
-      const selectedGuardrails = data.guardrailIds
-        ? allGuardrails.filter(g => data.guardrailIds?.includes(g.id))
-        : [];
+      // Navigate to the running evaluation URL
+      navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation/${result.evaluationId}`);
 
-      // Run jailbreak evaluation
-      const results = await runJailbreakEvaluation(
-        {
-          aiSystemId: data.aiSystemIds?.[0] || '',
-          policies,
-          guardrailIds: data.guardrailIds,
-        },
-        selectedGuardrails,
-        (progress) => {
-          setEvaluationProgress(progress);
-          // Update progress in storage
-          EvaluationStorageAdapter.updateTestProgress(evaluationId, progress.current, progress.total);
-        }
-      );
-
-      // Add evaluationId to results
-      results.evaluationId = evaluationId;
-
-      // Update storage with results
-      EvaluationStorageAdapter.updateTestWithResults(evaluationId, results);
-
-      // Reload history
-      const history = EvaluationStorageAdapter.loadHistoryForAISystem(aiSystem.name);
+      // Reload history from Supabase
+      const supabaseHistory = await EvaluationService.getEvaluationsForAISystem(aiSystem.name);
+      const history = mapSupabaseToEvaluationTests(supabaseHistory, aiSystem);
       setEvaluationHistory(history);
       setHasEvaluations(true);
 
-      // Navigate back to evaluation list (don't automatically open results)
-      navigate(`/ai-systems/${encodeURIComponent(aiSystem.name)}/evaluation`);
     } catch (error) {
-      console.error('Evaluation failed:', error);
-      alert(`Evaluation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Evaluation creation failed:', error);
+      alert(`Evaluation creation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
   const handleCancelCreation = () => {
     if (aiSystem) {
       // Navigate back to evaluation list
-      navigate(`/ai-systems/${encodeURIComponent(aiSystem.name)}/evaluation`);
+      navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation`);
     }
   };
 
@@ -328,29 +378,29 @@ export function AISystemEvaluationPage() {
   const handleViewResults = (test: EvaluationTest) => {
     if (aiSystem) {
       // Navigate to the evaluation URL
-      navigate(`/ai-systems/${encodeURIComponent(aiSystem.name)}/evaluation/${test.id}/summary`);
+      navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation/${test.id}/summary`);
     }
   };
 
-  const handleViewData = (test: EvaluationTest) => {
-    console.log('View data for test:', test);
+  const handleViewData = (_test: EvaluationTest) => {
+    // View data handler - placeholder
   };
 
   const handleShowProgress = (test: EvaluationTest) => {
     if (aiSystem) {
       // Navigate to the running evaluation URL
-      navigate(`/ai-systems/${encodeURIComponent(aiSystem.name)}/evaluation/${test.id}`);
+      navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation/${test.id}`);
     }
   };
 
-  const handleTestDetails = (test: EvaluationTest) => {
-    console.log('Show details for test:', test);
+  const handleTestDetails = (_test: EvaluationTest) => {
+    // Test details handler - placeholder
   };
 
   const handleMinimize = () => {
     if (aiSystem) {
       // Navigate back to evaluation list while keeping evaluation running
-      navigate(`/ai-systems/${encodeURIComponent(aiSystem.name)}/evaluation`);
+      navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation`);
     }
   };
 
@@ -492,7 +542,7 @@ export function AISystemEvaluationPage() {
       )}
 
       {/* Running evaluation overlay */}
-      {evaluationId && selectedTest?.status === 'in_progress' && (
+      {evaluationId && selectedTest?.status === 'running' && (
         <div className="fixed inset-0 z-50 bg-gray-0 flex flex-col">
           {/* Header with minimize button */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-0">
@@ -527,13 +577,13 @@ export function AISystemEvaluationPage() {
       )}
 
       {/* Results overlay */}
-      {evaluationResults && (
+      {evaluationResults && selectedTest?.status !== 'running' && (
         <div className="fixed inset-0 z-50 bg-gray-0">
           <EvaluationResults
             results={evaluationResults}
             onClose={() => {
               if (aiSystem) {
-                navigate(`/ai-systems/${encodeURIComponent(aiSystem.name)}/evaluation`);
+                navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation`);
               }
             }}
             currentTab={tab || 'summary'}

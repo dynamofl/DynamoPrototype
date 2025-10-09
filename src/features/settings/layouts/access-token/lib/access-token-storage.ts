@@ -173,6 +173,19 @@ export class AccessTokenStorage implements TableStorage {
   }
 
   async getAPIKeys(provider: string): Promise<APIKey[]> {
+    // Always reload from localStorage to ensure we have the latest data
+    try {
+      const storedAPIKeys = localStorage.getItem(this.API_KEYS_STORAGE_KEY)
+      console.log('Raw localStorage data:', storedAPIKeys)
+      if (storedAPIKeys) {
+        this.apiKeys = JSON.parse(storedAPIKeys)
+        console.log('Parsed API keys:', this.apiKeys)
+        console.log('Keys for provider', provider, ':', this.apiKeys[provider])
+      }
+    } catch (error) {
+      console.error('Failed to load API keys:', error)
+    }
+
     return this.apiKeys[provider] || []
   }
 

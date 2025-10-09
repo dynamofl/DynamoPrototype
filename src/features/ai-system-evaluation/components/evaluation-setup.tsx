@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Checkbox } from "@/components/ui/checkbox";
 import { AISystemIcon } from "@/components/patterns/ui-patterns/ai-system-icon";
 import { AISystemsStorage } from "@/features/ai-systems/lib";
-import { useGuardrails } from "@/features/guardrails/lib/useGuardrails";
+import { useGuardrailsSupabase } from "@/features/guardrails/lib/useGuardrailsSupabase";
 import { GuardrailViewSheet } from "@/features/guardrails/components";
 import { PolicyIcon } from "@/assets/icons/policy-icon";
 import { Plus, Search, ChevronRight, X } from "lucide-react";
@@ -36,7 +36,7 @@ export function EvaluationSetup({
   const [selectedGuardrailForView, setSelectedGuardrailForView] = useState<string | null>(null);
 
   // Load guardrails using the hook
-  const { guardrails: availableGuardrails } = useGuardrails();
+  const { guardrails: availableGuardrails } = useGuardrailsSupabase();
 
   // Filter guardrails based on search query
   const filteredGuardrails = useMemo(() => {

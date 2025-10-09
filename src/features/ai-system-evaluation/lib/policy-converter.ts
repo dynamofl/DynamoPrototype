@@ -1,5 +1,6 @@
 import type { Guardrail } from '@/types';
 import type { Policy } from '../types/jailbreak-evaluation';
+import { supabase } from '@/lib/supabase/client';
 
 /**
  * Convert Guardrail to Policy format for jailbreak evaluation
@@ -39,15 +40,53 @@ export function guardrailsToPolicies(guardrails: Guardrail[]): Policy[] {
 
 /**
  * Load guardrails from storage by IDs and convert to policies
+ * NOTE: This is now an async function that fetches from Supabase
  */
-export function loadPoliciesFromGuardrailIds(guardrailIds: string[]): Policy[] {
-  // Load all guardrails from localStorage
-  const guardrailsData = localStorage.getItem('guardrails');
-  const allGuardrails: Guardrail[] = guardrailsData ? JSON.parse(guardrailsData) : [];
+export async function loadPoliciesFromGuardrailIds(guardrailIds: string[]): Promise<Policy[]> {
+  console.log('📂 loadPoliciesFromGuardrailIds called with IDs:', guardrailIds);
 
-  // Filter by IDs
-  const selectedGuardrails = allGuardrails.filter(g => guardrailIds.includes(g.id));
+  try {
+    // Fetch guardrails from Supabase
+    const { data, error } = await supabase
+      .from('guardrails')
+      .select('*')
+      .in('id', guardrailIds);
 
-  // Convert to policies
-  return guardrailsToPolicies(selectedGuardrails);
+    if (error) {
+      console.error('Error fetching guardrails from Supabase:', error);
+      return [];
+    }
+
+    // Transform Supabase data to match Guardrail type
+    const allGuardrails: Guardrail[] = (data || []).map((item) => {
+      const policyData = Array.isArray(item.policies) && item.policies.length > 0
+        ? item.policies[0]
+        : {};
+
+      return {
+        id: item.id,
+        name: item.name,
+        description: policyData.description || '',
+        content: policyData.disallowedBehavior || '',
+        allowedBehavior: policyData.allowedBehavior || '',
+        disallowedBehavior: policyData.disallowedBehavior || '',
+        category: item.category || 'Content',
+        type: item.type || 'Input Policy',
+        status: item.status || 'active',
+        createdAt: item.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+        updatedAt: item.updated_at?.split('T')[0] || new Date().toISOString().split('T')[0]
+      };
+    });
+
+    console.log('📂 Total guardrails fetched from Supabase:', allGuardrails.length);
+    console.log('📂 All guardrail IDs:', allGuardrails.map(g => g.id));
+
+    // Convert to policies
+    const policies = guardrailsToPolicies(allGuardrails);
+    console.log('📂 Converted policies:', policies);
+    return policies;
+  } catch (err) {
+    console.error('Failed to load guardrails from Supabase:', err);
+    return [];
+  }
 }

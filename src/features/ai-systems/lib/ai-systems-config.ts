@@ -53,7 +53,7 @@ export const aiSystemsStorageConfig: TableStorageConfig = {
   type: 'secure',
   storageKey: AI_SYSTEMS_STORAGE_KEY,
   autoSave: true,
-  idGenerator: 'timestamp',
+  idGenerator: 'uuid',
   transform: {
     onSave: (data) => data.map(row => ({
       ...row,
@@ -201,12 +201,12 @@ export const createDefaultAISystem = (data: {
   selectedModel: string
   modelDetails?: any
 }): any => ({
-  id: Date.now().toString(),
+  id: crypto.randomUUID(),
   name: data.name,
-  createdAt: new Date().toLocaleDateString('en-US', { 
-    month: 'short', 
-    day: 'numeric', 
-    year: 'numeric' 
+  createdAt: new Date().toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
   }),
   status: 'connected', // Will be validated and updated by state manager
   hasValidAPIKey: false, // Will be validated by state manager
