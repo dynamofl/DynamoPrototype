@@ -24,15 +24,18 @@ serve(async (req: Request) => {
       );
     }
 
-    // Combine policyIds and guardrailIds (policyIds might contain guardrail IDs from migration)
-    const allGuardrailIds = [...new Set([...(guardrailIds || []), ...(policyIds || [])])];
-
-    if (allGuardrailIds.length === 0) {
+    // Validate that at least one policy is selected (required for test generation)
+    if (!policyIds || policyIds.length === 0) {
       return new Response(
-        JSON.stringify({ error: 'No guardrails or policies selected' }),
+        JSON.stringify({ error: 'At least one policy must be selected to generate test prompts' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // Combine policyIds and guardrailIds for database fetch
+    // policyIds: Used for prompt generation (MANDATORY)
+    // guardrailIds: Used for response evaluation (OPTIONAL)
+    const allGuardrailIds = [...new Set([...(guardrailIds || []), ...(policyIds || [])])];
 
     // Create Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -58,25 +61,32 @@ serve(async (req: Request) => {
       );
     }
 
-    // Fetch guardrails to generate prompts
-    const { data: guardrails, error: guardrailsError } = await supabase
-      .from('guardrails')
-      .select('*')
-      .in('id', allGuardrailIds);
+    // Fetch guardrails from database (both policies and guardrails)
+    let guardrails: any[] = [];
+    if (allGuardrailIds.length > 0) {
+      const { data: fetchedGuardrails, error: guardrailsError } = await supabase
+        .from('guardrails')
+        .select('*')
+        .in('id', allGuardrailIds);
 
-    if (guardrailsError) {
-      throw new Error(`Failed to fetch guardrails: ${guardrailsError.message}`);
+      if (guardrailsError) {
+        throw new Error(`Failed to fetch guardrails: ${guardrailsError.message}`);
+      }
+
+      if (!fetchedGuardrails || fetchedGuardrails.length === 0) {
+        return new Response(
+          JSON.stringify({ error: `No policies/guardrails found with IDs: ${allGuardrailIds.join(', ')}` }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      guardrails = fetchedGuardrails;
     }
 
-    if (!guardrails || guardrails.length === 0) {
-      return new Response(
-        JSON.stringify({ error: `No guardrails found with IDs: ${allGuardrailIds.join(', ')}` }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Generate prompts based on policies (use allGuardrailIds for matching)
-    const prompts = await generatePromptsFromPolicies(allGuardrailIds, guardrails || []);
+    // Generate prompts based on POLICIES ONLY (not guardrails)
+    // policyIds: Used to generate test prompts
+    // guardrails: Full list of fetched guardrail records (filtered inside generator)
+    const prompts = await generatePromptsFromPolicies(policyIds, guardrails);
 
     if (prompts.length === 0) {
       return new Response(

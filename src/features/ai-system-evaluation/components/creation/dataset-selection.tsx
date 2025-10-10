@@ -94,12 +94,11 @@ export function DatasetSelection({
   };
 
   const handleContinue = () => {
+    // Validate that at least one policy is selected
+    if (selectedPolicyIds.length === 0) {
+      return; // Button should be disabled, but this is a safety check
+    }
     onDataChange({ policyIds: selectedPolicyIds, policyDatasets });
-    onNext?.();
-  };
-
-  const handleSkip = () => {
-    onDataChange({ policyIds: [], policyDatasets: [] });
     onNext?.();
   };
 
@@ -264,14 +263,24 @@ export function DatasetSelection({
         </div>
       </div>
 
+      {/* Validation Message */}
+      {selectedPolicyIds.length === 0 && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
+          <span className="text-xs text-amber-800">
+            <strong>Required:</strong> Select at least one policy to generate test prompts for evaluation.
+          </span>
+        </div>
+      )}
+
       {/* Actions */}
       <div className="flex justify-between pt-2">
         <Button variant="outline" onClick={onBack}>
           Back
         </Button>
         <div className="flex gap-2">
-
-          <Button onClick={handleContinue} disabled={selectedPolicyIds.length === 0}>Continue</Button>
+          <Button onClick={handleContinue} disabled={selectedPolicyIds.length === 0}>
+            Continue
+          </Button>
         </div>
       </div>
 

@@ -8,6 +8,14 @@ export interface AISystem {
   config: Record<string, any>;
 }
 
+export interface AISystemResponse {
+  content: string;
+  runtimeMs: number;
+  inputTokens?: number;
+  outputTokens?: number;
+  totalTokens?: number;
+}
+
 export interface Guardrail {
   id: string;
   name: string;
@@ -38,6 +46,10 @@ export interface EvaluationPrompt {
   guardrail_judgement?: string;
   model_judgement?: string;
   attack_outcome?: string;
+  runtime_ms?: number;
+  input_tokens?: number;
+  output_tokens?: number;
+  total_tokens?: number;
 }
 
 export interface Evaluation {

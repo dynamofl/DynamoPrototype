@@ -44,6 +44,10 @@ export interface JailbreakEvaluationResult {
   guardrailJudgement: GuardrailJudgement;
   modelJudgement: ModelJudgement;
   attackOutcome: AttackOutcome;
+  runtimeMs?: number;
+  inputTokens?: number;
+  outputTokens?: number;
+  totalTokens?: number;
 }
 
 export interface JailbreakEvaluationConfig {

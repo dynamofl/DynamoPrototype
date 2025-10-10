@@ -5,9 +5,11 @@ import { motion, AnimatePresence, easeInOut } from "framer-motion";
 // Components
 import { AppBar, OverlayHeader } from "@/components/patterns";
 import type { BreadcrumbItem, AppBarActionButton } from "@/components/patterns";
-import { Plus } from "lucide-react";
+import { Download, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BulkActionBar } from "@/components/patterns/ui-patterns/bulk-action-bar";
+import type { BulkAction } from "@/components/patterns/ui-patterns/bulk-action-bar";
 import {
   EvaluationCreationFlow,
   EvaluationInProgress,
@@ -38,6 +40,8 @@ import type { EvaluationTest } from "@/features/evaluation/types/evaluation-test
 import { validateModelAssignments } from "@/features/settings/lib/model-assignment-helper";
 import { EvaluationService } from "@/lib/supabase/evaluation-service";
 import { toUrlSlug } from "@/lib/utils";
+import { ensureValidSummary } from "./lib/calculate-summary";
+import { exportEvaluationsToCSV } from "./lib/export-utils";
 
 export function AISystemEvaluationUnifiedPage() {
   const { systemName, evaluationId, tab } = useParams<{
@@ -81,6 +85,7 @@ export function AISystemEvaluationUnifiedPage() {
   // Delete confirmation dialog state
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [evaluationToDelete, setEvaluationToDelete] = useState<EvaluationTest | null>(null);
+  const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   // Selection state
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
@@ -231,6 +236,23 @@ export function AISystemEvaluationUnifiedPage() {
 
         const { evaluation, prompts } = await EvaluationService.getEvaluationResults(test.id);
 
+        const results = prompts.map(prompt => ({
+          policyId: prompt.policy_id || 'unknown',
+          policyName: prompt.policy_name || 'Policy',
+          behaviorType: prompt.behavior_type || 'Disallowed',
+          basePrompt: prompt.base_prompt || '',
+          attackType: prompt.attack_type || 'Unknown',
+          adversarialPrompt: prompt.adversarial_prompt || prompt.base_prompt || '',
+          systemResponse: prompt.system_response || '',
+          guardrailJudgement: prompt.guardrail_judgement || 'Unknown',
+          modelJudgement: prompt.model_judgement || 'Unknown',
+          attackOutcome: prompt.attack_outcome || 'Unknown',
+          runtimeMs: prompt.runtime_ms,
+          inputTokens: prompt.input_tokens,
+          outputTokens: prompt.output_tokens,
+          totalTokens: prompt.total_tokens
+        }));
+
         const jailbreakOutput: JailbreakEvaluationOutput = {
           evaluationId: evaluation.id,
           timestamp: evaluation.created_at,
@@ -239,27 +261,8 @@ export function AISystemEvaluationUnifiedPage() {
             policies: [],
             guardrailIds: []
           },
-          results: prompts.map(prompt => ({
-            policyId: prompt.policy_id || 'unknown',
-            policyName: prompt.policy_name || 'Policy',
-            behaviorType: prompt.behavior_type || 'Disallowed',
-            basePrompt: prompt.base_prompt || '',
-            attackType: prompt.attack_type || 'Unknown',
-            adversarialPrompt: prompt.adversarial_prompt || prompt.base_prompt || '',
-            systemResponse: prompt.system_response || '',
-            guardrailJudgement: prompt.guardrail_judgement || 'Unknown',
-            modelJudgement: prompt.model_judgement || 'Unknown',
-            attackOutcome: prompt.attack_outcome || 'Unknown'
-          })),
-          summary: evaluation.summary_metrics || {
-            totalTests: prompts.length,
-            attackSuccesses: 0,
-            attackFailures: 0,
-            successRate: 0,
-            byPolicy: {},
-            byAttackType: {},
-            byBehaviorType: {}
-          }
+          results,
+          summary: ensureValidSummary(evaluation.summary_metrics, results)
         };
         setEvaluationResults(jailbreakOutput);
         setLoadingResults(false);
@@ -527,18 +530,39 @@ export function AISystemEvaluationUnifiedPage() {
   }, [evaluationHistory]);
 
   const handleDeleteConfirm = async () => {
-    if (!evaluationToDelete) return;
-
     try {
-      // Delete from backend
-      await EvaluationService.deleteEvaluation(evaluationToDelete.id);
+      if (isBulkDelete) {
+        // Bulk delete: delete all selected evaluations
+        if (selectedRows.length === 0) return;
 
-      // If we're viewing the deleted evaluation, navigate back to list
-      if (selectedTest?.id === evaluationToDelete.id) {
-        setSelectedTest(null);
-        setEvaluationResults(null);
-        if (aiSystem) {
-          navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation`);
+        await Promise.all(
+          selectedRows.map(id => EvaluationService.deleteEvaluation(id))
+        );
+
+        // If we're viewing one of the deleted evaluations, navigate back to list
+        if (selectedTest && selectedRows.includes(selectedTest.id)) {
+          setSelectedTest(null);
+          setEvaluationResults(null);
+          if (aiSystem) {
+            navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation`);
+          }
+        }
+
+        // Clear selection
+        setSelectedRows([]);
+      } else {
+        // Single delete
+        if (!evaluationToDelete) return;
+
+        await EvaluationService.deleteEvaluation(evaluationToDelete.id);
+
+        // If we're viewing the deleted evaluation, navigate back to list
+        if (selectedTest?.id === evaluationToDelete.id) {
+          setSelectedTest(null);
+          setEvaluationResults(null);
+          if (aiSystem) {
+            navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation`);
+          }
         }
       }
 
@@ -548,16 +572,65 @@ export function AISystemEvaluationUnifiedPage() {
       // Close dialog and reset state
       setIsDeleteDialogOpen(false);
       setEvaluationToDelete(null);
+      setIsBulkDelete(false);
     } catch (error) {
-      console.error('Failed to delete evaluation:', error);
-      alert(`Failed to delete evaluation: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Failed to delete evaluation(s):', error);
+      alert(`Failed to delete evaluation(s): ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
   const handleDeleteCancel = () => {
     setIsDeleteDialogOpen(false);
     setEvaluationToDelete(null);
+    setIsBulkDelete(false);
   };
+
+  // Bulk action handlers
+  const handleBulkDelete = () => {
+    if (selectedRows.length === 0) return;
+
+    // Open the delete dialog in bulk mode
+    setIsBulkDelete(true);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleBulkDownload = () => {
+    if (selectedRows.length === 0) return;
+
+    // Get selected evaluations
+    const selectedEvaluations = evaluationHistory.filter(test =>
+      selectedRows.includes(test.id)
+    );
+
+    // Export to CSV
+    const filename = aiSystem
+      ? `${toUrlSlug(aiSystem.name)}-evaluations-${new Date().toISOString().split('T')[0]}.csv`
+      : `evaluations-${new Date().toISOString().split('T')[0]}.csv`;
+
+    exportEvaluationsToCSV(selectedEvaluations, filename);
+  };
+
+  const handleClearSelection = () => {
+    setSelectedRows([]);
+  };
+
+  // Define bulk actions
+  const bulkActions: BulkAction[] = [
+    {
+      key: 'download',
+      label: 'Download',
+      icon: <Download className="h-4 w-4" />,
+      variant: 'outline',
+      onClick: handleBulkDownload
+    },
+    {
+      key: 'delete',
+      label: 'Delete',
+      icon: <Trash2 className="h-4 w-4" />,
+      variant: 'destructive',
+      onClick: handleBulkDelete
+    }
+  ];
 
   const handleMinimize = () => {
     if (aiSystem) {
@@ -854,17 +927,6 @@ export function AISystemEvaluationUnifiedPage() {
                 <OverlayHeader
                   title={selectedTest.name}
                   breadcrumbs={aiSystem?.name ? [{ label: aiSystem.name }] : undefined}
-                  titleDropdownOptions={evaluationHistory.length > 1 ? evaluationHistory.map(test => ({
-                    id: test.id,
-                    label: test.name,
-                    isActive: test.id === selectedTest.id,
-                  })) : undefined}
-                  onTitleDropdownSelect={(evaluationId) => {
-                    const evaluation = evaluationHistory.find(e => e.id === evaluationId);
-                    if (evaluation && aiSystem) {
-                      navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation/${evaluationId}`);
-                    }
-                  }}
                   onClose={handleMinimize}
                 />
                 <div className="flex-1 flex items-center justify-center">
@@ -877,16 +939,9 @@ export function AISystemEvaluationUnifiedPage() {
                 results={evaluationResults}
                 evaluationName={selectedTest?.name}
                 aiSystemName={aiSystem?.name}
-                evaluations={evaluationHistory.map(test => ({
-                  id: test.id,
-                  name: test.name,
-                }))}
-                onEvaluationSwitch={(evaluationId) => {
-                  const evaluation = evaluationHistory.find(e => e.id === evaluationId);
-                  if (evaluation && aiSystem) {
-                    navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation/${evaluationId}`);
-                  }
-                }}
+                aiSystemIcon={aiSystem?.icon}
+                startedAt={selectedTest?.startedAt}
+                completedAt={selectedTest?.completedAt}
                 onClose={handleMinimize}
                 currentTab={tab || 'summary'}
                 onExport={handleExport}
@@ -900,9 +955,14 @@ export function AISystemEvaluationUnifiedPage() {
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Evaluation</AlertDialogTitle>
+            <AlertDialogTitle>
+              {isBulkDelete ? 'Delete Evaluations' : 'Delete Evaluation'}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{evaluationToDelete?.name}"? This action cannot be undone.
+              {isBulkDelete
+                ? `Are you sure you want to delete ${selectedRows.length} evaluation${selectedRows.length > 1 ? 's' : ''}? This action cannot be undone.`
+                : `Are you sure you want to delete "${evaluationToDelete?.name}"? This action cannot be undone.`
+              }
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -918,6 +978,13 @@ export function AISystemEvaluationUnifiedPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Bulk Action Bar */}
+      <BulkActionBar
+        selectedCount={selectedRows.length}
+        onClearSelection={handleClearSelection}
+        actions={bulkActions}
+      />
     </div>
   );
 }

@@ -15,9 +15,10 @@ interface EvaluationDataFiltersProps {
   onFiltersChange: (filters: JailbreakFilterState) => void
   currentView: 'table' | 'conversation'
   onViewChange: (view: 'table' | 'conversation') => void
+  hasGuardrails?: boolean
 }
 
-export function EvaluationDataFilters({ filters, onFiltersChange, currentView, onViewChange }: EvaluationDataFiltersProps) {
+export function EvaluationDataFilters({ filters, onFiltersChange, currentView, onViewChange, hasGuardrails = true }: EvaluationDataFiltersProps) {
   const primaryFilters: FilterConfig[] = [
     {
       key: 'attackOutcome',
@@ -31,12 +32,12 @@ export function EvaluationDataFilters({ filters, onFiltersChange, currentView, o
       options: ATTACK_TYPE_OPTIONS,
       type: 'array'
     },
-    {
+    ...(hasGuardrails ? [{
       key: 'guardrailJudgment',
       label: 'Guardrail Judgment',
       options: GUARDRAIL_JUDGMENT_OPTIONS,
-      type: 'array'
-    }
+      type: 'array' as const
+    }] : [])
   ]
 
   const additionalFilters: FilterConfig[] = [

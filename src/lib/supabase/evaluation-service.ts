@@ -44,6 +44,11 @@ export class EvaluationService {
       throw new Error('Authentication required');
     }
 
+    // Validate that at least one policy is selected (required for test generation)
+    if (!data.policyIds || data.policyIds.length === 0) {
+      throw new Error('At least one policy must be selected to generate test prompts');
+    }
+
     // Get test execution model and its API key
     const assignments = ModelAssignmentStorage.load();
     let testExecutionApiKey: string | undefined;

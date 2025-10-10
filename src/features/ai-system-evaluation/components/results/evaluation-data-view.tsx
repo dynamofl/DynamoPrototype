@@ -16,9 +16,10 @@ type ViewType = 'table' | 'conversation'
 
 interface EvaluationDataViewProps {
   results: JailbreakEvaluationResult[]
+  hasGuardrails?: boolean
 }
 
-export function EvaluationDataView({ results }: EvaluationDataViewProps) {
+export function EvaluationDataView({ results, hasGuardrails = true }: EvaluationDataViewProps) {
   const [allData, setAllData] = useState<JailbreakEvaluationResult[]>([])
   const [filteredData, setFilteredData] = useState<JailbreakEvaluationResult[]>([])
   const [displayData, setDisplayData] = useState<JailbreakEvaluationResult[]>([])
@@ -180,17 +181,18 @@ export function EvaluationDataView({ results }: EvaluationDataViewProps) {
   }
 
   return (
-    <div className="flex flex-col overflow-hidden py-2" style={{ height: 'calc(100vh - 256px)' }}>
+    <div className="flex flex-col h-full py-2">
       {/* Filters */}
       <EvaluationDataFilters
         filters={filters}
         onFiltersChange={handleFiltersChange}
         currentView={currentView}
         onViewChange={handleViewChange}
+        hasGuardrails={hasGuardrails}
       />
 
       {/* Content Area */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden min-h-0">
         {/* Table/Conversation View */}
         <div className={`${currentView === 'conversation' ? 'w-[480px]' : 'flex-1'} ${currentView === 'table' ? 'overflow-auto' : 'flex flex-col overflow-hidden'}`}>
           <div
@@ -213,6 +215,7 @@ export function EvaluationDataView({ results }: EvaluationDataViewProps) {
                 onRowSelect={handleRowSelect}
                 onSelectAll={handleSelectAll}
                 onRowClick={handleRowClick}
+                hasGuardrails={hasGuardrails}
               />
             ) : (
               <EvaluationDataConversationView
@@ -236,7 +239,7 @@ export function EvaluationDataView({ results }: EvaluationDataViewProps) {
                   const selectedRecord = displayData.find(record => (record as any).id === selectedConversationId)
                   return selectedRecord ? (
                     <div className="animate-in fade-in-0 slide-in-from-right-2 duration-300">
-                      <EvaluationDataDetail record={selectedRecord} />
+                      <EvaluationDataDetail record={selectedRecord} hasGuardrails={hasGuardrails} />
                     </div>
                   ) : (
                     <div className="flex items-center justify-center h-64 animate-in fade-in-0 duration-300">
@@ -255,8 +258,8 @@ export function EvaluationDataView({ results }: EvaluationDataViewProps) {
         )}
       </div>
 
-      {/* Pagination - Only show for table view */}
-      {currentView === 'table' && (
+      {/* Pagination - Only show for table view and when there are more than 20 items */}
+      {currentView === 'table' && pagination.total > 20 && (
         <EvaluationDataPagination
           pagination={pagination}
           onPaginationChange={handlePaginationChange}
@@ -272,6 +275,7 @@ export function EvaluationDataView({ results }: EvaluationDataViewProps) {
         onNavigateNext={handleSideSheetNavigateNext}
         onNavigatePrevious={handleSideSheetNavigatePrevious}
         onExpand={handleSideSheetExpand}
+        hasGuardrails={hasGuardrails}
       />
     </div>
   )

@@ -21,7 +21,7 @@ export interface TitleDropdownOption {
 }
 
 interface OverlayHeaderProps {
-  title: string;
+  title: string | ReactNode;
   subtitle?: string;
   breadcrumbs?: BreadcrumbSegment[]; // e.g., ["GPT-4", "Security Evaluation"]
   titleDropdownOptions?: TitleDropdownOption[]; // Dropdown options for switching evaluations
@@ -74,13 +74,13 @@ export function OverlayHeader({
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="flex items-center gap-1 text-sm font-450 text-gray-900 hover:text-gray-700 transition-colors">
-                      {title}
+                      {typeof title === 'string' ? title : <div>{title}</div>}
                       <ChevronDown className="h-3.5 w-3.5 text-gray-500" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" className="w-64">
                     {titleDropdownOptions.map((option, index) => (
-                      <div key={option.id}> 
+                      <div key={option.id}>
                         <DropdownMenuItem
                           onClick={() => onTitleDropdownSelect?.(option.id)}
                           className={option.isActive ? "bg-gray-100 font-medium" : ""}
@@ -97,13 +97,19 @@ export function OverlayHeader({
               </div>
             ) : (
               <div className="flex items-center gap-1.5">
-                <span className="text-gray-400 text-sm">/</span>
-                <h2 className="text-sm font-450 text-gray-900">{title}</h2>
+                <span className="text-gray-400 text-sm pr-1">/</span>
+                {typeof title === 'string' ? (
+                  <h2 className="text-sm font-450 text-gray-900">{title}</h2>
+                ) : (
+                  title
+                )}
               </div>
             )}
           </div>
-        ) : (
+        ) : typeof title === 'string' ? (
           <h2 className="text-sm font-450 text-gray-900">{title}</h2>
+        ) : (
+          title
         )}
 
         {subtitle && (

@@ -1,13 +1,13 @@
 // AI System Client - handles calls to different AI providers
 
-import type { AISystem } from './types.ts';
+import type { AISystem, AISystemResponse } from './types.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 export async function callAISystem(
   aiSystem: AISystem,
   prompt: string,
   evaluationApiKey?: string
-): Promise<string> {
+): Promise<AISystemResponse> {
   const { provider, model, config } = aiSystem;
 
   // Use evaluation API key if provided, otherwise try to get from vault
@@ -39,20 +39,34 @@ export async function callAISystem(
     }
   }
 
+  const startTime = Date.now();
+
   try {
+    let response: AISystemResponse;
+
     switch (provider.toLowerCase()) {
       case 'openai':
-        return await callOpenAI(model, prompt, { ...config, apiKey });
+        response = await callOpenAI(model, prompt, { ...config, apiKey });
+        break;
 
       case 'anthropic':
-        return await callAnthropic(model, prompt, { ...config, apiKey });
+        response = await callAnthropic(model, prompt, { ...config, apiKey });
+        break;
 
       case 'custom':
-        return await callCustomEndpoint(model, prompt, config);
+        response = await callCustomEndpoint(model, prompt, config);
+        break;
 
       default:
         throw new Error(`Unsupported AI provider: ${provider}`);
     }
+
+    // Add runtime if not already set
+    if (!response.runtimeMs) {
+      response.runtimeMs = Date.now() - startTime;
+    }
+
+    return response;
   } catch (error) {
     console.error(`Error calling AI system ${aiSystem.name}:`, error);
     throw error;
@@ -63,11 +77,13 @@ async function callOpenAI(
   model: string,
   prompt: string,
   config: Record<string, any>
-): Promise<string> {
+): Promise<AISystemResponse> {
   const apiKey = config.apiKey || Deno.env.get('OPENAI_API_KEY');
   if (!apiKey) {
     throw new Error('OpenAI API key not configured');
   }
+
+  const startTime = Date.now();
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -85,24 +101,35 @@ async function callOpenAI(
     })
   });
 
+  const runtimeMs = Date.now() - startTime;
+
   if (!response.ok) {
     const error = await response.text();
     throw new Error(`OpenAI API error: ${error}`);
   }
 
   const data = await response.json();
-  return data.choices[0].message.content;
+
+  return {
+    content: data.choices[0].message.content,
+    runtimeMs,
+    inputTokens: data.usage?.prompt_tokens,
+    outputTokens: data.usage?.completion_tokens,
+    totalTokens: data.usage?.total_tokens
+  };
 }
 
 async function callAnthropic(
   model: string,
   prompt: string,
   config: Record<string, any>
-): Promise<string> {
+): Promise<AISystemResponse> {
   const apiKey = config.apiKey || Deno.env.get('ANTHROPIC_API_KEY');
   if (!apiKey) {
     throw new Error('Anthropic API key not configured');
   }
+
+  const startTime = Date.now();
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -120,24 +147,35 @@ async function callAnthropic(
     })
   });
 
+  const runtimeMs = Date.now() - startTime;
+
   if (!response.ok) {
     const error = await response.text();
     throw new Error(`Anthropic API error: ${error}`);
   }
 
   const data = await response.json();
-  return data.content[0].text;
+
+  return {
+    content: data.content[0].text,
+    runtimeMs,
+    inputTokens: data.usage?.input_tokens,
+    outputTokens: data.usage?.output_tokens,
+    totalTokens: (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0)
+  };
 }
 
 async function callCustomEndpoint(
   model: string,
   prompt: string,
   config: Record<string, any>
-): Promise<string> {
+): Promise<AISystemResponse> {
   const endpoint = config.endpoint;
   if (!endpoint) {
     throw new Error('Custom endpoint URL not configured');
   }
+
+  const startTime = Date.now();
 
   const response = await fetch(endpoint, {
     method: 'POST',
@@ -152,6 +190,8 @@ async function callCustomEndpoint(
     })
   });
 
+  const runtimeMs = Date.now() - startTime;
+
   if (!response.ok) {
     const error = await response.text();
     throw new Error(`Custom endpoint error: ${error}`);
@@ -159,5 +199,13 @@ async function callCustomEndpoint(
 
   const data = await response.json();
   // Assume response has a 'response' or 'text' field
-  return data.response || data.text || data.content || JSON.stringify(data);
+  const content = data.response || data.text || data.content || JSON.stringify(data);
+
+  return {
+    content,
+    runtimeMs,
+    inputTokens: data.usage?.input_tokens || data.usage?.prompt_tokens,
+    outputTokens: data.usage?.output_tokens || data.usage?.completion_tokens,
+    totalTokens: data.usage?.total_tokens
+  };
 }

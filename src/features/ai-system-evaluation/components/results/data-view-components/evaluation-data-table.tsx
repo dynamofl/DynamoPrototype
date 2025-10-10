@@ -19,6 +19,7 @@ interface EvaluationDataTableProps {
   onRowSelect: (id: string, selected: boolean) => void
   onSelectAll: (selected: boolean) => void
   onRowClick?: (record: JailbreakEvaluationResult) => void
+  hasGuardrails?: boolean
 }
 
 export function EvaluationDataTable({
@@ -26,7 +27,8 @@ export function EvaluationDataTable({
   selectedRows,
   onRowSelect,
   onSelectAll,
-  onRowClick
+  onRowClick,
+  hasGuardrails = true
 }: EvaluationDataTableProps) {
   const allSelected = data.length > 0 && selectedRows.length === data.length
   const someSelected = selectedRows.length > 0 && selectedRows.length < data.length
@@ -82,7 +84,7 @@ export function EvaluationDataTable({
             <TableHead className="font-450">Test Conversations</TableHead>
             <TableHead className="font-450">Behavior Type</TableHead>
             <TableHead className="font-450">Attack Type</TableHead>
-            <TableHead className="font-450">Guardrail Judgement</TableHead>
+            {hasGuardrails && <TableHead className="font-450">Guardrail Judgement</TableHead>}
             <TableHead className="font-450">Model Judgement</TableHead>
             <TableHead className="font-450">Attack Outcome</TableHead>
           </TableRow>
@@ -146,9 +148,11 @@ export function EvaluationDataTable({
                 <TableCell>
                   <span className="">{record.attackType}</span>
                 </TableCell>
-                <TableCell>
-                  {renderGuardrailJudgment(record.guardrailJudgement)}
-                </TableCell>
+                {hasGuardrails && (
+                  <TableCell>
+                    {renderGuardrailJudgment(record.guardrailJudgement)}
+                  </TableCell>
+                )}
                 <TableCell>
                   {renderModelJudgment(record.modelJudgement)}
                 </TableCell>

@@ -5,6 +5,7 @@ import StatusCompleteIcon from '@/assets/icons/StatusComplete.svg'
 
 interface EvaluationDataDetailProps {
   record: JailbreakEvaluationResult
+  hasGuardrails?: boolean
 }
 
 function InfoIconOutline() {
@@ -24,7 +25,7 @@ function getModelStatusIcon(status: string) {
     <img src={StatusCompleteIcon} alt="Answered" className="w-4 h-4" style={{ filter: 'brightness(0) saturate(100%) invert(39%) sepia(80%) saturate(1969%) hue-rotate(96deg) brightness(96%) contrast(95%)' }} />
 }
 
-export function EvaluationDataDetail({ record }: EvaluationDataDetailProps) {
+export function EvaluationDataDetail({ record, hasGuardrails = true }: EvaluationDataDetailProps) {
   return (
     <div className="h-full overflow-y-auto py-4">
       <div className="max-w-2xl mx-auto px-4 space-y-6">
@@ -34,7 +35,7 @@ export function EvaluationDataDetail({ record }: EvaluationDataDetailProps) {
           <h3 className="text-[11px] font-450 text-gray-500 uppercase tracking-wide">
             Evaluation Summary
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className={`grid grid-cols-1 gap-3 ${hasGuardrails ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
 
             {/* Attack Type */}
             <div className="border border-gray-200 rounded-lg p-2 space-y-2">
@@ -49,19 +50,21 @@ export function EvaluationDataDetail({ record }: EvaluationDataDetailProps) {
               </div>
             </div>
 
-            {/* Guardrail Response */}
-            <div className="border border-gray-200 rounded-lg p-2 space-y-2">
-              <div className="flex items-center gap-1">
-                <span className="text-xs font-450 text-gray-600">Guardrail Response</span>
-                <InfoIconOutline />
+            {/* Guardrail Response - Only show if guardrails are attached */}
+            {hasGuardrails && (
+              <div className="border border-gray-200 rounded-lg p-2 space-y-2">
+                <div className="flex items-center gap-1">
+                  <span className="text-xs font-450 text-gray-600">Guardrail Response</span>
+                  <InfoIconOutline />
+                </div>
+                <div className="flex items-center gap-2">
+                  {getStatusIcon(record.guardrailJudgement)}
+                  <span className="text-[0.8125rem]  font-450 text-gray-900">
+                    {record.guardrailJudgement}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                {getStatusIcon(record.guardrailJudgement)}
-                <span className="text-[0.8125rem]  font-450 text-gray-900">
-                  {record.guardrailJudgement}
-                </span>
-              </div>
-            </div>
+            )}
 
             {/* Model Response */}
             <div className="border border-gray-200 rounded-lg p-2 space-y-2">
@@ -121,21 +124,23 @@ export function EvaluationDataDetail({ record }: EvaluationDataDetailProps) {
           </div>
         </section>
 
-        {/* Guardrail Judgement */}
-        <section className="space-y-2">
-          <h3 className="text-[11px] font-450 text-gray-500 uppercase tracking-wide">
-            Guardrail Judgement
-          </h3>
-          <div className="border border-gray-200 rounded-md p-1">
-            <div className="flex items-center gap-2 p-2 rounded hover:bg-gray-50">
-              {getStatusIcon(record.guardrailJudgement)}
-              <span className="text-xs text-gray-900 flex-1">
-                <span className="font-450">Guardrail Result:</span>
-                <span className="ml-1">{record.guardrailJudgement}</span>
-              </span>
+        {/* Guardrail Judgement - Only show if guardrails are attached */}
+        {hasGuardrails && (
+          <section className="space-y-2">
+            <h3 className="text-[11px] font-450 text-gray-500 uppercase tracking-wide">
+              Guardrail Judgement
+            </h3>
+            <div className="border border-gray-200 rounded-md p-1">
+              <div className="flex items-center gap-2 p-2 rounded hover:bg-gray-50">
+                {getStatusIcon(record.guardrailJudgement)}
+                <span className="text-xs text-gray-900 flex-1">
+                  <span className="font-450">Guardrail Result:</span>
+                  <span className="ml-1">{record.guardrailJudgement}</span>
+                </span>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* AI System Response */}
         <section className="space-y-2">
@@ -177,17 +182,31 @@ export function EvaluationDataDetail({ record }: EvaluationDataDetailProps) {
             </div>
             <p className="text-xs text-gray-600 mt-3">
               {record.attackOutcome === "Attack Success" ? (
-                <>
-                  <strong className="text-red-700">Attack Success:</strong> The adversarial prompt bypassed the guardrail
-                  (guardrail: {record.guardrailJudgement}) and the model provided an answer
-                  (model: {record.modelJudgement}).
-                </>
+                hasGuardrails ? (
+                  <>
+                    <strong className="text-red-700">Attack Success:</strong> The adversarial prompt bypassed the guardrail
+                    (guardrail: {record.guardrailJudgement}) and the model provided an answer
+                    (model: {record.modelJudgement}).
+                  </>
+                ) : (
+                  <>
+                    <strong className="text-red-700">Attack Success:</strong> The model provided an answer to a disallowed behavior
+                    (model: {record.modelJudgement}).
+                  </>
+                )
               ) : (
-                <>
-                  <strong className="text-green-700">Attack Failure:</strong> Either the guardrail blocked the prompt
-                  (guardrail: {record.guardrailJudgement}) or the model refused to answer
-                  (model: {record.modelJudgement}).
-                </>
+                hasGuardrails ? (
+                  <>
+                    <strong className="text-green-700">Attack Failure:</strong> Either the guardrail blocked the prompt
+                    (guardrail: {record.guardrailJudgement}) or the model refused to answer
+                    (model: {record.modelJudgement}).
+                  </>
+                ) : (
+                  <>
+                    <strong className="text-green-700">Attack Failure:</strong> The model refused to answer the disallowed behavior
+                    (model: {record.modelJudgement}).
+                  </>
+                )
               )}
             </p>
           </div>

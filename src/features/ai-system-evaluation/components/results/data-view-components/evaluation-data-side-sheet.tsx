@@ -15,6 +15,7 @@ interface EvaluationDataSideSheetProps {
   onNavigateNext: () => void
   onNavigatePrevious: () => void
   onExpand: () => void
+  hasGuardrails?: boolean
 }
 
 export function EvaluationDataSideSheet({
@@ -24,7 +25,8 @@ export function EvaluationDataSideSheet({
   allRecords,
   onNavigateNext,
   onNavigatePrevious,
-  onExpand
+  onExpand,
+  hasGuardrails = true
 }: EvaluationDataSideSheetProps) {
   if (!record) return null
 
@@ -103,7 +105,7 @@ export function EvaluationDataSideSheet({
 
         {/* Content */}
         <div className="flex-1 overflow-hidden">
-          <EvaluationDataDetail record={record} />
+          <EvaluationDataDetail record={record} hasGuardrails={hasGuardrails} />
         </div>
       </SheetContent>
     </Sheet>
