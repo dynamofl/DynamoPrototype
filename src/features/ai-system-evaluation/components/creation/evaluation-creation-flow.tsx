@@ -8,6 +8,7 @@ import { AISystemSelection } from "./ai-system-selection";
 import { EvaluationReview } from "./evaluation-review";
 import type { EvaluationCreationData } from "../../types/evaluation-creation";
 import type { AISystem } from "@/features/ai-systems/types/types";
+import type { Guardrail } from "@/features/guardrails/types";
 import { getStepFlow, type StepId } from "../../constants/evaluation-steps";
 
 interface EvaluationCreationFlowProps {
@@ -16,6 +17,7 @@ interface EvaluationCreationFlowProps {
   variant?: "overlay" | "onboarding";
   aiSystemId?: string; // AI system being evaluated (deprecated - use aiSystem instead)
   aiSystem?: AISystem; // Full AI system object being evaluated
+  guardrails?: Guardrail[]; // Pre-loaded guardrails to avoid fetching
 }
 
 export function EvaluationCreationFlow({
@@ -24,6 +26,7 @@ export function EvaluationCreationFlow({
   variant = "overlay",
   aiSystemId,
   aiSystem,
+  guardrails,
 }: EvaluationCreationFlowProps) {
   const [currentStepId, setCurrentStepId] = useState<StepId>("setup");
   const [evaluationData, setEvaluationData] = useState<Partial<EvaluationCreationData>>({
@@ -187,6 +190,7 @@ export function EvaluationCreationFlow({
               onNext={handleNext}
               onBack={handleBack}
               variant={variant}
+              guardrails={guardrails}
             />
           )}
           {currentStepId === "ai-system-selection" && (

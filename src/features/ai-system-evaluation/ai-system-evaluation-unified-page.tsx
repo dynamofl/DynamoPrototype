@@ -29,6 +29,7 @@ import {
 // Hooks
 import { useAISystemLoader } from "./hooks/useAISystemLoader";
 import { useEvaluationHistory } from "./hooks/useEvaluationHistory";
+import { useGuardrailsSupabase } from "@/features/guardrails/lib/useGuardrailsSupabase";
 
 // Types and services
 import type { EvaluationCreationData } from "./types/evaluation-creation";
@@ -58,6 +59,9 @@ export function AISystemEvaluationUnifiedPage() {
     reloadHistory,
     setEvaluationHistory
   } = useEvaluationHistory(aiSystem);
+
+  // Load guardrails for evaluation creation
+  const { guardrails } = useGuardrailsSupabase();
 
   // UI state management
   const [initialized, setInitialized] = useState(false); // Track if initial data load is complete
@@ -614,7 +618,7 @@ export function AISystemEvaluationUnifiedPage() {
         <AppBar
           variant="breadcrumb"
           breadcrumbs={breadcrumbs}
-          currentSection={{ name: "Loading...", badge: "Evaluation" }}
+          currentSection={{ name: "Loading..." }}
         />
         <main className="flex-1 border rounded-lg shadow m-2 mt-0 bg-gray-0">
           <div className="space-y-3 py-3">
@@ -660,7 +664,7 @@ export function AISystemEvaluationUnifiedPage() {
       <AppBar
         variant="breadcrumb"
         breadcrumbs={breadcrumbs}
-        currentSection={{ name: aiSystem.name, badge: "Evaluation" }}
+        currentSection={{ name: aiSystem.name }}
         actionButtons={actionButtons}
       />
 
@@ -706,6 +710,7 @@ export function AISystemEvaluationUnifiedPage() {
                   onComplete={handleEvaluationCreated}
                   onCancel={handleCancelCreation}
                   aiSystemId={aiSystem.id}
+                  guardrails={guardrails}
                 />
               ) : hasEvaluations ? (
                 /* Show evaluation history table when evaluations exist */
@@ -754,6 +759,7 @@ export function AISystemEvaluationUnifiedPage() {
                 onComplete={handleEvaluationCreated}
                 onCancel={handleCancelCreation}
                 aiSystem={aiSystem}
+                guardrails={guardrails}
               />
             </div>
           </motion.div>
@@ -772,6 +778,18 @@ export function AISystemEvaluationUnifiedPage() {
           >
             <OverlayHeader
               title={selectedTest.name}
+              breadcrumbs={aiSystem?.name ? [{ label: aiSystem.name }] : undefined}
+              titleDropdownOptions={evaluationHistory.length > 1 ? evaluationHistory.map(test => ({
+                id: test.id,
+                label: test.name,
+                isActive: test.id === selectedTest.id,
+              })) : undefined}
+              onTitleDropdownSelect={(evaluationId) => {
+                const evaluation = evaluationHistory.find(e => e.id === evaluationId);
+                if (evaluation && aiSystem) {
+                  navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation/${evaluationId}`);
+                }
+              }}
               onMinimize={handleMinimize}
             />
             <div className="flex-1 flex items-center justify-center">
@@ -793,6 +811,18 @@ export function AISystemEvaluationUnifiedPage() {
           >
             <OverlayHeader
               title={selectedTest.name}
+              breadcrumbs={aiSystem?.name ? [{ label: aiSystem.name }] : undefined}
+              titleDropdownOptions={evaluationHistory.length > 1 ? evaluationHistory.map(test => ({
+                id: test.id,
+                label: test.name,
+                isActive: test.id === selectedTest.id,
+              })) : undefined}
+              onTitleDropdownSelect={(evaluationId) => {
+                const evaluation = evaluationHistory.find(e => e.id === evaluationId);
+                if (evaluation && aiSystem) {
+                  navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation/${evaluationId}`);
+                }
+              }}
               onMinimize={handleMinimize}
             />
             <div className="flex-1 overflow-auto">
@@ -823,6 +853,18 @@ export function AISystemEvaluationUnifiedPage() {
               <>
                 <OverlayHeader
                   title={selectedTest.name}
+                  breadcrumbs={aiSystem?.name ? [{ label: aiSystem.name }] : undefined}
+                  titleDropdownOptions={evaluationHistory.length > 1 ? evaluationHistory.map(test => ({
+                    id: test.id,
+                    label: test.name,
+                    isActive: test.id === selectedTest.id,
+                  })) : undefined}
+                  onTitleDropdownSelect={(evaluationId) => {
+                    const evaluation = evaluationHistory.find(e => e.id === evaluationId);
+                    if (evaluation && aiSystem) {
+                      navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation/${evaluationId}`);
+                    }
+                  }}
                   onClose={handleMinimize}
                 />
                 <div className="flex-1 flex items-center justify-center">
@@ -834,6 +876,17 @@ export function AISystemEvaluationUnifiedPage() {
               <EvaluationResults
                 results={evaluationResults}
                 evaluationName={selectedTest?.name}
+                aiSystemName={aiSystem?.name}
+                evaluations={evaluationHistory.map(test => ({
+                  id: test.id,
+                  name: test.name,
+                }))}
+                onEvaluationSwitch={(evaluationId) => {
+                  const evaluation = evaluationHistory.find(e => e.id === evaluationId);
+                  if (evaluation && aiSystem) {
+                    navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation/${evaluationId}`);
+                  }
+                }}
                 onClose={handleMinimize}
                 currentTab={tab || 'summary'}
                 onExport={handleExport}

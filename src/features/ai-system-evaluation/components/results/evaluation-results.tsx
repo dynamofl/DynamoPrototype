@@ -15,22 +15,49 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { OverlayHeader } from "@/components/patterns";
+import { OverlayHeader, type BreadcrumbSegment, type TitleDropdownOption } from "@/components/patterns";
 import { toUrlSlug } from "@/lib/utils";
 
 interface EvaluationResultsProps {
   results: JailbreakEvaluationOutput;
   evaluationName?: string;
+  aiSystemName?: string; // AI system name for breadcrumb
+  evaluations?: Array<{ id: string; name: string }>; // List of evaluations for dropdown
+  onEvaluationSwitch?: (evaluationId: string) => void; // Callback when switching evaluation
   onExport?: (format: 'json' | 'csv') => void;
   onClose?: () => void;
   currentTab?: string;
   onTabChange?: (tab: 'summary' | 'data') => void;
 }
 
-export function EvaluationResults({ results, evaluationName, onExport, onClose, currentTab: propTab, onTabChange }: EvaluationResultsProps) {
+export function EvaluationResults({
+  results,
+  evaluationName,
+  aiSystemName,
+  evaluations,
+  onEvaluationSwitch,
+  onExport,
+  onClose,
+  currentTab: propTab,
+  onTabChange
+}: EvaluationResultsProps) {
   const navigate = useNavigate();
   const { systemName, evaluationId } = useParams<{ systemName: string; evaluationId?: string }>();
   const [selectedTab, setSelectedTab] = useState<'summary' | 'data'>((propTab as 'summary' | 'data') || 'summary');
+
+  // Prepare breadcrumbs if AI system name is provided
+  const breadcrumbs: BreadcrumbSegment[] | undefined = aiSystemName
+    ? [{ label: aiSystemName }]
+    : undefined;
+
+  // Prepare dropdown options if evaluations list is provided
+  const titleDropdownOptions: TitleDropdownOption[] | undefined = evaluations && evaluations.length > 1
+    ? evaluations.map(evaluation => ({
+        id: evaluation.id,
+        label: evaluation.name,
+        isActive: evaluation.id === evaluationId || evaluation.name === evaluationName,
+      }))
+    : undefined;
 
   // Update selectedTab when propTab changes
   useEffect(() => {
@@ -65,15 +92,18 @@ export function EvaluationResults({ results, evaluationName, onExport, onClose, 
       {/* Header with Export */}
       <OverlayHeader
         title={evaluationName || 'Evaluation Results'}
+        breadcrumbs={breadcrumbs}
+        titleDropdownOptions={titleDropdownOptions}
+        onTitleDropdownSelect={onEvaluationSwitch}
         onClose={onClose}
         actions={
           <div className="flex gap-2 align-center items-center">
-            <Button variant="secondary" size="sm" className="gap-1 py-1">
+            <Button variant="secondary" size="default" className="gap-1">
               <ArrowDownToLine className="w-4 h-4"/>
                Download Report</Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="">
+              <Button variant="outline" size="default" className="">
                 Export Result
               </Button>
             </DropdownMenuTrigger>

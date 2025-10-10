@@ -15,8 +15,12 @@ export function GuardrailSelection({
   onNext,
   onBack,
   variant = "overlay",
+  guardrails: propGuardrails,
 }: EvaluationCreationStepProps) {
-  const { guardrails: allGuardrails } = useGuardrailsSupabase();
+  const { guardrails: fetchedGuardrails } = useGuardrailsSupabase();
+
+  // Use prop guardrails if provided, otherwise use fetched guardrails
+  const allGuardrails = propGuardrails ?? fetchedGuardrails;
   const [selectedGuardrailIds, setSelectedGuardrailIds] = useState<string[]>(
     data.guardrailIds || []
   );

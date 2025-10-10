@@ -1,3 +1,5 @@
+import type { Guardrail } from "@/features/guardrails/types";
+
 export type EvaluationType = 'compliance' | 'jailbreak';
 
 export type PerturbationType = "rewording" | "misspelling" | "leet" | "random-upper";
@@ -45,4 +47,5 @@ export interface EvaluationCreationStepProps {
   onBack?: () => void;
   onCancel?: () => void;
   variant?: "overlay" | "onboarding";
+  guardrails?: Guardrail[]; // Pre-loaded guardrails to avoid fetching
 }
