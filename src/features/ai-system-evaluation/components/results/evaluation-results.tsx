@@ -1,13 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowDownToLine, Eye, ChevronDown } from "lucide-react";
-import type { JailbreakEvaluationOutput } from "../types/jailbreak-evaluation";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { ArrowDownToLine } from "lucide-react";
+import type { JailbreakEvaluationOutput } from "../../types/jailbreak-evaluation";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -17,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { OverlayHeader, type BreadcrumbSegment, type TitleDropdownOption } from "@/components/patterns";
 import { toUrlSlug } from "@/lib/utils";
+import { EvaluationDataView } from "./evaluation-data-view";
 
 interface EvaluationResultsProps {
   results: JailbreakEvaluationOutput;
@@ -65,13 +60,6 @@ export function EvaluationResults({
       setSelectedTab(propTab);
     }
   }, [propTab]);
-  const [selectedRow, setSelectedRow] = useState<number | null>(null);
-  const [detailsOpen, setDetailsOpen] = useState(false);
-
-  const handleRowClick = (index: number) => {
-    setSelectedRow(index);
-    setDetailsOpen(true);
-  };
 
   const handleTabChange = (tab: 'summary' | 'data') => {
     if (onTabChange) {
@@ -84,8 +72,6 @@ export function EvaluationResults({
       setSelectedTab(tab);
     }
   };
-
-  const selectedResult = selectedRow !== null ? results.results[selectedRow] : null;
 
   return (
     <div className="flex flex-col h-full">
@@ -251,176 +237,10 @@ export function EvaluationResults({
         )}
 
         {selectedTab === 'data' && (
-          <div className="h-full">
-            <div className="overflow-auto h-full">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50 sticky top-0">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Policy</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Behavior Type</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Attack Type</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Base Prompt</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Jailbreak Prompt</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Guardrail</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Model Response</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Outcome</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-gray-0 divide-y divide-gray-200">
-                  {results.results.map((result, idx) => (
-                    <tr key={idx} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm text-gray-900">{result.policyName}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{result.behaviorType}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{result.attackType}</td>
-                      <td className="px-4 py-3 text-sm text-gray-700 max-w-xs truncate" title={result.basePrompt}>
-                        {result.basePrompt}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-700 max-w-xs truncate" title={result.adversarialPrompt}>
-                        {result.adversarialPrompt}
-                      </td>
-                      <td className="px-4 py-3 text-sm">
-                        <span className={`px-2 py-1 rounded text-xs ${
-                          result.guardrailJudgement === "Blocked" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                        }`}>
-                          {result.guardrailJudgement}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm">
-                        <span className={`px-2 py-1 rounded text-xs ${
-                          result.modelJudgement === "Blocked" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                        }`}>
-                          {result.modelJudgement}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                          result.attackOutcome === "Attack Success" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
-                        }`}>
-                          {result.attackOutcome}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm">
-                        <button
-                          onClick={() => handleRowClick(idx)}
-                          className="text-blue-600 hover:text-blue-700 flex items-center gap-1"
-                        >
-                          <Eye className="h-4 w-4" />
-                          View
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <EvaluationDataView results={results.results} />
         )}
       </div>
 
-      {/* Details Sheet */}
-      <Sheet open={detailsOpen} onOpenChange={setDetailsOpen}>
-        <SheetContent className="w-[600px] sm:w-[800px] overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>Test Result Details</SheetTitle>
-          </SheetHeader>
-          {selectedResult && (
-            <div className="mt-6 space-y-6">
-              {/* Outcome Badge */}
-              <div className="flex items-center gap-3">
-                <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
-                  selectedResult.attackOutcome === "Attack Success"
-                    ? "bg-red-100 text-red-700"
-                    : "bg-green-100 text-green-700"
-                }`}>
-                  {selectedResult.attackOutcome}
-                </span>
-                <span className="text-sm text-gray-600">
-                  {selectedResult.policyName} • {selectedResult.attackType}
-                </span>
-              </div>
-
-              {/* Base Prompt */}
-              <div>
-                <h3 className="text-sm font-medium text-gray-900 mb-2">Base Prompt</h3>
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <p className="text-sm text-gray-700">{selectedResult.basePrompt}</p>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">Behavior Type: {selectedResult.behaviorType}</p>
-              </div>
-
-              {/* Adversarial Prompt */}
-              <div>
-                <h3 className="text-sm font-medium text-gray-900 mb-2">Jailbreak Prompt (Adversarial)</h3>
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                  <p className="text-sm text-gray-700">{selectedResult.adversarialPrompt}</p>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">Attack Type: {selectedResult.attackType}</p>
-              </div>
-
-              {/* System Response */}
-              <div>
-                <h3 className="text-sm font-medium text-gray-900 mb-2">AI System Response</h3>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <p className="text-sm text-gray-700">{selectedResult.systemResponse}</p>
-                </div>
-              </div>
-
-              {/* Judgements */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900 mb-2">Guardrail Judgement</h3>
-                  <div className={`border rounded-lg p-3 ${
-                    selectedResult.guardrailJudgement === "Blocked"
-                      ? "bg-green-50 border-green-200"
-                      : "bg-red-50 border-red-200"
-                  }`}>
-                    <p className={`text-sm font-medium ${
-                      selectedResult.guardrailJudgement === "Blocked" ? "text-green-700" : "text-red-700"
-                    }`}>
-                      {selectedResult.guardrailJudgement}
-                    </p>
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900 mb-2">Model Judgement</h3>
-                  <div className={`border rounded-lg p-3 ${
-                    selectedResult.modelJudgement === "Blocked"
-                      ? "bg-green-50 border-green-200"
-                      : "bg-red-50 border-red-200"
-                  }`}>
-                    <p className={`text-sm font-medium ${
-                      selectedResult.modelJudgement === "Blocked" ? "text-green-700" : "text-red-700"
-                    }`}>
-                      {selectedResult.modelJudgement}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Attack Outcome Explanation */}
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <h3 className="text-sm font-medium text-gray-900 mb-2">Attack Outcome Logic</h3>
-                <p className="text-xs text-gray-600">
-                  {selectedResult.attackOutcome === "Attack Success" ? (
-                    <>
-                      <strong className="text-red-700">Attack Success:</strong> The adversarial prompt bypassed the guardrail
-                      (guardrail: {selectedResult.guardrailJudgement}) and the model provided an answer
-                      (model: {selectedResult.modelJudgement}).
-                    </>
-                  ) : (
-                    <>
-                      <strong className="text-green-700">Attack Failure:</strong> Either the guardrail blocked the prompt
-                      (guardrail: {selectedResult.guardrailJudgement}) or the model refused to answer
-                      (model: {selectedResult.modelJudgement}).
-                    </>
-                  )}
-                </p>
-              </div>
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
     </div>
   );
 }
