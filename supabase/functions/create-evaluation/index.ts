@@ -92,6 +92,15 @@ serve(async (req: Request) => {
       if (internalModels.promptGeneration) {
         console.log(`   Prompt Generation: ${internalModels.promptGeneration.provider}/${internalModels.promptGeneration.modelId}`);
       }
+      if (internalModels.inputGuardrail) {
+        console.log(`   Input Guardrail: ${internalModels.inputGuardrail.provider}/${internalModels.inputGuardrail.modelId}`);
+      }
+      if (internalModels.outputGuardrail) {
+        console.log(`   Output Guardrail: ${internalModels.outputGuardrail.provider}/${internalModels.outputGuardrail.modelId}`);
+      }
+      if (internalModels.judgeModel) {
+        console.log(`   Judge Model: ${internalModels.judgeModel.provider}/${internalModels.judgeModel.modelId}`);
+      }
     }
 
     // Generate prompts based on POLICIES ONLY (not guardrails)
@@ -107,7 +116,7 @@ serve(async (req: Request) => {
       );
     }
 
-    // Create evaluation record
+    // Create evaluation record with internal models in config
     const { data: evaluation, error: evalError } = await supabase
       .from('evaluations')
       .insert({
@@ -115,7 +124,12 @@ serve(async (req: Request) => {
         ai_system_id: aiSystemId,
         evaluation_type: evaluationType,
         status: 'pending',
-        config: { ...config, policyIds, guardrailIds },
+        config: {
+          ...config,
+          policyIds,
+          guardrailIds,
+          internalModels // Store internal models in config for run-evaluation to use
+        },
         total_prompts: prompts.length,
         completed_prompts: 0,
         created_by: user.id

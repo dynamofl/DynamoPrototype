@@ -14,6 +14,9 @@ export class ModelAssignmentStorage {
           promptGeneration: null,
           evaluationJudgement: null,
           testExecution: null,
+          inputGuardrail: null,
+          outputGuardrail: null,
+          judgeModel: null,
         };
       }
     }
@@ -22,6 +25,9 @@ export class ModelAssignmentStorage {
       promptGeneration: null,
       evaluationJudgement: null,
       testExecution: null,
+      inputGuardrail: null,
+      outputGuardrail: null,
+      judgeModel: null,
     };
   }
 

@@ -267,8 +267,19 @@ export function AISystemEvaluationUnifiedPage() {
           attackType: prompt.attack_type || 'Unknown',
           adversarialPrompt: prompt.adversarial_prompt || prompt.base_prompt || '',
           systemResponse: prompt.system_response || '',
+
+          // Three-layer judgements (new)
+          inputGuardrailJudgement: prompt.input_guardrail_judgement || null,
+          inputGuardrailReason: prompt.input_guardrail_reason || null,
+          outputGuardrailJudgement: prompt.output_guardrail_judgement || null,
+          outputGuardrailReason: prompt.output_guardrail_reason || null,
+          judgeModelJudgement: prompt.judge_model_judgement || null,
+          judgeModelReason: prompt.judge_model_reason || null,
+
+          // Legacy fields (kept for backward compatibility)
           guardrailJudgement: prompt.guardrail_judgement || 'Unknown',
           modelJudgement: prompt.model_judgement || 'Unknown',
+
           attackOutcome: prompt.attack_outcome || 'Unknown',
           runtimeMs: prompt.runtime_ms,
           inputTokens: prompt.input_tokens,

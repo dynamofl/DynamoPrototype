@@ -82,6 +82,45 @@ export class EvaluationService {
       }
     }
 
+    // Input Guardrail Model
+    if (assignments.inputGuardrail) {
+      const inputGuardrailModel = models.find(m => m.id === assignments.inputGuardrail);
+      if (inputGuardrailModel) {
+        internalModels.inputGuardrail = {
+          provider: inputGuardrailModel.provider,
+          modelId: inputGuardrailModel.modelId,
+          apiKey: inputGuardrailModel.apiKey
+        };
+        console.log(`🛡️ Input Guardrail Model: ${inputGuardrailModel.name} (${inputGuardrailModel.provider}/${inputGuardrailModel.modelId})`);
+      }
+    }
+
+    // Output Guardrail Model
+    if (assignments.outputGuardrail) {
+      const outputGuardrailModel = models.find(m => m.id === assignments.outputGuardrail);
+      if (outputGuardrailModel) {
+        internalModels.outputGuardrail = {
+          provider: outputGuardrailModel.provider,
+          modelId: outputGuardrailModel.modelId,
+          apiKey: outputGuardrailModel.apiKey
+        };
+        console.log(`��️ Output Guardrail Model: ${outputGuardrailModel.name} (${outputGuardrailModel.provider}/${outputGuardrailModel.modelId})`);
+      }
+    }
+
+    // Judge Model
+    if (assignments.judgeModel) {
+      const judgeModel = models.find(m => m.id === assignments.judgeModel);
+      if (judgeModel) {
+        internalModels.judgeModel = {
+          provider: judgeModel.provider,
+          modelId: judgeModel.modelId,
+          apiKey: judgeModel.apiKey
+        };
+        console.log(`⚖️ Judge Model: ${judgeModel.name} (${judgeModel.provider}/${judgeModel.modelId})`);
+      }
+    }
+
     // Test Execution Model (for backward compatibility)
     let testExecutionApiKey: string | undefined;
     let testExecutionModelName: string | undefined;

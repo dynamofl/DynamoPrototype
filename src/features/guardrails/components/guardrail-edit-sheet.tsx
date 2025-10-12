@@ -223,7 +223,7 @@ export function GuardrailEditSheet({
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label htmlFor="edit-guardrail-type">Type</Label>
             <Select
@@ -242,6 +242,33 @@ export function GuardrailEditSheet({
               </SelectContent>
             </Select>
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-guardrail-stage">Evaluation Stage</Label>
+            <Select
+              value={(editingGuardrail.guardrailType as 'input' | 'output') || 'input'}
+              onValueChange={(value: 'input' | 'output') => setEditingGuardrail({ ...editingGuardrail, guardrailType: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select Stage" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="input">
+                  <div className="flex flex-col">
+                    <span className="font-medium">Input Guardrail</span>
+                    <span className="text-xs text-gray-500">Evaluates prompts before AI</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="output">
+                  <div className="flex flex-col">
+                    <span className="font-medium">Output Guardrail</span>
+                    <span className="text-xs text-gray-500">Evaluates AI responses after generation</span>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="edit-guardrail-category">Category</Label>
             <Select

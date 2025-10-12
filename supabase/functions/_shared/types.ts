@@ -20,6 +20,7 @@ export interface Guardrail {
   id: string;
   name: string;
   type: string;
+  guardrail_type: 'input' | 'output'; // Input (evaluates prompts) or Output (evaluates responses)
   config: Record<string, any>;
   policies: Policy[];
 }
@@ -44,8 +45,19 @@ export interface EvaluationPrompt {
   behavior_type: string;
   status?: 'pending' | 'running' | 'completed' | 'failed';
   system_response?: string;
+
+  // Three-layer judgements
+  input_guardrail_judgement?: string | null;
+  input_guardrail_reason?: string | null;
+  output_guardrail_judgement?: string | null;
+  output_guardrail_reason?: string | null;
+  judge_model_judgement?: string | null;
+  judge_model_reason?: string | null;
+
+  // Legacy fields (kept for backward compatibility)
   guardrail_judgement?: string;
   model_judgement?: string;
+
   attack_outcome?: string;
   runtime_ms?: number;
   input_tokens?: number;
@@ -100,6 +112,41 @@ export interface InternalModelConfig {
     modelId: string;
     apiKey: string;
   };
+  inputGuardrail?: {
+    provider: string;
+    modelId: string;
+    apiKey: string;
+  };
+  outputGuardrail?: {
+    provider: string;
+    modelId: string;
+    apiKey: string;
+  };
+  judgeModel?: {
+    provider: string;
+    modelId: string;
+    apiKey: string;
+  };
+}
+
+// New: Configuration for guardrail and judge models
+export interface GuardrailModelConfig {
+  id: string;
+  config_type: 'input_guardrail' | 'output_guardrail' | 'judge_model';
+  provider: string;
+  model: string;
+  api_key_encrypted: string;
+  config?: Record<string, any>;
+  is_active: boolean;
+}
+
+// Helper type for model execution
+export interface ModelExecutionConfig {
+  provider: string;
+  model: string;
+  apiKey: string;
+  temperature?: number;
+  maxTokens?: number;
 }
 
 export interface CreateEvaluationRequest {

@@ -28,6 +28,7 @@ export function GuardrailCreateSheet({
     description: '',
     category: '',
     type: '',
+    guardrailType: 'input' as 'input' | 'output', // New: input vs output guardrail
     allowedBehavior: '',
     disallowedBehavior: ''
   })
@@ -53,6 +54,7 @@ export function GuardrailCreateSheet({
       description: '',
       category: '',
       type: '',
+      guardrailType: 'input',
       allowedBehavior: '',
       disallowedBehavior: ''
     })
@@ -186,6 +188,7 @@ export function GuardrailCreateSheet({
       description: formData.description.trim(),
       category: formData.category,
       type: formData.type,
+      guardrailType: formData.guardrailType, // New: input vs output
       allowedBehavior: formData.allowedBehavior.trim(),
       disallowedBehavior: formData.disallowedBehavior.trim(),
       status: 'active',
@@ -229,7 +232,7 @@ export function GuardrailCreateSheet({
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label htmlFor="guardrail-type">Type</Label>
             <Select
@@ -248,6 +251,33 @@ export function GuardrailCreateSheet({
               </SelectContent>
             </Select>
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="guardrail-stage">Evaluation Stage</Label>
+            <Select
+              value={formData.guardrailType}
+              onValueChange={(value: 'input' | 'output') => setFormData({ ...formData, guardrailType: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select Stage" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="input">
+                  <div className="flex flex-col">
+                    <span className="font-medium">Input Guardrail</span>
+                    <span className="text-xs text-gray-500">Evaluates prompts before AI</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="output">
+                  <div className="flex flex-col">
+                    <span className="font-medium">Output Guardrail</span>
+                    <span className="text-xs text-gray-500">Evaluates AI responses after generation</span>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="guardrail-category">Category</Label>
             <Select

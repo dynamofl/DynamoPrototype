@@ -17,6 +17,9 @@ export interface ModelAssignment {
   promptGeneration: string | null; // model id - Stage 2: Generate prompts from topics
   evaluationJudgement: string | null; // model id
   testExecution: string | null; // model id
+  inputGuardrail: string | null; // model id - Input guardrail evaluation
+  outputGuardrail: string | null; // model id - Output guardrail evaluation
+  judgeModel: string | null; // model id - Judge model for answer/refusal determination
 }
 
 export interface EvaluationModelFormData {

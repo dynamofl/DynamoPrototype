@@ -33,6 +33,10 @@ export function EvaluationDataTable({
   const allSelected = data.length > 0 && selectedRows.length === data.length
   const someSelected = selectedRows.length > 0 && selectedRows.length < data.length
 
+  // Check if any records have input/output guardrail judgements
+  const hasInputGuardrails = data.some(record => record.inputGuardrailJudgement !== null && record.inputGuardrailJudgement !== undefined)
+  const hasOutputGuardrails = data.some(record => record.outputGuardrailJudgement !== null && record.outputGuardrailJudgement !== undefined)
+
   const renderGuardrailJudgment = (judgment: string) => (
     <div className="flex items-center gap-2">
       {judgment === 'Blocked' ?
@@ -85,8 +89,9 @@ export function EvaluationDataTable({
             <TableHead className="font-450">Topic</TableHead>
             <TableHead className="font-450">Behavior Type</TableHead>
             <TableHead className="font-450">Attack Type</TableHead>
-            {hasGuardrails && <TableHead className="font-450">Guardrail Judgement</TableHead>}
-            <TableHead className="font-450">Model Judgement</TableHead>
+            {hasInputGuardrails && <TableHead className="font-450">Input Guardrail</TableHead>}
+            {hasOutputGuardrails && <TableHead className="font-450">Output Guardrail</TableHead>}
+            <TableHead className="font-450">Judge Model</TableHead>
             <TableHead className="font-450">Attack Outcome</TableHead>
           </TableRow>
         </TableHeader>
@@ -154,13 +159,27 @@ export function EvaluationDataTable({
                 <TableCell>
                   <span className="">{record.attackType}</span>
                 </TableCell>
-                {hasGuardrails && (
+                {hasInputGuardrails && (
                   <TableCell>
-                    {renderGuardrailJudgment(record.guardrailJudgement)}
+                    {record.inputGuardrailJudgement
+                      ? renderGuardrailJudgment(record.inputGuardrailJudgement)
+                      : <span className="text-gray-400">—</span>
+                    }
+                  </TableCell>
+                )}
+                {hasOutputGuardrails && (
+                  <TableCell>
+                    {record.outputGuardrailJudgement
+                      ? renderGuardrailJudgment(record.outputGuardrailJudgement)
+                      : <span className="text-gray-400">—</span>
+                    }
                   </TableCell>
                 )}
                 <TableCell>
-                  {renderModelJudgment(record.modelJudgement)}
+                  {record.judgeModelJudgement
+                    ? renderModelJudgment(record.judgeModelJudgement)
+                    : renderModelJudgment(record.modelJudgement)
+                  }
                 </TableCell>
                 <TableCell>
                   {renderAttackOutcome(record.attackOutcome)}

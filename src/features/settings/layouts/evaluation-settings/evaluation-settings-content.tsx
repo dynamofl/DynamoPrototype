@@ -101,9 +101,31 @@ export function EvaluationSettingsContent() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 px-4">
         {/* Left Column - Where Models Are Used */}
         <div className="lg:col-span-2 space-y-4">
-         
-
           <div className="border border-gray-200 rounded-lg px-4">
+            <ModelAssignmentCard
+              title="Input Guardrail Model"
+              description="Evaluates prompts for safety before sending to your AI system"
+              selectedModelId={assignments.inputGuardrail}
+              models={models}
+              onModelChange={(value) => handleAssignmentChange('inputGuardrail', value)}
+            />
+
+            <ModelAssignmentCard
+              title="Output Guardrail Model"
+              description="Evaluates AI responses for safety after generation"
+              selectedModelId={assignments.outputGuardrail}
+              models={models}
+              onModelChange={(value) => handleAssignmentChange('outputGuardrail', value)}
+            />
+
+            <ModelAssignmentCard
+              title="Judge Model"
+              description="Determines whether the AI answered or refused the user's question"
+              selectedModelId={assignments.judgeModel}
+              models={models}
+              onModelChange={(value) => handleAssignmentChange('judgeModel', value)}
+            />
+
             <ModelAssignmentCard
               title="Topic Generation"
               description="Analyzes policies and generates test topics from allowed and disallowed behaviors"

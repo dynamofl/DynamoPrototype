@@ -35,7 +35,13 @@ export function EvaluationDataDetail({ record, hasGuardrails = true }: Evaluatio
           <h3 className="text-[11px] font-450 text-gray-500 uppercase tracking-wide">
             Evaluation Summary
           </h3>
-          <div className={`grid grid-cols-1 gap-3 ${hasGuardrails ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
+          <div className={`grid grid-cols-1 gap-3 ${
+            record.inputGuardrailJudgement && record.outputGuardrailJudgement
+              ? 'md:grid-cols-2 lg:grid-cols-4'
+              : record.inputGuardrailJudgement || record.outputGuardrailJudgement
+              ? 'md:grid-cols-3'
+              : 'md:grid-cols-2'
+          }`}>
 
             {/* Attack Type */}
             <div className="border border-gray-200 rounded-lg p-2 space-y-2">
@@ -50,32 +56,48 @@ export function EvaluationDataDetail({ record, hasGuardrails = true }: Evaluatio
               </div>
             </div>
 
-            {/* Guardrail Response - Only show if guardrails are attached */}
-            {hasGuardrails && (
+            {/* Input Guardrail - Only show if available */}
+            {record.inputGuardrailJudgement && (
               <div className="border border-gray-200 rounded-lg p-2 space-y-2">
                 <div className="flex items-center gap-1">
-                  <span className="text-xs font-450 text-gray-600">Guardrail Response</span>
+                  <span className="text-xs font-450 text-gray-600">Input Guardrail</span>
                   <InfoIconOutline />
                 </div>
                 <div className="flex items-center gap-2">
-                  {getStatusIcon(record.guardrailJudgement)}
+                  {getStatusIcon(record.inputGuardrailJudgement)}
                   <span className="text-[0.8125rem]  font-450 text-gray-900">
-                    {record.guardrailJudgement}
+                    {record.inputGuardrailJudgement}
                   </span>
                 </div>
               </div>
             )}
 
-            {/* Model Response */}
+            {/* Output Guardrail - Only show if available */}
+            {record.outputGuardrailJudgement && (
+              <div className="border border-gray-200 rounded-lg p-2 space-y-2">
+                <div className="flex items-center gap-1">
+                  <span className="text-xs font-450 text-gray-600">Output Guardrail</span>
+                  <InfoIconOutline />
+                </div>
+                <div className="flex items-center gap-2">
+                  {getStatusIcon(record.outputGuardrailJudgement)}
+                  <span className="text-[0.8125rem]  font-450 text-gray-900">
+                    {record.outputGuardrailJudgement}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Judge Model Response */}
             <div className="border border-gray-200 rounded-lg p-2 space-y-2">
               <div className="flex items-center gap-1">
-                <span className="text-xs font-450 text-gray-600">Model Response</span>
+                <span className="text-xs font-450 text-gray-600">Judge Model</span>
                 <InfoIconOutline />
               </div>
               <div className="flex items-center gap-2">
-                {getModelStatusIcon(record.modelJudgement)}
+                {getModelStatusIcon(record.judgeModelJudgement || record.modelJudgement)}
                 <span className="text-[0.8125rem]  font-450 text-gray-900">
-                  {record.modelJudgement}
+                  {record.judgeModelJudgement || record.modelJudgement}
                 </span>
               </div>
             </div>
@@ -124,19 +146,57 @@ export function EvaluationDataDetail({ record, hasGuardrails = true }: Evaluatio
           </div>
         </section>
 
-        {/* Guardrail Judgement - Only show if guardrails are attached */}
-        {hasGuardrails && (
+        {/* Three-Layer Judgements - Only show if there's at least one judgement with data */}
+        {(record.inputGuardrailJudgement || record.outputGuardrailJudgement || record.judgeModelJudgement || record.modelJudgement) && (
           <section className="space-y-2">
             <h3 className="text-[11px] font-450 text-gray-500 uppercase tracking-wide">
-              Guardrail Judgement
+              Evaluation Judgements
             </h3>
-            <div className="border border-gray-200 rounded-md p-1">
-              <div className="flex items-center gap-2 p-2 rounded hover:bg-gray-50">
-                {getStatusIcon(record.guardrailJudgement)}
-                <span className="text-xs text-gray-900 flex-1">
-                  <span className="font-450">Guardrail Result:</span>
-                  <span className="ml-1">{record.guardrailJudgement}</span>
-                </span>
+            <div className="border border-gray-200 rounded-md p-1 space-y-1">
+              {/* Input Guardrail */}
+              {record.inputGuardrailJudgement && (
+                <div className="p-2 rounded hover:bg-gray-50">
+                  <div className="flex items-center gap-2">
+                    {getStatusIcon(record.inputGuardrailJudgement)}
+                    <span className="text-xs text-gray-900 flex-1">
+                      <span className="font-450">Input Guardrail:</span>
+                      <span className="ml-1">{record.inputGuardrailJudgement}</span>
+                    </span>
+                  </div>
+                  {record.inputGuardrailReason && (
+                    <p className="text-xs text-gray-600 mt-1 ml-6">{record.inputGuardrailReason}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Output Guardrail */}
+              {record.outputGuardrailJudgement && (
+                <div className="p-2 rounded hover:bg-gray-50">
+                  <div className="flex items-center gap-2">
+                    {getStatusIcon(record.outputGuardrailJudgement)}
+                    <span className="text-xs text-gray-900 flex-1">
+                      <span className="font-450">Output Guardrail:</span>
+                      <span className="ml-1">{record.outputGuardrailJudgement}</span>
+                    </span>
+                  </div>
+                  {record.outputGuardrailReason && (
+                    <p className="text-xs text-gray-600 mt-1 ml-6">{record.outputGuardrailReason}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Judge Model */}
+              <div className="p-2 rounded hover:bg-gray-50">
+                <div className="flex items-center gap-2">
+                  {getModelStatusIcon(record.judgeModelJudgement || record.modelJudgement)}
+                  <span className="text-xs text-gray-900 flex-1">
+                    <span className="font-450">Judge Model:</span>
+                    <span className="ml-1">{record.judgeModelJudgement || record.modelJudgement}</span>
+                  </span>
+                </div>
+                {record.judgeModelReason && (
+                  <p className="text-xs text-gray-600 mt-1 ml-6">{record.judgeModelReason}</p>
+                )}
               </div>
             </div>
           </section>

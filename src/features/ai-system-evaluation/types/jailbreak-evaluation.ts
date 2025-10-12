@@ -42,8 +42,19 @@ export interface JailbreakEvaluationResult {
   attackType: AttackType;
   adversarialPrompt: string;
   systemResponse: string;
+
+  // Three-layer judgements (new)
+  inputGuardrailJudgement?: GuardrailJudgement | null;
+  inputGuardrailReason?: string | null;
+  outputGuardrailJudgement?: GuardrailJudgement | null;
+  outputGuardrailReason?: string | null;
+  judgeModelJudgement?: ModelJudgement | null;
+  judgeModelReason?: string | null;
+
+  // Legacy fields (kept for backward compatibility)
   guardrailJudgement: GuardrailJudgement;
   modelJudgement: ModelJudgement;
+
   attackOutcome: AttackOutcome;
   runtimeMs?: number;
   inputTokens?: number;

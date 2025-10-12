@@ -68,8 +68,22 @@ export interface Guardrail {
   status: 'active' | 'inactive';
   category?: string;
   type?: string;
+  guardrailType?: 'input' | 'output'; // Input (evaluates prompts) or Output (evaluates responses)
   allowedBehavior?: string;
   disallowedBehavior?: string;
+}
+
+// Internal model configuration types
+export interface InternalModelConfig {
+  id: string;
+  configType: 'input_guardrail' | 'output_guardrail' | 'judge_model';
+  provider: string;
+  model: string;
+  apiKeyEncrypted: string;
+  config?: Record<string, any>;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type { EvaluationInput, EvaluationConfig, EvaluationResult, Message } from '@/features/evaluation/types/evaluation';
