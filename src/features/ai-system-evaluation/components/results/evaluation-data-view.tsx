@@ -37,6 +37,7 @@ export function EvaluationDataView({ results, hasGuardrails = true }: Evaluation
     guardrailJudgment: [],
     modelJudgment: [],
     behaviorType: [],
+    topic: [],
     searchTerm: ''
   })
 

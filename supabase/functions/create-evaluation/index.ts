@@ -14,7 +14,7 @@ serve(async (req: Request) => {
 
   try {
     // Parse request body
-    const { name, aiSystemId, evaluationType, policyIds, guardrailIds, config }: CreateEvaluationRequest = await req.json();
+    const { name, aiSystemId, evaluationType, policyIds, guardrailIds, config, internalModels }: CreateEvaluationRequest = await req.json();
 
     // Validate input
     if (!name || !aiSystemId) {
@@ -83,10 +83,22 @@ serve(async (req: Request) => {
       guardrails = fetchedGuardrails;
     }
 
+    // Log internal models if configured
+    if (internalModels) {
+      console.log('📋 Using Internal Models Configuration:');
+      if (internalModels.topicGeneration) {
+        console.log(`   Topic Generation: ${internalModels.topicGeneration.provider}/${internalModels.topicGeneration.modelId}`);
+      }
+      if (internalModels.promptGeneration) {
+        console.log(`   Prompt Generation: ${internalModels.promptGeneration.provider}/${internalModels.promptGeneration.modelId}`);
+      }
+    }
+
     // Generate prompts based on POLICIES ONLY (not guardrails)
     // policyIds: Used to generate test prompts
     // guardrails: Full list of fetched guardrail records (filtered inside generator)
-    const prompts = await generatePromptsFromPolicies(policyIds, guardrails);
+    // internalModels: Model configurations for topic and prompt generation
+    const prompts = await generatePromptsFromPolicies(policyIds, guardrails, internalModels);
 
     if (prompts.length === 0) {
       return new Response(

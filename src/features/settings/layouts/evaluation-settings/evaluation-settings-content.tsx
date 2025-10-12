@@ -22,6 +22,7 @@ export function EvaluationSettingsContent() {
   const [models, setModels] = useState<EvaluationModel[]>([]);
   const [showAddPane, setShowAddPane] = useState(false);
   const [assignments, setAssignments] = useState<ModelAssignment>({
+    topicGeneration: null,
     promptGeneration: null,
     evaluationJudgement: null,
     testExecution: null,
@@ -103,6 +104,14 @@ export function EvaluationSettingsContent() {
          
 
           <div className="border border-gray-200 rounded-lg px-4">
+            <ModelAssignmentCard
+              title="Topic Generation"
+              description="Analyzes policies and generates test topics from allowed and disallowed behaviors"
+              selectedModelId={assignments.topicGeneration}
+              models={models}
+              onModelChange={(value) => handleAssignmentChange('topicGeneration', value)}
+            />
+
             <ModelAssignmentCard
               title="Prompt Generation"
               description="Generates base test prompts and adversarial variants using various attack techniques"

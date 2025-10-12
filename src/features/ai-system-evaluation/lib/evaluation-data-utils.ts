@@ -31,6 +31,14 @@ export function filterJailbreakRecords(
       return false
     }
 
+    // Topic filter
+    if (filters.topic.length > 0) {
+      const recordTopic = record.topic || 'General'
+      if (!filters.topic.includes(recordTopic)) {
+        return false
+      }
+    }
+
     // Search term filter
     if (filters.searchTerm) {
       const searchLower = filters.searchTerm.toLowerCase()

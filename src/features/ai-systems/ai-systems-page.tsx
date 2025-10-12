@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { AISystem } from './types'
 import { toUrlSlug } from '@/lib/utils'
@@ -10,11 +10,8 @@ import {
   AISystemsStats,
   AISystemsTableDirect
 } from './components'
-import {
-  AISystemsTableStorage,
-  aiSystemsStorageConfig,
-  aiSystemsStateManager
-} from './lib'
+import { useAISystemsSupabase } from './lib/useAISystemsSupabase'
+import { supabase, ensureAuthenticated } from '@/lib/supabase/client'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,52 +36,56 @@ export function AISystemsPage() {
   const [editingSystem, setEditingSystem] = useState<AISystem | null>(null)
   const [isViewingSystem, setIsViewingSystem] = useState(false)
   const [viewingSystem, setViewingSystem] = useState<AISystem | null>(null)
-  
+
   // Delete confirmation dialog state
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [systemToDelete, setSystemToDelete] = useState<AISystem | null>(null)
-  
-  // Refresh trigger for table
-  const [refreshTrigger, setRefreshTrigger] = useState(0)
-  
-  // AI Systems data
-  const [aiSystems, setAiSystems] = useState<AISystem[]>([])
-  
+
   // Selection state
   const [selectedRows, setSelectedRows] = useState<string[]>([])
-  
-  // Create custom storage instance for AI systems
-  const customStorage = useMemo(() => {
-    return new AISystemsTableStorage(aiSystemsStorageConfig)
-  }, [])
 
-  // Load AI systems data
-  const loadAISystems = async () => {
-    try {
-      const systems = await customStorage.load()
-      console.log('AI System IDs:', systems.map(s => ({ id: s.id, name: s.name })))
-      setAiSystems(systems as AISystem[])
-    } catch (error) {
-      console.error('Failed to load AI systems:', error)
-      setAiSystems([])
-    }
-  }
+  // Use Supabase hook for AI systems data
+  const { aiSystems, loading: aiSystemsLoading, reload: reloadAISystems } = useAISystemsSupabase()
 
-  // Load data on mount and refresh trigger changes
+  // Log AI systems for debugging
   useEffect(() => {
-    loadAISystems()
-  }, [refreshTrigger, customStorage])
+    console.log('[AISystemsPage] AI System IDs from Supabase:', aiSystems.map((s: AISystem) => ({ id: s.id, name: s.name })))
+  }, [aiSystems])
 
 
 
   // Handle system creation
   const handleSystemCreated = async (system: AISystem) => {
     try {
-      // Invalidate cache for this provider BEFORE adding to ensure fresh validation
-      aiSystemsStateManager.notifyAPIKeyModified(system.providerId)
-      await customStorage.add(system)
-      // Trigger table refresh
-      setRefreshTrigger(prev => prev + 1)
+      // Ensure authenticated
+      await ensureAuthenticated()
+
+      // Create AI system in Supabase
+      const { error } = await supabase
+        .from('ai_systems')
+        .insert({
+          id: system.id,
+          name: system.name,
+          description: '',  // AI System type doesn't have description
+          provider: system.providerId,
+          model: system.selectedModel,
+          config: {
+            apiKeyId: system.apiKeyId,
+            apiKeyName: system.apiKeyName,
+            modelDetails: system.modelDetails,
+            icon: system.icon,
+            status: system.status,
+            hasValidAPIKey: system.hasValidAPIKey
+          }
+        })
+
+      if (error) {
+        console.error('Failed to create system in Supabase:', error)
+        throw error
+      }
+
+      // Trigger reload of AI systems
+      await reloadAISystems()
     } catch (error) {
       console.error('Failed to create system:', error)
     }
@@ -93,11 +94,35 @@ export function AISystemsPage() {
   // Handle system update
   const handleSystemUpdated = async (system: AISystem) => {
     try {
-      // Invalidate cache for this provider BEFORE updating to ensure fresh validation
-      aiSystemsStateManager.notifyAPIKeyModified(system.providerId)
-      await customStorage.update(system.id, system)
-      // Trigger table refresh
-      setRefreshTrigger(prev => prev + 1)
+      // Ensure authenticated
+      await ensureAuthenticated()
+
+      // Update AI system in Supabase
+      const { error } = await supabase
+        .from('ai_systems')
+        .update({
+          name: system.name,
+          description: '',  // AI System type doesn't have description
+          provider: system.providerId,
+          model: system.selectedModel,
+          config: {
+            apiKeyId: system.apiKeyId,
+            apiKeyName: system.apiKeyName,
+            modelDetails: system.modelDetails,
+            icon: system.icon,
+            status: system.status,
+            hasValidAPIKey: system.hasValidAPIKey
+          }
+        })
+        .eq('id', system.id)
+
+      if (error) {
+        console.error('Failed to update system in Supabase:', error)
+        throw error
+      }
+
+      // Trigger reload of AI systems
+      await reloadAISystems()
     } catch (error) {
       console.error('Failed to update system:', error)
     }
@@ -118,11 +143,24 @@ export function AISystemsPage() {
   // Handle delete system confirmation
   const handleDeleteSystemConfirm = async () => {
     if (!systemToDelete) return
-    
+
     try {
-      await customStorage.delete(systemToDelete.id)
-      // Trigger table refresh
-      setRefreshTrigger(prev => prev + 1)
+      // Ensure authenticated
+      await ensureAuthenticated()
+
+      // Delete AI system from Supabase
+      const { error } = await supabase
+        .from('ai_systems')
+        .delete()
+        .eq('id', systemToDelete.id)
+
+      if (error) {
+        console.error('Failed to delete system from Supabase:', error)
+        throw error
+      }
+
+      // Trigger reload of AI systems
+      await reloadAISystems()
       // Close dialog and reset state
       setIsDeleteDialogOpen(false)
       setSystemToDelete(null)
@@ -169,6 +207,24 @@ export function AISystemsPage() {
   // Handle select all
   const handleSelectAll = (selected: boolean) => {
     setSelectedRows(selected ? aiSystems.map(system => system.id) : [])
+  }
+
+  // Show loading state while AI systems are being fetched
+  if (aiSystemsLoading) {
+    return (
+      <div className="">
+        <main className="mx-auto">
+          <div className="space-y-3 py-3">
+            <AISystemsHeader onAddSystem={() => setIsAddingSystem(true)} />
+            <div className="px-4">
+              <div className="flex items-center justify-center h-64">
+                <p className="text-gray-500">Loading AI Systems...</p>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    )
   }
 
   return (

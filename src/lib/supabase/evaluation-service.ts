@@ -49,25 +49,59 @@ export class EvaluationService {
       throw new Error('At least one policy must be selected to generate test prompts');
     }
 
-    // Get test execution model and its API key
+    // Get all assigned models and their configurations
     const assignments = ModelAssignmentStorage.load();
+    const models = EvaluationModelStorage.load();
+
+    // Build internal models configuration
+    const internalModels: any = {};
+
+    // Topic Generation Model
+    if (assignments.topicGeneration) {
+      const topicModel = models.find(m => m.id === assignments.topicGeneration);
+      if (topicModel) {
+        internalModels.topicGeneration = {
+          provider: topicModel.provider,
+          modelId: topicModel.modelId,
+          apiKey: topicModel.apiKey
+        };
+        console.log(`📝 Topic Generation Model: ${topicModel.name} (${topicModel.provider}/${topicModel.modelId})`);
+      }
+    }
+
+    // Prompt Generation Model
+    if (assignments.promptGeneration) {
+      const promptModel = models.find(m => m.id === assignments.promptGeneration);
+      if (promptModel) {
+        internalModels.promptGeneration = {
+          provider: promptModel.provider,
+          modelId: promptModel.modelId,
+          apiKey: promptModel.apiKey
+        };
+        console.log(`📝 Prompt Generation Model: ${promptModel.name} (${promptModel.provider}/${promptModel.modelId})`);
+      }
+    }
+
+    // Test Execution Model (for backward compatibility)
     let testExecutionApiKey: string | undefined;
     let testExecutionModelName: string | undefined;
 
     if (assignments.testExecution) {
-      const model = EvaluationModelStorage.load().find(
-        m => m.id === assignments.testExecution
-      );
+      const model = models.find(m => m.id === assignments.testExecution);
 
       if (model) {
         testExecutionApiKey = model.apiKey;
         testExecutionModelName = model.name;
-        console.log(`📝 Using test execution model: ${model.name} (${model.provider}/${model.modelId})`);
+        console.log(`📝 Test Execution Model: ${model.name} (${model.provider}/${model.modelId})`);
       } else {
         console.warn('⚠️  Test execution model not found. API key will not be included.');
       }
     } else {
       console.warn('⚠️  No test execution model assigned. Please configure it in Settings > Internal Models Usage.');
+    }
+
+    if (!internalModels.topicGeneration && !internalModels.promptGeneration) {
+      console.warn('⚠️  No topic/prompt generation models configured. Will use environment fallback.');
     }
 
     const response = await fetch(`${SUPABASE_URL}/functions/v1/create-evaluation`, {
@@ -87,7 +121,8 @@ export class EvaluationService {
           maxTokens: 1000,
           testExecutionApiKey,
           testExecutionModelName
-        }
+        },
+        internalModels: Object.keys(internalModels).length > 0 ? internalModels : undefined
       })
     });
 

@@ -5,9 +5,16 @@ import { motion, AnimatePresence, easeInOut } from "framer-motion";
 // Components
 import { AppBar, OverlayHeader } from "@/components/patterns";
 import type { BreadcrumbItem, AppBarActionButton } from "@/components/patterns";
-import { Download, Trash2 } from "lucide-react";
+import { Download, Trash2, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { BulkActionBar } from "@/components/patterns/ui-patterns/bulk-action-bar";
 import type { BulkAction } from "@/components/patterns/ui-patterns/bulk-action-bar";
 import {
@@ -32,6 +39,7 @@ import {
 import { useAISystemLoader } from "./hooks/useAISystemLoader";
 import { useEvaluationHistory } from "./hooks/useEvaluationHistory";
 import { useGuardrailsSupabase } from "@/features/guardrails/lib/useGuardrailsSupabase";
+import { useAISystemsSupabase } from "@/features/ai-systems/lib/useAISystemsSupabase";
 
 // Types and services
 import type { EvaluationCreationData } from "./types/evaluation-creation";
@@ -66,6 +74,20 @@ export function AISystemEvaluationUnifiedPage() {
 
   // Load guardrails for evaluation creation
   const { guardrails } = useGuardrailsSupabase();
+
+  // Load all AI systems for system switching
+  const { aiSystems, loading: aiSystemsLoading, reload: reloadAISystems } = useAISystemsSupabase();
+
+  // Debug log to check what systems are loaded
+  useEffect(() => {
+    console.log('[UnifiedPage] AI Systems loaded from backend:', aiSystems.length, aiSystems.map(s => ({ id: s.id, name: s.name })));
+  }, [aiSystems]);
+
+  // Force reload AI systems on mount to ensure fresh data
+  useEffect(() => {
+    console.log('[UnifiedPage] Forcing AI systems reload on mount');
+    reloadAISystems();
+  }, []);
 
   // UI state management
   const [initialized, setInitialized] = useState(false); // Track if initial data load is complete
@@ -239,6 +261,7 @@ export function AISystemEvaluationUnifiedPage() {
         const results = prompts.map(prompt => ({
           policyId: prompt.policy_id || 'unknown',
           policyName: prompt.policy_name || 'Policy',
+          topic: prompt.topic || 'General', // Add topic field from database
           behaviorType: prompt.behavior_type || 'Disallowed',
           basePrompt: prompt.base_prompt || '',
           attackType: prompt.attack_type || 'Unknown',
@@ -681,53 +704,7 @@ export function AISystemEvaluationUnifiedPage() {
   // Remove action buttons from AppBar - button is now in the header
   const actionButtons: AppBarActionButton[] = [];
 
-  // Show loading state if either AI system or history is loading
-  // Also show loading if we're still determining whether to show creation flow
-  const loading = aiSystemLoading || historyLoading;
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex flex-col">
-        <AppBar
-          variant="breadcrumb"
-          breadcrumbs={breadcrumbs}
-          currentSection={{ name: "Loading..." }}
-        />
-        <main className="flex-1 border rounded-lg shadow m-2 mt-0 bg-gray-0">
-          <div className="space-y-3 py-3">
-            {/* Header Skeleton */}
-            <div className="px-4">
-              <Skeleton className="h-8 w-48" />
-            </div>
-
-            {/* Filters Skeleton */}
-            <div className="px-4">
-              <div className="flex items-center gap-2">
-                <Skeleton className="h-9 w-32" />
-                <Skeleton className="h-9 w-32" />
-                <Skeleton className="h-9 flex-1 max-w-md ml-auto" />
-              </div>
-            </div>
-
-            {/* Table Skeleton */}
-            <div className="px-4">
-              <div className="space-y-3">
-                {/* Table Header */}
-                <Skeleton className="h-10 w-full" />
-
-                {/* Table Rows */}
-                {[...Array(5)].map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-full" />
-                ))}
-              </div>
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  if (!aiSystem) {
+  if (!aiSystem && !systemName) {
     return null;
   }
 
@@ -737,7 +714,20 @@ export function AISystemEvaluationUnifiedPage() {
       <AppBar
         variant="breadcrumb"
         breadcrumbs={breadcrumbs}
-        currentSection={{ name: aiSystem.name }}
+        currentSection={{
+          name: aiSystem?.name || systemName || "",
+          dropdownOptions: !aiSystemsLoading && aiSystems.length > 1 ? aiSystems.map(system => ({
+            id: system.id,
+            name: system.name,
+            isActive: system.id === aiSystem?.id
+          })) : undefined,
+          onDropdownSelect: (systemId) => {
+            const selectedSystem = aiSystems.find(s => s.id === systemId);
+            if (selectedSystem) {
+              navigate(`/ai-systems/${toUrlSlug(selectedSystem.name)}/evaluation`);
+            }
+          }
+        }}
         actionButtons={actionButtons}
       />
 
@@ -777,7 +767,7 @@ export function AISystemEvaluationUnifiedPage() {
           ) : (
             <>
               {/* Show creation flow as new page only when no evaluations exist */}
-              {showCreationFlow && creationFlowVariant === "onboarding" && !hasEvaluations ? (
+              {showCreationFlow && creationFlowVariant === "onboarding" && !hasEvaluations && aiSystem ? (
                 <EvaluationCreationFlow
                   variant={creationFlowVariant}
                   onComplete={handleEvaluationCreated}
@@ -827,13 +817,15 @@ export function AISystemEvaluationUnifiedPage() {
               onClose={handleCancelCreation}
             />
             <div className="flex-1 overflow-auto">
-              <EvaluationCreationFlow
-                variant="onboarding"
-                onComplete={handleEvaluationCreated}
-                onCancel={handleCancelCreation}
-                aiSystem={aiSystem}
-                guardrails={guardrails}
-              />
+              {aiSystem && (
+                <EvaluationCreationFlow
+                  variant="onboarding"
+                  onComplete={handleEvaluationCreated}
+                  onCancel={handleCancelCreation}
+                  aiSystemId={aiSystem.id}
+                  guardrails={guardrails}
+                />
+              )}
             </div>
           </motion.div>
         )}
@@ -866,7 +858,11 @@ export function AISystemEvaluationUnifiedPage() {
               onMinimize={handleMinimize}
             />
             <div className="flex-1 flex items-center justify-center">
-              <p className="text-gray-500">Loading Progress...</p>
+              <div className="space-y-4 w-full max-w-md px-8">
+                <Skeleton className="h-6 w-48 mx-auto" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4 mx-auto" />
+              </div>
             </div>
           </motion.div>
         )}
@@ -925,12 +921,84 @@ export function AISystemEvaluationUnifiedPage() {
               /* Loading State */
               <>
                 <OverlayHeader
-                  title={selectedTest.name}
-                  breadcrumbs={aiSystem?.name ? [{ label: aiSystem.name }] : undefined}
+                  title={
+                    <div className="flex items-center gap-3 text-sm font-450">
+                      {/* AI System Name */}
+                      {aiSystem?.name && (
+                        <div className="flex items-center gap-1">
+                          <span className="max-w-[200px] truncate text-sm font-450 text-gray-900">
+                            {aiSystem.name}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Separator */}
+                      {aiSystem?.name && (
+                        <span className="text-gray-400">/</span>
+                      )}
+
+                      {/* Test/Evaluation Name with Badge and Dropdown */}
+                      {selectedTest && (
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1">
+                            <span className="max-w-[200px] truncate text-sm font-450 text-gray-900">
+                              {selectedTest.name}
+                            </span>
+                            <Badge variant="secondary" className="text-xs ml-1">
+                              {selectedTest.type === 'compliance' ? 'Compliance' : 'Jailbreak'}
+                            </Badge>
+                          </div>
+                          {evaluationHistory.length > 1 && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button className="p-0.5 hover:bg-gray-100 rounded transition-colors">
+                                  <ChevronsUpDown className="h-3.5 w-3.5 text-gray-500" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="start" className="w-[280px]">
+                                {evaluationHistory.map((test) => (
+                                  <DropdownMenuItem
+                                    key={test.id}
+                                    onClick={() => {
+                                      if (aiSystem) {
+                                        navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation/${test.id}/${tab || 'summary'}`);
+                                      }
+                                    }}
+                                    className={selectedTest.id === test.id ? 'bg-gray-100 font-medium' : ''}
+                                  >
+                                    <div className="flex flex-col gap-0.5">
+                                      <span className="text-sm">{test.name}</span>
+                                      <span className="text-xs text-gray-500">
+                                        {test.status} • {new Date(test.createdAt).toLocaleDateString()}
+                                      </span>
+                                    </div>
+                                  </DropdownMenuItem>
+                                ))}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Separator */}
+                      <span className="text-gray-400">/</span>
+
+                      {/* Tab Skeleton */}
+                      <Skeleton className="h-8 w-32 rounded-full" />
+                    </div>
+                  }
                   onClose={handleMinimize}
                 />
                 <div className="flex-1 flex items-center justify-center">
-                  <p className="text-gray-500">Loading Report...</p>
+                  <div className="space-y-4 w-full max-w-2xl px-8">
+                    <Skeleton className="h-8 w-64 mx-auto" />
+                    <div className="grid grid-cols-3 gap-4 pt-4">
+                      <Skeleton className="h-24 w-full" />
+                      <Skeleton className="h-24 w-full" />
+                      <Skeleton className="h-24 w-full" />
+                    </div>
+                    <Skeleton className="h-64 w-full mt-4" />
+                  </div>
                 </div>
               </>
             ) : evaluationResults ? (
@@ -938,6 +1006,7 @@ export function AISystemEvaluationUnifiedPage() {
               <EvaluationResults
                 results={evaluationResults}
                 evaluationName={selectedTest?.name}
+                evaluationType={selectedTest?.type === 'compliance' ? 'Compliance' : 'Jailbreak'}
                 aiSystemName={aiSystem?.name}
                 aiSystemIcon={aiSystem?.icon}
                 startedAt={selectedTest?.startedAt}
@@ -945,6 +1014,23 @@ export function AISystemEvaluationUnifiedPage() {
                 onClose={handleMinimize}
                 currentTab={tab || 'summary'}
                 onExport={handleExport}
+                // New props for test and system selection
+                availableTests={evaluationHistory}
+                availableAISystems={aiSystems}
+                currentTestId={selectedTest?.id}
+                currentAISystemId={aiSystem?.id}
+                onTestChange={(testId) => {
+                  const test = evaluationHistory.find(t => t.id === testId);
+                  if (test && aiSystem) {
+                    navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation/${testId}/${tab || 'summary'}`);
+                  }
+                }}
+                onAISystemChange={(systemId) => {
+                  const system = aiSystems.find(s => s.id === systemId);
+                  if (system && selectedTest) {
+                    navigate(`/ai-systems/${toUrlSlug(system.name)}/evaluation/${selectedTest.id}/${tab || 'summary'}`);
+                  }
+                }}
               />
             ) : null}
           </motion.div>

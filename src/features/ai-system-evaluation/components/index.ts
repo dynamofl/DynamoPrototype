@@ -6,6 +6,7 @@ export { GuardrailSelection } from './creation/guardrail-selection';
 export { AISystemSelection } from './creation/ai-system-selection';
 export { EvaluationReview } from './creation/evaluation-review';
 export { EvaluationCreationFlow } from './creation/evaluation-creation-flow';
+export type { EvaluationCreationFlowProps } from './creation/evaluation-creation-flow';
 export { EvaluationEmptyState } from './creation/evaluation-empty-state';
 export { UploadPromptsSheet } from './creation/upload-prompts-sheet';
 

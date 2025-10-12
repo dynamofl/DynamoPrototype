@@ -36,6 +36,7 @@ export interface BasePrompt {
 export interface JailbreakEvaluationResult {
   policyId: string;
   policyName: string;
+  topic?: string; // Topic category (1-2 words) for grouping related prompts
   behaviorType: BehaviorType;
   basePrompt: string;
   attackType: AttackType;

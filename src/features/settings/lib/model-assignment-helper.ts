@@ -50,6 +50,10 @@ export function validateModelAssignments(): { valid: boolean; missing: string[] 
   const assignments = ModelAssignmentStorage.load();
   const missing: string[] = [];
 
+  if (!assignments.topicGeneration) {
+    missing.push('Topic Generation');
+  }
+
   if (!assignments.promptGeneration) {
     missing.push('Prompt Generation');
   }

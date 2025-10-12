@@ -13,7 +13,8 @@ export interface EvaluationModel {
 }
 
 export interface ModelAssignment {
-  promptGeneration: string | null; // model id
+  topicGeneration: string | null; // model id - Stage 1: Generate topics from policies
+  promptGeneration: string | null; // model id - Stage 2: Generate prompts from topics
   evaluationJudgement: string | null; // model id
   testExecution: string | null; // model id
 }

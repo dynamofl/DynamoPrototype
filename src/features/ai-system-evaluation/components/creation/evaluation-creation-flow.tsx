@@ -11,7 +11,7 @@ import type { AISystem } from "@/features/ai-systems/types/types";
 import type { Guardrail } from "@/features/guardrails/types";
 import { getStepFlow, type StepId } from "../../constants/evaluation-steps";
 
-interface EvaluationCreationFlowProps {
+export interface EvaluationCreationFlowProps {
   onComplete: (data: EvaluationCreationData) => void;
   onCancel: () => void;
   variant?: "overlay" | "onboarding";

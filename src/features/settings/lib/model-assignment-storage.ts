@@ -10,6 +10,7 @@ export class ModelAssignmentStorage {
         return JSON.parse(data);
       } catch {
         return {
+          topicGeneration: null,
           promptGeneration: null,
           evaluationJudgement: null,
           testExecution: null,
@@ -17,6 +18,7 @@ export class ModelAssignmentStorage {
       }
     }
     return {
+      topicGeneration: null,
       promptGeneration: null,
       evaluationJudgement: null,
       testExecution: null,

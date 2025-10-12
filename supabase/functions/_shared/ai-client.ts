@@ -2,6 +2,7 @@
 
 import type { AISystem, AISystemResponse } from './types.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { aiApiLimiter } from './rate-limiter.ts';
 
 export async function callAISystem(
   aiSystem: AISystem,
@@ -42,24 +43,29 @@ export async function callAISystem(
   const startTime = Date.now();
 
   try {
-    let response: AISystemResponse;
+    // Use rate limiter to prevent concurrent API calls and handle 400 errors
+    const response = await aiApiLimiter.execute(async () => {
+      let apiResponse: AISystemResponse;
 
-    switch (provider.toLowerCase()) {
-      case 'openai':
-        response = await callOpenAI(model, prompt, { ...config, apiKey });
-        break;
+      switch (provider.toLowerCase()) {
+        case 'openai':
+          apiResponse = await callOpenAI(model, prompt, { ...config, apiKey });
+          break;
 
-      case 'anthropic':
-        response = await callAnthropic(model, prompt, { ...config, apiKey });
-        break;
+        case 'anthropic':
+          apiResponse = await callAnthropic(model, prompt, { ...config, apiKey });
+          break;
 
-      case 'custom':
-        response = await callCustomEndpoint(model, prompt, config);
-        break;
+        case 'custom':
+          apiResponse = await callCustomEndpoint(model, prompt, config);
+          break;
 
-      default:
-        throw new Error(`Unsupported AI provider: ${provider}`);
-    }
+        default:
+          throw new Error(`Unsupported AI provider: ${provider}`);
+      }
+
+      return apiResponse;
+    });
 
     // Add runtime if not already set
     if (!response.runtimeMs) {

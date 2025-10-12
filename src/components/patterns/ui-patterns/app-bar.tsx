@@ -3,6 +3,8 @@ import { ProjectsIcon } from '@/assets/icons/projects-icon'
 import { AISystemsIcon } from '@/assets/icons/ai-systems-icon'
 import { PoliciesIcon } from '@/assets/icons/policies-icon'
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,7 +28,7 @@ import {
   FlaskConical,
   Play,
   UserPlus,
-  ChevronDown,
+  ChevronsUpDown,
 } from "lucide-react"
 import { useTheme } from '@/components/patterns/theme-provider'
 import { NavLink, useNavigate, Link } from 'react-router-dom'
@@ -53,6 +55,12 @@ export interface AppBarProps {
   currentSection?: {
     name: string
     badge?: string
+    dropdownOptions?: {
+      id: string
+      name: string
+      isActive?: boolean
+    }[]
+    onDropdownSelect?: (id: string) => void
   }
   actionButtons?: AppBarActionButton[]
 }
@@ -77,7 +85,7 @@ export function AppBar({
   const renderLeftSection = () => {
     if (variant === 'breadcrumb') {
       return (
-        <div className="flex items-center gap-1 animate-in fade-in slide-in-from-right-2 duration-150">
+        <div className="flex items-center gap-1  animate-in fade-in slide-in-from-right-2 duration-150">
           {/* Logo */}
           <Link to="/ai-systems" className="flex items-center pr-2 rounded-full hover:bg-gray-100">
             <DynamoLogoTypeface className="h-4" />
@@ -111,17 +119,50 @@ export function AppBar({
           {currentSection && (
             <>
               <span className="text-gray-500 text-[0.8125rem]  font-450">/</span>
-              <div className="flex items-center gap-1 px-2 rounded-full hover:bg-gray-100 cursor-pointer animate-in fade-in slide-in-from-right-2 duration-150" style={{ animationDelay: `${breadcrumbs.length * 50}ms` }}>
-                <span className="text-gray-800 text-[0.8125rem]  font-450">
-                  {currentSection.name}
-                </span>
-                {currentSection.badge && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[12px] font-[425] bg-gray-100 text-gray-800">
-                    {currentSection.badge}
+              {currentSection.dropdownOptions && currentSection.dropdownOptions.length > 0 ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <div className="pl-2 flex items-center gap-1 animate-in fade-in slide-in-from-right-2 duration-150" style={{ animationDelay: `${breadcrumbs.length * 50}ms` }}>
+                      <span className="text-gray-800 text-[0.8125rem] font-450 max-w-[200px] truncate">
+                        {currentSection.name}
+                      </span>
+                      <Badge variant="secondary" className="text-xs">
+                        Evaluation
+                      </Badge>
+                      {currentSection.badge && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[12px] font-[425] bg-gray-100 text-gray-800">
+                          {currentSection.badge}
+                        </span>
+                      )}
+                      <button className="p-0.5 hover:bg-gray-100 rounded transition-colors">
+                        <ChevronsUpDown className="h-3.5 w-3.5 text-gray-500" />
+                      </button>
+                    </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-64">
+                    {currentSection.dropdownOptions.map((option) => (
+                      <DropdownMenuItem
+                        key={option.id}
+                        onClick={() => currentSection.onDropdownSelect?.(option.id)}
+                        className={option.isActive ? "bg-gray-100 font-medium" : ""}
+                      >
+                        {option.name}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <div className="flex items-center gap-1 animate-in fade-in slide-in-from-right-2 duration-150" style={{ animationDelay: `${breadcrumbs.length * 50}ms` }}>
+                  <span className="text-gray-800 text-[0.8125rem] font-450 max-w-[200px] truncate">
+                    {currentSection.name}
                   </span>
-                )}
-                <ChevronDown className="h-5 w-5 text-gray-800" />
-              </div>
+                  {currentSection.badge && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[12px] font-[425] bg-gray-100 text-gray-800">
+                      {currentSection.badge}
+                    </span>
+                  )}
+                </div>
+              )}
             </>
           )}
         </div>
@@ -193,7 +234,7 @@ export function AppBar({
                     style={{ animationDelay: `${index * 75}ms` }}
                   >
                     {button.icon}
-                    {button.loading ? 'Loading...' : button.label}
+                    {button.loading ? <Skeleton className="h-3 w-16" /> : button.label}
                   </Button>
                 ))}
               </div>

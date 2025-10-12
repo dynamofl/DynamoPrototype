@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
+import { ensureAuthenticated } from '@/lib/supabase/client'
 import type { AISystem } from '../types/types'
 
 /**
@@ -41,10 +42,21 @@ export function useAISystemsSupabase() {
       setLoading(true)
       setError(null)
 
+      // Ensure authenticated
+      await ensureAuthenticated()
+
+      console.log('[useAISystemsSupabase] Fetching AI systems from Supabase...')
+
       const { data, error: fetchError } = await supabase
         .from('ai_systems')
         .select('*')
         .order('created_at', { ascending: false })
+
+      console.log('[useAISystemsSupabase] Fetch result:', {
+        count: data?.length || 0,
+        systems: data?.map(s => ({ id: s.id, name: s.name })) || [],
+        error: fetchError
+      })
 
       if (fetchError) {
         throw fetchError
@@ -64,6 +76,7 @@ export function useAISystemsSupabase() {
         modelDetails: item.config?.modelDetails,
         icon: item.config?.icon || 'custom',
         status: item.config?.status || 'active',
+        hasValidAPIKey: !!item.config?.apiKeyId || !!item.config?.hasValidAPIKey,
         createdAt: item.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
         updatedAt: item.updated_at?.split('T')[0] || new Date().toISOString().split('T')[0]
       }))

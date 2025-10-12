@@ -1,23 +1,28 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowDownToLine } from "lucide-react";
+import { ArrowDownToLine, ChevronsUpDown } from "lucide-react";
 import type { JailbreakEvaluationOutput } from "../../types/jailbreak-evaluation";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { OverlayHeader, type BreadcrumbSegment } from "@/components/patterns";
+import { OverlayHeader } from "@/components/patterns";
 import { toUrlSlug } from "@/lib/utils";
 import { EvaluationDataView } from "./evaluation-data-view";
 import { EvaluationSummaryView } from "./evaluation-summary-view";
+import type { EvaluationTest } from "@/features/evaluation/types/evaluation-test";
+import type { AISystem } from "@/features/ai-systems/types/types";
 
 interface EvaluationResultsProps {
   results: JailbreakEvaluationOutput;
   evaluationName?: string;
+  evaluationType?: string; // Type of evaluation (Jailbreak, Compliance, etc.)
   aiSystemName?: string; // AI system name for breadcrumb
   aiSystemIcon?: 'OpenAI' | 'Azure' | 'Mistral' | 'Databricks' | 'HuggingFace' | 'Anthropic' | 'Remote' | 'Local' | 'AWS' | 'DynamoAI';
   startedAt?: string;
@@ -26,11 +31,19 @@ interface EvaluationResultsProps {
   onClose?: () => void;
   currentTab?: string;
   onTabChange?: (tab: 'summary' | 'data') => void;
+  // New props for test and system selection
+  availableTests?: EvaluationTest[];
+  availableAISystems?: AISystem[];
+  currentTestId?: string;
+  currentAISystemId?: string;
+  onTestChange?: (testId: string) => void;
+  onAISystemChange?: (systemId: string) => void;
 }
 
 export function EvaluationResults({
   results,
   evaluationName,
+  evaluationType = 'Jailbreak',
   aiSystemName,
   aiSystemIcon,
   startedAt,
@@ -38,7 +51,13 @@ export function EvaluationResults({
   onExport,
   onClose,
   currentTab: propTab,
-  onTabChange
+  onTabChange,
+  availableTests = [],
+  availableAISystems = [],
+  currentTestId,
+  currentAISystemId,
+  onTestChange,
+  onAISystemChange
 }: EvaluationResultsProps) {
   const navigate = useNavigate();
   const { systemName, evaluationId } = useParams<{ systemName: string; evaluationId?: string }>();
@@ -48,11 +67,6 @@ export function EvaluationResults({
   const totalTokenUtilization = results.results.reduce((total, result) => {
     return total + (result.totalTokens || 0);
   }, 0);
-
-  // Prepare breadcrumbs if AI system name is provided
-  const breadcrumbs: BreadcrumbSegment[] | undefined = aiSystemName
-    ? [{ label: aiSystemName }]
-    : undefined;
 
   // Update selectedTab when propTab changes
   useEffect(() => {
@@ -79,8 +93,95 @@ export function EvaluationResults({
       <OverlayHeader
         title={
           <div className="flex items-center gap-3 text-sm font-450">
-            <span>{evaluationName || 'Evaluation Results'}</span>
-            {/* View Switch */}
+            {/* AI System Display (Dropdown commented out) */}
+            {aiSystemName && (
+              <div className="flex items-center gap-1">
+                <span className="max-w-[200px] truncate text-sm font-450 text-gray-900">
+                  {aiSystemName}
+                </span>
+                {/* Dropdown for AI System switching - commented out for now */}
+                {/* <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="p-0.5 hover:bg-gray-100 rounded transition-colors">
+                      <ChevronsUpDown className="h-3.5 w-3.5 text-gray-500" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-[280px]">
+                    {availableAISystems.map((system) => (
+                      <DropdownMenuItem
+                        key={system.id}
+                        onClick={() => onAISystemChange?.(system.id)}
+                        className={`${currentAISystemId === system.id ? 'bg-gray-100 font-medium' : ''}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">{system.name}</span>
+                          <span className="text-xs text-gray-500">
+                            {system.providerId} • {system.selectedModel}
+                          </span>
+                        </div>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu> */}
+              </div>
+            )}
+
+            {/* Separator */}
+            {aiSystemName && availableTests.length > 0 && (
+              <span className="text-gray-400">/</span>
+            )}
+
+            {/* Test/Evaluation Selection Dropdown */}
+            {availableTests.length > 0 && (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  <span className="max-w-[200px] truncate text-sm font-450 text-gray-900">
+                    {evaluationName || 'Select Test'}
+                  </span>
+                  <Badge variant="secondary" className="text-xs ml-1">
+                    {evaluationType}
+                  </Badge>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="p-0.5 hover:bg-gray-100 rounded transition-colors">
+                      <ChevronsUpDown className="h-3.5 w-3.5 text-gray-500" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="center" className="w-[280px]">
+                    {availableTests.map((test) => (
+                      <DropdownMenuItem
+                        key={test.id}
+                        onClick={() => onTestChange?.(test.id)}
+                        className={`${currentTestId === test.id ? 'bg-gray-100 font-medium' : ''}`}
+                      >
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-sm">{test.name}</span>
+                          <span className="text-xs text-gray-500">
+                            {test.status} • {new Date(test.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
+
+            {/* Separator */}
+            {(availableTests.length > 0 || aiSystemName) && (
+              <span className="text-gray-400">/</span>
+            )}
+
+            {/* If no dropdowns, show simple title */}
+            {availableTests.length === 0 && !aiSystemName && (
+              <>
+                <span>{evaluationName || 'Evaluation Results'}</span>
+                <span className="text-gray-400">/</span>
+              </>
+            )}
+
+            {/* View Switch Tabs */}
             <Tabs value={selectedTab} onValueChange={(value) => handleTabChange(value as 'summary' | 'data')}>
               <TabsList className="h-8 px-0.5 rounded-full">
                 <TabsTrigger value="summary" className="text-[0.8125rem] py-1 px-3 rounded-full">
@@ -93,7 +194,6 @@ export function EvaluationResults({
             </Tabs>
           </div>
         }
-        breadcrumbs={breadcrumbs}
         onClose={onClose}
         actions={
           <div className="flex gap-2 align-center items-center">

@@ -155,18 +155,7 @@ export function EvaluationSetup({
         </p>
       </div>
 
-      {/* Evaluation Name */}
-      <div className="space-y-2">
-        <Label htmlFor="evaluation-name">Evaluation Name</Label>
-        <Input
-          id="evaluation-name"
-          placeholder="e.g., Production Safety Test"
-          value={name}
-          onChange={handleNameChange}
-          error={nameError}
-          autoFocus
-        />
-      </div>
+  
 
       {/* Evaluating AI System Info */}
       {data.aiSystemIds && data.aiSystemIds.length > 0 && (
@@ -443,6 +432,19 @@ export function EvaluationSetup({
             </div>
           </div>
         </RadioGroup>
+      </div>
+
+          {/* Evaluation Name */}
+      <div className="space-y-2">
+        <Label htmlFor="evaluation-name">Evaluation Name</Label>
+        <Input
+          id="evaluation-name"
+          placeholder="e.g., Production Safety Test"
+          value={name}
+          onChange={handleNameChange}
+          error={nameError}
+          
+        />
       </div>
 
       {/* Actions */}

@@ -4,6 +4,7 @@ export interface JailbreakFilterState {
   guardrailJudgment: string[]
   modelJudgment: string[]
   behaviorType: string[]
+  topic: string[] // Filter by topic categories
   searchTerm: string
 }
 

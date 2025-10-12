@@ -118,6 +118,15 @@ export function DatasetSelection({
           estimated number of prompts for the benchmark.
         </p>
       </div>
+      
+     {/* Validation Message */}
+      {/* {selectedPolicyIds.length === 0 && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
+          <span className="text-xs text-amber-800">
+            <strong>Required:</strong> Select at least one policy to generate test prompts for evaluation.
+          </span>
+        </div>
+      )} */}
 
       {/* Policies List */}
       <div className="space-y-3">
@@ -263,14 +272,7 @@ export function DatasetSelection({
         </div>
       </div>
 
-      {/* Validation Message */}
-      {selectedPolicyIds.length === 0 && (
-        <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
-          <span className="text-xs text-amber-800">
-            <strong>Required:</strong> Select at least one policy to generate test prompts for evaluation.
-          </span>
-        </div>
-      )}
+ 
 
       {/* Actions */}
       <div className="flex justify-between pt-2">

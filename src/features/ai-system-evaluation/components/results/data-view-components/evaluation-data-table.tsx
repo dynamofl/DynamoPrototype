@@ -82,6 +82,7 @@ export function EvaluationDataTable({
             </TableHead>
             <TableHead className="w-8 pr-[0px]"><MessagesSquare className="h-4 w-4 text-gray-500" strokeWidth="2" /></TableHead>
             <TableHead className="font-450">Test Conversations</TableHead>
+            <TableHead className="font-450">Topic</TableHead>
             <TableHead className="font-450">Behavior Type</TableHead>
             <TableHead className="font-450">Attack Type</TableHead>
             {hasGuardrails && <TableHead className="font-450">Guardrail Judgement</TableHead>}
@@ -139,6 +140,11 @@ export function EvaluationDataTable({
                   <div className="truncate max-w-md group-hover:underline" title={record.basePrompt}>
                     {record.basePrompt}
                   </div>
+                </TableCell>
+                <TableCell>
+                  <Badge variant="outline" className="text-xs">
+                    {record.topic || 'General'}
+                  </Badge>
                 </TableCell>
                 <TableCell>
                   <Badge variant="secondary">

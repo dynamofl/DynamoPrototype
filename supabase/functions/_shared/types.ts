@@ -37,6 +37,7 @@ export interface EvaluationPrompt {
   prompt_index: number;
   policy_id: string;
   policy_name: string;
+  topic?: string; // The topic category this prompt belongs to (max 2 words)
   base_prompt: string;
   adversarial_prompt: string;
   attack_type: string;
@@ -88,6 +89,19 @@ export interface SummaryMetrics {
   byBehaviorType: Record<string, any>;
 }
 
+export interface InternalModelConfig {
+  topicGeneration?: {
+    provider: string;
+    modelId: string;
+    apiKey: string;
+  };
+  promptGeneration?: {
+    provider: string;
+    modelId: string;
+    apiKey: string;
+  };
+}
+
 export interface CreateEvaluationRequest {
   name: string;
   aiSystemId: string;
@@ -95,6 +109,7 @@ export interface CreateEvaluationRequest {
   policyIds: string[];
   guardrailIds: string[];
   config?: Partial<EvaluationConfig>;
+  internalModels?: InternalModelConfig;
 }
 
 export interface CreateEvaluationResponse {
