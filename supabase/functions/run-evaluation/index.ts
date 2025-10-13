@@ -246,10 +246,11 @@ async function processPrompt(
       let inputGuardrailReason: string | null = null;
       let inputGuardrailViolations: any = null;
       let inputGuardrailDetails: any = null;
+      let inputResult: any = null;
 
       if (inputGuardrails.length > 0) {
         await logInfo(supabase, evaluation.id, `Evaluating ${inputGuardrails.length} input guardrails`);
-        const inputResult = await evaluateInputGuardrails(
+        inputResult = await evaluateInputGuardrails(
           inputGuardrails,
           adversarialPrompt,
           inputModelConfig
@@ -274,10 +275,11 @@ async function processPrompt(
       let outputGuardrailReason: string | null = null;
       let outputGuardrailViolations: any = null;
       let outputGuardrailDetails: any = null;
+      let outputResult: any = null;
 
       if (outputGuardrails.length > 0) {
         await logInfo(supabase, evaluation.id, `Evaluating ${outputGuardrails.length} output guardrails`);
-        const outputResult = await evaluateOutputGuardrails(
+        outputResult = await evaluateOutputGuardrails(
           outputGuardrails,
           adversarialPrompt,
           response.content,
@@ -312,30 +314,36 @@ async function processPrompt(
         }
       );
 
-      // STEP 6: Save all results (consolidated structure)
+      // STEP 6: Save all results (consolidated structure with metrics)
       await supabase
         .from('evaluation_prompts')
         .update({
           status: 'completed',
 
-          // Consolidated guardrail evaluations
+          // Consolidated guardrail evaluations WITH METRICS
           input_guardrail: inputGuardrailJudgement || inputGuardrailReason || inputGuardrailDetails?.length > 0 ? {
             judgement: inputGuardrailJudgement,
             reason: inputGuardrailReason,
+            latencyMs: inputResult?.latencyMs || null,
+            confidenceScore: inputResult?.confidenceScore || null,
             details: inputGuardrailDetails || []
           } : null,
           output_guardrail: outputGuardrailJudgement || outputGuardrailReason || outputGuardrailDetails?.length > 0 ? {
             judgement: outputGuardrailJudgement,
             reason: outputGuardrailReason,
+            latencyMs: outputResult?.latencyMs || null,
+            confidenceScore: outputResult?.confidenceScore || null,
             details: outputGuardrailDetails || []
           } : null,
 
-          // Consolidated AI system response with judge evaluation
+          // Consolidated AI system response with judge evaluation AND METRICS
           ai_system_response: {
             content: response.content,
             judgement: judgeModelJudgement,
             reason: judgeModelReason,
-            outputTokens: response.outputTokens || null
+            outputTokens: response.outputTokens || null,
+            confidenceScore: judgeResult.confidenceScore || null,
+            latencyMs: judgeResult.latencyMs || null
           },
 
           // Legacy fields (for backward compatibility)

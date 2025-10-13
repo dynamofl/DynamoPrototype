@@ -14,6 +14,8 @@ export interface AISystemResponse {
   inputTokens?: number;
   outputTokens?: number;
   totalTokens?: number;
+  confidenceScore?: number; // 0-1 value from logprobs (OpenAI) or null (other providers)
+  latencyMs?: number; // Response time in milliseconds (usually same as runtimeMs)
 }
 
 export interface Guardrail {
@@ -39,6 +41,8 @@ export interface GuardrailDetail {
   judgement: string;
   reason: string;
   violations?: Array<{phrase: string, violatedBehaviors: string[]}>;
+  latencyMs?: number; // Individual guardrail evaluation time
+  confidenceScore?: number; // Individual guardrail confidence (0-1)
 }
 
 // Consolidated guardrail evaluation structure
@@ -46,6 +50,8 @@ export interface GuardrailEvaluation {
   judgement: string;  // 'Blocked' | 'Allowed'
   reason: string;
   details: GuardrailDetail[];
+  latencyMs?: number; // Total time for all guardrails
+  confidenceScore?: number; // Average confidence across all guardrails
 }
 
 // Consolidated AI system response with judge evaluation
@@ -54,6 +60,8 @@ export interface AISystemResponseData {
   judgement: string | null;  // 'Answered' | 'Refused'
   reason: string | null;
   outputTokens: number | null;
+  confidenceScore?: number | null; // Judge model confidence in the judgement (0-1)
+  latencyMs?: number | null; // Response time in milliseconds
 }
 
 export interface EvaluationPrompt {

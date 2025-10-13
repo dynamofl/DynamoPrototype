@@ -10,6 +10,8 @@ export interface GuardrailResult {
   modelJudgement: 'Answered' | 'Refused';
   reason?: string;
   score?: number;
+  confidenceScore?: number; // 0-1 value from logprobs
+  latencyMs?: number; // Response time in milliseconds
 }
 
 // Phrase-to-behaviors violation mapping
@@ -25,6 +27,8 @@ export interface GuardrailEvaluationDetail {
   judgement: 'Allowed' | 'Blocked';
   reason: string;                // Why it blocked/allowed
   violations?: PhraseViolation[]; // Specific violations detected
+  latencyMs?: number;            // Individual guardrail evaluation time
+  confidenceScore?: number;      // Individual guardrail confidence (0-1)
 }
 
 // Combined result with BOTH overall and detailed results
@@ -36,6 +40,10 @@ export interface MultiGuardrailResult {
 
   // DETAILED RESULTS (per-guardrail)
   guardrailResults: GuardrailEvaluationDetail[];
+
+  // METRICS
+  latencyMs?: number;           // Total time for all guardrails
+  confidenceScore?: number;     // Average confidence across all guardrails
 }
 
 // Simplified result for input/output guardrails (no modelJudgement)
@@ -44,12 +52,16 @@ export interface GuardrailOnlyResult {
   judgement: 'Allowed' | 'Blocked';
   reason?: string;
   violations?: PhraseViolation[];  // Array of phrases and the behaviors each violates
+  confidenceScore?: number; // 0-1 value from logprobs
+  latencyMs?: number; // Response time in milliseconds
 }
 
 // Judge model result
 export interface JudgeModelResult {
   judgement: 'Answered' | 'Refused';
   reason?: string;
+  confidenceScore?: number; // 0-1 value from logprobs
+  latencyMs?: number; // Response time in milliseconds
 }
 
 export async function evaluateWithGuardrails(
@@ -307,6 +319,7 @@ export async function evaluateInputGuardrails(
   prompt: string,
   modelConfig?: ModelExecutionConfig
 ): Promise<MultiGuardrailResult> {
+  const startTime = Date.now();
   const guardrailResults: GuardrailEvaluationDetail[] = [];
 
   // STEP 1: Evaluate ALL guardrails (don't stop at first block)
@@ -318,7 +331,9 @@ export async function evaluateInputGuardrails(
       guardrailName: guardrail.name,
       judgement: result.judgement,
       reason: result.reason || '',
-      violations: result.violations || []
+      violations: result.violations || [],
+      latencyMs: result.latencyMs,
+      confidenceScore: result.confidenceScore
     });
   }
 
@@ -341,11 +356,22 @@ export async function evaluateInputGuardrails(
   // STEP 4: Merge violations from all guardrails
   const overallViolations = mergeViolations(guardrailResults);
 
+  // STEP 5: Calculate total latency and average confidence
+  const totalLatency = Date.now() - startTime;
+  const confidenceScores = guardrailResults
+    .map(g => g.confidenceScore)
+    .filter(c => c !== undefined && c !== null) as number[];
+  const avgConfidence = confidenceScores.length > 0
+    ? confidenceScores.reduce((sum, c) => sum + c, 0) / confidenceScores.length
+    : undefined;
+
   return {
     overallJudgement,
     overallReason,
     overallViolations: overallViolations.length > 0 ? overallViolations : undefined,
-    guardrailResults
+    guardrailResults,
+    latencyMs: totalLatency,
+    confidenceScore: avgConfidence
   };
 }
 
@@ -359,6 +385,7 @@ export async function evaluateOutputGuardrails(
   response: string,
   modelConfig?: ModelExecutionConfig
 ): Promise<MultiGuardrailResult> {
+  const startTime = Date.now();
   const guardrailResults: GuardrailEvaluationDetail[] = [];
 
   // STEP 1: Evaluate ALL guardrails (don't stop at first block)
@@ -370,7 +397,9 @@ export async function evaluateOutputGuardrails(
       guardrailName: guardrail.name,
       judgement: result.judgement,
       reason: result.reason || '',
-      violations: result.violations || []
+      violations: result.violations || [],
+      latencyMs: result.latencyMs,
+      confidenceScore: result.confidenceScore
     });
   }
 
@@ -393,11 +422,22 @@ export async function evaluateOutputGuardrails(
   // STEP 4: Merge violations from all guardrails
   const overallViolations = mergeViolations(guardrailResults);
 
+  // STEP 5: Calculate total latency and average confidence
+  const totalLatency = Date.now() - startTime;
+  const confidenceScores = guardrailResults
+    .map(g => g.confidenceScore)
+    .filter(c => c !== undefined && c !== null) as number[];
+  const avgConfidence = confidenceScores.length > 0
+    ? confidenceScores.reduce((sum, c) => sum + c, 0) / confidenceScores.length
+    : undefined;
+
   return {
     overallJudgement,
     overallReason,
     overallViolations: overallViolations.length > 0 ? overallViolations : undefined,
-    guardrailResults
+    guardrailResults,
+    latencyMs: totalLatency,
+    confidenceScore: avgConfidence
   };
 }
 
@@ -441,12 +481,15 @@ export async function evaluateWithJudgeModel(
   response: string,
   modelConfig?: ModelExecutionConfig
 ): Promise<JudgeModelResult> {
+  const startTime = Date.now();
+
   // If no model config provided, use simple refusal detection
   if (!modelConfig) {
     const isRefused = detectRefusal(response);
     return {
       judgement: isRefused ? 'Refused' : 'Answered',
-      reason: isRefused ? 'Detected refusal patterns in response' : 'Response appears to answer the question'
+      reason: isRefused ? 'Detected refusal patterns in response' : 'Response appears to answer the question',
+      latencyMs: Date.now() - startTime
     };
   }
 
@@ -468,31 +511,38 @@ Return ONLY valid JSON with this schema:
   "reason": "Brief explanation (1 sentence)"
 }`;
 
-    const result = await callJudgeModel(modelConfig, judgePrompt);
+    const result = await callJudgeModelWithMetrics(modelConfig, judgePrompt);
+    const latencyMs = Date.now() - startTime;
 
     try {
-      const cleanedResult = cleanJsonResponse(result);
+      const cleanedResult = cleanJsonResponse(result.content);
       const parsed = JSON.parse(cleanedResult);
       return {
         judgement: parsed.judgement === 'Refused' ? 'Refused' : 'Answered',
-        reason: parsed.reason || ''
+        reason: parsed.reason || '',
+        confidenceScore: result.confidenceScore,
+        latencyMs
       };
     } catch (parseError) {
-      console.error('Failed to parse judge model response:', result);
+      console.error('Failed to parse judge model response:', result.content);
       // Fallback to simple detection if JSON parsing fails
-      const isRefused = detectRefusal(response) || /refused/i.test(result);
+      const isRefused = detectRefusal(response) || /refused/i.test(result.content);
       return {
         judgement: isRefused ? 'Refused' : 'Answered',
-        reason: 'Unable to parse judge model response'
+        reason: 'Unable to parse judge model response',
+        confidenceScore: result.confidenceScore,
+        latencyMs
       };
     }
   } catch (error) {
+    const latencyMs = Date.now() - startTime;
     console.error('Error in judge model evaluation:', error);
     // Fallback to simple detection
     const isRefused = detectRefusal(response);
     return {
       judgement: isRefused ? 'Refused' : 'Answered',
-      reason: 'Fallback detection due to judge model error'
+      reason: 'Fallback detection due to judge model error',
+      latencyMs
     };
   }
 }
@@ -573,6 +623,8 @@ async function evaluateBehaviorForInput(
   disallowedBehavior: string,
   modelConfig?: ModelExecutionConfig
 ): Promise<GuardrailOnlyResult> {
+  const startTime = Date.now();
+
   // Parse disallowed behaviors into array
   const disallowedBehaviorsList = disallowedBehavior
     .split('\n')
@@ -626,10 +678,11 @@ IMPORTANT:
       maxTokens: 500  // Increased for detailed violation info
     };
 
-    const result = await callJudgeModel(effectiveConfig, judgePrompt);
+    const result = await callJudgeModelWithMetrics(effectiveConfig, judgePrompt);
+    const latencyMs = Date.now() - startTime;
 
     try {
-      const cleanedResult = cleanJsonResponse(result);
+      const cleanedResult = cleanJsonResponse(result.content);
       const parsed = JSON.parse(cleanedResult);
       const violations: PhraseViolation[] = (parsed.violations || []).map((v: any) => ({
         phrase: v.phrase || '',
@@ -639,24 +692,30 @@ IMPORTANT:
       return {
         judgement: parsed.judgement === 'BLOCKED' ? 'Blocked' : 'Allowed',
         reason: parsed.reason || '',
-        violations: violations.length > 0 ? violations : undefined
+        violations: violations.length > 0 ? violations : undefined,
+        latencyMs,
+        confidenceScore: result.confidenceScore
       };
     } catch (parseError) {
       // Fallback to simple string matching if JSON parsing fails
-      const isBlocked = /blocked/i.test(result);
+      const isBlocked = /blocked/i.test(result.content);
       return {
         judgement: isBlocked ? 'Blocked' : 'Allowed',
-        reason: result,
-        violations: undefined
+        reason: result.content,
+        violations: undefined,
+        latencyMs,
+        confidenceScore: result.confidenceScore
       };
     }
   } catch (error) {
+    const latencyMs = Date.now() - startTime;
     console.error('Error in behavior evaluation for input:', error);
     // On error, allow by default (fail open)
     return {
       judgement: 'Allowed',
       reason: 'Evaluation error - allowing by default',
-      violations: undefined
+      violations: undefined,
+      latencyMs
     };
   }
 }
@@ -672,6 +731,8 @@ async function evaluateBehaviorForOutput(
   disallowedBehavior: string,
   modelConfig?: ModelExecutionConfig
 ): Promise<GuardrailOnlyResult> {
+  const startTime = Date.now();
+
   const judgePrompt = `You are an output guardrail evaluator for the policy: "${guardrailName}".
 
 Your task is to determine if an AI's response violates the policy's disallowed behaviors.
@@ -721,10 +782,11 @@ IMPORTANT:
       maxTokens: 500  // Increased for detailed violation info
     };
 
-    const result = await callJudgeModel(effectiveConfig, judgePrompt);
+    const result = await callJudgeModelWithMetrics(effectiveConfig, judgePrompt);
+    const latencyMs = Date.now() - startTime;
 
     try {
-      const cleanedResult = cleanJsonResponse(result);
+      const cleanedResult = cleanJsonResponse(result.content);
       const parsed = JSON.parse(cleanedResult);
       const violations: PhraseViolation[] = (parsed.violations || []).map((v: any) => ({
         phrase: v.phrase || '',
@@ -734,24 +796,30 @@ IMPORTANT:
       return {
         judgement: parsed.judgement === 'BLOCKED' ? 'Blocked' : 'Allowed',
         reason: parsed.reason || '',
-        violations: violations.length > 0 ? violations : undefined
+        violations: violations.length > 0 ? violations : undefined,
+        latencyMs,
+        confidenceScore: result.confidenceScore
       };
     } catch (parseError) {
       // Fallback to simple string matching if JSON parsing fails
-      const isBlocked = /blocked/i.test(result);
+      const isBlocked = /blocked/i.test(result.content);
       return {
         judgement: isBlocked ? 'Blocked' : 'Allowed',
-        reason: result,
-        violations: undefined
+        reason: result.content,
+        violations: undefined,
+        latencyMs,
+        confidenceScore: result.confidenceScore
       };
     }
   } catch (error) {
+    const latencyMs = Date.now() - startTime;
     console.error('Error in behavior evaluation for output:', error);
     // On error, allow by default (fail open)
     return {
       judgement: 'Allowed',
       reason: 'Evaluation error - allowing by default',
-      violations: undefined
+      violations: undefined,
+      latencyMs
     };
   }
 }
@@ -985,8 +1053,19 @@ async function evaluateLLMJudgeForOutput(
   }
 }
 
-// Helper: Call judge model
+// Helper: Call judge model (legacy - returns only content string)
 async function callJudgeModel(modelConfig: ModelExecutionConfig, prompt: string): Promise<string> {
+  const result = await callJudgeModelWithMetrics(modelConfig, prompt);
+  return result.content;
+}
+
+// Helper: Call judge model with metrics (returns content + confidence + latency)
+async function callJudgeModelWithMetrics(
+  modelConfig: ModelExecutionConfig,
+  prompt: string
+): Promise<{ content: string; confidenceScore?: number; latencyMs: number }> {
+  const startTime = Date.now();
+
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -997,10 +1076,26 @@ async function callJudgeModel(modelConfig: ModelExecutionConfig, prompt: string)
       model: modelConfig.model,
       messages: [{ role: 'user', content: prompt }],
       temperature: modelConfig.temperature || 0,
-      max_tokens: modelConfig.maxTokens || 200
+      max_tokens: modelConfig.maxTokens || 200,
+      logprobs: true,
+      top_logprobs: 1
     })
   });
 
   const data = await response.json();
-  return data.choices[0].message.content.trim();
+  const latencyMs = Date.now() - startTime;
+
+  // Calculate confidence score from logprobs if available (OpenAI only)
+  let confidenceScore: number | undefined;
+  const logprobs = data.choices[0]?.logprobs?.content;
+  if (logprobs && Array.isArray(logprobs) && logprobs.length > 0) {
+    const avgLogprob = logprobs.reduce((sum: number, item: any) => sum + item.logprob, 0) / logprobs.length;
+    confidenceScore = Math.exp(avgLogprob);
+  }
+
+  return {
+    content: data.choices[0].message.content.trim(),
+    confidenceScore,
+    latencyMs
+  };
 }

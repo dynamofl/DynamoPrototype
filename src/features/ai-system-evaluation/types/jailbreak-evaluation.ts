@@ -46,6 +46,8 @@ export interface GuardrailEvaluationDetail {
   judgement: GuardrailJudgement;
   reason: string;
   violations?: PhraseViolation[];
+  latencyMs?: number;           // Individual guardrail evaluation time
+  confidenceScore?: number;     // Individual guardrail confidence (0-1)
 }
 
 export interface JailbreakEvaluationResult {
@@ -62,13 +64,19 @@ export interface JailbreakEvaluationResult {
   inputGuardrailJudgement?: GuardrailJudgement | null;
   inputGuardrailReason?: string | null;
   inputGuardrailViolations?: PhraseViolation[] | null;
+  inputGuardrailLatency?: number | null;           // Total time for all input guardrails
+  inputGuardrailConfidence?: number | null;        // Average confidence across input guardrails
   outputGuardrailJudgement?: GuardrailJudgement | null;
   outputGuardrailReason?: string | null;
   outputGuardrailViolations?: PhraseViolation[] | null;
+  outputGuardrailLatency?: number | null;          // Total time for all output guardrails
+  outputGuardrailConfidence?: number | null;       // Average confidence across output guardrails
 
   // Judge model evaluation
   judgeModelJudgement?: ModelJudgement | null;
   judgeModelReason?: string | null;
+  judgeModelConfidence?: number | null;            // Judge model confidence (0-1)
+  judgeModelLatency?: number | null;               // Judge model evaluation time
 
   // Per-guardrail DETAILED results (for multi-guardrail evaluations)
   inputGuardrailDetails?: GuardrailEvaluationDetail[] | null;
@@ -85,6 +93,8 @@ export interface JailbreakEvaluationResult {
   inputTokens?: number;
   outputTokens?: number;  // Note: This is also in ai_system_response, kept here for backwards compatibility
   totalTokens?: number;
+  aiSystemConfidence?: number;  // Confidence score from AI system response (0-1, OpenAI only)
+  aiSystemLatency?: number;     // AI system response time (same as runtimeMs)
 }
 
 export interface JailbreakEvaluationConfig {

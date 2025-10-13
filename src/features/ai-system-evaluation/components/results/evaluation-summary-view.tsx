@@ -79,15 +79,16 @@ export function EvaluationSummaryView({
 
           {/* Main Title */}
           <h2 className="text-3xl font-550 text-gray-900">
-            Policy Jailbreak Evaluation Results
+            {evaluationName || "--"}
+            
           </h2>
         </div>
 
         {/* Metadata Section */}
         <div className="grid grid-cols-4 gap-6 mx-3 py-3 border-b border-t border-dashed border-gray-200">
           <div className="flex flex-col gap-1">
-            <p className="text-sm  text-gray-600">Evaluation Name</p>
-            <p className="text-sm text-gray-900">{evaluationName || "--"}</p>
+            <p className="text-sm  text-gray-600">Evaluation Category</p>
+            <p className="text-sm text-gray-900">Policy Jailbreaking</p>
           </div>
 
           <div className="flex flex-col gap-1">

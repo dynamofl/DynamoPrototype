@@ -103,7 +103,9 @@ async function callOpenAI(
         { role: 'user', content: prompt }
       ],
       temperature: config.temperature || 0.7,
-      max_tokens: config.maxTokens || 1000
+      max_tokens: config.maxTokens || 1000,
+      logprobs: true, // Enable logprobs to calculate confidence scores
+      top_logprobs: 1 // Get the top 1 alternative token (minimal overhead)
     })
   });
 
@@ -116,12 +118,24 @@ async function callOpenAI(
 
   const data = await response.json();
 
+  // Calculate confidence score from logprobs if available
+  let confidenceScore: number | undefined;
+  const logprobs = data.choices[0]?.logprobs?.content;
+  if (logprobs && Array.isArray(logprobs) && logprobs.length > 0) {
+    // Calculate average log probability across all tokens
+    const avgLogprob = logprobs.reduce((sum: number, item: any) => sum + item.logprob, 0) / logprobs.length;
+    // Convert log probability to probability (0-1 scale)
+    confidenceScore = Math.exp(avgLogprob);
+  }
+
   return {
     content: data.choices[0].message.content,
     runtimeMs,
     inputTokens: data.usage?.prompt_tokens,
     outputTokens: data.usage?.completion_tokens,
-    totalTokens: data.usage?.total_tokens
+    totalTokens: data.usage?.total_tokens,
+    confidenceScore,
+    latencyMs: runtimeMs
   };
 }
 
@@ -167,7 +181,9 @@ async function callAnthropic(
     runtimeMs,
     inputTokens: data.usage?.input_tokens,
     outputTokens: data.usage?.output_tokens,
-    totalTokens: (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0)
+    totalTokens: (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0),
+    confidenceScore: undefined, // Anthropic doesn't provide confidence scores
+    latencyMs: runtimeMs
   };
 }
 
@@ -212,6 +228,8 @@ async function callCustomEndpoint(
     runtimeMs,
     inputTokens: data.usage?.input_tokens || data.usage?.prompt_tokens,
     outputTokens: data.usage?.output_tokens || data.usage?.completion_tokens,
-    totalTokens: data.usage?.total_tokens
+    totalTokens: data.usage?.total_tokens,
+    confidenceScore: undefined, // Custom endpoints don't typically provide confidence scores
+    latencyMs: runtimeMs
   };
 }
