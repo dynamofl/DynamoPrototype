@@ -266,30 +266,34 @@ export function AISystemEvaluationUnifiedPage() {
           basePrompt: prompt.base_prompt || '',
           attackType: prompt.attack_type || 'Unknown',
           adversarialPrompt: prompt.adversarial_prompt || prompt.base_prompt || '',
-          systemResponse: prompt.system_response || '',
+          systemResponse: prompt.ai_system_response?.content || '',
 
-          // Three-layer judgements - OVERALL results
-          inputGuardrailJudgement: prompt.input_guardrail_judgement || null,
-          inputGuardrailReason: prompt.input_guardrail_reason || null,
-          inputGuardrailViolations: prompt.input_guardrail_violations || null,
-          outputGuardrailJudgement: prompt.output_guardrail_judgement || null,
-          outputGuardrailReason: prompt.output_guardrail_reason || null,
-          outputGuardrailViolations: prompt.output_guardrail_violations || null,
-          judgeModelJudgement: prompt.judge_model_judgement || null,
-          judgeModelReason: prompt.judge_model_reason || null,
+          // Consolidated guardrail evaluations
+          inputGuardrailJudgement: prompt.input_guardrail?.judgement || null,
+          inputGuardrailReason: prompt.input_guardrail?.reason || null,
+          inputGuardrailViolations: null, // No longer used - violations are in details
+          outputGuardrailJudgement: prompt.output_guardrail?.judgement || null,
+          outputGuardrailReason: prompt.output_guardrail?.reason || null,
+          outputGuardrailViolations: null, // No longer used - violations are in details
+
+          // Judge model evaluation (from consolidated ai_system_response)
+          judgeModelJudgement: prompt.ai_system_response?.judgement || null,
+          judgeModelReason: prompt.ai_system_response?.reason || null,
 
           // Per-guardrail DETAILED results (for multi-guardrail evaluations)
-          inputGuardrailDetails: prompt.input_guardrail_details || null,
-          outputGuardrailDetails: prompt.output_guardrail_details || null,
+          inputGuardrailDetails: prompt.input_guardrail?.details || null,
+          outputGuardrailDetails: prompt.output_guardrail?.details || null,
 
           // Legacy fields (kept for backward compatibility)
           guardrailJudgement: prompt.guardrail_judgement || 'Unknown',
           modelJudgement: prompt.model_judgement || 'Unknown',
 
           attackOutcome: prompt.attack_outcome || 'Unknown',
+
+          // Evaluation-level metrics
           runtimeMs: prompt.runtime_ms,
           inputTokens: prompt.input_tokens,
-          outputTokens: prompt.output_tokens,
+          outputTokens: prompt.ai_system_response?.outputTokens || null,
           totalTokens: prompt.total_tokens
         }));
 

@@ -73,6 +73,29 @@ export interface Guardrail {
   disallowedBehavior?: string;
 }
 
+// Guardrail evaluation types (consolidated structure)
+export interface GuardrailDetail {
+  guardrailId: string;
+  guardrailName: string;
+  judgement: string;
+  reason: string;
+  violations?: Array<{phrase: string, violatedBehaviors: string[]}>;
+}
+
+export interface GuardrailEvaluation {
+  judgement: string;  // 'Blocked' | 'Allowed'
+  reason: string;
+  details: GuardrailDetail[];
+}
+
+// AI system response with judge evaluation (consolidated structure)
+export interface AISystemResponseData {
+  content: string;
+  judgement: string | null;  // 'Answered' | 'Refused'
+  reason: string | null;
+  outputTokens: number | null;
+}
+
 // Internal model configuration types
 export interface InternalModelConfig {
   id: string;

@@ -58,13 +58,15 @@ export interface JailbreakEvaluationResult {
   adversarialPrompt: string;
   systemResponse: string;
 
-  // Three-layer judgements - OVERALL results
+  // Guardrail judgements - OVERALL results
   inputGuardrailJudgement?: GuardrailJudgement | null;
   inputGuardrailReason?: string | null;
   inputGuardrailViolations?: PhraseViolation[] | null;
   outputGuardrailJudgement?: GuardrailJudgement | null;
   outputGuardrailReason?: string | null;
   outputGuardrailViolations?: PhraseViolation[] | null;
+
+  // Judge model evaluation
   judgeModelJudgement?: ModelJudgement | null;
   judgeModelReason?: string | null;
 
@@ -77,9 +79,11 @@ export interface JailbreakEvaluationResult {
   modelJudgement: ModelJudgement;
 
   attackOutcome: AttackOutcome;
+
+  // Evaluation-level metrics
   runtimeMs?: number;
   inputTokens?: number;
-  outputTokens?: number;
+  outputTokens?: number;  // Note: This is also in ai_system_response, kept here for backwards compatibility
   totalTokens?: number;
 }
 

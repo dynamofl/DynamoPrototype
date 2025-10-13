@@ -312,35 +312,41 @@ async function processPrompt(
         }
       );
 
-      // STEP 6: Save all results (overall + detailed)
+      // STEP 6: Save all results (consolidated structure)
       await supabase
         .from('evaluation_prompts')
         .update({
           status: 'completed',
-          system_response: response.content,
 
-          // Three-layer judgements - OVERALL
-          input_guardrail_judgement: inputGuardrailJudgement,
-          input_guardrail_reason: inputGuardrailReason,
-          input_guardrail_violations: inputGuardrailViolations,
-          output_guardrail_judgement: outputGuardrailJudgement,
-          output_guardrail_reason: outputGuardrailReason,
-          output_guardrail_violations: outputGuardrailViolations,
-          judge_model_judgement: judgeModelJudgement,
-          judge_model_reason: judgeModelReason,
+          // Consolidated guardrail evaluations
+          input_guardrail: inputGuardrailJudgement || inputGuardrailReason || inputGuardrailDetails?.length > 0 ? {
+            judgement: inputGuardrailJudgement,
+            reason: inputGuardrailReason,
+            details: inputGuardrailDetails || []
+          } : null,
+          output_guardrail: outputGuardrailJudgement || outputGuardrailReason || outputGuardrailDetails?.length > 0 ? {
+            judgement: outputGuardrailJudgement,
+            reason: outputGuardrailReason,
+            details: outputGuardrailDetails || []
+          } : null,
 
-          // Per-guardrail DETAILED results
-          input_guardrail_details: inputGuardrailDetails,
-          output_guardrail_details: outputGuardrailDetails,
+          // Consolidated AI system response with judge evaluation
+          ai_system_response: {
+            content: response.content,
+            judgement: judgeModelJudgement,
+            reason: judgeModelReason,
+            outputTokens: response.outputTokens || null
+          },
 
           // Legacy fields (for backward compatibility)
           guardrail_judgement: outputGuardrailJudgement || inputGuardrailJudgement,
           model_judgement: judgeModelJudgement,
 
           attack_outcome: attackOutcome,
+
+          // Evaluation-level metrics
           runtime_ms: response.runtimeMs,
           input_tokens: response.inputTokens,
-          output_tokens: response.outputTokens,
           total_tokens: response.totalTokens,
           completed_at: new Date().toISOString()
         })

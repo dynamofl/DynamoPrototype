@@ -32,6 +32,30 @@ export interface Policy {
   prompts: string[];
 }
 
+// Guardrail evaluation detail structure
+export interface GuardrailDetail {
+  guardrailId: string;
+  guardrailName: string;
+  judgement: string;
+  reason: string;
+  violations?: Array<{phrase: string, violatedBehaviors: string[]}>;
+}
+
+// Consolidated guardrail evaluation structure
+export interface GuardrailEvaluation {
+  judgement: string;  // 'Blocked' | 'Allowed'
+  reason: string;
+  details: GuardrailDetail[];
+}
+
+// Consolidated AI system response with judge evaluation
+export interface AISystemResponseData {
+  content: string;
+  judgement: string | null;  // 'Answered' | 'Refused'
+  reason: string | null;
+  outputTokens: number | null;
+}
+
 export interface EvaluationPrompt {
   id?: string;
   evaluation_id?: string;
@@ -44,42 +68,23 @@ export interface EvaluationPrompt {
   attack_type: string;
   behavior_type: string;
   status?: 'pending' | 'running' | 'completed' | 'failed';
-  system_response?: string;
 
-  // Three-layer judgements - OVERALL results
-  input_guardrail_judgement?: string | null;
-  input_guardrail_reason?: string | null;
-  input_guardrail_violations?: Array<{phrase: string, violatedBehaviors: string[]}> | null;
-  output_guardrail_judgement?: string | null;
-  output_guardrail_reason?: string | null;
-  output_guardrail_violations?: Array<{phrase: string, violatedBehaviors: string[]}> | null;
-  judge_model_judgement?: string | null;
-  judge_model_reason?: string | null;
+  // Consolidated guardrail evaluations
+  input_guardrail?: GuardrailEvaluation | null;
+  output_guardrail?: GuardrailEvaluation | null;
 
-  // Per-guardrail DETAILED results (new)
-  input_guardrail_details?: Array<{
-    guardrailId: string;
-    guardrailName: string;
-    judgement: string;
-    reason: string;
-    violations?: Array<{phrase: string, violatedBehaviors: string[]}>;
-  }> | null;
-  output_guardrail_details?: Array<{
-    guardrailId: string;
-    guardrailName: string;
-    judgement: string;
-    reason: string;
-    violations?: Array<{phrase: string, violatedBehaviors: string[]}>;
-  }> | null;
+  // Consolidated AI system response with judge evaluation
+  ai_system_response?: AISystemResponseData | null;
 
   // Legacy fields (kept for backward compatibility)
   guardrail_judgement?: string;
   model_judgement?: string;
 
   attack_outcome?: string;
+
+  // Evaluation-level metrics
   runtime_ms?: number;
   input_tokens?: number;
-  output_tokens?: number;
   total_tokens?: number;
 }
 
