@@ -37,15 +37,37 @@ export function EvaluationDataTable({
   const hasInputGuardrails = data.some(record => record.inputGuardrailJudgement !== null && record.inputGuardrailJudgement !== undefined)
   const hasOutputGuardrails = data.some(record => record.outputGuardrailJudgement !== null && record.outputGuardrailJudgement !== undefined)
 
-  const renderGuardrailJudgment = (judgment: string) => (
-    <div className="flex items-center gap-2">
-      {judgment === 'Blocked' ?
-        <img src={BlockIcon} alt="Blocked" className="w-4 h-4 text-red-600" style={{ filter: 'brightness(0) saturate(100%) invert(25%) sepia(85%) saturate(5963%) hue-rotate(346deg) brightness(93%) contrast(90%)' }} /> :
-        <img src={StatusCompleteIcon} alt="Allowed" className="w-4 h-4 text-green-600" style={{ filter: 'brightness(0) saturate(100%) invert(39%) sepia(80%) saturate(1969%) hue-rotate(96deg) brightness(96%) contrast(95%)' }} />
-      }
-      <span className="">{judgment}</span>
-    </div>
-  )
+  const renderGuardrailJudgment = (judgment: string, details?: Array<{guardrailId: string, guardrailName: string, judgement: string}>) => {
+    // If we have details, show count instead of single judgement
+    if (details && details.length > 1) {
+      const blockedCount = details.filter(d => d.judgement === 'Blocked').length
+      const totalCount = details.length
+      const hasBlocked = blockedCount > 0
+
+      return (
+        <div className="flex items-center gap-2">
+          {hasBlocked ?
+            <img src={BlockIcon} alt="Blocked" className="w-4 h-4 text-red-600" style={{ filter: 'brightness(0) saturate(100%) invert(25%) sepia(85%) saturate(5963%) hue-rotate(346deg) brightness(93%) contrast(90%)' }} /> :
+            <img src={StatusCompleteIcon} alt="Allowed" className="w-4 h-4 text-green-600" style={{ filter: 'brightness(0) saturate(100%) invert(39%) sepia(80%) saturate(1969%) hue-rotate(96deg) brightness(96%) contrast(95%)' }} />
+          }
+          <span className="text-xs">
+            {blockedCount > 0 ? `${blockedCount}/${totalCount} Blocked` : `${totalCount}/${totalCount} Allowed`}
+          </span>
+        </div>
+      )
+    }
+
+    // Single guardrail - show normal judgement
+    return (
+      <div className="flex items-center gap-2">
+        {judgment === 'Blocked' ?
+          <img src={BlockIcon} alt="Blocked" className="w-4 h-4 text-red-600" style={{ filter: 'brightness(0) saturate(100%) invert(25%) sepia(85%) saturate(5963%) hue-rotate(346deg) brightness(93%) contrast(90%)' }} /> :
+          <img src={StatusCompleteIcon} alt="Allowed" className="w-4 h-4 text-green-600" style={{ filter: 'brightness(0) saturate(100%) invert(39%) sepia(80%) saturate(1969%) hue-rotate(96deg) brightness(96%) contrast(95%)' }} />
+        }
+        <span className="">{judgment}</span>
+      </div>
+    )
+  }
 
   const renderModelJudgment = (judgment: string) => (
     <div className="flex items-center gap-2">
@@ -162,7 +184,7 @@ export function EvaluationDataTable({
                 {hasInputGuardrails && (
                   <TableCell>
                     {record.inputGuardrailJudgement
-                      ? renderGuardrailJudgment(record.inputGuardrailJudgement)
+                      ? renderGuardrailJudgment(record.inputGuardrailJudgement, record.inputGuardrailDetails || undefined)
                       : <span className="text-gray-400">—</span>
                     }
                   </TableCell>
@@ -170,7 +192,7 @@ export function EvaluationDataTable({
                 {hasOutputGuardrails && (
                   <TableCell>
                     {record.outputGuardrailJudgement
-                      ? renderGuardrailJudgment(record.outputGuardrailJudgement)
+                      ? renderGuardrailJudgment(record.outputGuardrailJudgement, record.outputGuardrailDetails || undefined)
                       : <span className="text-gray-400">—</span>
                     }
                   </TableCell>

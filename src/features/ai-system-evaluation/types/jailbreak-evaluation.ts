@@ -33,6 +33,21 @@ export interface BasePrompt {
   behaviorType: BehaviorType;
 }
 
+// Violation tracking: phrase-to-behaviors mapping
+export interface PhraseViolation {
+  phrase: string;
+  violatedBehaviors: string[];
+}
+
+// Per-guardrail evaluation detail
+export interface GuardrailEvaluationDetail {
+  guardrailId: string;
+  guardrailName: string;
+  judgement: GuardrailJudgement;
+  reason: string;
+  violations?: PhraseViolation[];
+}
+
 export interface JailbreakEvaluationResult {
   policyId: string;
   policyName: string;
@@ -43,13 +58,19 @@ export interface JailbreakEvaluationResult {
   adversarialPrompt: string;
   systemResponse: string;
 
-  // Three-layer judgements (new)
+  // Three-layer judgements - OVERALL results
   inputGuardrailJudgement?: GuardrailJudgement | null;
   inputGuardrailReason?: string | null;
+  inputGuardrailViolations?: PhraseViolation[] | null;
   outputGuardrailJudgement?: GuardrailJudgement | null;
   outputGuardrailReason?: string | null;
+  outputGuardrailViolations?: PhraseViolation[] | null;
   judgeModelJudgement?: ModelJudgement | null;
   judgeModelReason?: string | null;
+
+  // Per-guardrail DETAILED results (for multi-guardrail evaluations)
+  inputGuardrailDetails?: GuardrailEvaluationDetail[] | null;
+  outputGuardrailDetails?: GuardrailEvaluationDetail[] | null;
 
   // Legacy fields (kept for backward compatibility)
   guardrailJudgement: GuardrailJudgement;

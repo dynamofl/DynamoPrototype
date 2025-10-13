@@ -146,11 +146,11 @@ export function EvaluationDataDetail({ record, hasGuardrails = true }: Evaluatio
           </div>
         </section>
 
-        {/* Three-Layer Judgements - Only show if there's at least one judgement with data */}
+        {/* Three-Layer Judgements - OVERALL results */}
         {(record.inputGuardrailJudgement || record.outputGuardrailJudgement || record.judgeModelJudgement || record.modelJudgement) && (
           <section className="space-y-2">
             <h3 className="text-[11px] font-450 text-gray-500 uppercase tracking-wide">
-              Evaluation Judgements
+              Overall Evaluation Judgements
             </h3>
             <div className="border border-gray-200 rounded-md p-1 space-y-1">
               {/* Input Guardrail */}
@@ -165,6 +165,19 @@ export function EvaluationDataDetail({ record, hasGuardrails = true }: Evaluatio
                   </div>
                   {record.inputGuardrailReason && (
                     <p className="text-xs text-gray-600 mt-1 ml-6">{record.inputGuardrailReason}</p>
+                  )}
+                  {/* Overall Violations */}
+                  {record.inputGuardrailViolations && record.inputGuardrailViolations.length > 0 && (
+                    <div className="mt-2 ml-6 space-y-1">
+                      <p className="text-xs font-450 text-gray-700">Violations:</p>
+                      {record.inputGuardrailViolations.map((violation, idx) => (
+                        <div key={idx} className="text-xs text-gray-600 pl-2 border-l-2 border-red-200">
+                          <span className="font-450 text-red-700">"{violation.phrase}"</span>
+                          <span className="text-gray-500"> violates: </span>
+                          <span className="text-gray-700">{violation.violatedBehaviors.join(', ')}</span>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
               )}
@@ -181,6 +194,19 @@ export function EvaluationDataDetail({ record, hasGuardrails = true }: Evaluatio
                   </div>
                   {record.outputGuardrailReason && (
                     <p className="text-xs text-gray-600 mt-1 ml-6">{record.outputGuardrailReason}</p>
+                  )}
+                  {/* Overall Violations */}
+                  {record.outputGuardrailViolations && record.outputGuardrailViolations.length > 0 && (
+                    <div className="mt-2 ml-6 space-y-1">
+                      <p className="text-xs font-450 text-gray-700">Violations:</p>
+                      {record.outputGuardrailViolations.map((violation, idx) => (
+                        <div key={idx} className="text-xs text-gray-600 pl-2 border-l-2 border-red-200">
+                          <span className="font-450 text-red-700">"{violation.phrase}"</span>
+                          <span className="text-gray-500"> violates: </span>
+                          <span className="text-gray-700">{violation.violatedBehaviors.join(', ')}</span>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
               )}
@@ -199,6 +225,102 @@ export function EvaluationDataDetail({ record, hasGuardrails = true }: Evaluatio
                 )}
               </div>
             </div>
+          </section>
+        )}
+
+        {/* Per-Guardrail Detailed Results - NEW section for multi-guardrail evaluations */}
+        {((record.inputGuardrailDetails && record.inputGuardrailDetails.length > 0) ||
+          (record.outputGuardrailDetails && record.outputGuardrailDetails.length > 0)) && (
+          <section className="space-y-2">
+            <h3 className="text-[11px] font-450 text-gray-500 uppercase tracking-wide">
+              Per-Guardrail Detailed Results
+            </h3>
+
+            {/* Input Guardrails Details */}
+            {record.inputGuardrailDetails && record.inputGuardrailDetails.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-450 text-gray-700">Input Guardrails ({record.inputGuardrailDetails.length})</p>
+                <div className="space-y-2">
+                  {record.inputGuardrailDetails.map((detail, idx) => (
+                    <div key={idx} className="border border-gray-200 rounded-md p-3 bg-gray-50">
+                      <div className="flex items-center gap-2 mb-2">
+                        {getStatusIcon(detail.judgement)}
+                        <span className="text-sm font-450 text-gray-900">{detail.guardrailName}</span>
+                        <span className={`ml-auto text-xs font-medium px-2 py-0.5 rounded ${
+                          detail.judgement === 'Blocked'
+                            ? 'bg-red-100 text-red-700'
+                            : 'bg-green-100 text-green-700'
+                        }`}>
+                          {detail.judgement}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-600 mb-2">{detail.reason}</p>
+                      {detail.violations && detail.violations.length > 0 && (
+                        <div className="mt-2 space-y-1 border-t border-gray-200 pt-2">
+                          <p className="text-xs font-450 text-gray-700">Violations:</p>
+                          {detail.violations.map((violation, vIdx) => (
+                            <div key={vIdx} className="text-xs pl-2 border-l-2 border-red-300 bg-white p-2 rounded">
+                              <div className="font-450 text-red-700 mb-1">"{violation.phrase}"</div>
+                              <div className="text-gray-600">
+                                <span className="text-gray-500">Violates: </span>
+                                {violation.violatedBehaviors.map((behavior, bIdx) => (
+                                  <span key={bIdx} className="inline-block bg-red-50 text-red-700 px-1.5 py-0.5 rounded mr-1 mb-1 text-xs">
+                                    {behavior}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Output Guardrails Details */}
+            {record.outputGuardrailDetails && record.outputGuardrailDetails.length > 0 && (
+              <div className="space-y-2 mt-4">
+                <p className="text-xs font-450 text-gray-700">Output Guardrails ({record.outputGuardrailDetails.length})</p>
+                <div className="space-y-2">
+                  {record.outputGuardrailDetails.map((detail, idx) => (
+                    <div key={idx} className="border border-gray-200 rounded-md p-3 bg-gray-50">
+                      <div className="flex items-center gap-2 mb-2">
+                        {getStatusIcon(detail.judgement)}
+                        <span className="text-sm font-450 text-gray-900">{detail.guardrailName}</span>
+                        <span className={`ml-auto text-xs font-medium px-2 py-0.5 rounded ${
+                          detail.judgement === 'Blocked'
+                            ? 'bg-red-100 text-red-700'
+                            : 'bg-green-100 text-green-700'
+                        }`}>
+                          {detail.judgement}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-600 mb-2">{detail.reason}</p>
+                      {detail.violations && detail.violations.length > 0 && (
+                        <div className="mt-2 space-y-1 border-t border-gray-200 pt-2">
+                          <p className="text-xs font-450 text-gray-700">Violations:</p>
+                          {detail.violations.map((violation, vIdx) => (
+                            <div key={vIdx} className="text-xs pl-2 border-l-2 border-red-300 bg-white p-2 rounded">
+                              <div className="font-450 text-red-700 mb-1">"{violation.phrase}"</div>
+                              <div className="text-gray-600">
+                                <span className="text-gray-500">Violates: </span>
+                                {violation.violatedBehaviors.map((behavior, bIdx) => (
+                                  <span key={bIdx} className="inline-block bg-red-50 text-red-700 px-1.5 py-0.5 rounded mr-1 mb-1 text-xs">
+                                    {behavior}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </section>
         )}
 

@@ -244,6 +244,8 @@ async function processPrompt(
       // STEP 1: Evaluate INPUT guardrails (on prompt only)
       let inputGuardrailJudgement: string | null = null;
       let inputGuardrailReason: string | null = null;
+      let inputGuardrailViolations: any = null;
+      let inputGuardrailDetails: any = null;
 
       if (inputGuardrails.length > 0) {
         await logInfo(supabase, evaluation.id, `Evaluating ${inputGuardrails.length} input guardrails`);
@@ -252,8 +254,12 @@ async function processPrompt(
           adversarialPrompt,
           inputModelConfig
         );
-        inputGuardrailJudgement = inputResult.judgement;
-        inputGuardrailReason = inputResult.reason || null;
+        // Extract OVERALL results
+        inputGuardrailJudgement = inputResult.overallJudgement;
+        inputGuardrailReason = inputResult.overallReason;
+        inputGuardrailViolations = inputResult.overallViolations || null;
+        // Extract DETAILED per-guardrail results
+        inputGuardrailDetails = inputResult.guardrailResults;
       }
 
       // STEP 2: Call AI System (ALWAYS runs, even if input guardrail blocked)
@@ -266,6 +272,8 @@ async function processPrompt(
       // STEP 3: Evaluate OUTPUT guardrails (on response)
       let outputGuardrailJudgement: string | null = null;
       let outputGuardrailReason: string | null = null;
+      let outputGuardrailViolations: any = null;
+      let outputGuardrailDetails: any = null;
 
       if (outputGuardrails.length > 0) {
         await logInfo(supabase, evaluation.id, `Evaluating ${outputGuardrails.length} output guardrails`);
@@ -275,8 +283,12 @@ async function processPrompt(
           response.content,
           outputModelConfig
         );
-        outputGuardrailJudgement = outputResult.judgement;
-        outputGuardrailReason = outputResult.reason || null;
+        // Extract OVERALL results
+        outputGuardrailJudgement = outputResult.overallJudgement;
+        outputGuardrailReason = outputResult.overallReason;
+        outputGuardrailViolations = outputResult.overallViolations || null;
+        // Extract DETAILED per-guardrail results
+        outputGuardrailDetails = outputResult.guardrailResults;
       }
 
       // STEP 4: Judge Model - Did AI answer or refuse?
@@ -300,20 +312,26 @@ async function processPrompt(
         }
       );
 
-      // STEP 6: Save all results
+      // STEP 6: Save all results (overall + detailed)
       await supabase
         .from('evaluation_prompts')
         .update({
           status: 'completed',
           system_response: response.content,
 
-          // Three-layer judgements
+          // Three-layer judgements - OVERALL
           input_guardrail_judgement: inputGuardrailJudgement,
           input_guardrail_reason: inputGuardrailReason,
+          input_guardrail_violations: inputGuardrailViolations,
           output_guardrail_judgement: outputGuardrailJudgement,
           output_guardrail_reason: outputGuardrailReason,
+          output_guardrail_violations: outputGuardrailViolations,
           judge_model_judgement: judgeModelJudgement,
           judge_model_reason: judgeModelReason,
+
+          // Per-guardrail DETAILED results
+          input_guardrail_details: inputGuardrailDetails,
+          output_guardrail_details: outputGuardrailDetails,
 
           // Legacy fields (for backward compatibility)
           guardrail_judgement: outputGuardrailJudgement || inputGuardrailJudgement,

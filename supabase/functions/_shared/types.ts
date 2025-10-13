@@ -46,13 +46,31 @@ export interface EvaluationPrompt {
   status?: 'pending' | 'running' | 'completed' | 'failed';
   system_response?: string;
 
-  // Three-layer judgements
+  // Three-layer judgements - OVERALL results
   input_guardrail_judgement?: string | null;
   input_guardrail_reason?: string | null;
+  input_guardrail_violations?: Array<{phrase: string, violatedBehaviors: string[]}> | null;
   output_guardrail_judgement?: string | null;
   output_guardrail_reason?: string | null;
+  output_guardrail_violations?: Array<{phrase: string, violatedBehaviors: string[]}> | null;
   judge_model_judgement?: string | null;
   judge_model_reason?: string | null;
+
+  // Per-guardrail DETAILED results (new)
+  input_guardrail_details?: Array<{
+    guardrailId: string;
+    guardrailName: string;
+    judgement: string;
+    reason: string;
+    violations?: Array<{phrase: string, violatedBehaviors: string[]}>;
+  }> | null;
+  output_guardrail_details?: Array<{
+    guardrailId: string;
+    guardrailName: string;
+    judgement: string;
+    reason: string;
+    violations?: Array<{phrase: string, violatedBehaviors: string[]}>;
+  }> | null;
 
   // Legacy fields (kept for backward compatibility)
   guardrail_judgement?: string;

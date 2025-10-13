@@ -268,13 +268,19 @@ export function AISystemEvaluationUnifiedPage() {
           adversarialPrompt: prompt.adversarial_prompt || prompt.base_prompt || '',
           systemResponse: prompt.system_response || '',
 
-          // Three-layer judgements (new)
+          // Three-layer judgements - OVERALL results
           inputGuardrailJudgement: prompt.input_guardrail_judgement || null,
           inputGuardrailReason: prompt.input_guardrail_reason || null,
+          inputGuardrailViolations: prompt.input_guardrail_violations || null,
           outputGuardrailJudgement: prompt.output_guardrail_judgement || null,
           outputGuardrailReason: prompt.output_guardrail_reason || null,
+          outputGuardrailViolations: prompt.output_guardrail_violations || null,
           judgeModelJudgement: prompt.judge_model_judgement || null,
           judgeModelReason: prompt.judge_model_reason || null,
+
+          // Per-guardrail DETAILED results (for multi-guardrail evaluations)
+          inputGuardrailDetails: prompt.input_guardrail_details || null,
+          outputGuardrailDetails: prompt.output_guardrail_details || null,
 
           // Legacy fields (kept for backward compatibility)
           guardrailJudgement: prompt.guardrail_judgement || 'Unknown',
