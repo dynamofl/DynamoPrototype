@@ -37,6 +37,7 @@ export { OverlayHeader } from './overlay-header';
 export type { BreadcrumbSegment, TitleDropdownOption } from './overlay-header';
 export { BulkActionBar } from './bulk-action-bar';
 export type { BulkAction, BulkActionBarProps } from './bulk-action-bar';
+export { MarkdownRenderer } from './markdown-renderer';
 
 // Icon Components
 export * from './inline-ai-icons';

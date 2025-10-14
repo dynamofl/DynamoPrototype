@@ -262,6 +262,7 @@ export function AISystemEvaluationUnifiedPage() {
           policyId: prompt.policy_id || 'unknown',
           policyName: prompt.policy_name || 'Policy',
           topic: prompt.topic || 'General', // Add topic field from database
+          promptTitle: prompt.prompt_title || null, // Add prompt title from database
           behaviorType: prompt.behavior_type || 'Disallowed',
           basePrompt: prompt.base_prompt || '',
           attackType: prompt.attack_type || 'Unknown',

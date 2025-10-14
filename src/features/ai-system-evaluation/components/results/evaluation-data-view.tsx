@@ -7,6 +7,7 @@ import {
   EvaluationDataSideSheet
 } from './data-view-components'
 import { EvaluationDataDetail } from './evaluation-data-detail'
+import { EvaluationConversationView } from './evaluation-conversation-view'
 import { filterJailbreakRecords, paginateJailbreakRecords } from '../../lib/evaluation-data-utils'
 import { DEFAULT_PAGE_SIZE } from '../../constants/evaluation-data-constants'
 import type { JailbreakEvaluationResult } from '../../types/jailbreak-evaluation'
@@ -195,7 +196,7 @@ export function EvaluationDataView({ results, hasGuardrails = true }: Evaluation
       {/* Content Area */}
       <div className="flex flex-1 overflow-hidden min-h-0">
         {/* Table/Conversation View */}
-        <div className={`${currentView === 'conversation' ? 'w-[480px]' : 'flex-1'} ${currentView === 'table' ? 'overflow-auto' : 'flex flex-col overflow-hidden'}`}>
+        <div className={`${currentView === 'conversation' ? 'max-w-[400px]' : 'flex-1'} ${currentView === 'table' ? 'overflow-auto' : 'flex flex-col overflow-hidden'}`}>
           <div
             className={`h-full transition-all  ${
               transitionState === 'exiting'
@@ -233,14 +234,14 @@ export function EvaluationDataView({ results, hasGuardrails = true }: Evaluation
 
         {/* Right Detail Area for Conversation View */}
         {currentView === 'conversation' && (
-          <div className="flex-1 border-l border-gray-200 overflow-y-auto">
-            <div className="transition-all duration-300 ease-in-out">
+          <div className="flex-1 overflow-hidden">
+            <div className="transition-all duration-300 ease-in-out h-full">
               {selectedConversationId && displayData.length > 0 && (
                 (() => {
                   const selectedRecord = displayData.find(record => (record as any).id === selectedConversationId)
                   return selectedRecord ? (
-                    <div className="animate-in fade-in-0 slide-in-from-right-2 duration-300">
-                      <EvaluationDataDetail record={selectedRecord} hasGuardrails={hasGuardrails} />
+                    <div className="animate-in fade-in-0 slide-in-from-right-2 duration-300 h-full">
+                      <EvaluationConversationView record={selectedRecord} />
                     </div>
                   ) : (
                     <div className="flex items-center justify-center h-64 animate-in fade-in-0 duration-300">

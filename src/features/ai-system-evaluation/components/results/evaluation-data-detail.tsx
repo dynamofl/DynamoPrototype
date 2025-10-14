@@ -2,6 +2,7 @@ import { InfoIcon } from 'lucide-react'
 import type { JailbreakEvaluationResult } from '../../types/jailbreak-evaluation'
 import BlockIcon from '@/assets/icons/Block.svg'
 import StatusCompleteIcon from '@/assets/icons/StatusComplete.svg'
+import { MarkdownRenderer } from '@/components/patterns/ui-patterns/markdown-renderer'
 
 interface EvaluationDataDetailProps {
   record: JailbreakEvaluationResult
@@ -329,8 +330,8 @@ export function EvaluationDataDetail({ record, hasGuardrails = true }: Evaluatio
           <h3 className="text-[11px] font-450 text-gray-500 uppercase tracking-wide">
             AI System Response
           </h3>
-          <div className="text-[0.8125rem]  text-gray-900 leading-relaxed">
-            {record.systemResponse}
+          <div>
+            <MarkdownRenderer content={record.systemResponse} />
           </div>
           <div className="border border-gray-200 rounded-md p-1">
             <div className="flex items-center gap-2 p-2">

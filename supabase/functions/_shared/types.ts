@@ -71,6 +71,7 @@ export interface EvaluationPrompt {
   policy_id: string;
   policy_name: string;
   topic?: string; // The topic category this prompt belongs to (max 2 words)
+  prompt_title?: string; // Concise title (max 5 words) describing the base prompt
   base_prompt: string;
   adversarial_prompt: string;
   attack_type: string;

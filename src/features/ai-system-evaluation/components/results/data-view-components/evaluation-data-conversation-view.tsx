@@ -160,7 +160,7 @@ export function EvaluationDataConversationView({
                 </div>
 
                 {/* Status Badge */}
-                <div className="w-[150px] flex justify-end ">
+                <div className="w-[120px] flex justify-end ">
                   {renderAttackOutcome(record.attackOutcome)}
                 </div>
               </div>

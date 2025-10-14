@@ -41,6 +41,11 @@ module.exports = {
   			'750': '750',
   			'850': '850'
   		},
+  		lineHeight: {
+  			'relaxed': '1.6',
+  			'loose': '1.75',
+  			'extra-loose': '2',
+  		},
   		colors: {
   			gray: {
   				'0': 'rgb(var(--gray-0) / <alpha-value>)',
