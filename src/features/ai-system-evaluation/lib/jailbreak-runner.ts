@@ -121,8 +121,11 @@ export async function runJailbreakEvaluation(
         evalJudgeApiKey
       );
 
-      // Step 6: Judge model response
-      const modelJudgement = judgeModel(systemResponse);
+      // Step 6: Judge model response with confidence
+      const { judgement: modelJudgement, confidence: judgeModelConfidence } = await judgeModel(
+        systemResponse,
+        evalJudgeApiKey
+      );
 
       // Step 7: Calculate attack outcome
       const attackOutcome = calculateOutcome(guardrailJudgement, modelJudgement);
@@ -138,7 +141,8 @@ export async function runJailbreakEvaluation(
         systemResponse,
         guardrailJudgement,
         modelJudgement,
-        attackOutcome
+        attackOutcome,
+        judgeModelConfidence: judgeModelConfidence > 0 ? judgeModelConfidence : undefined
       });
 
       currentStep++;

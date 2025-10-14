@@ -280,6 +280,8 @@ export function AISystemEvaluationUnifiedPage() {
           // Judge model evaluation (from consolidated ai_system_response)
           judgeModelJudgement: prompt.ai_system_response?.judgement || null,
           judgeModelReason: prompt.ai_system_response?.reason || null,
+          judgeModelConfidence: prompt.ai_system_response?.confidenceScore || null,
+          judgeModelLatency: prompt.ai_system_response?.latencyMs || null,
 
           // Per-guardrail DETAILED results (for multi-guardrail evaluations)
           inputGuardrailDetails: prompt.input_guardrail?.details || null,

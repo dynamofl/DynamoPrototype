@@ -40,7 +40,7 @@ export function EvaluationConversationView({ record }: EvaluationConversationVie
 
           {/* Base Prompt */}
           <section className="space-y-2">
-            <h3 className="text-xs font-550 leading-4 text-gray-600">
+            <h3 className="text-[0.8125rem] font-550 leading-4 text-gray-600">
               Base Prompt
             </h3>
             <div className="text-sm font-425 leading-5 text-gray-900">
@@ -50,12 +50,12 @@ export function EvaluationConversationView({ record }: EvaluationConversationVie
 
           {/* Jailbreak Prompt */}
           <section className="space-y-2">
-            <h3 className="text-xs font-550 leading-4 text-gray-600">
+            <h3 className="text-[0.8125rem] font-550 leading-4 text-gray-600">
               Jailbreak Prompt
             </h3>
             <div className="border border-gray-200 rounded p-2 space-y-6">
               <div className="space-y-2">
-                <p className="text-xs font-425 leading-4 text-gray-600">User</p>
+                <p className="text-[0.8125rem] font-425 leading-4 text-gray-600">User</p>
                 <p className="text-sm leading-5 text-gray-900">
                   {record.adversarialPrompt}
                 </p>
@@ -65,7 +65,7 @@ export function EvaluationConversationView({ record }: EvaluationConversationVie
 
           {/* AI System Response */}
           <section className="space-y-2">
-            <h3 className="text-xs font-550 leading-4 text-gray-600">
+            <h3 className="text-[0.8125rem] font-550 leading-4 text-gray-600">
               AI System Response
             </h3>
             <div>
