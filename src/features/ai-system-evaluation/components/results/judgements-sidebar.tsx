@@ -6,6 +6,8 @@ import StatusCompleteIcon from '@/assets/icons/StatusComplete.svg'
 
 interface JudgementsSidebarProps {
   record: JailbreakEvaluationResult
+  expandedKey?: string | null
+  onExpandedKeyChange?: (key: string | null) => void
 }
 
 // Info Icon component
@@ -19,19 +21,21 @@ function getStatusIcon(status: string) {
 }
 
 function getModelStatusIcon(status: string) {
-  return status === 'Blocked' ?
-    <img src={BlockIcon} alt="Blocked" className="w-5 h-5" style={{ filter: 'brightness(0) saturate(100%) invert(25%) sepia(85%) saturate(5963%) hue-rotate(346deg) brightness(93%) contrast(90%)' }} /> :
+  return status === 'Refused' ?
+    <img src={BlockIcon} alt="Refused" className="w-5 h-5" style={{ filter: 'brightness(0) saturate(100%) invert(25%) sepia(85%) saturate(5963%) hue-rotate(346deg) brightness(93%) contrast(90%)' }} /> :
     <img src={StatusCompleteIcon} alt="Answered" className="w-5 h-5" style={{ filter: 'brightness(0) saturate(100%) invert(39%) sepia(80%) saturate(1969%) hue-rotate(96deg) brightness(96%) contrast(95%)' }} />
 }
 
 interface GuardrailDetailCardProps {
   detail: GuardrailEvaluationDetail
-  uniqueKey: string
+  type: 'input' | 'output'
   isExpanded: boolean
   onToggle: (key: string) => void
 }
 
-function GuardrailDetailCard({ detail, uniqueKey, isExpanded, onToggle }: GuardrailDetailCardProps) {
+function GuardrailDetailCard({ detail, type, isExpanded, onToggle }: GuardrailDetailCardProps) {
+  // Use guardrailId as the unique key to avoid index mismatch issues with sorting
+  const uniqueKey = `${type}-${detail.guardrailId}`
   // Extract all violated behaviors from violations array
   const violatedBehaviors = detail.violations
     ? Array.from(new Set(detail.violations.flatMap(v => v.violatedBehaviors)))
@@ -102,16 +106,26 @@ function GuardrailDetailCard({ detail, uniqueKey, isExpanded, onToggle }: Guardr
   )
 }
 
-export function JudgementsSidebar({ record }: JudgementsSidebarProps) {
-  const [expandedKey, setExpandedKey] = useState<string | null>(null)
+export function JudgementsSidebar({
+  record,
+  expandedKey: externalExpandedKey,
+  onExpandedKeyChange
+}: JudgementsSidebarProps) {
+  // Use internal state if no external state is provided
+  const [internalExpandedKey, setInternalExpandedKey] = useState<string | null>(null)
+
+  // Determine which state to use
+  const expandedKey = externalExpandedKey !== undefined ? externalExpandedKey : internalExpandedKey
+  const setExpandedKey = onExpandedKeyChange || setInternalExpandedKey
 
   // Reset expansion state when record changes
   useEffect(() => {
     setExpandedKey(null)
-  }, [record])
+  }, [record, setExpandedKey])
 
   const handleToggle = (key: string) => {
-    setExpandedKey(prev => prev === key ? null : key)
+    const newValue = expandedKey === key ? null : key
+    setExpandedKey(newValue)
   }
 
   // Sort function for guardrail details: Blocked first, high confidence first, more violations first
@@ -192,13 +206,13 @@ export function JudgementsSidebar({ record }: JudgementsSidebarProps) {
               {/* Input Guardrail Details */}
               {record.inputGuardrailDetails && record.inputGuardrailDetails.length > 0 && (
                 <>
-                  {sortGuardrailDetails(record.inputGuardrailDetails).map((detail, idx) => {
-                    const key = `input-${idx}`
+                  {sortGuardrailDetails(record.inputGuardrailDetails).map((detail) => {
+                    const key = `input-${detail.guardrailId}`
                     return (
                       <GuardrailDetailCard
                         key={key}
                         detail={detail}
-                        uniqueKey={key}
+                        type="input"
                         isExpanded={expandedKey === key}
                         onToggle={handleToggle}
                       />
@@ -210,13 +224,13 @@ export function JudgementsSidebar({ record }: JudgementsSidebarProps) {
               {/* Output Guardrail Details */}
               {record.outputGuardrailDetails && record.outputGuardrailDetails.length > 0 && (
                 <>
-                  {sortGuardrailDetails(record.outputGuardrailDetails).map((detail, idx) => {
-                    const key = `output-${idx}`
+                  {sortGuardrailDetails(record.outputGuardrailDetails).map((detail) => {
+                    const key = `output-${detail.guardrailId}`
                     return (
                       <GuardrailDetailCard
                         key={key}
                         detail={detail}
-                        uniqueKey={key}
+                        type="output"
                         isExpanded={expandedKey === key}
                         onToggle={handleToggle}
                       />

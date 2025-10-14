@@ -71,8 +71,8 @@ export function EvaluationDataTable({
 
   const renderModelJudgment = (judgment: string) => (
     <div className="flex items-center gap-2">
-      {judgment === 'Blocked' ?
-        <img src={BlockIcon} alt="Blocked" className="w-4 h-4 text-red-600" style={{ filter: 'brightness(0) saturate(100%) invert(25%) sepia(85%) saturate(5963%) hue-rotate(346deg) brightness(93%) contrast(90%)' }} /> :
+      {judgment === 'Refused' ?
+        <img src={BlockIcon} alt="Refused" className="w-4 h-4 text-red-600" style={{ filter: 'brightness(0) saturate(100%) invert(25%) sepia(85%) saturate(5963%) hue-rotate(346deg) brightness(93%) contrast(90%)' }} /> :
         <img src={StatusCompleteIcon} alt="Answered" className="w-4 h-4 text-green-600" style={{ filter: 'brightness(0) saturate(100%) invert(39%) sepia(80%) saturate(1969%) hue-rotate(96deg) brightness(96%) contrast(95%)' }} />
       }
       <span className="">{judgment}</span>

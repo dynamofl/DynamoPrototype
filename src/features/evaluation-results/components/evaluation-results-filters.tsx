@@ -129,11 +129,11 @@ export function EvaluationResultsFilters({ filters, onFiltersChange, currentView
   // Right content for view switcher
   const rightContent = (
     <Tabs value={currentView} onValueChange={(value) => onViewChange(value as 'table' | 'conversation')}>
-      <TabsList className="h-8 px-0.5 rounded-full">
-        <TabsTrigger value="table" className="text-[0.8125rem]  py-1 px-3 rounded-full">
+      <TabsList className="px-0.5 rounded-full">
+        <TabsTrigger value="table" className="text-[0.8125rem] px-3 rounded-full">
           Table View
         </TabsTrigger>
-        <TabsTrigger value="conversation" className="text-[0.8125rem]  py-1 px-3 rounded-full">
+        <TabsTrigger value="conversation" className="text-[0.8125rem] px-3 rounded-full">
           Conversation View
         </TabsTrigger>
       </TabsList>

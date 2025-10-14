@@ -73,7 +73,7 @@ export function ConfigurationPanel({
   };
 
   return (
-    <div className="lg:col-span-1 border-r border-gray-200">
+    <div className="lg:col-span-1 border-l border-r border-gray-200">
       <div className="px-4 py-3 text-gray-900 border-b border-gray-200 text-sm font-450">
         Configuration
       </div>
