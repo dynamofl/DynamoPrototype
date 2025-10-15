@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   EvaluationDataTable,
   EvaluationDataFilters,
@@ -12,6 +13,7 @@ import { filterJailbreakRecords, paginateJailbreakRecords } from '../../lib/eval
 import { DEFAULT_PAGE_SIZE } from '../../constants/evaluation-data-constants'
 import type { JailbreakEvaluationResult } from '../../types/jailbreak-evaluation'
 import type { JailbreakFilterState, JailbreakPaginationState } from '../../types/evaluation-data-types'
+import { toUrlSlug } from '@/lib/utils'
 
 type ViewType = 'table' | 'conversation'
 
@@ -19,19 +21,39 @@ interface EvaluationDataViewProps {
   results: JailbreakEvaluationResult[]
   aiSystemName?: string
   hasGuardrails?: boolean
+  systemName?: string
+  evaluationId?: string
 }
 
-export function EvaluationDataView({ results, aiSystemName, hasGuardrails = true }: EvaluationDataViewProps) {
+export function EvaluationDataView({ results, aiSystemName, hasGuardrails = true, systemName, evaluationId }: EvaluationDataViewProps) {
+  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+
   const [allData, setAllData] = useState<JailbreakEvaluationResult[]>([])
   const [filteredData, setFilteredData] = useState<JailbreakEvaluationResult[]>([])
   const [displayData, setDisplayData] = useState<JailbreakEvaluationResult[]>([])
   const [selectedRows, setSelectedRows] = useState<string[]>([])
-  const [currentView, setCurrentView] = useState<ViewType>('table')
+
+  // Initialize state from URL params
+  const modeFromUrl = searchParams.get('mode') as ViewType | null
+  const itemFromUrl = searchParams.get('item')
+
+  const [currentView, setCurrentView] = useState<ViewType>(modeFromUrl || 'table')
   const [conversationDisplayCount, setConversationDisplayCount] = useState(25)
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null)
+
+  // In conversation view, initialize selectedConversationId from URL
+  // In table view, it will be set by the auto-select logic
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(
+    modeFromUrl === 'conversation' ? itemFromUrl : null
+  )
+
   const [transitionState, setTransitionState] = useState<'idle' | 'exiting' | 'entering'>('idle')
-  const [sideSheetOpen, setSideSheetOpen] = useState(false)
-  const [sideSheetRecordId, setSideSheetRecordId] = useState<string | null>(null)
+
+  // In table view with item param, initialize side sheet as open
+  const [sideSheetOpen, setSideSheetOpen] = useState(modeFromUrl === 'table' && !!itemFromUrl)
+  const [sideSheetRecordId, setSideSheetRecordId] = useState<string | null>(
+    modeFromUrl === 'table' ? itemFromUrl : null
+  )
 
   const [filters, setFilters] = useState<JailbreakFilterState>({
     attackOutcome: [],
@@ -48,6 +70,69 @@ export function EvaluationDataView({ results, aiSystemName, hasGuardrails = true
     pageSize: DEFAULT_PAGE_SIZE,
     total: 0
   })
+
+  // Update URL when view mode or selected item changes
+  useEffect(() => {
+    if (!systemName || !evaluationId) return
+
+    const newParams = new URLSearchParams(searchParams)
+
+    // Handle mode parameter
+    if (currentView !== 'table') {
+      newParams.set('mode', currentView)
+    } else {
+      newParams.delete('mode')
+    }
+
+    // Handle item parameter based on view mode
+    if (currentView === 'conversation') {
+      // Conversation view: item is mandatory (always a selected conversation)
+      if (selectedConversationId) {
+        newParams.set('item', selectedConversationId)
+      }
+    } else if (currentView === 'table') {
+      // Table view: item only exists when side sheet is open
+      if (sideSheetOpen && sideSheetRecordId) {
+        newParams.set('item', sideSheetRecordId)
+      } else {
+        newParams.delete('item')
+      }
+    }
+
+    // Only update if params changed
+    if (newParams.toString() !== searchParams.toString()) {
+      setSearchParams(newParams, { replace: true })
+    }
+  }, [currentView, selectedConversationId, sideSheetOpen, sideSheetRecordId, systemName, evaluationId, searchParams, setSearchParams])
+
+  // Sync state with URL params when they change externally
+  useEffect(() => {
+    const mode = searchParams.get('mode') as ViewType | null
+    const item = searchParams.get('item')
+
+    // Sync view mode
+    if (mode && (mode === 'table' || mode === 'conversation') && mode !== currentView) {
+      setCurrentView(mode)
+    }
+
+    // Sync item based on view mode
+    if (currentView === 'conversation') {
+      // In conversation view, sync selected conversation from URL
+      if (item && item !== selectedConversationId) {
+        setSelectedConversationId(item)
+      }
+    } else if (currentView === 'table') {
+      // In table view, sync side sheet from URL
+      if (item && item !== sideSheetRecordId) {
+        setSideSheetRecordId(item)
+        setSideSheetOpen(true)
+      } else if (!item && sideSheetOpen) {
+        // If no item in URL but side sheet is open, close it
+        setSideSheetOpen(false)
+        setSideSheetRecordId(null)
+      }
+    }
+  }, [searchParams, currentView])
 
   // Load initial data
   useEffect(() => {
@@ -183,6 +268,14 @@ export function EvaluationDataView({ results, aiSystemName, hasGuardrails = true
     setSelectedConversationId(sideSheetRecordId)
   }
 
+  const handleSideSheetClose = (open: boolean) => {
+    setSideSheetOpen(open)
+    // Clear the record ID when closing
+    if (!open) {
+      setSideSheetRecordId(null)
+    }
+  }
+
   return (
     <div className="flex flex-col h-full py-2">
       {/* Filters */}
@@ -272,7 +365,7 @@ export function EvaluationDataView({ results, aiSystemName, hasGuardrails = true
       {/* Side Sheet */}
       <EvaluationDataSideSheet
         open={sideSheetOpen}
-        onOpenChange={setSideSheetOpen}
+        onOpenChange={handleSideSheetClose}
         record={sideSheetRecordId ? allData.find(r => (r as any).id === sideSheetRecordId) || null : null}
         allRecords={allData}
         onNavigateNext={handleSideSheetNavigateNext}

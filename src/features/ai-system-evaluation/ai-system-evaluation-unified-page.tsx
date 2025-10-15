@@ -52,10 +52,10 @@ import { ensureValidSummary } from "./lib/calculate-summary";
 import { exportEvaluationsToCSV } from "./lib/export-utils";
 
 export function AISystemEvaluationUnifiedPage() {
-  const { systemName, evaluationId, tab } = useParams<{
+  const { systemName, evaluationId, view } = useParams<{
     systemName: string;
     evaluationId?: string;
-    tab?: string;
+    view?: string;
   }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -987,7 +987,7 @@ export function AISystemEvaluationUnifiedPage() {
                                     key={test.id}
                                     onClick={() => {
                                       if (aiSystem) {
-                                        navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation/${test.id}/${tab || 'summary'}`);
+                                        navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation/${test.id}/${view || 'summary'}`);
                                       }
                                     }}
                                     className={selectedTest.id === test.id ? 'bg-gray-100 font-medium' : ''}
@@ -1038,7 +1038,7 @@ export function AISystemEvaluationUnifiedPage() {
                 startedAt={selectedTest?.startedAt}
                 completedAt={selectedTest?.completedAt}
                 onClose={handleMinimize}
-                currentTab={tab || 'summary'}
+                currentTab={view || 'summary'}
                 onExport={handleExport}
                 // New props for test and system selection
                 availableTests={evaluationHistory}
@@ -1048,13 +1048,13 @@ export function AISystemEvaluationUnifiedPage() {
                 onTestChange={(testId) => {
                   const test = evaluationHistory.find(t => t.id === testId);
                   if (test && aiSystem) {
-                    navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation/${testId}/${tab || 'summary'}`);
+                    navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation/${testId}/${view || 'summary'}`);
                   }
                 }}
                 onAISystemChange={(systemId) => {
                   const system = aiSystems.find(s => s.id === systemId);
                   if (system && selectedTest) {
-                    navigate(`/ai-systems/${toUrlSlug(system.name)}/evaluation/${selectedTest.id}/${tab || 'summary'}`);
+                    navigate(`/ai-systems/${toUrlSlug(system.name)}/evaluation/${selectedTest.id}/${view || 'summary'}`);
                   }
                 }}
               />

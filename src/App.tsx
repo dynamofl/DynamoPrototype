@@ -22,7 +22,8 @@ function App() {
       <Route path="/settings" element={<SettingsPage />} />
 
       {/* AI System Evaluation Routes - Unified component with URL-based overlays */}
-      <Route path="/ai-systems/:systemName/evaluation/:evaluationId/:tab" element={<AISystemEvaluationUnifiedPage />} />
+      {/* Route with view parameter (summary or data) and optional query params for mode and item */}
+      <Route path="/ai-systems/:systemName/evaluation/:evaluationId/:view" element={<AISystemEvaluationUnifiedPage />} />
       <Route path="/ai-systems/:systemName/evaluation/:evaluationId" element={<AISystemEvaluationUnifiedPage />} />
       <Route path="/ai-systems/:systemName/evaluation" element={<AISystemEvaluationUnifiedPage />} />
 

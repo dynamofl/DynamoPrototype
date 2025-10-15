@@ -60,20 +60,21 @@ export function EvaluationResults({
   onAISystemChange
 }: EvaluationResultsProps) {
   const navigate = useNavigate();
-  const { systemName, evaluationId } = useParams<{ systemName: string; evaluationId?: string }>();
-  const [selectedTab, setSelectedTab] = useState<'summary' | 'data'>((propTab as 'summary' | 'data') || 'summary');
+  const { systemName, evaluationId, view } = useParams<{ systemName: string; evaluationId?: string; view?: string }>();
+  const [selectedTab, setSelectedTab] = useState<'summary' | 'data'>((view as 'summary' | 'data') || (propTab as 'summary' | 'data') || 'summary');
 
   // Calculate total token utilization from all results
   const totalTokenUtilization = results.results.reduce((total, result) => {
     return total + (result.totalTokens || 0);
   }, 0);
 
-  // Update selectedTab when propTab changes
+  // Update selectedTab when view or propTab changes
   useEffect(() => {
-    if (propTab === 'summary' || propTab === 'data') {
-      setSelectedTab(propTab);
+    const effectiveTab = (view as 'summary' | 'data') || (propTab as 'summary' | 'data');
+    if (effectiveTab === 'summary' || effectiveTab === 'data') {
+      setSelectedTab(effectiveTab);
     }
-  }, [propTab]);
+  }, [view, propTab]);
 
   const handleTabChange = (tab: 'summary' | 'data') => {
     if (onTabChange) {
@@ -241,6 +242,8 @@ export function EvaluationResults({
             results={results.results}
             aiSystemName={aiSystemName}
             hasGuardrails={results.config.guardrailIds && results.config.guardrailIds.length > 0}
+            systemName={systemName}
+            evaluationId={evaluationId}
           />
         )}
       </div>
