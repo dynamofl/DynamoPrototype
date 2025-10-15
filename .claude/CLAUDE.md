@@ -1,3 +1,4 @@
 - Ensure UI component uses the tailwind classes
 - For the colors, use only tailwind colors gray, red, green, amber
 - For title case for Heading, title, labels
+- Don't use bg-white. In cases where bg-white is necessary, use bg-gray-0 there.

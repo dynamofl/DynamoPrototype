@@ -3,6 +3,8 @@ import { InfoIcon, ChevronsUpDown, ChevronsDownUp, MessageCircleOff, CircleCheck
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { HoveredBehaviorContext } from '@/components/patterns/ui-patterns/phrase-highlighter'
+import { SeverityIcon } from './severity-icon'
+import { getAttackSeverityLevel } from '../../lib/attack-severity'
 
 interface JudgementsSidebarProps {
   record: JailbreakEvaluationResult
@@ -345,12 +347,13 @@ export function JudgementsSidebar({
         {/* Summary Cards */}
         <div className="flex gap-2 items-center w-full">
           {/* Prompt */}
-          <div className="flex-1 bg-gray-100  rounded-lg p-2 flex flex-col gap-1">
+          <div className="flex-1 min-w-36 bg-gray-100  rounded-lg p-2 flex flex-col gap-1">
             <div className="flex gap-0.5 items-start">
               <span className="text-xs font-400 leading-4 text-gray-900">Attack</span>
             </div>
-            <div className="flex gap-0.5 items-center">
-              <span className="text-[0.8125rem] font-450 leading-5 text-gray-900 tracking-[0.065px]">
+            <div className="flex gap-1 items-center">
+              <SeverityIcon level={getAttackSeverityLevel(record.attackType)} size="sm" />
+              <span className="text-[0.8125rem] font-450  text-gray-900">
                 {record.attackType}
               </span>
             </div>
@@ -369,7 +372,7 @@ export function JudgementsSidebar({
                 ) : (
                   <ShieldCheck className="w-3.5 h-3.5 text-green-600" />
                 )}
-                <span className="text-[0.8125rem] font-450 leading-5 text-gray-900 tracking-[0.065px]">
+                <span className="text-[0.8125rem] font-450 leading-5 text-gray-900">
                   {record.inputGuardrailJudgement || record.outputGuardrailJudgement}
                 </span>
               </div>
@@ -388,7 +391,7 @@ export function JudgementsSidebar({
               ) : (
                 <CircleCheckBig className="w-3.5 h-3.5 text-green-600" />
               )}
-              <span className="text-[0.8125rem] font-450 leading-5 text-gray-900 tracking-[0.065px]">
+              <span className="text-[0.8125rem] font-450 leading-5 text-gray-900">
                 {record.judgeModelJudgement || record.modelJudgement}
               </span>
             </div>

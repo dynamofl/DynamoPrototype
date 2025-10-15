@@ -1,4 +1,4 @@
-import { MessagesSquare } from 'lucide-react'
+import { MessagesSquare, ShieldBan, ShieldCheck, MessageCircleOff, CircleCheckBig } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   Table,
@@ -10,8 +10,8 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import type { JailbreakEvaluationResult } from '../../../types/jailbreak-evaluation'
-import BlockIcon from '@/assets/icons/Block.svg'
-import StatusCompleteIcon from '@/assets/icons/StatusComplete.svg'
+import { SeverityIcon } from '../severity-icon'
+import { getAttackSeverityLevel } from '../../../lib/attack-severity'
 
 interface EvaluationDataTableProps {
   data: JailbreakEvaluationResult[]
@@ -47,8 +47,8 @@ export function EvaluationDataTable({
       return (
         <div className="flex items-center gap-2">
           {hasBlocked ?
-            <img src={BlockIcon} alt="Blocked" className="w-4 h-4 text-red-600" style={{ filter: 'brightness(0) saturate(100%) invert(25%) sepia(85%) saturate(5963%) hue-rotate(346deg) brightness(93%) contrast(90%)' }} /> :
-            <img src={StatusCompleteIcon} alt="Allowed" className="w-4 h-4 text-green-600" style={{ filter: 'brightness(0) saturate(100%) invert(39%) sepia(80%) saturate(1969%) hue-rotate(96deg) brightness(96%) contrast(95%)' }} />
+            <ShieldBan className="w-4 h-4 text-red-600" /> :
+            <ShieldCheck className="w-4 h-4 text-green-600" />
           }
           <span className="text-xs">
             {blockedCount > 0 ? `${blockedCount}/${totalCount} Blocked` : `${totalCount}/${totalCount} Allowed`}
@@ -61,8 +61,8 @@ export function EvaluationDataTable({
     return (
       <div className="flex items-center gap-2">
         {judgment === 'Blocked' ?
-          <img src={BlockIcon} alt="Blocked" className="w-4 h-4 text-red-600" style={{ filter: 'brightness(0) saturate(100%) invert(25%) sepia(85%) saturate(5963%) hue-rotate(346deg) brightness(93%) contrast(90%)' }} /> :
-          <img src={StatusCompleteIcon} alt="Allowed" className="w-4 h-4 text-green-600" style={{ filter: 'brightness(0) saturate(100%) invert(39%) sepia(80%) saturate(1969%) hue-rotate(96deg) brightness(96%) contrast(95%)' }} />
+          <ShieldBan className="w-4 h-4 text-red-600" /> :
+          <ShieldCheck className="w-4 h-4 text-green-600" />
         }
         <span className="">{judgment}</span>
       </div>
@@ -71,9 +71,9 @@ export function EvaluationDataTable({
 
   const renderModelJudgment = (judgment: string) => (
     <div className="flex items-center gap-2">
-      {judgment === 'Refused' ?
-        <img src={BlockIcon} alt="Refused" className="w-4 h-4 text-red-600" style={{ filter: 'brightness(0) saturate(100%) invert(25%) sepia(85%) saturate(5963%) hue-rotate(346deg) brightness(93%) contrast(90%)' }} /> :
-        <img src={StatusCompleteIcon} alt="Answered" className="w-4 h-4 text-green-600" style={{ filter: 'brightness(0) saturate(100%) invert(39%) sepia(80%) saturate(1969%) hue-rotate(96deg) brightness(96%) contrast(95%)' }} />
+      {judgment === 'Refused' || judgment === 'Blocked' ?
+        <MessageCircleOff className="w-4 h-4 text-red-600" /> :
+        <CircleCheckBig className="w-4 h-4 text-green-600" />
       }
       <span className="">{judgment}</span>
     </div>
@@ -181,7 +181,10 @@ export function EvaluationDataTable({
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <span className="">{record.attackType}</span>
+                  <div className="flex items-center gap-2">
+                    <SeverityIcon level={getAttackSeverityLevel(record.attackType)} size="sm" />
+                    <span className="">{record.attackType}</span>
+                  </div>
                 </TableCell>
                 {hasInputGuardrails && (
                   <TableCell>
