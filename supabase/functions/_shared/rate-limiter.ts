@@ -1,53 +1,40 @@
-// Rate Limiter - Prevents concurrent API calls and implements backoff
-// Addresses 400 errors from tool use concurrency issues
-
-interface QueueItem {
-  fn: () => Promise<any>;
-  resolve: (value: any) => void;
-  reject: (error: any) => void;
-}
+// Rate Limiter - Implements backoff on errors while allowing parallel execution
+// OPTIMIZED: Allows concurrent API calls with retry logic, but no artificial delays
 
 export class RateLimiter {
-  private queue: QueueItem[] = [];
-  private processing = false;
-  private minDelay: number; // Minimum delay between requests in ms
+  private minDelay: number; // Minimum delay between requests in ms (0 = no delay, full parallelization)
+  private maxConcurrent: number; // Maximum concurrent requests
+  private activeRequests: number = 0;
+  private lastRequestTime: number = 0;
 
-  constructor(minDelay: number = 1000) {
+  constructor(minDelay: number = 0, maxConcurrent: number = 50) {
     this.minDelay = minDelay;
+    this.maxConcurrent = maxConcurrent;
   }
 
   async execute<T>(fn: () => Promise<T>): Promise<T> {
-    return new Promise((resolve, reject) => {
-      this.queue.push({ fn, resolve, reject });
-      this.processQueue();
-    });
-  }
-
-  private async processQueue() {
-    if (this.processing || this.queue.length === 0) {
-      return;
+    // Wait if we've hit the concurrency limit
+    while (this.activeRequests >= this.maxConcurrent) {
+      await this.delay(10); // Small delay to check again
     }
 
-    this.processing = true;
-
-    while (this.queue.length > 0) {
-      const item = this.queue.shift();
-      if (!item) break;
-
-      try {
-        const result = await this.executeWithBackoff(item.fn);
-        item.resolve(result);
-      } catch (error) {
-        item.reject(error);
-      }
-
-      // Wait before processing next item to avoid rate limits
-      if (this.queue.length > 0) {
-        await this.delay(this.minDelay);
+    // Enforce minimum delay between requests (if configured)
+    if (this.minDelay > 0) {
+      const timeSinceLastRequest = Date.now() - this.lastRequestTime;
+      if (timeSinceLastRequest < this.minDelay) {
+        await this.delay(this.minDelay - timeSinceLastRequest);
       }
     }
 
-    this.processing = false;
+    this.lastRequestTime = Date.now();
+    this.activeRequests++;
+
+    try {
+      const result = await this.executeWithBackoff(fn);
+      return result;
+    } finally {
+      this.activeRequests--;
+    }
   }
 
   private async executeWithBackoff<T>(
@@ -94,7 +81,7 @@ export class RateLimiter {
 }
 
 // Global rate limiter instance for AI API calls
-// OPTIMIZED: Reduced from 1000ms to 200ms for 80% faster execution
-// Most AI providers can handle much faster request rates than 1 per second
-// The 200ms delay still prevents rate limiting while dramatically improving performance
-export const aiApiLimiter = new RateLimiter(200);
+// OPTIMIZED: No artificial delays (minDelay = 0) for full parallelization
+// Allows up to 50 concurrent requests with automatic retry on rate limit errors
+// This enables true parallel processing while still handling rate limits gracefully
+export const aiApiLimiter = new RateLimiter(0, 50);
