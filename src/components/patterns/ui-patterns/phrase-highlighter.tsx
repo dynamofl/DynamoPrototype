@@ -151,8 +151,8 @@ export function PhraseHighlighter({
     // Dynamic color classes based on highlightColor prop
     // Base classes: show border only if showHighlightByDefault is true
     const baseClasses = showHighlightByDefault
-      ? (highlightColor === 'green' ? 'border-b-2 border-green-400' :
-         highlightColor === 'red' ? 'border-b-2 border-red-400' :
+      ? (highlightColor === 'green' ? 'border-b border-green-400' :
+         highlightColor === 'red' ? 'border-b border-red-400' :
          'border-b-2 border-amber-400')
       : ''
 

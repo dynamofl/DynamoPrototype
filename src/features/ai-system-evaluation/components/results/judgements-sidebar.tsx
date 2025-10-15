@@ -1,10 +1,12 @@
 import type { JailbreakEvaluationResult, GuardrailEvaluationDetail } from '../../types/jailbreak-evaluation'
-import { InfoIcon, ChevronsUpDown, ChevronsDownUp, MessageCircleOff, CircleCheckBig, ShieldBan, ShieldCheck, Circle } from 'lucide-react'
+import { InfoIcon, ChevronsUpDown, ChevronsDownUp, MessageCircleOff, CircleCheckBig, ShieldBan, ShieldCheck, Circle, ArrowUpRight } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { HoveredBehaviorContext } from '@/components/patterns/ui-patterns/phrase-highlighter'
 import { SeverityIcon } from './severity-icon'
 import { getAttackSeverityLevel } from '../../lib/attack-severity'
+import { GuardrailViewSheet } from '@/features/guardrails/components'
+import { useGuardrailsSupabase } from '@/features/guardrails/lib/useGuardrailsSupabase'
 
 interface JudgementsSidebarProps {
   record: JailbreakEvaluationResult
@@ -41,6 +43,7 @@ interface GuardrailDetailCardProps {
   hoveredBehavior?: HoveredBehaviorContext | null
   onBehaviorHover?: (behavior: HoveredBehaviorContext | null) => void
   selectedBehaviors?: Set<string> | null
+  onPreviewPolicy?: (guardrailId: string) => void
 }
 
 interface ResponseJudgementCardProps {
@@ -62,7 +65,7 @@ function ResponseJudgementCard({ record, aiSystemName, isExpanded, onToggle, hov
   }
 
   return (
-    <div className={`bg-gray-0 border border-gray-200 rounded-lg px-1 py-2 flex flex-col gap-3 w-full ${isExpanded ? 'shadow-sm' : 'hover:bg-gray-50'}`}>
+    <div className={`bg-gray-0 border border-gray-200 rounded-lg px-1 py-2 flex flex-col gap-3 w-full ${isExpanded ? 'shadow-md' : 'hover:bg-gray-50'}`}>
       <div
         className={`flex gap-2 items-start px-1 ${hasAnswerPhrases ? 'cursor-pointer' : ''}`}
         onClick={handleClick}
@@ -106,9 +109,9 @@ function ResponseJudgementCard({ record, aiSystemName, isExpanded, onToggle, hov
         {hasAnswerPhrases && (
           <div className="flex gap-2 items-center">
             {isExpanded ? (
-              <ChevronsDownUp className="w-4 h-4 shrink-0 text-gray-400" />
+              <ChevronsDownUp className="w-4 h-4 shrink-0 text-gray-600" />
             ) : (
-              <ChevronsUpDown className="w-4 h-4 shrink-0 text-gray-400" />
+              <ChevronsUpDown className="w-4 h-4 shrink-0 text-gray-600" />
             )}
           </div>
         )}
@@ -163,7 +166,7 @@ function ResponseJudgementCard({ record, aiSystemName, isExpanded, onToggle, hov
   )
 }
 
-function GuardrailDetailCard({ detail, type, isExpanded, onToggle, hoveredBehavior, onBehaviorHover, selectedBehaviors }: GuardrailDetailCardProps) {
+function GuardrailDetailCard({ detail, type, isExpanded, onToggle, hoveredBehavior, onBehaviorHover, selectedBehaviors, onPreviewPolicy }: GuardrailDetailCardProps) {
   // Use guardrailId as the unique key to avoid index mismatch issues with sorting
   const uniqueKey = `${type}-${detail.guardrailId}`
   // Get violations array and count total behaviors across all violations
@@ -172,19 +175,25 @@ function GuardrailDetailCard({ detail, type, isExpanded, onToggle, hoveredBehavi
 
   // Only show expand/collapse for judgements with violations
   const hasViolations = violations.length > 0
+  const isAllowed = detail.judgement === 'Allowed'
 
   const handleClick = () => {
     if (!hasViolations) return
     onToggle(uniqueKey)
   }
 
+  const handlePreviewPolicy = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onPreviewPolicy?.(detail.guardrailId)
+  }
+
   return (
-    <div className={`bg-gray-0 border border-gray-200 rounded-lg px-1 py-2 flex flex-col gap-3 ${isExpanded ? 'shadow-sm' : 'hover:bg-gray-50'}`}>
+    <div className={`bg-gray-0 border border-gray-200 rounded-lg px-1 py-2 flex flex-col gap-3 ${isExpanded ? 'shadow-md' : 'hover:bg-gray-50'}`}>
       <div
         className={`flex gap-2 items-start px-1 ${hasViolations ? 'cursor-pointer' : ''}`}
         onClick={handleClick}
       >
-        
+
         {getStatusIcon(detail.judgement)}
         <div className="flex-1 flex flex-col gap-1 items-start justify-center min-w-0">
           <div className="flex flex-col gap-0.5 items-start justify-center w-full">
@@ -193,9 +202,9 @@ function GuardrailDetailCard({ detail, type, isExpanded, onToggle, hoveredBehavi
             </div>
             <div className="flex gap-1 items-center text-xs leading-4 text-gray-600">
               <>
-                <span className="font-400">{detail.judgement}</span>              
+                <span className="font-400">{detail.judgement}</span>
               </>
-          
+
               {hasViolations && (
                 <>
                   <span className="font-400">•</span>
@@ -212,15 +221,23 @@ function GuardrailDetailCard({ detail, type, isExpanded, onToggle, hoveredBehavi
             </div>
           </div>
         </div>
-        {hasViolations && (
+        {isAllowed ? (
+          <button
+            onClick={handlePreviewPolicy}
+            className="flex items-center gap-0.5 px-1 py-1 text-xs font-450 text-gray-600 hover:bg-gray-100 pl-2 rounded-full transition-colors"
+          >
+            Preview Policy
+            <ArrowUpRight className='w-4 h-4'/>
+          </button>
+        ) : hasViolations ? (
           <div className="flex gap-2 items-center py-1">
             {isExpanded ? (
-              <ChevronsDownUp className="w-4 h-4 shrink-0 text-gray-400" />
+              <ChevronsDownUp className="w-4 h-4 shrink-0 text-gray-600" />
             ) : (
-              <ChevronsUpDown className="w-4 h-4 shrink-0 text-gray-400" />
+              <ChevronsUpDown className="w-4 h-4 shrink-0 text-gray-600" />
             )}
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Violation Phrases List */}
@@ -275,6 +292,17 @@ function GuardrailDetailCard({ detail, type, isExpanded, onToggle, hoveredBehavi
                 )
               })
             })()}
+
+            {/* Preview Policy Button at the end of violations */}
+            <div className="flex justify-start ml-6 px-2 pt-1">
+              <button
+                onClick={handlePreviewPolicy}
+                className="flex items-center gap-0.5 px-2 py-1 text-xs font-450 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                Preview All Behaviors
+                <ArrowUpRight className='w-3.5 h-3.5'/>
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -293,6 +321,11 @@ export function JudgementsSidebar({
 }: JudgementsSidebarProps) {
   // Use internal state if no external state is provided
   const [internalExpandedKeys, setInternalExpandedKeys] = useState<Set<string>>(new Set())
+  const [viewPolicySheetOpen, setViewPolicySheetOpen] = useState(false)
+  const [selectedGuardrailId, setSelectedGuardrailId] = useState<string | null>(null)
+
+  // Fetch guardrails data
+  const { guardrails } = useGuardrailsSupabase()
 
   // Determine which state to use
   const expandedKeys = externalExpandedKeys !== undefined ? externalExpandedKeys : internalExpandedKeys
@@ -318,6 +351,11 @@ export function JudgementsSidebar({
     setExpandedKeys(newKeys)
   }
 
+  const handlePreviewPolicy = (guardrailId: string) => {
+    setSelectedGuardrailId(guardrailId)
+    setViewPolicySheetOpen(true)
+  }
+
   // Sort function for guardrail details: Blocked first, high confidence first, more violations first
   const sortGuardrailDetails = (details: GuardrailEvaluationDetail[]) => {
     return [...details].sort((a, b) => {
@@ -336,6 +374,9 @@ export function JudgementsSidebar({
       return bViolations - aViolations
     })
   }
+
+  // Find the selected guardrail
+  const selectedGuardrail = guardrails.find(g => g.id === selectedGuardrailId) || null
 
   return (
     <div className="h-full overflow-y-auto bg-gray-0">
@@ -422,6 +463,7 @@ export function JudgementsSidebar({
                         hoveredBehavior={hoveredBehavior}
                         onBehaviorHover={onBehaviorHover}
                         selectedBehaviors={selectedBehaviors}
+                        onPreviewPolicy={handlePreviewPolicy}
                       />
                     )
                   })}
@@ -443,6 +485,7 @@ export function JudgementsSidebar({
                         hoveredBehavior={hoveredBehavior}
                         onBehaviorHover={onBehaviorHover}
                         selectedBehaviors={selectedBehaviors}
+                        onPreviewPolicy={handlePreviewPolicy}
                       />
                     )
                   })}
@@ -470,6 +513,13 @@ export function JudgementsSidebar({
           </div>
         )}
       </div>
+
+      {/* Guardrail View Sheet */}
+      <GuardrailViewSheet
+        open={viewPolicySheetOpen}
+        onOpenChange={setViewPolicySheetOpen}
+        guardrail={selectedGuardrail}
+      />
     </div>
   )
 }
