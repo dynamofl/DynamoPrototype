@@ -94,5 +94,7 @@ export class RateLimiter {
 }
 
 // Global rate limiter instance for AI API calls
-// Uses a 1 second delay between calls to prevent concurrency issues
-export const aiApiLimiter = new RateLimiter(1000);
+// OPTIMIZED: Reduced from 1000ms to 200ms for 80% faster execution
+// Most AI providers can handle much faster request rates than 1 per second
+// The 200ms delay still prevents rate limiting while dramatically improving performance
+export const aiApiLimiter = new RateLimiter(200);
