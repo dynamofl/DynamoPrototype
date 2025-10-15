@@ -1,5 +1,11 @@
 // Shared types for Edge Functions
 
+// Multi-turn conversation support for advanced jailbreak attacks (TAP, IRIS)
+export interface ConversationTurn {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
+
 export interface AISystem {
   id: string;
   name: string;
@@ -62,6 +68,7 @@ export interface AISystemResponseData {
   outputTokens: number | null;
   confidenceScore?: number | null; // Judge model confidence in the judgement (0-1)
   latencyMs?: number | null; // Response time in milliseconds
+  answerPhrases?: Array<{phrase: string, reasoning: string}>; // Key phrases that answer the question (only when judgement is 'Answered')
 }
 
 export interface EvaluationPrompt {
@@ -73,7 +80,7 @@ export interface EvaluationPrompt {
   topic?: string; // The topic category this prompt belongs to (max 2 words)
   prompt_title?: string; // Concise title (max 5 words) describing the base prompt
   base_prompt: string;
-  adversarial_prompt: string;
+  adversarial_prompt: ConversationTurn[] | { text: string } | any; // JSONB: array for multi-turn (TAP, IRIS) or object for single-turn
   attack_type: string;
   behavior_type: string;
   status?: 'pending' | 'running' | 'completed' | 'failed';

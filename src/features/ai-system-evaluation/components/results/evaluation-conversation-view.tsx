@@ -1,4 +1,4 @@
-import type { JailbreakEvaluationResult, GuardrailEvaluationDetail } from '../../types/jailbreak-evaluation'
+import type { JailbreakEvaluationResult, GuardrailEvaluationDetail, ConversationTurn } from '../../types/jailbreak-evaluation'
 import { JudgementsSidebar } from './judgements-sidebar'
 import { Badge } from '@/components/ui/badge'
 import { MarkdownRenderer } from '@/components/patterns/ui-patterns/markdown-renderer'
@@ -9,11 +9,37 @@ interface EvaluationConversationViewProps {
   record: JailbreakEvaluationResult
 }
 
+// Helper functions to handle adversarial prompt format
+function isMultiTurnPrompt(prompt: any): prompt is ConversationTurn[] {
+  return Array.isArray(prompt)
+}
+
+function isSingleTurnPrompt(prompt: any): prompt is { text: string } {
+  return prompt && typeof prompt === 'object' && 'text' in prompt && !Array.isArray(prompt)
+}
+
+function getAdversarialPromptText(prompt: any): string {
+  if (isSingleTurnPrompt(prompt)) {
+    return prompt.text
+  }
+  if (isMultiTurnPrompt(prompt)) {
+    // For multi-turn, we'll display the conversation in a different format
+    return prompt.map((turn, idx) => `[${turn.role}]: ${turn.content}`).join('\n\n')
+  }
+  // Fallback for legacy string format (shouldn't happen with new data)
+  return typeof prompt === 'string' ? prompt : ''
+}
+
 export function EvaluationConversationView({ record }: EvaluationConversationViewProps) {
   const isAttackSuccess = record.attackOutcome === 'Attack Success'
+  const isMultiTurn = isMultiTurnPrompt(record.adversarialPrompt)
+  const adversarialPromptText = getAdversarialPromptText(record.adversarialPrompt)
 
   // Track which guardrail detail is expanded
   const [expandedKey, setExpandedKey] = useState<string | null>(null)
+
+  // Track which phrase is being hovered
+  const [hoveredPhraseIndex, setHoveredPhraseIndex] = useState<number | null>(null)
 
   // Determine which violations to highlight based on expanded guardrail
   const highlightPhrases = useMemo((): HighlightPhrase[] => {
@@ -21,6 +47,23 @@ export function EvaluationConversationView({ record }: EvaluationConversationVie
     console.log('🔍 Debug - All Output Guardrail Details:', record.outputGuardrailDetails)
 
     if (!expandedKey) return []
+
+    // Special case: judge model answer phrases
+    if (expandedKey === 'judge-model') {
+      if (!record.judgeModelAnswerPhrases) return []
+
+      // Convert answer phrases to HighlightPhrase format
+      const phrases = record.judgeModelAnswerPhrases.map(ap => ({
+        phrase: ap.phrase,
+        guardrailName: 'Answer Phrase',
+        violatedBehaviors: [ap.reasoning]
+      }))
+
+      console.log('🔍 Debug - Judge Model Answer Phrases:', phrases)
+      console.log('🔍 Debug - System Response Length:', record.systemResponse.length)
+      console.log('🔍 Debug - System Response Preview:', record.systemResponse.substring(0, 200))
+      return phrases
+    }
 
     // Parse the expanded key to determine which guardrail detail
     // Format is now: type-guardrailId (e.g., "input-42f44c4e-b0aa-4ae7-b5b8-5c5c99c771cd")
@@ -51,11 +94,12 @@ export function EvaluationConversationView({ record }: EvaluationConversationVie
 
     console.log('🔍 Debug - Highlight Phrases:', phrases)
     return phrases
-  }, [expandedKey, record.inputGuardrailDetails, record.outputGuardrailDetails])
+  }, [expandedKey, record.inputGuardrailDetails, record.outputGuardrailDetails, record.judgeModelAnswerPhrases])
 
   // Determine which text to highlight based on guardrail type
   const shouldHighlightPrompt = expandedKey?.startsWith('input-')
-  const shouldHighlightResponse = expandedKey?.startsWith('output-')
+  const shouldHighlightResponse = expandedKey?.startsWith('output-') || expandedKey === 'judge-model'
+  const highlightColor = expandedKey === 'judge-model' ? 'green' : 'amber'
 
   return (
     <div className="h-full grid grid-cols-[1fr_450px]">
@@ -98,25 +142,55 @@ export function EvaluationConversationView({ record }: EvaluationConversationVie
           {/* Jailbreak Prompt */}
           <section className="space-y-2">
             <h3 className="text-[0.8125rem] font-550 leading-4 text-gray-600">
-              Jailbreak Prompt
+              Jailbreak Prompt {isMultiTurn && <span className="text-gray-500">(Multi-turn)</span>}
             </h3>
-            <div className="border border-gray-200 rounded p-2 space-y-6">
-              <div className="space-y-2">
-                <p className="text-[0.8125rem] font-425 leading-4 text-gray-600">User</p>
-                <p className="text-sm leading-5 text-gray-900">
-                  {shouldHighlightPrompt ? (
-                    <HighlightedText
-                      highlightPhrases={highlightPhrases}
-                      className="text-sm leading-5 text-gray-900"
-                    >
-                      {record.adversarialPrompt}
-                    </HighlightedText>
-                  ) : (
-                    record.adversarialPrompt
-                  )}
-                </p>
+            {isMultiTurn ? (
+              <div className="border border-gray-200 rounded p-2 space-y-4">
+                {(record.adversarialPrompt as ConversationTurn[]).map((turn, idx) => (
+                  <div key={idx} className="space-y-2">
+                    <p className="text-[0.8125rem] font-425 leading-4 text-gray-600 capitalize">
+                      {turn.role}
+                    </p>
+                    <div className="text-sm leading-5 text-gray-900 whitespace-pre-wrap">
+                      {shouldHighlightPrompt && turn.role === 'user' ? (
+                        <HighlightedText
+                          highlightPhrases={highlightPhrases}
+                          className="text-sm leading-5 text-gray-900"
+                          highlightColor={highlightColor}
+                          hoveredPhraseIndex={hoveredPhraseIndex}
+                          onPhraseHover={setHoveredPhraseIndex}
+                        >
+                          {turn.content}
+                        </HighlightedText>
+                      ) : (
+                        turn.content
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
+            ) : (
+              <div className="border border-gray-200 rounded p-2 space-y-6">
+                <div className="space-y-2">
+                  <p className="text-[0.8125rem] font-425 leading-4 text-gray-600">User</p>
+                  <div className="text-sm leading-5 text-gray-900">
+                    {shouldHighlightPrompt ? (
+                      <HighlightedText
+                        highlightPhrases={highlightPhrases}
+                        className="text-sm leading-5 text-gray-900"
+                        highlightColor={highlightColor}
+                        hoveredPhraseIndex={hoveredPhraseIndex}
+                        onPhraseHover={setHoveredPhraseIndex}
+                      >
+                        {adversarialPromptText}
+                      </HighlightedText>
+                    ) : (
+                      adversarialPromptText
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </section>
 
           {/* AI System Response */}
@@ -129,6 +203,9 @@ export function EvaluationConversationView({ record }: EvaluationConversationVie
                 <HighlightedMarkdownRenderer
                   content={record.systemResponse}
                   highlightPhrases={highlightPhrases}
+                  highlightColor={highlightColor}
+                  hoveredPhraseIndex={hoveredPhraseIndex}
+                  onPhraseHover={setHoveredPhraseIndex}
                 />
               ) : (
                 <MarkdownRenderer content={record.systemResponse} />
@@ -144,6 +221,8 @@ export function EvaluationConversationView({ record }: EvaluationConversationVie
         record={record}
         expandedKey={expandedKey}
         onExpandedKeyChange={setExpandedKey}
+        hoveredPhraseIndex={hoveredPhraseIndex}
+        onPhraseHover={setHoveredPhraseIndex}
       />
     </div>
   )
@@ -153,34 +232,76 @@ export function EvaluationConversationView({ record }: EvaluationConversationVie
 interface HighlightedMarkdownRendererProps {
   content: string
   highlightPhrases: HighlightPhrase[]
+  highlightColor: 'amber' | 'green'
+  hoveredPhraseIndex?: number | null
+  onPhraseHover?: (index: number | null) => void
 }
 
-function HighlightedMarkdownRenderer({ content, highlightPhrases }: HighlightedMarkdownRendererProps) {
-  // For markdown content, we'll use a custom component override for paragraph elements
-  const customComponents = {
-    p: ({ children, ...props }: any) => {
-      // Convert children to string if possible
-      const text = typeof children === 'string' ? children : String(children)
-
+function HighlightedMarkdownRenderer({ content, highlightPhrases, highlightColor, hoveredPhraseIndex, onPhraseHover }: HighlightedMarkdownRendererProps) {
+  // Helper function to recursively process children and apply highlighting
+  const processChildren = (children: any): any => {
+    if (typeof children === 'string') {
       return (
-        <p className="text-sm font-425 leading-relaxed text-gray-900 mb-4 last:mb-0" {...props}>
-          <HighlightedText highlightPhrases={highlightPhrases}>
-            {text}
-          </HighlightedText>
-        </p>
-      )
-    },
-    li: ({ children, ...props }: any) => {
-      const text = typeof children === 'string' ? children : String(children)
-
-      return (
-        <li className="text-sm font-425 leading-relaxed text-gray-900 pl-1" {...props}>
-          <HighlightedText highlightPhrases={highlightPhrases}>
-            {text}
-          </HighlightedText>
-        </li>
+        <HighlightedText
+          highlightPhrases={highlightPhrases}
+          highlightColor={highlightColor}
+          hoveredPhraseIndex={hoveredPhraseIndex}
+          onPhraseHover={onPhraseHover}
+        >
+          {children}
+        </HighlightedText>
       )
     }
+    if (Array.isArray(children)) {
+      return children.map((child, idx) => (
+        <span key={idx}>{processChildren(child)}</span>
+      ))
+    }
+    return children
+  }
+
+  // Custom components for all markdown elements to support highlighting
+  const customComponents = {
+    p: ({ children, ...props }: any) => (
+      <p className="text-sm font-425 leading-relaxed text-gray-900 mb-4 last:mb-0" {...props}>
+        {processChildren(children)}
+      </p>
+    ),
+    li: ({ children, ...props }: any) => (
+      <li className="text-sm font-425 leading-relaxed text-gray-900 pl-1" {...props}>
+        {processChildren(children)}
+      </li>
+    ),
+    h1: ({ children, ...props }: any) => (
+      <h1 className="text-xl font-550 leading-6 text-gray-900 mb-3" {...props}>
+        {processChildren(children)}
+      </h1>
+    ),
+    h2: ({ children, ...props }: any) => (
+      <h2 className="text-lg font-550 leading-6 text-gray-900 mb-2" {...props}>
+        {processChildren(children)}
+      </h2>
+    ),
+    h3: ({ children, ...props }: any) => (
+      <h3 className="text-base font-550 leading-5 text-gray-900 mb-2" {...props}>
+        {processChildren(children)}
+      </h3>
+    ),
+    strong: ({ children, ...props }: any) => (
+      <strong className="font-550" {...props}>
+        {processChildren(children)}
+      </strong>
+    ),
+    em: ({ children, ...props }: any) => (
+      <em className="italic" {...props}>
+        {processChildren(children)}
+      </em>
+    ),
+    code: ({ children, ...props }: any) => (
+      <code className="bg-gray-100 px-1 rounded text-sm" {...props}>
+        {processChildren(children)}
+      </code>
+    )
   }
 
   return (

@@ -6,28 +6,37 @@ export interface HighlightPhrase {
   violatedBehaviors: string[]
 }
 
+export type HighlightColor = 'amber' | 'green'
+
 interface PhraseHighlighterProps {
   text: string
   highlightPhrases?: HighlightPhrase[]
   className?: string
+  highlightColor?: HighlightColor  // Defaults to 'amber' for violations
+  hoveredPhraseIndex?: number | null  // Index of the phrase being hovered in sidebar
+  onPhraseHover?: (index: number | null) => void  // Callback when phrase is hovered
 }
 
 /**
  * PhraseHighlighter Component
  *
- * Highlights specific phrases in text with amber background and shows tooltips
- * with guardrail information on hover.
+ * Highlights specific phrases in text with underline and shows tooltips.
+ * Background color is added only when phrase is hovered in sidebar.
  *
  * Features:
  * - Case-insensitive phrase matching
  * - Handles overlapping phrases (longer phrases take precedence)
  * - Shows guardrail name and violated behaviors in tooltip
- * - Uses amber color scheme for violations
+ * - Default: border/underline only (amber for violations, green for answers)
+ * - Hover: adds background color for emphasis
  */
 export function PhraseHighlighter({
   text,
   highlightPhrases = [],
-  className = ''
+  className = '',
+  highlightColor = 'amber',
+  hoveredPhraseIndex = null,
+  onPhraseHover
 }: PhraseHighlighterProps) {
   // If no phrases to highlight, return original text
   if (!highlightPhrases || highlightPhrases.length === 0) {
@@ -44,14 +53,20 @@ export function PhraseHighlighter({
     start: number
     end: number
     phraseInfo: HighlightPhrase
+    phraseIndex: number  // Index in the original highlightPhrases array
   }
 
   const ranges: HighlightRange[] = []
   const textLower = text.toLowerCase()
 
   // Find all occurrences of each phrase
-  for (const phraseInfo of sortedPhrases) {
+  for (let phraseIdx = 0; phraseIdx < sortedPhrases.length; phraseIdx++) {
+    const phraseInfo = sortedPhrases[phraseIdx]
     const phraseLower = phraseInfo.phrase.toLowerCase()
+
+    // Find the original index of this phrase in highlightPhrases
+    const originalIndex = highlightPhrases.findIndex(p => p.phrase === phraseInfo.phrase)
+
     let searchStart = 0
 
     while (true) {
@@ -71,7 +86,8 @@ export function PhraseHighlighter({
         ranges.push({
           start: index,
           end,
-          phraseInfo
+          phraseInfo,
+          phraseIndex: originalIndex
         })
       }
 
@@ -105,11 +121,27 @@ export function PhraseHighlighter({
     const highlightedText = text.substring(range.start, range.end)
     const tooltipContent = `${range.phraseInfo.guardrailName}\n${range.phraseInfo.violatedBehaviors.join(', ')}`
 
+    // Check if this phrase is being hovered in the sidebar
+    const isHovered = hoveredPhraseIndex === range.phraseIndex
+
+    // Dynamic color classes based on highlightColor prop
+    // Base classes: always show border (underline effect)
+    const baseClasses = highlightColor === 'green'
+      ? 'border-b-2 border-green-400'
+      : 'border-b-2 border-amber-400'
+
+    // Background: only show when hovered (emphasis effect)
+    const backgroundClass = isHovered
+      ? (highlightColor === 'green' ? 'bg-green-100' : 'bg-amber-100')
+      : ''
+
     elements.push(
       <span
         key={`highlight-${idx}`}
-        className="bg-amber-100 border-b-2 border-amber-400 rounded-sm px-0.5 cursor-help transition-colors hover:bg-amber-200"
+        className={`${baseClasses} ${backgroundClass} rounded-sm px-0.5 cursor-help transition-all duration-200`}
         title={tooltipContent}
+        onMouseEnter={() => onPhraseHover?.(range.phraseIndex)}
+        onMouseLeave={() => onPhraseHover?.(null)}
       >
         {highlightedText}
       </span>
@@ -139,18 +171,27 @@ interface HighlightedTextProps {
   children: string
   highlightPhrases?: HighlightPhrase[]
   className?: string
+  highlightColor?: HighlightColor
+  hoveredPhraseIndex?: number | null
+  onPhraseHover?: (index: number | null) => void
 }
 
 export function HighlightedText({
   children,
   highlightPhrases,
-  className
+  className,
+  highlightColor,
+  hoveredPhraseIndex,
+  onPhraseHover
 }: HighlightedTextProps) {
   return (
     <PhraseHighlighter
       text={children}
       highlightPhrases={highlightPhrases}
       className={className}
+      highlightColor={highlightColor}
+      hoveredPhraseIndex={hoveredPhraseIndex}
+      onPhraseHover={onPhraseHover}
     />
   )
 }

@@ -1,8 +1,92 @@
 // AI System Client - handles calls to different AI providers
 
-import type { AISystem, AISystemResponse } from './types.ts';
+import type { AISystem, AISystemResponse, ConversationTurn } from './types.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { aiApiLimiter } from './rate-limiter.ts';
+
+/**
+ * Call AI system with multi-turn conversation history
+ * Used for advanced jailbreak attacks like TAP and IRIS
+ */
+export async function callAISystemWithConversation(
+  aiSystem: AISystem,
+  conversationTurns: ConversationTurn[],
+  evaluationApiKey?: string
+): Promise<AISystemResponse> {
+  const { provider, model, config } = aiSystem;
+
+  // Use evaluation API key if provided, otherwise try to get from vault
+  let apiKey = evaluationApiKey;
+
+  if (!apiKey && config?.apiKeyId) {
+    // Fetch API key from vault
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
+
+    const { data: apiKeyData } = await supabase
+      .from('api_keys')
+      .select('vault_secret_id')
+      .eq('id', config.apiKeyId)
+      .single();
+
+    if (apiKeyData?.vault_secret_id) {
+      const { data: secretData } = await supabase
+        .from('vault_secrets')
+        .select('secret')
+        .eq('id', apiKeyData.vault_secret_id)
+        .single();
+
+      if (secretData?.secret) {
+        apiKey = secretData.secret;
+      }
+    }
+  }
+
+  const startTime = Date.now();
+
+  try {
+    // Use rate limiter to prevent concurrent API calls
+    const response = await aiApiLimiter.execute(async () => {
+      let apiResponse: AISystemResponse;
+
+      switch (provider.toLowerCase()) {
+        case 'openai':
+          apiResponse = await callOpenAIWithConversation(model, conversationTurns, { ...config, apiKey });
+          break;
+
+        case 'anthropic':
+          apiResponse = await callAnthropicWithConversation(model, conversationTurns, { ...config, apiKey });
+          break;
+
+        case 'custom':
+          // For custom endpoints, fall back to single prompt (last user message)
+          const lastUserMessage = conversationTurns.filter(t => t.role === 'user').pop();
+          if (!lastUserMessage) {
+            throw new Error('No user message found in conversation');
+          }
+          apiResponse = await callCustomEndpoint(model, lastUserMessage.content, config);
+          break;
+
+        default:
+          throw new Error(`Unsupported AI provider: ${provider}`);
+      }
+
+      return apiResponse;
+    });
+
+    // Add runtime if not already set
+    if (!response.runtimeMs) {
+      response.runtimeMs = Date.now() - startTime;
+    }
+
+    return response;
+  } catch (error) {
+    console.error(`Error calling AI system ${aiSystem.name} with conversation:`, error);
+    throw error;
+  }
+}
 
 export async function callAISystem(
   aiSystem: AISystem,
@@ -230,6 +314,127 @@ async function callCustomEndpoint(
     outputTokens: data.usage?.output_tokens || data.usage?.completion_tokens,
     totalTokens: data.usage?.total_tokens,
     confidenceScore: undefined, // Custom endpoints don't typically provide confidence scores
+    latencyMs: runtimeMs
+  };
+}
+
+// ============================================================================
+// MULTI-TURN CONVERSATION FUNCTIONS
+// ============================================================================
+
+async function callOpenAIWithConversation(
+  model: string,
+  conversationTurns: ConversationTurn[],
+  config: Record<string, any>
+): Promise<AISystemResponse> {
+  const apiKey = config.apiKey || Deno.env.get('OPENAI_API_KEY');
+  if (!apiKey) {
+    throw new Error('OpenAI API key not configured');
+  }
+
+  const startTime = Date.now();
+
+  // Convert ConversationTurn[] to OpenAI message format
+  const messages = conversationTurns.map(turn => ({
+    role: turn.role,
+    content: turn.content
+  }));
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: model || 'gpt-4',
+      messages: messages,
+      temperature: config.temperature || 0.7,
+      max_tokens: config.maxTokens || 1000,
+      logprobs: true,
+      top_logprobs: 1
+    })
+  });
+
+  const runtimeMs = Date.now() - startTime;
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`OpenAI API error: ${error}`);
+  }
+
+  const data = await response.json();
+
+  // Calculate confidence score from logprobs if available
+  let confidenceScore: number | undefined;
+  const logprobs = data.choices[0]?.logprobs?.content;
+  if (logprobs && Array.isArray(logprobs) && logprobs.length > 0) {
+    const avgLogprob = logprobs.reduce((sum: number, item: any) => sum + item.logprob, 0) / logprobs.length;
+    confidenceScore = Math.exp(avgLogprob);
+  }
+
+  return {
+    content: data.choices[0].message.content,
+    runtimeMs,
+    inputTokens: data.usage?.prompt_tokens,
+    outputTokens: data.usage?.completion_tokens,
+    totalTokens: data.usage?.total_tokens,
+    confidenceScore,
+    latencyMs: runtimeMs
+  };
+}
+
+async function callAnthropicWithConversation(
+  model: string,
+  conversationTurns: ConversationTurn[],
+  config: Record<string, any>
+): Promise<AISystemResponse> {
+  const apiKey = config.apiKey || Deno.env.get('ANTHROPIC_API_KEY');
+  if (!apiKey) {
+    throw new Error('Anthropic API key not configured');
+  }
+
+  const startTime = Date.now();
+
+  // Anthropic requires alternating user/assistant messages and no system messages in the messages array
+  // Filter out system messages and convert to Anthropic format
+  const messages = conversationTurns
+    .filter(turn => turn.role !== 'system')
+    .map(turn => ({
+      role: turn.role,
+      content: turn.content
+    }));
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify({
+      model: model || 'claude-3-sonnet-20240229',
+      messages: messages,
+      max_tokens: config.maxTokens || 1000
+    })
+  });
+
+  const runtimeMs = Date.now() - startTime;
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Anthropic API error: ${error}`);
+  }
+
+  const data = await response.json();
+
+  return {
+    content: data.content[0].text,
+    runtimeMs,
+    inputTokens: data.usage?.input_tokens,
+    outputTokens: data.usage?.output_tokens,
+    totalTokens: (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0),
+    confidenceScore: undefined,
     latencyMs: runtimeMs
   };
 }

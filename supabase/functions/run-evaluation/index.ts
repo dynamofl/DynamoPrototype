@@ -4,7 +4,7 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders, handleCors } from '../_shared/cors.ts';
-import { callAISystem } from '../_shared/ai-client.ts';
+import { callAISystem, callAISystemWithConversation } from '../_shared/ai-client.ts';
 import {
   evaluateWithGuardrails,
   evaluateInputGuardrails,
@@ -208,7 +208,43 @@ async function processPrompt(
       // THREE-LAYER EVALUATION SYSTEM
       // ============================================================================
 
-      const adversarialPrompt = prompt.adversarial_prompt || prompt.base_prompt;
+      // Parse adversarial prompt - JSONB format from database
+      // Format: array for multi-turn (TAP, IRIS) or {text: "..."} for single-turn
+      let adversarialPrompt: string;
+      let conversationTurns: any[] | null = null;
+
+      console.log(`\n🔍 [DEBUG] Processing prompt #${prompt.prompt_index} - Attack Type: ${prompt.attack_type}`);
+      console.log(`📝 [DEBUG] adversarial_prompt type: ${typeof prompt.adversarial_prompt}`);
+
+      // JSONB is already parsed by the database driver
+      const promptData = prompt.adversarial_prompt;
+
+      if (Array.isArray(promptData)) {
+        // Multi-turn conversation (TAP, IRIS)
+        if (promptData.length > 0 && promptData[0].role && promptData[0].content) {
+          conversationTurns = promptData;
+          console.log(`🎯 [DEBUG] Multi-turn conversation detected! Turns: ${conversationTurns.length}`);
+          console.log(`💬 [DEBUG] Conversation roles: ${conversationTurns.map(t => t.role).join(' → ')}`);
+
+          // For logging/display purposes, use the last user message
+          const lastUserMessage = promptData.filter((t: any) => t.role === 'user').pop();
+          adversarialPrompt = lastUserMessage?.content || prompt.base_prompt;
+          console.log(`📤 [DEBUG] Using multi-turn conversation with ${conversationTurns.length} turns`);
+        } else {
+          console.log(`⚠️  [DEBUG] Array format but not valid conversation structure`);
+          adversarialPrompt = prompt.base_prompt;
+        }
+      } else if (promptData && typeof promptData === 'object' && promptData.text) {
+        // Single-turn attack wrapped in {text: "..."}
+        adversarialPrompt = promptData.text;
+        console.log(`📝 [DEBUG] Single-turn attack: ${adversarialPrompt.substring(0, 100)}...`);
+      } else {
+        // Fallback to base prompt
+        adversarialPrompt = prompt.base_prompt;
+        console.log(`⚠️  [DEBUG] Unexpected format, using base_prompt`);
+      }
+
+      console.log(`🚀 [DEBUG] Will use: ${conversationTurns ? 'MULTI-TURN' : 'SINGLE-TURN'} call\n`);
 
       // Separate guardrails by type
       const inputGuardrails = guardrails.filter(g => g.guardrail_type === 'input');
@@ -238,7 +274,7 @@ async function processPrompt(
         model: internalModels.judgeModel.modelId,
         apiKey: internalModels.judgeModel.apiKey,
         temperature: 0,
-        maxTokens: 200
+        maxTokens: 800  // Increased to accommodate JSON with answerPhrases array
       } : undefined;
 
       // STEP 1: Evaluate INPUT guardrails (on prompt only)
@@ -264,11 +300,23 @@ async function processPrompt(
       }
 
       // STEP 2: Call AI System (ALWAYS runs, even if input guardrail blocked)
-      const response = await callAISystem(
-        evaluation.ai_systems,
-        adversarialPrompt,
-        evaluationApiKey
-      );
+      // Use multi-turn conversation function if conversationTurns are present (TAP, IRIS attacks)
+      console.log(`🤖 [DEBUG] Calling AI System: ${evaluation.ai_systems.name} (${evaluation.ai_systems.provider}/${evaluation.ai_systems.model})`);
+      console.log(`📞 [DEBUG] Call type: ${conversationTurns ? 'callAISystemWithConversation' : 'callAISystem'}`);
+
+      const response = conversationTurns
+        ? await callAISystemWithConversation(
+            evaluation.ai_systems,
+            conversationTurns,
+            evaluationApiKey
+          )
+        : await callAISystem(
+            evaluation.ai_systems,
+            adversarialPrompt,
+            evaluationApiKey
+          );
+
+      console.log(`✅ [DEBUG] AI System response received: ${response.content.substring(0, 100)}...`);
 
       // STEP 3: Evaluate OUTPUT guardrails (on response)
       let outputGuardrailJudgement: string | null = null;
@@ -295,7 +343,7 @@ async function processPrompt(
 
       // STEP 4: Judge Model - Did AI answer or refuse?
       const judgeResult = await evaluateWithJudgeModel(
-        adversarialPrompt,
+        prompt.base_prompt,  // Use base prompt to check if AI answered the original question
         response.content,
         judgeModelConfig
       );
@@ -343,7 +391,8 @@ async function processPrompt(
             reason: judgeModelReason,
             outputTokens: response.outputTokens || null,
             confidenceScore: judgeResult.confidenceScore || null,
-            latencyMs: judgeResult.latencyMs || null
+            latencyMs: judgeResult.latencyMs || null,
+            answerPhrases: judgeResult.answerPhrases || null
           },
 
           // Legacy fields (for backward compatibility)

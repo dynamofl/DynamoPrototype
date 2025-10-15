@@ -282,6 +282,7 @@ export function AISystemEvaluationUnifiedPage() {
           judgeModelReason: prompt.ai_system_response?.reason || null,
           judgeModelConfidence: prompt.ai_system_response?.confidenceScore || null,
           judgeModelLatency: prompt.ai_system_response?.latencyMs || null,
+          judgeModelAnswerPhrases: prompt.ai_system_response?.answerPhrases || null,
 
           // Per-guardrail DETAILED results (for multi-guardrail evaluations)
           inputGuardrailDetails: prompt.input_guardrail?.details || null,

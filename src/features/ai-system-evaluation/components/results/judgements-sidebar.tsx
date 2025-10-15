@@ -8,6 +8,8 @@ interface JudgementsSidebarProps {
   record: JailbreakEvaluationResult
   expandedKey?: string | null
   onExpandedKeyChange?: (key: string | null) => void
+  hoveredPhraseIndex?: number | null
+  onPhraseHover?: (index: number | null) => void
 }
 
 // Info Icon component
@@ -31,9 +33,11 @@ interface GuardrailDetailCardProps {
   type: 'input' | 'output'
   isExpanded: boolean
   onToggle: (key: string) => void
+  hoveredPhraseIndex?: number | null
+  onPhraseHover?: (index: number | null) => void
 }
 
-function GuardrailDetailCard({ detail, type, isExpanded, onToggle }: GuardrailDetailCardProps) {
+function GuardrailDetailCard({ detail, type, isExpanded, onToggle, hoveredPhraseIndex, onPhraseHover }: GuardrailDetailCardProps) {
   // Use guardrailId as the unique key to avoid index mismatch issues with sorting
   const uniqueKey = `${type}-${detail.guardrailId}`
   // Extract all violated behaviors from violations array
@@ -90,13 +94,22 @@ function GuardrailDetailCard({ detail, type, isExpanded, onToggle }: GuardrailDe
         )}
       </div>
 
-      {/* Violated Behaviors List */}
-      {isExpanded && hasViolations && (
+      {/* Violation Phrases List */}
+      {isExpanded && hasViolations && detail.violations && (
         <div className="px-1 pb-2 pl-8">
           <div className="flex flex-col gap-1">
-            {violatedBehaviors.map((behavior, idx) => (
-              <div key={idx} className="text-xs leading-4 text-gray-600 font-425">
-                • {behavior}
+            {detail.violations.map((violation, idx) => (
+              <div
+                key={idx}
+                className={`text-xs leading-4 font-425 cursor-pointer transition-colors ${
+                  hoveredPhraseIndex === idx
+                    ? 'text-amber-700 font-550'
+                    : 'text-gray-600 hover:text-amber-600'
+                }`}
+                onMouseEnter={() => onPhraseHover?.(idx)}
+                onMouseLeave={() => onPhraseHover?.(null)}
+              >
+                • {violation.violatedBehaviors.join(', ')}
               </div>
             ))}
           </div>
@@ -109,7 +122,9 @@ function GuardrailDetailCard({ detail, type, isExpanded, onToggle }: GuardrailDe
 export function JudgementsSidebar({
   record,
   expandedKey: externalExpandedKey,
-  onExpandedKeyChange
+  onExpandedKeyChange,
+  hoveredPhraseIndex,
+  onPhraseHover
 }: JudgementsSidebarProps) {
   // Use internal state if no external state is provided
   const [internalExpandedKey, setInternalExpandedKey] = useState<string | null>(null)
@@ -215,6 +230,8 @@ export function JudgementsSidebar({
                         type="input"
                         isExpanded={expandedKey === key}
                         onToggle={handleToggle}
+                        hoveredPhraseIndex={hoveredPhraseIndex}
+                        onPhraseHover={onPhraseHover}
                       />
                     )
                   })}
@@ -233,6 +250,8 @@ export function JudgementsSidebar({
                         type="output"
                         isExpanded={expandedKey === key}
                         onToggle={handleToggle}
+                        hoveredPhraseIndex={hoveredPhraseIndex}
+                        onPhraseHover={onPhraseHover}
                       />
                     )
                   })}
@@ -249,31 +268,78 @@ export function JudgementsSidebar({
               Response Judgement
             </h3>
             <div className="bg-gray-0 border border-gray-200 rounded-md p-1 w-full">
-              <div className="flex gap-2 items-start px-1 py-2 rounded-md">
-                {getModelStatusIcon(record.judgeModelJudgement || record.modelJudgement)}
-                <div className="flex-1 flex flex-col gap-1 items-start justify-center min-w-0">
-                  <div className="flex flex-col gap-0.5 items-start justify-center w-full">
-                    <div className="flex gap-0.5 items-start text-[0.8125rem] leading-5 text-gray-900">
-                      <span className="font-425">gpt-4o-prod:</span>
-                      <span className="font-550 tracking-[0.065px]">{record.judgeModelJudgement || record.modelJudgement}</span>
-                    </div>
-                    <div className="flex gap-1 items-center text-xs leading-4 text-gray-600">
-                      {record.judgeModelConfidence !== undefined && record.judgeModelConfidence !== null && (
-                        <>
-                          <span className="font-425">Confidence:</span>
-                          <span className="font-425">{record.judgeModelConfidence.toFixed(2)}</span>
-                        </>
-                      )}
-                      {record.outputTokens !== undefined && (
-                        <>
-                          {record.judgeModelConfidence !== undefined && record.judgeModelConfidence !== null && <span className="font-425">•</span>}
-                          <span className="font-425">Tokens:</span>
-                          <span className="font-425">{record.outputTokens.toLocaleString()}</span>
-                        </>
-                      )}
+              <div className="flex flex-col border-b border-gray-200 last:border-b-0">
+                <div
+                  className={`flex gap-2 items-start px-1 py-2 ${record.judgeModelAnswerPhrases && record.judgeModelAnswerPhrases.length > 0 ? 'cursor-pointer hover:bg-gray-50' : ''}`}
+                  onClick={() => {
+                    if (record.judgeModelAnswerPhrases && record.judgeModelAnswerPhrases.length > 0) {
+                      handleToggle('judge-model')
+                    }
+                  }}
+                >
+                  {getModelStatusIcon(record.judgeModelJudgement || record.modelJudgement)}
+                  <div className="flex-1 flex flex-col gap-1 items-start justify-center min-w-0">
+                    <div className="flex flex-col gap-0.5 items-start justify-center w-full">
+                      <div className="flex gap-0.5 items-start text-[0.8125rem] leading-5 text-gray-900">
+                        <span className="font-425">gpt-4o-prod:</span>
+                        <span className="font-550 tracking-[0.065px]">{record.judgeModelJudgement || record.modelJudgement}</span>
+                      </div>
+                      <div className="flex gap-1 items-center text-xs leading-4 text-gray-600">
+                        {record.judgeModelConfidence !== undefined && record.judgeModelConfidence !== null && (
+                          <>
+                            <span className="font-425">Confidence:</span>
+                            <span className="font-425">{record.judgeModelConfidence.toFixed(2)}</span>
+                          </>
+                        )}
+                        {record.outputTokens !== undefined && (
+                          <>
+                            {record.judgeModelConfidence !== undefined && record.judgeModelConfidence !== null && <span className="font-425">•</span>}
+                            <span className="font-425">Tokens:</span>
+                            <span className="font-425">{record.outputTokens.toLocaleString()}</span>
+                          </>
+                        )}
+                        {record.judgeModelAnswerPhrases && record.judgeModelAnswerPhrases.length > 0 && (
+                          <>
+                            <span className="font-425">•</span>
+                            <span className="font-425">Answer Phrases:</span>
+                            <span className="font-425">{record.judgeModelAnswerPhrases.length}</span>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
+                  {record.judgeModelAnswerPhrases && record.judgeModelAnswerPhrases.length > 0 && (
+                    <div className="flex gap-2 items-center">
+                      {expandedKey === 'judge-model' ? (
+                        <ChevronsDownUp className="w-4 h-4 shrink-0 text-gray-400" />
+                      ) : (
+                        <ChevronsUpDown className="w-4 h-4 shrink-0 text-gray-400" />
+                      )}
+                    </div>
+                  )}
                 </div>
+
+                {/* Answer Phrases List */}
+                {expandedKey === 'judge-model' && record.judgeModelAnswerPhrases && record.judgeModelAnswerPhrases.length > 0 && (
+                  <div className="px-1 pb-2 pl-8">
+                    <div className="flex flex-col gap-1">
+                      {record.judgeModelAnswerPhrases.map((answerPhrase, idx) => (
+                        <div
+                          key={idx}
+                          className={`text-xs leading-4 font-425 cursor-pointer transition-colors ${
+                            hoveredPhraseIndex === idx
+                              ? 'text-green-700 font-550'
+                              : 'text-gray-600 hover:text-green-600'
+                          }`}
+                          onMouseEnter={() => onPhraseHover?.(idx)}
+                          onMouseLeave={() => onPhraseHover?.(null)}
+                        >
+                          • {answerPhrase.reasoning}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

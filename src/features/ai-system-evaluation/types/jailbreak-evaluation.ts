@@ -17,6 +17,17 @@ export type AttackType =
   | "TAP"
   | "IRIS";
 
+// Multi-turn conversation support for advanced jailbreak attacks (TAP, IRIS)
+export interface ConversationTurn {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
+
+// Adversarial prompt can be either:
+// - Single-turn: {text: string}
+// - Multi-turn: ConversationTurn[]
+export type AdversarialPrompt = { text: string } | ConversationTurn[];
+
 export type GuardrailJudgement = "Allowed" | "Blocked";
 export type ModelJudgement = "Answered" | "Blocked";
 export type AttackOutcome = "Attack Success" | "Attack Failure";
@@ -39,6 +50,12 @@ export interface PhraseViolation {
   violatedBehaviors: string[];
 }
 
+// Answer phrase tracking: key phrases that answer the question
+export interface AnswerPhrase {
+  phrase: string;
+  reasoning: string;
+}
+
 // Per-guardrail evaluation detail
 export interface GuardrailEvaluationDetail {
   guardrailId: string;
@@ -58,7 +75,7 @@ export interface JailbreakEvaluationResult {
   behaviorType: BehaviorType;
   basePrompt: string;
   attackType: AttackType;
-  adversarialPrompt: string;
+  adversarialPrompt: AdversarialPrompt; // JSONB: {text: string} or ConversationTurn[]
   systemResponse: string;
 
   // Guardrail judgements - OVERALL results
@@ -78,6 +95,7 @@ export interface JailbreakEvaluationResult {
   judgeModelReason?: string | null;
   judgeModelConfidence?: number | null;            // Judge model confidence (0-1)
   judgeModelLatency?: number | null;               // Judge model evaluation time
+  judgeModelAnswerPhrases?: AnswerPhrase[] | null; // Key phrases that answer the question (only when judgement is 'Answered')
 
   // Per-guardrail DETAILED results (for multi-guardrail evaluations)
   inputGuardrailDetails?: GuardrailEvaluationDetail[] | null;
