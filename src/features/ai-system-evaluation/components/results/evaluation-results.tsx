@@ -225,6 +225,7 @@ export function EvaluationResults({
         {selectedTab === 'summary' && (
           <EvaluationSummaryView
             summary={results.summary}
+            hasGuardrails={results.config.guardrailIds && results.config.guardrailIds.length > 0}
             aiSystemName={aiSystemName}
             aiSystemIcon={aiSystemIcon}
             timestamp={results.timestamp}
@@ -238,6 +239,7 @@ export function EvaluationResults({
         {selectedTab === 'data' && (
           <EvaluationDataView
             results={results.results}
+            aiSystemName={aiSystemName}
             hasGuardrails={results.config.guardrailIds && results.config.guardrailIds.length > 0}
           />
         )}

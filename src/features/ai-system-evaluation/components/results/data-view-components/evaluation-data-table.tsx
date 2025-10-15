@@ -114,7 +114,9 @@ export function EvaluationDataTable({
             {hasInputGuardrails && <TableHead className="font-450">Input Guardrail</TableHead>}
             {hasOutputGuardrails && <TableHead className="font-450">Output Guardrail</TableHead>}
             <TableHead className="font-450">Judge Model</TableHead>
-            <TableHead className="font-450">Attack Outcome</TableHead>
+            <TableHead className="font-450">
+              {hasGuardrails ? 'Attack Outcome' : 'AI System Attack Outcome'}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -204,7 +206,9 @@ export function EvaluationDataTable({
                   }
                 </TableCell>
                 <TableCell>
-                  {renderAttackOutcome(record.attackOutcome)}
+                  {renderAttackOutcome(
+                    hasGuardrails ? record.attackOutcome : (record.aiSystemAttackOutcome || record.attackOutcome)
+                  )}
                 </TableCell>
               </TableRow>
             )

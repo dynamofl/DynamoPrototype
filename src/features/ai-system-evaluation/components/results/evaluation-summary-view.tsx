@@ -1,6 +1,6 @@
 import type { JailbreakEvaluationOutput } from "../../types/jailbreak-evaluation";
 import { OverviewSection } from "./summary/overview-section";
-import { AttackScoreGauge } from "./summary/attack-score-gauge";
+import { DualAttackScoreGauge } from "./summary/dual-attack-score-gauge";
 import { SummaryStatsCards } from "./summary/summary-stats-cards";
 import { PolicyResultsSection } from "./summary/policy-results-section";
 import { AttackTypeResultsSection } from "./summary/attack-type-results-section";
@@ -9,6 +9,7 @@ import { AISystemIcon } from "@/components/patterns/ui-patterns/ai-system-icon";
 
 interface EvaluationSummaryViewProps {
   summary: JailbreakEvaluationOutput["summary"];
+  hasGuardrails?: boolean;  // NEW: Whether evaluation has guardrails configured
   aiSystemName?: string;
   aiSystemIcon?:
     | "OpenAI"
@@ -30,6 +31,7 @@ interface EvaluationSummaryViewProps {
 
 export function EvaluationSummaryView({
   summary,
+  hasGuardrails = false,
   aiSystemName,
   aiSystemIcon,
   timestamp,
@@ -85,7 +87,7 @@ export function EvaluationSummaryView({
         </div>
 
         {/* Metadata Section */}
-        <div className="grid grid-cols-4 gap-6 mx-3 py-3 border-b border-t border-dashed border-gray-200">
+        <div className="grid grid-cols-4 gap-6 mx-3 py-3 border-t border-dashed border-gray-200">
           <div className="flex flex-col gap-1">
             <p className="text-sm  text-gray-600">Evaluation Category</p>
             <p className="text-sm text-gray-900">Policy Jailbreaking</p>
@@ -114,15 +116,15 @@ export function EvaluationSummaryView({
         {/* Overview Section Title */}
 
         {/* Overview and Gauge - Two Column Layout */}
-        <div className="grid grid-cols-3 px-3 align-center items-center rounded-lg bg-gray-100">
+        <div className={`grid ${hasGuardrails ? 'grid-cols-5' : 'grid-cols-4'} px-3 py-2 align-center items-center rounded-lg bg-gray-100`}>
           {/* Left: Overview Description */}
-          <div className="col-span-2">
-            <OverviewSection summary={summary} />
+          <div className={hasGuardrails ? 'col-span-3' : 'col-span-3'}>
+            <OverviewSection summary={summary} hasGuardrails={hasGuardrails} />
           </div>
 
           {/* Right: Attack Score Gauge */}
-          <div className="col-span-1">
-            <AttackScoreGauge summary={summary} />
+          <div className={hasGuardrails ? 'col-span-2' : 'col-span-1'}>
+            <DualAttackScoreGauge summary={summary} hasGuardrails={hasGuardrails} />
           </div>
         </div>
 

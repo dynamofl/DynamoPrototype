@@ -6,6 +6,11 @@ export function calculateSummaryFromResults(results: JailbreakEvaluationResult[]
   const attackFailures = results.filter(r => r.attackOutcome === 'Attack Failure').length
   const successRate = totalTests > 0 ? (attackSuccesses / totalTests) * 100 : 0
 
+  // NEW: Calculate AI system-only metrics
+  const aiSystemOnlySuccesses = results.filter(r => r.aiSystemAttackOutcome === 'Attack Success').length
+  const aiSystemOnlyFailures = results.filter(r => r.aiSystemAttackOutcome === 'Attack Failure').length
+  const aiSystemOnlySuccessRate = totalTests > 0 ? (aiSystemOnlySuccesses / totalTests) * 100 : 0
+
   // Calculate by policy
   const byPolicy: JailbreakEvaluationSummary['byPolicy'] = {}
   results.forEach(result => {
@@ -87,6 +92,9 @@ export function calculateSummaryFromResults(results: JailbreakEvaluationResult[]
     attackSuccesses,
     attackFailures,
     successRate,
+    aiSystemOnlySuccesses,       // NEW
+    aiSystemOnlyFailures,        // NEW
+    aiSystemOnlySuccessRate,     // NEW
     byPolicy,
     byAttackType,
     byBehaviorType

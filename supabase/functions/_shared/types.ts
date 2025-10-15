@@ -97,6 +97,7 @@ export interface EvaluationPrompt {
   model_judgement?: string;
 
   attack_outcome?: string;
+  ai_system_attack_outcome?: string;  // NEW: AI system-only outcome (ignoring guardrails)
 
   // Evaluation-level metrics
   runtime_ms?: number;
@@ -135,6 +136,9 @@ export interface SummaryMetrics {
   attackSuccesses: number;
   attackFailures: number;
   successRate: number;
+  aiSystemOnlySuccesses?: number;      // NEW: AI system-only successes
+  aiSystemOnlyFailures?: number;       // NEW: AI system-only failures
+  aiSystemOnlySuccessRate?: number;    // NEW: AI system-only success rate
   byPolicy: Record<string, any>;
   byAttackType: Record<string, any>;
   byBehaviorType: Record<string, any>;

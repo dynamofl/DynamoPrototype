@@ -6,7 +6,12 @@ export interface HighlightPhrase {
   violatedBehaviors: string[]
 }
 
-export type HighlightColor = 'amber' | 'green'
+export type HighlightColor = 'amber' | 'green' | 'red'
+
+export interface HoveredBehaviorContext {
+  behavior: string
+  guardrailName: string
+}
 
 interface PhraseHighlighterProps {
   text: string
@@ -14,7 +19,11 @@ interface PhraseHighlighterProps {
   className?: string
   highlightColor?: HighlightColor  // Defaults to 'amber' for violations
   hoveredPhraseIndex?: number | null  // Index of the phrase being hovered in sidebar
+  hoveredBehavior?: HoveredBehaviorContext | null  // Specific behavior being hovered (for behavior-level highlighting)
+  selectedBehaviors?: Set<string> | null  // Behaviors selected from phrase click (for multi-behavior highlighting)
   onPhraseHover?: (index: number | null) => void  // Callback when phrase is hovered
+  onPhraseClick?: (index: number) => void  // Callback when phrase is clicked
+  showHighlightByDefault?: boolean  // If false, only show highlight on hover (default: true)
 }
 
 /**
@@ -29,6 +38,7 @@ interface PhraseHighlighterProps {
  * - Shows guardrail name and violated behaviors in tooltip
  * - Default: border/underline only (amber for violations, green for answers)
  * - Hover: adds background color for emphasis
+ * - Click: triggers callback to expand related judgment in sidebar
  */
 export function PhraseHighlighter({
   text,
@@ -36,7 +46,11 @@ export function PhraseHighlighter({
   className = '',
   highlightColor = 'amber',
   hoveredPhraseIndex = null,
-  onPhraseHover
+  hoveredBehavior = null,
+  selectedBehaviors = null,
+  onPhraseHover,
+  onPhraseClick,
+  showHighlightByDefault = true
 }: PhraseHighlighterProps) {
   // If no phrases to highlight, return original text
   if (!highlightPhrases || highlightPhrases.length === 0) {
@@ -124,24 +138,39 @@ export function PhraseHighlighter({
     // Check if this phrase is being hovered in the sidebar
     const isHovered = hoveredPhraseIndex === range.phraseIndex
 
-    // Dynamic color classes based on highlightColor prop
-    // Base classes: always show border (underline effect)
-    const baseClasses = highlightColor === 'green'
-      ? 'border-b-2 border-green-400'
-      : 'border-b-2 border-amber-400'
+    // Check if this phrase is associated with the hovered behavior (single behavior hover)
+    // Must match BOTH the behavior AND the guardrail name to ensure we only highlight phrases from the same guardrail
+    const isBehaviorHovered = hoveredBehavior !== null &&
+      range.phraseInfo.guardrailName === hoveredBehavior.guardrailName &&
+      range.phraseInfo.violatedBehaviors.includes(hoveredBehavior.behavior)
 
-    // Background: only show when hovered (emphasis effect)
-    const backgroundClass = isHovered
-      ? (highlightColor === 'green' ? 'bg-green-100' : 'bg-amber-100')
+    // Check if this phrase is associated with any selected behaviors (from phrase click)
+    const hasSelectedBehavior = selectedBehaviors !== null && selectedBehaviors.size > 0 &&
+      range.phraseInfo.violatedBehaviors.some(behavior => selectedBehaviors.has(behavior))
+
+    // Dynamic color classes based on highlightColor prop
+    // Base classes: show border only if showHighlightByDefault is true
+    const baseClasses = showHighlightByDefault
+      ? (highlightColor === 'green' ? 'border-b-2 border-green-400' :
+         highlightColor === 'red' ? 'border-b-2 border-red-400' :
+         'border-b-2 border-amber-400')
+      : ''
+
+    // Background: show when hovered (emphasis effect), behavior is hovered, or phrase has selected behaviors
+    const backgroundClass = (isHovered || isBehaviorHovered || hasSelectedBehavior)
+      ? (highlightColor === 'green' ? 'bg-green-100' :
+         highlightColor === 'red' ? 'bg-red-100' :
+         'bg-amber-100')
       : ''
 
     elements.push(
       <span
         key={`highlight-${idx}`}
-        className={`${baseClasses} ${backgroundClass} rounded-sm px-0.5 cursor-help transition-all duration-200`}
+        className={`${baseClasses} ${backgroundClass}  px-0.5 cursor-pointer transition-all duration-200`}
         title={tooltipContent}
         onMouseEnter={() => onPhraseHover?.(range.phraseIndex)}
         onMouseLeave={() => onPhraseHover?.(null)}
+        onClick={() => onPhraseClick?.(range.phraseIndex)}
       >
         {highlightedText}
       </span>
@@ -173,7 +202,11 @@ interface HighlightedTextProps {
   className?: string
   highlightColor?: HighlightColor
   hoveredPhraseIndex?: number | null
+  hoveredBehavior?: HoveredBehaviorContext | null
+  selectedBehaviors?: Set<string> | null
   onPhraseHover?: (index: number | null) => void
+  onPhraseClick?: (index: number) => void
+  showHighlightByDefault?: boolean
 }
 
 export function HighlightedText({
@@ -182,7 +215,11 @@ export function HighlightedText({
   className,
   highlightColor,
   hoveredPhraseIndex,
-  onPhraseHover
+  hoveredBehavior,
+  selectedBehaviors,
+  onPhraseHover,
+  onPhraseClick,
+  showHighlightByDefault
 }: HighlightedTextProps) {
   return (
     <PhraseHighlighter
@@ -191,7 +228,11 @@ export function HighlightedText({
       className={className}
       highlightColor={highlightColor}
       hoveredPhraseIndex={hoveredPhraseIndex}
+      hoveredBehavior={hoveredBehavior}
+      selectedBehaviors={selectedBehaviors}
       onPhraseHover={onPhraseHover}
+      onPhraseClick={onPhraseClick}
+      showHighlightByDefault={showHighlightByDefault}
     />
   )
 }

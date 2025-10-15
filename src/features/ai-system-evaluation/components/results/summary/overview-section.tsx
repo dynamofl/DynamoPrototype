@@ -2,6 +2,7 @@ import type { JailbreakEvaluationOutput } from "../../../types/jailbreak-evaluat
 
 interface OverviewSectionProps {
   summary: JailbreakEvaluationOutput['summary'];
+  hasGuardrails?: boolean;
 }
 
 function GaugeChart({ value }: { value: number }) {
@@ -75,22 +76,40 @@ function getRiskLevel(successRate: number): string {
   return "high risk level";
 }
 
-export function OverviewSection({ summary }: OverviewSectionProps) {
+export function OverviewSection({ summary, hasGuardrails = false }: OverviewSectionProps) {
   const policyCount = Object.keys(summary.byPolicy).length;
   const riskLevel = getRiskLevel(summary.successRate);
+
+  // Get attack type count from byAttackType
+  const attackTypeCount = Object.keys(summary.byAttackType || {}).length;
 
   return (
     <div className="text-sm space-y-2">
       {/* Description */}
-        <h3 className="font-semibold text-gray-900">Overview</h3>
+      <h3 className="font-semibold text-gray-900">Overview</h3>
 
-      <p className="text-gray-900 leading-relaxed">
-        The system demonstrates resilience against jailbreak attacks, with an attack success rate of{' '}
-        <span className="text-gray-900 font-medium">{summary.successRate.toFixed(1)}%</span> across{' '}
-        <span className="text-gray-900 font-medium">{summary.totalTests}</span> adversarial prompts spanning{' '}
-        <span className="text-gray-900 font-medium">{policyCount}</span> policy areas. This indicates a{' '}
-        <span className="text-gray-900 font-medium">{riskLevel}</span> in deployment.
-      </p>
+      {hasGuardrails ? (
+        // With Guardrails: Compare baseline vs protected
+        <p className="text-gray-900 leading-relaxed">
+          The system demonstrates strong resilience against jailbreak attacks. In the baseline condition,
+          the AI System exhibits a high Attack Success Rate (ASR) of{' '}
+          <span className="text-gray-900 font-medium">
+            {summary.aiSystemOnlySuccessRate?.toFixed(1) ?? summary.successRate.toFixed(1)}%
+          </span>, reflecting significant vulnerability. With guardrails enabled, the ASR is reduced to just{' '}
+          <span className="text-gray-900 font-medium">{summary.successRate.toFixed(1)}%</span> across{' '}
+          <span className="text-gray-900 font-medium">{summary.totalTests}</span> adversarial prompts in{' '}
+          <span className="text-gray-900 font-medium">{attackTypeCount}</span> attack areas.
+        </p>
+      ) : (
+        // Without Guardrails: Original text
+        <p className="text-gray-900 leading-relaxed">
+          The system demonstrates resilience against jailbreak attacks, with an attack success rate of{' '}
+          <span className="text-gray-900 font-medium">{summary.successRate.toFixed(1)}%</span> across{' '}
+          <span className="text-gray-900 font-medium">{summary.totalTests}</span> adversarial prompts spanning{' '}
+          <span className="text-gray-900 font-medium">{policyCount}</span> policy areas. This indicates a{' '}
+          <span className="text-gray-900 font-medium">{riskLevel}</span> in deployment.
+        </p>
+      )}
     </div>
   );
 }

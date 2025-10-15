@@ -293,6 +293,7 @@ export function AISystemEvaluationUnifiedPage() {
           modelJudgement: prompt.model_judgement || 'Unknown',
 
           attackOutcome: prompt.attack_outcome || 'Unknown',
+          aiSystemAttackOutcome: prompt.ai_system_attack_outcome || prompt.attack_outcome || 'Unknown', // NEW: AI system-only outcome
 
           // Evaluation-level metrics
           runtimeMs: prompt.runtime_ms,

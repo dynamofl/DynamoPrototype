@@ -17,10 +17,11 @@ type ViewType = 'table' | 'conversation'
 
 interface EvaluationDataViewProps {
   results: JailbreakEvaluationResult[]
+  aiSystemName?: string
   hasGuardrails?: boolean
 }
 
-export function EvaluationDataView({ results, hasGuardrails = true }: EvaluationDataViewProps) {
+export function EvaluationDataView({ results, aiSystemName, hasGuardrails = true }: EvaluationDataViewProps) {
   const [allData, setAllData] = useState<JailbreakEvaluationResult[]>([])
   const [filteredData, setFilteredData] = useState<JailbreakEvaluationResult[]>([])
   const [displayData, setDisplayData] = useState<JailbreakEvaluationResult[]>([])
@@ -241,7 +242,7 @@ export function EvaluationDataView({ results, hasGuardrails = true }: Evaluation
                   const selectedRecord = displayData.find(record => (record as any).id === selectedConversationId)
                   return selectedRecord ? (
                     <div className="animate-in fade-in-0 slide-in-from-right-2 duration-300 h-full">
-                      <EvaluationConversationView record={selectedRecord} />
+                      <EvaluationConversationView record={selectedRecord} aiSystemName={aiSystemName} />
                     </div>
                   ) : (
                     <div className="flex items-center justify-center h-64 animate-in fade-in-0 duration-300">

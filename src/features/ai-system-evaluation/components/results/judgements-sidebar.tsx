@@ -1,31 +1,34 @@
 import type { JailbreakEvaluationResult, GuardrailEvaluationDetail } from '../../types/jailbreak-evaluation'
-import { InfoIcon, ChevronsUpDown, ChevronsDownUp } from 'lucide-react'
+import { InfoIcon, ChevronsUpDown, ChevronsDownUp, MessageCircleOff, CircleCheckBig, ShieldBan, ShieldCheck, Circle } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import BlockIcon from '@/assets/icons/Block.svg'
-import StatusCompleteIcon from '@/assets/icons/StatusComplete.svg'
+import { motion, AnimatePresence } from 'framer-motion'
+import type { HoveredBehaviorContext } from '@/components/patterns/ui-patterns/phrase-highlighter'
 
 interface JudgementsSidebarProps {
   record: JailbreakEvaluationResult
-  expandedKey?: string | null
-  onExpandedKeyChange?: (key: string | null) => void
-  hoveredPhraseIndex?: number | null
-  onPhraseHover?: (index: number | null) => void
+  aiSystemName?: string
+  expandedKeys?: Set<string>
+  onExpandedKeysChange?: (keys: Set<string>) => void
+  hoveredBehavior?: HoveredBehaviorContext | null
+  onBehaviorHover?: (behavior: HoveredBehaviorContext | null) => void
+  selectedBehaviors?: Set<string> | null
 }
 
 // Info Icon component
 const InfoIconOutline = () => <InfoIcon className="w-4 h-4 text-gray-400" />
 
-// Status icons using the same logic from the original component
+// Status icons using Lucide icons
 function getStatusIcon(status: string) {
   return status === 'Blocked' ?
-    <img src={BlockIcon} alt="Blocked" className="w-5 h-5" style={{ filter: 'brightness(0) saturate(100%) invert(25%) sepia(85%) saturate(5963%) hue-rotate(346deg) brightness(93%) contrast(90%)' }} /> :
-    <img src={StatusCompleteIcon} alt="Allowed" className="w-5 h-5" style={{ filter: 'brightness(0) saturate(100%) invert(39%) sepia(80%) saturate(1969%) hue-rotate(96deg) brightness(96%) contrast(95%)' }} />
+    
+    <div className='p-1.5 bg-red-50 rounded-full'><ShieldBan className="w-4 h-4 text-red-600" /></div> :
+    <div className='p-1.5 bg-green-50 rounded-full'><ShieldCheck className="w-4 h-4 text-green-600" /></div>
 }
 
 function getModelStatusIcon(status: string) {
   return status === 'Refused' ?
-    <img src={BlockIcon} alt="Refused" className="w-5 h-5" style={{ filter: 'brightness(0) saturate(100%) invert(25%) sepia(85%) saturate(5963%) hue-rotate(346deg) brightness(93%) contrast(90%)' }} /> :
-    <img src={StatusCompleteIcon} alt="Answered" className="w-5 h-5" style={{ filter: 'brightness(0) saturate(100%) invert(39%) sepia(80%) saturate(1969%) hue-rotate(96deg) brightness(96%) contrast(95%)' }} />
+     <div className='p-1.5 bg-red-50 rounded-full'><MessageCircleOff className="w-4 h-4 text-red-600" /></div> :
+   <div className='p-1.5 bg-green-50 rounded-full'><CircleCheckBig className="w-4 h-4 text-green-600" /></div>
 }
 
 interface GuardrailDetailCardProps {
@@ -33,57 +36,72 @@ interface GuardrailDetailCardProps {
   type: 'input' | 'output'
   isExpanded: boolean
   onToggle: (key: string) => void
-  hoveredPhraseIndex?: number | null
-  onPhraseHover?: (index: number | null) => void
+  hoveredBehavior?: HoveredBehaviorContext | null
+  onBehaviorHover?: (behavior: HoveredBehaviorContext | null) => void
+  selectedBehaviors?: Set<string> | null
 }
 
-function GuardrailDetailCard({ detail, type, isExpanded, onToggle, hoveredPhraseIndex, onPhraseHover }: GuardrailDetailCardProps) {
-  // Use guardrailId as the unique key to avoid index mismatch issues with sorting
-  const uniqueKey = `${type}-${detail.guardrailId}`
-  // Extract all violated behaviors from violations array
-  const violatedBehaviors = detail.violations
-    ? Array.from(new Set(detail.violations.flatMap(v => v.violatedBehaviors)))
-    : []
+interface ResponseJudgementCardProps {
+  record: JailbreakEvaluationResult
+  aiSystemName: string
+  isExpanded: boolean
+  onToggle: (key: string) => void
+  hoveredBehavior?: HoveredBehaviorContext | null
+  onBehaviorHover?: (behavior: HoveredBehaviorContext | null) => void
+  selectedBehaviors?: Set<string> | null
+}
 
-  // Only show expand/collapse for judgements with violations
-  const hasViolations = violatedBehaviors.length > 0
+function ResponseJudgementCard({ record, aiSystemName, isExpanded, onToggle, hoveredBehavior, onBehaviorHover, selectedBehaviors }: ResponseJudgementCardProps) {
+  const hasAnswerPhrases = record.judgeModelAnswerPhrases && record.judgeModelAnswerPhrases.length > 0
 
   const handleClick = () => {
-    if (!hasViolations) return
-    onToggle(uniqueKey)
+    if (!hasAnswerPhrases) return
+    onToggle('judge-model')
   }
 
   return (
-    <div className="flex flex-col border-b border-gray-200 last:border-b-0">
+    <div className={`bg-gray-0 border border-gray-200 rounded-lg px-1 py-2 flex flex-col gap-3 w-full ${isExpanded ? 'shadow-sm' : 'hover:bg-gray-50'}`}>
       <div
-        className={`flex gap-2 items-start px-1 py-2 ${hasViolations ? 'cursor-pointer hover:bg-gray-50' : ''}`}
+        className={`flex gap-2 items-start px-1 ${hasAnswerPhrases ? 'cursor-pointer' : ''}`}
         onClick={handleClick}
       >
-        {getStatusIcon(detail.judgement)}
+        {getModelStatusIcon(record.judgeModelJudgement || record.modelJudgement)}
         <div className="flex-1 flex flex-col gap-1 items-start justify-center min-w-0">
           <div className="flex flex-col gap-0.5 items-start justify-center w-full">
-            <div className="flex gap-0.5 items-start text-[0.8125rem] leading-5 text-gray-900">
-              <span className="font-425">{detail.guardrailName}:</span>
-              <span className="font-550 tracking-[0.065px]">{detail.judgement}</span>
+            <div className="flex gap-0.5 items-start text-[0.875rem] leading-5 text-gray-900">
+              <span className="text-[0.8125rem] font-450">{aiSystemName}</span>
             </div>
             <div className="flex gap-1 items-center text-xs leading-4 text-gray-600">
-              {detail.confidenceScore !== undefined && (
+              <>
+                  <span className="font-400">{record.judgeModelJudgement || record.modelJudgement}</span>
+
+              </>
+              {/* {hasAnswerPhrases && (
                 <>
-                  <span className="font-425">Confidence:</span>
-                  <span className="font-425">{detail.confidenceScore.toFixed(2)}</span>
+                  <span className="font-400">•</span>
+                  <span className="font-400">{record.judgeModelAnswerPhrases!.length} Phrases</span>
+                </>
+              )} */}
+              {record.judgeModelConfidence !== undefined && record.judgeModelConfidence !== null && (
+                <>
+                                  <span className="font-400">•</span>
+
+                  <span className="font-400">Confidence:</span>
+                  <span className="font-400">{record.judgeModelConfidence.toFixed(2)}</span>
                 </>
               )}
-              {hasViolations && (
+              {record.outputTokens !== undefined && (
                 <>
-                  <span className="font-425">•</span>
-                  <span className="font-425">Violates:</span>
-                  <span className="font-425">{violatedBehaviors.length} Behavior{violatedBehaviors.length > 1 ? 's' : ''}</span>
+                  {record.judgeModelConfidence !== undefined && record.judgeModelConfidence !== null && <span className="font-425">•</span>}
+                  <span className="font-400">Tokens:</span>
+                  <span className="font-400">{record.outputTokens.toLocaleString()}</span>
                 </>
               )}
+              
             </div>
           </div>
         </div>
-        {hasViolations && (
+        {hasAnswerPhrases && (
           <div className="flex gap-2 items-center">
             {isExpanded ? (
               <ChevronsDownUp className="w-4 h-4 shrink-0 text-gray-400" />
@@ -94,53 +112,208 @@ function GuardrailDetailCard({ detail, type, isExpanded, onToggle, hoveredPhrase
         )}
       </div>
 
-      {/* Violation Phrases List */}
-      {isExpanded && hasViolations && detail.violations && (
-        <div className="px-1 pb-2 pl-8">
-          <div className="flex flex-col gap-1">
-            {detail.violations.map((violation, idx) => (
-              <div
-                key={idx}
-                className={`text-xs leading-4 font-425 cursor-pointer transition-colors ${
-                  hoveredPhraseIndex === idx
-                    ? 'text-amber-700 font-550'
-                    : 'text-gray-600 hover:text-amber-600'
-                }`}
-                onMouseEnter={() => onPhraseHover?.(idx)}
-                onMouseLeave={() => onPhraseHover?.(null)}
-              >
-                • {violation.violatedBehaviors.join(', ')}
-              </div>
-            ))}
+      {/* Answer Phrases List */}
+      <AnimatePresence initial={false}>
+        {isExpanded && hasAnswerPhrases && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+            className="flex flex-col gap-2 overflow-hidden"
+          >
+            {record.judgeModelAnswerPhrases!.map((answerPhrase, idx) => {
+              // For answer phrases, use the reasoning as the behavior
+              const judgeModelName = aiSystemName // AI system name for judge model
+              const isHovered = hoveredBehavior !== null && hoveredBehavior !== undefined &&
+                hoveredBehavior.behavior === answerPhrase.reasoning &&
+                hoveredBehavior.guardrailName === judgeModelName
+              const isSelected = selectedBehaviors !== null && selectedBehaviors !== undefined && selectedBehaviors.has(answerPhrase.reasoning)
+
+              return (
+                <div
+                  key={idx}
+                  className="flex gap-2 items-start px-2 cursor-pointer"
+                  onMouseEnter={() => onBehaviorHover?.({ behavior: answerPhrase.reasoning, guardrailName: judgeModelName })}
+                  onMouseLeave={() => onBehaviorHover?.(null)}
+                >
+                  <div className="w-6 h-6 flex items-center justify-center shrink-0">
+                    <Circle className={`w-2 h-2 transition-all ${
+                      isHovered || isSelected
+                        ? 'fill-gray-600 stroke-gray-600'
+                        : 'fill-none stroke-gray-600'
+                    }`} />
+                  </div>
+                  <div className={`flex-1 text-[0.8125rem] leading-5 transition-colors ${
+                    isHovered || isSelected
+                      ? 'text-gray-900'
+                      : 'text-gray-600'
+                  }`}>
+                    {answerPhrase.reasoning}
+                  </div>
+                </div>
+              )
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+function GuardrailDetailCard({ detail, type, isExpanded, onToggle, hoveredBehavior, onBehaviorHover, selectedBehaviors }: GuardrailDetailCardProps) {
+  // Use guardrailId as the unique key to avoid index mismatch issues with sorting
+  const uniqueKey = `${type}-${detail.guardrailId}`
+  // Get violations array and count total behaviors across all violations
+  const violations = detail.violations || []
+  const totalBehaviors = violations.reduce((sum, v) => sum + v.violatedBehaviors.length, 0)
+
+  // Only show expand/collapse for judgements with violations
+  const hasViolations = violations.length > 0
+
+  const handleClick = () => {
+    if (!hasViolations) return
+    onToggle(uniqueKey)
+  }
+
+  return (
+    <div className={`bg-gray-0 border border-gray-200 rounded-lg px-1 py-2 flex flex-col gap-3 ${isExpanded ? 'shadow-sm' : 'hover:bg-gray-50'}`}>
+      <div
+        className={`flex gap-2 items-start px-1 ${hasViolations ? 'cursor-pointer' : ''}`}
+        onClick={handleClick}
+      >
+        
+        {getStatusIcon(detail.judgement)}
+        <div className="flex-1 flex flex-col gap-1 items-start justify-center min-w-0">
+          <div className="flex flex-col gap-0.5 items-start justify-center w-full">
+            <div className="flex gap-0.5 items-start text-[0.875rem] leading-5 text-gray-900">
+              <span className="text-[0.8125rem] font-450">{detail.guardrailName}</span>
+            </div>
+            <div className="flex gap-1 items-center text-xs leading-4 text-gray-600">
+              <>
+                <span className="font-400">{detail.judgement}</span>              
+              </>
+          
+              {hasViolations && (
+                <>
+                  <span className="font-400">•</span>
+                  <span className="font-400">{totalBehaviors} Violation{totalBehaviors > 1 ? 's' : ''}</span>
+                </>
+              )}
+               {detail.confidenceScore !== undefined && (
+                <>
+                <span className="font-400">•</span>
+                  <span className="font-400">Confidence:</span>
+                  <span className="font-400">{detail.confidenceScore.toFixed(2)}</span>
+                </>
+              )}
+            </div>
           </div>
         </div>
-      )}
+        {hasViolations && (
+          <div className="flex gap-2 items-center py-1">
+            {isExpanded ? (
+              <ChevronsDownUp className="w-4 h-4 shrink-0 text-gray-400" />
+            ) : (
+              <ChevronsUpDown className="w-4 h-4 shrink-0 text-gray-400" />
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Violation Phrases List */}
+      <AnimatePresence initial={false}>
+        {isExpanded && hasViolations && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.15, ease: 'easeInOut' }}
+            className="flex flex-col gap-2 overflow-hidden"
+          >
+            {(() => {
+              // Deduplicate behaviors
+              const uniqueBehaviors = new Set<string>()
+              violations.forEach((violation) => {
+                violation.violatedBehaviors.forEach((behavior) => {
+                  uniqueBehaviors.add(behavior)
+                })
+              })
+
+              return Array.from(uniqueBehaviors).map((behavior) => {
+                // Check if this behavior is being hovered
+                const isHovered = hoveredBehavior !== null && hoveredBehavior !== undefined &&
+                  hoveredBehavior.behavior === behavior &&
+                  hoveredBehavior.guardrailName === detail.guardrailName
+                // Check if this behavior is selected (from phrase click)
+                const isSelected = selectedBehaviors !== null && selectedBehaviors !== undefined && selectedBehaviors.has(behavior)
+
+                return (
+                  <div
+                    key={behavior}
+                    className="flex gap-2 items-start px-2 cursor-pointer"
+                    onMouseEnter={() => onBehaviorHover?.({ behavior, guardrailName: detail.guardrailName })}
+                    onMouseLeave={() => onBehaviorHover?.(null)}
+                  >
+                    <div className="w-6 h-6 flex items-center justify-center shrink-0">
+                      <Circle className={`w-2 h-2 transition-all ${
+                        isHovered || isSelected
+                          ? 'fill-gray-600 stroke-gray-600'
+                          : 'fill-none stroke-gray-600'
+                      }`} />
+                    </div>
+                    <div className={`flex-1 text-[0.8125rem] leading-5 transition-colors ${
+                      isHovered || isSelected
+                        ? 'text-gray-900'
+                        : 'text-gray-600'
+                    }`}>
+                      {behavior}
+                    </div>
+                  </div>
+                )
+              })
+            })()}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
 
 export function JudgementsSidebar({
   record,
-  expandedKey: externalExpandedKey,
-  onExpandedKeyChange,
-  hoveredPhraseIndex,
-  onPhraseHover
+  aiSystemName = 'AI System',
+  expandedKeys: externalExpandedKeys,
+  onExpandedKeysChange,
+  hoveredBehavior,
+  onBehaviorHover,
+  selectedBehaviors
 }: JudgementsSidebarProps) {
   // Use internal state if no external state is provided
-  const [internalExpandedKey, setInternalExpandedKey] = useState<string | null>(null)
+  const [internalExpandedKeys, setInternalExpandedKeys] = useState<Set<string>>(new Set())
 
   // Determine which state to use
-  const expandedKey = externalExpandedKey !== undefined ? externalExpandedKey : internalExpandedKey
-  const setExpandedKey = onExpandedKeyChange || setInternalExpandedKey
+  const expandedKeys = externalExpandedKeys !== undefined ? externalExpandedKeys : internalExpandedKeys
+  const setExpandedKeys = onExpandedKeysChange || setInternalExpandedKeys
 
   // Reset expansion state when record changes
   useEffect(() => {
-    setExpandedKey(null)
-  }, [record, setExpandedKey])
+    if (onExpandedKeysChange) {
+      // Only reset if using external state
+      onExpandedKeysChange(new Set())
+    } else {
+      setInternalExpandedKeys(new Set())
+    }
+  }, [record, onExpandedKeysChange])
 
   const handleToggle = (key: string) => {
-    const newValue = expandedKey === key ? null : key
-    setExpandedKey(newValue)
+    const newKeys = new Set(expandedKeys)
+    if (newKeys.has(key)) {
+      newKeys.delete(key)
+    } else {
+      newKeys.add(key)
+    }
+    setExpandedKeys(newKeys)
   }
 
   // Sort function for guardrail details: Blocked first, high confidence first, more violations first
@@ -164,60 +337,73 @@ export function JudgementsSidebar({
 
   return (
     <div className="h-full overflow-y-auto bg-gray-0">
-      <div className="flex flex-col gap-6 items-start p-6">
+      <div className="flex flex-col gap-6 items-start py-5 px-4">
         {/* Title */}
-        <h2 className="text-sm font-550 leading-5 text-gray-900">Evaluation Judgement</h2>
+        <div className="flex flex-col gap-3 items-start w-full">
+        <h2 className="text-sm font-450 leading-5 text-gray-900">Evaluation Judgement</h2>
 
         {/* Summary Cards */}
         <div className="flex gap-2 items-center w-full">
           {/* Prompt */}
-          <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg p-2 flex flex-col gap-1">
+          <div className="flex-1 bg-gray-100  rounded-lg p-2 flex flex-col gap-1">
             <div className="flex gap-0.5 items-start">
-              <span className="text-xs font-425 leading-4 text-gray-900">Prompt</span>
-              <InfoIconOutline />
+              <span className="text-xs font-400 leading-4 text-gray-900">Attack</span>
             </div>
             <div className="flex gap-0.5 items-center">
-              <span className="text-[0.8125rem] font-550 leading-5 text-gray-900 tracking-[0.065px]">
+              <span className="text-[0.8125rem] font-450 leading-5 text-gray-900 tracking-[0.065px]">
                 {record.attackType}
               </span>
             </div>
           </div>
 
-          {/* Guardrails */}
-          <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg p-2 flex flex-col gap-1">
-            <div className="flex gap-0.5 items-start">
-              <span className="text-xs font-425 leading-4 text-gray-900">Guardrails</span>
-              <InfoIconOutline />
+          {/* Guardrails - Only show if guardrails are present */}
+          {(record.inputGuardrailJudgement || record.outputGuardrailJudgement ||
+            record.inputGuardrailDetails?.length || record.outputGuardrailDetails?.length) && (
+            <div className="flex-1 bg-gray-100 rounded-lg p-2 flex flex-col gap-1">
+              <div className="flex gap-0.5 items-start">
+                <span className="text-xs font-400 leading-4 text-gray-900">Guardrails</span>
+              </div>
+              <div className="flex gap-1 items-center">
+                {(record.inputGuardrailJudgement || record.outputGuardrailJudgement) === 'Blocked' ? (
+                  <ShieldBan className="w-3.5 h-3.5 text-red-600" />
+                ) : (
+                  <ShieldCheck className="w-3.5 h-3.5 text-green-600" />
+                )}
+                <span className="text-[0.8125rem] font-450 leading-5 text-gray-900 tracking-[0.065px]">
+                  {record.inputGuardrailJudgement || record.outputGuardrailJudgement}
+                </span>
+              </div>
             </div>
-            <div className="flex gap-0.5 items-center">
-              <span className="text-[0.8125rem] font-550 leading-5 text-gray-900 tracking-[0.065px]">
-                {record.inputGuardrailJudgement || record.outputGuardrailJudgement || 'N/A'}
-              </span>
-            </div>
-          </div>
+          )}
 
           {/* Model */}
-          <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg p-2 flex flex-col gap-1">
+          <div className="flex-1 bg-gray-100  rounded-lg p-2 flex flex-col gap-1">
             <div className="flex gap-0.5 items-start">
-              <span className="text-xs font-425 leading-4 text-gray-900">Model</span>
-              <InfoIconOutline />
+              <span className="text-xs font-400 leading-4 text-gray-900">AI System</span>
             </div>
-            <div className="flex gap-0.5 items-center">
-              <span className="text-[0.8125rem] font-550 leading-5 text-gray-900 tracking-[0.065px]">
+            <div className="flex gap-1 items-center">
+              {((record.judgeModelJudgement || record.modelJudgement) === 'Blocked' ||
+                (record.judgeModelJudgement || record.modelJudgement) === 'Refused') ? (
+                <MessageCircleOff className="w-3.5 h-3.5 text-red-600" />
+              ) : (
+                <CircleCheckBig className="w-3.5 h-3.5 text-green-600" />
+              )}
+              <span className="text-[0.8125rem] font-450 leading-5 text-gray-900 tracking-[0.065px]">
                 {record.judgeModelJudgement || record.modelJudgement}
               </span>
             </div>
           </div>
+        </div>
         </div>
 
         {/* Guardrail Judgement Section */}
         {((record.inputGuardrailDetails && record.inputGuardrailDetails.length > 0) ||
         (record.outputGuardrailDetails && record.outputGuardrailDetails.length > 0)) && (
           <div className="flex flex-col gap-2 items-start w-full">
-            <h3 className="text-xs font-550 leading-4 text-gray-600">
+            <h3 className="text-xs font-450 leading-4 text-gray-600">
               Guardrail Judgement
             </h3>
-            <div className="bg-gray-0 border border-gray-200 rounded-md p-1 w-full">
+            <div className="flex flex-col gap-2 w-full">
               {/* Input Guardrail Details */}
               {record.inputGuardrailDetails && record.inputGuardrailDetails.length > 0 && (
                 <>
@@ -228,10 +414,11 @@ export function JudgementsSidebar({
                         key={key}
                         detail={detail}
                         type="input"
-                        isExpanded={expandedKey === key}
+                        isExpanded={expandedKeys.has(key)}
                         onToggle={handleToggle}
-                        hoveredPhraseIndex={hoveredPhraseIndex}
-                        onPhraseHover={onPhraseHover}
+                        hoveredBehavior={hoveredBehavior}
+                        onBehaviorHover={onBehaviorHover}
+                        selectedBehaviors={selectedBehaviors}
                       />
                     )
                   })}
@@ -248,10 +435,11 @@ export function JudgementsSidebar({
                         key={key}
                         detail={detail}
                         type="output"
-                        isExpanded={expandedKey === key}
+                        isExpanded={expandedKeys.has(key)}
                         onToggle={handleToggle}
-                        hoveredPhraseIndex={hoveredPhraseIndex}
-                        onPhraseHover={onPhraseHover}
+                        hoveredBehavior={hoveredBehavior}
+                        onBehaviorHover={onBehaviorHover}
+                        selectedBehaviors={selectedBehaviors}
                       />
                     )
                   })}
@@ -264,84 +452,18 @@ export function JudgementsSidebar({
         {/* Response Judgement Section */}
         {(record.judgeModelJudgement || record.modelJudgement) && (
           <div className="flex flex-col gap-2 items-start w-full">
-            <h3 className="text-xs font-550 leading-4 text-gray-600">
+            <h3 className="text-xs font-450 leading-4 text-gray-600">
               Response Judgement
             </h3>
-            <div className="bg-gray-0 border border-gray-200 rounded-md p-1 w-full">
-              <div className="flex flex-col border-b border-gray-200 last:border-b-0">
-                <div
-                  className={`flex gap-2 items-start px-1 py-2 ${record.judgeModelAnswerPhrases && record.judgeModelAnswerPhrases.length > 0 ? 'cursor-pointer hover:bg-gray-50' : ''}`}
-                  onClick={() => {
-                    if (record.judgeModelAnswerPhrases && record.judgeModelAnswerPhrases.length > 0) {
-                      handleToggle('judge-model')
-                    }
-                  }}
-                >
-                  {getModelStatusIcon(record.judgeModelJudgement || record.modelJudgement)}
-                  <div className="flex-1 flex flex-col gap-1 items-start justify-center min-w-0">
-                    <div className="flex flex-col gap-0.5 items-start justify-center w-full">
-                      <div className="flex gap-0.5 items-start text-[0.8125rem] leading-5 text-gray-900">
-                        <span className="font-425">gpt-4o-prod:</span>
-                        <span className="font-550 tracking-[0.065px]">{record.judgeModelJudgement || record.modelJudgement}</span>
-                      </div>
-                      <div className="flex gap-1 items-center text-xs leading-4 text-gray-600">
-                        {record.judgeModelConfidence !== undefined && record.judgeModelConfidence !== null && (
-                          <>
-                            <span className="font-425">Confidence:</span>
-                            <span className="font-425">{record.judgeModelConfidence.toFixed(2)}</span>
-                          </>
-                        )}
-                        {record.outputTokens !== undefined && (
-                          <>
-                            {record.judgeModelConfidence !== undefined && record.judgeModelConfidence !== null && <span className="font-425">•</span>}
-                            <span className="font-425">Tokens:</span>
-                            <span className="font-425">{record.outputTokens.toLocaleString()}</span>
-                          </>
-                        )}
-                        {record.judgeModelAnswerPhrases && record.judgeModelAnswerPhrases.length > 0 && (
-                          <>
-                            <span className="font-425">•</span>
-                            <span className="font-425">Answer Phrases:</span>
-                            <span className="font-425">{record.judgeModelAnswerPhrases.length}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  {record.judgeModelAnswerPhrases && record.judgeModelAnswerPhrases.length > 0 && (
-                    <div className="flex gap-2 items-center">
-                      {expandedKey === 'judge-model' ? (
-                        <ChevronsDownUp className="w-4 h-4 shrink-0 text-gray-400" />
-                      ) : (
-                        <ChevronsUpDown className="w-4 h-4 shrink-0 text-gray-400" />
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* Answer Phrases List */}
-                {expandedKey === 'judge-model' && record.judgeModelAnswerPhrases && record.judgeModelAnswerPhrases.length > 0 && (
-                  <div className="px-1 pb-2 pl-8">
-                    <div className="flex flex-col gap-1">
-                      {record.judgeModelAnswerPhrases.map((answerPhrase, idx) => (
-                        <div
-                          key={idx}
-                          className={`text-xs leading-4 font-425 cursor-pointer transition-colors ${
-                            hoveredPhraseIndex === idx
-                              ? 'text-green-700 font-550'
-                              : 'text-gray-600 hover:text-green-600'
-                          }`}
-                          onMouseEnter={() => onPhraseHover?.(idx)}
-                          onMouseLeave={() => onPhraseHover?.(null)}
-                        >
-                          • {answerPhrase.reasoning}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+            <ResponseJudgementCard
+              record={record}
+              aiSystemName={aiSystemName}
+              isExpanded={expandedKeys.has('judge-model')}
+              onToggle={handleToggle}
+              hoveredBehavior={hoveredBehavior}
+              onBehaviorHover={onBehaviorHover}
+              selectedBehaviors={selectedBehaviors}
+            />
           </div>
         )}
       </div>

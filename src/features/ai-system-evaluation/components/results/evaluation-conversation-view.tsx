@@ -2,11 +2,12 @@ import type { JailbreakEvaluationResult, GuardrailEvaluationDetail, Conversation
 import { JudgementsSidebar } from './judgements-sidebar'
 import { Badge } from '@/components/ui/badge'
 import { MarkdownRenderer } from '@/components/patterns/ui-patterns/markdown-renderer'
-import { HighlightedText, type HighlightPhrase } from '@/components/patterns/ui-patterns/phrase-highlighter'
+import { HighlightedText, type HighlightPhrase, type HoveredBehaviorContext } from '@/components/patterns/ui-patterns/phrase-highlighter'
 import { useState, useMemo } from 'react'
 
 interface EvaluationConversationViewProps {
   record: JailbreakEvaluationResult
+  aiSystemName?: string
 }
 
 // Helper functions to handle adversarial prompt format
@@ -30,76 +31,170 @@ function getAdversarialPromptText(prompt: any): string {
   return typeof prompt === 'string' ? prompt : ''
 }
 
-export function EvaluationConversationView({ record }: EvaluationConversationViewProps) {
+export function EvaluationConversationView({ record, aiSystemName }: EvaluationConversationViewProps) {
   const isAttackSuccess = record.attackOutcome === 'Attack Success'
   const isMultiTurn = isMultiTurnPrompt(record.adversarialPrompt)
   const adversarialPromptText = getAdversarialPromptText(record.adversarialPrompt)
 
-  // Track which guardrail detail is expanded
-  const [expandedKey, setExpandedKey] = useState<string | null>(null)
+  // Track which guardrail details are expanded (now supports multiple)
+  const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set())
 
-  // Track which phrase is being hovered
-  const [hoveredPhraseIndex, setHoveredPhraseIndex] = useState<number | null>(null)
+  // Track which behavior is being hovered in the sidebar (for single behavior hover)
+  // Now includes guardrail context to distinguish between same behaviors in different guardrails
+  const [hoveredBehavior, setHoveredBehavior] = useState<{ behavior: string; guardrailName: string } | null>(null)
 
-  // Determine which violations to highlight based on expanded guardrail
-  const highlightPhrases = useMemo((): HighlightPhrase[] => {
-    console.log('🔍 Debug - All Input Guardrail Details:', record.inputGuardrailDetails)
-    console.log('🔍 Debug - All Output Guardrail Details:', record.outputGuardrailDetails)
+  // Track which behaviors are selected from phrase click (for multi-behavior highlighting)
+  const [selectedBehaviors, setSelectedBehaviors] = useState<Set<string> | null>(null)
 
-    if (!expandedKey) return []
+  // Build map of all phrases to their guardrail keys (for click handling)
+  // A single phrase can map to multiple guardrails
+  const phraseToKeysMap = useMemo(() => {
+    const map = new Map<string, string[]>()
 
-    // Special case: judge model answer phrases
-    if (expandedKey === 'judge-model') {
-      if (!record.judgeModelAnswerPhrases) return []
+    // Add input guardrail phrases
+    record.inputGuardrailDetails?.forEach(detail => {
+      const key = `input-${detail.guardrailId}`
+      detail.violations?.forEach(v => {
+        const phraseKey = v.phrase.toLowerCase()
+        const existing = map.get(phraseKey) || []
+        existing.push(key)
+        map.set(phraseKey, existing)
+      })
+    })
 
-      // Convert answer phrases to HighlightPhrase format
-      const phrases = record.judgeModelAnswerPhrases.map(ap => ({
+    // Add output guardrail phrases
+    record.outputGuardrailDetails?.forEach(detail => {
+      const key = `output-${detail.guardrailId}`
+      detail.violations?.forEach(v => {
+        const phraseKey = v.phrase.toLowerCase()
+        const existing = map.get(phraseKey) || []
+        existing.push(key)
+        map.set(phraseKey, existing)
+      })
+    })
+
+    // Add judge model answer phrases
+    record.judgeModelAnswerPhrases?.forEach(ap => {
+      const phraseKey = ap.phrase.toLowerCase()
+      const existing = map.get(phraseKey) || []
+      existing.push('judge-model')
+      map.set(phraseKey, existing)
+    })
+
+    return map
+  }, [record.inputGuardrailDetails, record.outputGuardrailDetails, record.judgeModelAnswerPhrases])
+
+  // Get all phrases for the current context (input or output)
+  const getAllPhrasesForContext = (type: 'input' | 'output' | 'judge-model'): HighlightPhrase[] => {
+    if (type === 'judge-model') {
+      return record.judgeModelAnswerPhrases?.map(ap => ({
         phrase: ap.phrase,
         guardrailName: 'Answer Phrase',
         violatedBehaviors: [ap.reasoning]
-      }))
-
-      console.log('🔍 Debug - Judge Model Answer Phrases:', phrases)
-      console.log('🔍 Debug - System Response Length:', record.systemResponse.length)
-      console.log('🔍 Debug - System Response Preview:', record.systemResponse.substring(0, 200))
-      return phrases
+      })) || []
     }
 
-    // Parse the expanded key to determine which guardrail detail
-    // Format is now: type-guardrailId (e.g., "input-42f44c4e-b0aa-4ae7-b5b8-5c5c99c771cd")
-    const [type, ...guardrailIdParts] = expandedKey.split('-')
-    const guardrailId = guardrailIdParts.join('-') // Rejoin in case UUID contains dashes
+    const details = type === 'input' ? record.inputGuardrailDetails : record.outputGuardrailDetails
+    return details?.flatMap(detail =>
+      detail.violations?.map(v => ({
+        phrase: v.phrase,
+        guardrailName: detail.guardrailName,
+        violatedBehaviors: v.violatedBehaviors
+      })) || []
+    ) || []
+  }
 
-    let detail: GuardrailEvaluationDetail | undefined
+  // Determine which violations to highlight based on expanded guardrails
+  const highlightPhrases = useMemo((): HighlightPhrase[] => {
+    if (expandedKeys.size === 0) return []
 
-    if (type === 'input' && record.inputGuardrailDetails) {
-      detail = record.inputGuardrailDetails.find(d => d.guardrailId === guardrailId)
-    } else if (type === 'output' && record.outputGuardrailDetails) {
-      detail = record.outputGuardrailDetails.find(d => d.guardrailId === guardrailId)
+    const allPhrases: HighlightPhrase[] = []
+
+    // Process each expanded key
+    expandedKeys.forEach(expandedKey => {
+      // Special case: judge model answer phrases
+      if (expandedKey === 'judge-model') {
+        if (record.judgeModelAnswerPhrases) {
+          const phrases = record.judgeModelAnswerPhrases.map(ap => ({
+            phrase: ap.phrase,
+            guardrailName: 'Answer Phrase',
+            violatedBehaviors: [ap.reasoning]
+          }))
+          allPhrases.push(...phrases)
+        }
+        return
+      }
+
+      // Parse the expanded key to determine which guardrail detail
+      // Format is: type-guardrailId (e.g., "input-42f44c4e-b0aa-4ae7-b5b8-5c5c99c771cd")
+      const [type, ...guardrailIdParts] = expandedKey.split('-')
+      const guardrailId = guardrailIdParts.join('-') // Rejoin in case UUID contains dashes
+
+      let detail: GuardrailEvaluationDetail | undefined
+
+      if (type === 'input' && record.inputGuardrailDetails) {
+        detail = record.inputGuardrailDetails.find(d => d.guardrailId === guardrailId)
+      } else if (type === 'output' && record.outputGuardrailDetails) {
+        detail = record.outputGuardrailDetails.find(d => d.guardrailId === guardrailId)
+      }
+
+      if (detail && detail.violations) {
+        // Convert violations to HighlightPhrase format
+        const phrases = detail.violations.map(v => ({
+          phrase: v.phrase,
+          guardrailName: detail!.guardrailName,
+          violatedBehaviors: v.violatedBehaviors
+        }))
+        allPhrases.push(...phrases)
+      }
+    })
+
+    return allPhrases
+  }, [expandedKeys, record.inputGuardrailDetails, record.outputGuardrailDetails, record.judgeModelAnswerPhrases])
+
+  // Determine which text to highlight based on guardrail types
+  const shouldHighlightPrompt = Array.from(expandedKeys).some(key => key.startsWith('input-'))
+  const shouldHighlightResponse = Array.from(expandedKeys).some(key => key.startsWith('output-') || key === 'judge-model')
+  const highlightColor = 'red' as const
+
+  // Get all clickable phrases for input and output
+  const allInputPhrases = getAllPhrasesForContext('input')
+  const allOutputPhrases = [...getAllPhrasesForContext('output'), ...getAllPhrasesForContext('judge-model')]
+
+  // Handle phrase click - expand all corresponding guardrails and highlight all associated behaviors
+  const handlePhraseClick = (phraseIndex: number, type: 'input' | 'output') => {
+    const phrases = type === 'input' ? allInputPhrases : allOutputPhrases
+    const phrase = phrases[phraseIndex]
+    if (!phrase) return
+
+    const phraseKey = phrase.phrase.toLowerCase()
+    const guardrailKeys = phraseToKeysMap.get(phraseKey)
+    if (guardrailKeys && guardrailKeys.length > 0) {
+      // Expand all guardrail keys for this phrase
+      setExpandedKeys(new Set(guardrailKeys))
+
+      // Collect all behaviors associated with this phrase from all guardrails
+      const behaviorsToHighlight = new Set<string>()
+
+      // Add behaviors from the clicked phrase
+      phrase.violatedBehaviors.forEach(behavior => {
+        behaviorsToHighlight.add(behavior)
+      })
+
+      // Find all other phrases with the same text and collect their behaviors too
+      const allPhrases = [...allInputPhrases, ...allOutputPhrases]
+      allPhrases.forEach(p => {
+        if (p.phrase.toLowerCase() === phraseKey) {
+          p.violatedBehaviors.forEach(behavior => {
+            behaviorsToHighlight.add(behavior)
+          })
+        }
+      })
+
+      // Set the selected behaviors
+      setSelectedBehaviors(behaviorsToHighlight)
     }
-
-    console.log('🔍 Debug - Expanded Key:', expandedKey)
-    console.log('🔍 Debug - Type:', type, 'Guardrail ID:', guardrailId)
-    console.log('🔍 Debug - Detail:', detail)
-    console.log('🔍 Debug - Violations:', detail?.violations)
-
-    if (!detail || !detail.violations) return []
-
-    // Convert violations to HighlightPhrase format
-    const phrases = detail.violations.map(v => ({
-      phrase: v.phrase,
-      guardrailName: detail!.guardrailName,
-      violatedBehaviors: v.violatedBehaviors
-    }))
-
-    console.log('🔍 Debug - Highlight Phrases:', phrases)
-    return phrases
-  }, [expandedKey, record.inputGuardrailDetails, record.outputGuardrailDetails, record.judgeModelAnswerPhrases])
-
-  // Determine which text to highlight based on guardrail type
-  const shouldHighlightPrompt = expandedKey?.startsWith('input-')
-  const shouldHighlightResponse = expandedKey?.startsWith('output-') || expandedKey === 'judge-model'
-  const highlightColor = expandedKey === 'judge-model' ? 'green' : 'amber'
+  }
 
   return (
     <div className="h-full grid grid-cols-[1fr_450px]">
@@ -108,9 +203,9 @@ export function EvaluationConversationView({ record }: EvaluationConversationVie
         <div className="max-w-2xl mx-auto space-y-6">
 
           {/* Prompt Title & Attack Outcome Header */}
-          <section className="space-y-2 pb-4">
+          <section className="space-y-2 pb-2">
             {record.promptTitle && (
-              <h2 className="text-lg font-550 leading-6 text-gray-900">
+              <h2 className="text-lg font-450 leading-6 text-gray-900">
                 {record.promptTitle}
               </h2>
             )}
@@ -131,7 +226,7 @@ export function EvaluationConversationView({ record }: EvaluationConversationVie
 
           {/* Base Prompt */}
           <section className="space-y-2">
-            <h3 className="text-[0.8125rem] font-550 leading-4 text-gray-600">
+            <h3 className="text-[0.8125rem] font-450 leading-4 text-gray-600">
               Base Prompt
             </h3>
             <div className="text-sm font-425 leading-5 text-gray-900">
@@ -141,24 +236,26 @@ export function EvaluationConversationView({ record }: EvaluationConversationVie
 
           {/* Jailbreak Prompt */}
           <section className="space-y-2">
-            <h3 className="text-[0.8125rem] font-550 leading-4 text-gray-600">
+            <h3 className="text-[0.8125rem] font-450 leading-4 text-gray-600">
               Jailbreak Prompt {isMultiTurn && <span className="text-gray-500">(Multi-turn)</span>}
             </h3>
             {isMultiTurn ? (
-              <div className="border border-gray-200 rounded p-2 space-y-4">
+              <div className="border border-gray-200 rounded-lg p-2 space-y-4">
                 {(record.adversarialPrompt as ConversationTurn[]).map((turn, idx) => (
                   <div key={idx} className="space-y-2">
                     <p className="text-[0.8125rem] font-425 leading-4 text-gray-600 capitalize">
                       {turn.role}
                     </p>
                     <div className="text-sm leading-5 text-gray-900 whitespace-pre-wrap">
-                      {shouldHighlightPrompt && turn.role === 'user' ? (
+                      {turn.role === 'user' ? (
                         <HighlightedText
-                          highlightPhrases={highlightPhrases}
+                          highlightPhrases={shouldHighlightPrompt ? highlightPhrases : allInputPhrases}
                           className="text-sm leading-5 text-gray-900"
                           highlightColor={highlightColor}
-                          hoveredPhraseIndex={hoveredPhraseIndex}
-                          onPhraseHover={setHoveredPhraseIndex}
+                          hoveredBehavior={hoveredBehavior}
+                          selectedBehaviors={selectedBehaviors}
+                          onPhraseClick={(idx) => handlePhraseClick(idx, 'input')}
+                          showHighlightByDefault={true}
                         >
                           {turn.content}
                         </HighlightedText>
@@ -170,23 +267,21 @@ export function EvaluationConversationView({ record }: EvaluationConversationVie
                 ))}
               </div>
             ) : (
-              <div className="border border-gray-200 rounded p-2 space-y-6">
+              <div className="border border-gray-200 rounded-lg p-2 space-y-6">
                 <div className="space-y-2">
                   <p className="text-[0.8125rem] font-425 leading-4 text-gray-600">User</p>
                   <div className="text-sm leading-5 text-gray-900">
-                    {shouldHighlightPrompt ? (
-                      <HighlightedText
-                        highlightPhrases={highlightPhrases}
-                        className="text-sm leading-5 text-gray-900"
-                        highlightColor={highlightColor}
-                        hoveredPhraseIndex={hoveredPhraseIndex}
-                        onPhraseHover={setHoveredPhraseIndex}
-                      >
-                        {adversarialPromptText}
-                      </HighlightedText>
-                    ) : (
-                      adversarialPromptText
-                    )}
+                    <HighlightedText
+                      highlightPhrases={shouldHighlightPrompt ? highlightPhrases : allInputPhrases}
+                      className="text-sm leading-5 text-gray-900"
+                      highlightColor={highlightColor}
+                      hoveredBehavior={hoveredBehavior}
+                      selectedBehaviors={selectedBehaviors}
+                      onPhraseClick={(idx) => handlePhraseClick(idx, 'input')}
+                      showHighlightByDefault={true}
+                    >
+                      {adversarialPromptText}
+                    </HighlightedText>
                   </div>
                 </div>
               </div>
@@ -195,21 +290,19 @@ export function EvaluationConversationView({ record }: EvaluationConversationVie
 
           {/* AI System Response */}
           <section className="space-y-2">
-            <h3 className="text-[0.8125rem] font-550 leading-4 text-gray-600">
+            <h3 className="text-[0.8125rem] font-450 leading-4 text-gray-600">
               AI System Response
             </h3>
             <div>
-              {shouldHighlightResponse ? (
-                <HighlightedMarkdownRenderer
-                  content={record.systemResponse}
-                  highlightPhrases={highlightPhrases}
-                  highlightColor={highlightColor}
-                  hoveredPhraseIndex={hoveredPhraseIndex}
-                  onPhraseHover={setHoveredPhraseIndex}
-                />
-              ) : (
-                <MarkdownRenderer content={record.systemResponse} />
-              )}
+              <HighlightedMarkdownRenderer
+                content={record.systemResponse}
+                highlightPhrases={shouldHighlightResponse ? highlightPhrases : allOutputPhrases}
+                highlightColor={highlightColor}
+                hoveredBehavior={hoveredBehavior}
+                selectedBehaviors={selectedBehaviors}
+                onPhraseClick={(idx) => handlePhraseClick(idx, 'output')}
+                showHighlightByDefault={true}
+              />
             </div>
           </section>
 
@@ -219,10 +312,12 @@ export function EvaluationConversationView({ record }: EvaluationConversationVie
       {/* Judgements Sidebar - Right Side */}
       <JudgementsSidebar
         record={record}
-        expandedKey={expandedKey}
-        onExpandedKeyChange={setExpandedKey}
-        hoveredPhraseIndex={hoveredPhraseIndex}
-        onPhraseHover={setHoveredPhraseIndex}
+        aiSystemName={aiSystemName}
+        expandedKeys={expandedKeys}
+        onExpandedKeysChange={setExpandedKeys}
+        hoveredBehavior={hoveredBehavior}
+        onBehaviorHover={setHoveredBehavior}
+        selectedBehaviors={selectedBehaviors}
       />
     </div>
   )
@@ -232,12 +327,14 @@ export function EvaluationConversationView({ record }: EvaluationConversationVie
 interface HighlightedMarkdownRendererProps {
   content: string
   highlightPhrases: HighlightPhrase[]
-  highlightColor: 'amber' | 'green'
-  hoveredPhraseIndex?: number | null
-  onPhraseHover?: (index: number | null) => void
+  highlightColor: 'amber' | 'green' | 'red'
+  hoveredBehavior?: HoveredBehaviorContext | null
+  selectedBehaviors?: Set<string> | null
+  onPhraseClick?: (index: number) => void
+  showHighlightByDefault?: boolean
 }
 
-function HighlightedMarkdownRenderer({ content, highlightPhrases, highlightColor, hoveredPhraseIndex, onPhraseHover }: HighlightedMarkdownRendererProps) {
+function HighlightedMarkdownRenderer({ content, highlightPhrases, highlightColor, hoveredBehavior, selectedBehaviors, onPhraseClick, showHighlightByDefault }: HighlightedMarkdownRendererProps) {
   // Helper function to recursively process children and apply highlighting
   const processChildren = (children: any): any => {
     if (typeof children === 'string') {
@@ -245,8 +342,10 @@ function HighlightedMarkdownRenderer({ content, highlightPhrases, highlightColor
         <HighlightedText
           highlightPhrases={highlightPhrases}
           highlightColor={highlightColor}
-          hoveredPhraseIndex={hoveredPhraseIndex}
-          onPhraseHover={onPhraseHover}
+          hoveredBehavior={hoveredBehavior}
+          selectedBehaviors={selectedBehaviors}
+          onPhraseClick={onPhraseClick}
+          showHighlightByDefault={showHighlightByDefault}
         >
           {children}
         </HighlightedText>
@@ -273,22 +372,22 @@ function HighlightedMarkdownRenderer({ content, highlightPhrases, highlightColor
       </li>
     ),
     h1: ({ children, ...props }: any) => (
-      <h1 className="text-xl font-550 leading-6 text-gray-900 mb-3" {...props}>
+      <h1 className="text-xl font-450 leading-6 text-gray-900 mb-3" {...props}>
         {processChildren(children)}
       </h1>
     ),
     h2: ({ children, ...props }: any) => (
-      <h2 className="text-lg font-550 leading-6 text-gray-900 mb-2" {...props}>
+      <h2 className="text-lg font-450 leading-6 text-gray-900 mb-2" {...props}>
         {processChildren(children)}
       </h2>
     ),
     h3: ({ children, ...props }: any) => (
-      <h3 className="text-base font-550 leading-5 text-gray-900 mb-2" {...props}>
+      <h3 className="text-base font-450 leading-5 text-gray-900 mb-2" {...props}>
         {processChildren(children)}
       </h3>
     ),
     strong: ({ children, ...props }: any) => (
-      <strong className="font-550" {...props}>
+      <strong className="font-450" {...props}>
         {processChildren(children)}
       </strong>
     ),

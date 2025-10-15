@@ -3,20 +3,21 @@ import type { JailbreakEvaluationOutput } from "../../../types/jailbreak-evaluat
 import { cn } from "@/lib/utils";
 
 interface AttackScoreGaugeProps {
-  summary: JailbreakEvaluationOutput['summary'];
+  value: number;  // Success rate value (0-100)
+  label?: string; // Optional custom label (defaults to "Attack Success Rate")
 }
 
-export function AttackScoreGauge({ summary }: AttackScoreGaugeProps) {
-  const successRate = summary.successRate;
+export function AttackScoreGauge({ value, label = "Attack Success Rate" }: AttackScoreGaugeProps) {
+  const successRate = value;
   const [animatedValue, setAnimatedValue] = useState(0);
 
   // Gauge configuration
   const config = {
-    width: 300,
-    height: 160,
-    cx: 150,
-    cy: 120,
-    radius: 90, // Single radius for stroke-based arc
+    width: 160,
+    height: 100,
+    cx: 80,
+    cy: 80,
+    radius: 68, // Single radius for stroke-based arc
     strokeWidth: 10, // Width of the arc stroke
     startAngle: -90, // Start from left (-90 degrees)
     endAngle: 90,    // End at right (90 degrees)
@@ -82,17 +83,24 @@ export function AttackScoreGauge({ summary }: AttackScoreGaugeProps) {
 
   // Get text color class based on success rate
   const getTextColorClass = (rate: number) => {
-    if (rate < 30) return "text-green-600 dark:text-green-500";
-    if (rate < 60) return "text-amber-600 dark:text-amber-500";
-    return "text-red-600 dark:text-red-500";
+    if (rate < 30) return "text-gray-900 ";
+    if (rate < 60) return "text-gray-900 ";
+    return "text-gray-900";
   };
 
   // Calculate the current angle for the animated arc
   const currentAngle = config.startAngle + (animatedValue / 100) * (config.endAngle - config.startAngle);
 
   return (
-    <div className="flex flex-col items-center justify-center">
-      <div className="relative w-full flex justify-center -mr-10 -mb-3">
+    <div className="flex flex-col items-center justify-center mt-4">
+           {/* Label below gauge */}
+      {label && (
+      <p className="text-xs font-450 text-gray-900 text-center mb-1">
+        {label}
+      </p>
+      )}
+      <div className="relative w-full flex justify-center">
+        
         <svg
           width={config.width}
           height={config.height}
@@ -119,19 +127,20 @@ export function AttackScoreGauge({ summary }: AttackScoreGaugeProps) {
         </svg>
 
         {/* Centered text overlay */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center mt-8">
+        <div className="absolute inset-0 flex flex-col items-center justify-center mt-4">
           <p className={cn(
-            "text-xl font-bold transition-colors duration-300",
+            "text-lg font-550 transition-colors duration-300",
             getTextColorClass(animatedValue)
           )}>
             {animatedValue.toFixed(1)}%
           </p>
-          <p className="text-xs text-gray-600 dark:text-gray-400 ">
+          <p className="text-[0.6875rem] text-gray-600 ">
             {successRate < 30 ? "Well Protected" :
              successRate < 60 ? "Moderate Risk" : "High Vulnerability"}
           </p>
         </div>
       </div>
+     
     </div>
   );
 }

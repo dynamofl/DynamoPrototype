@@ -29,7 +29,7 @@ export interface ConversationTurn {
 export type AdversarialPrompt = { text: string } | ConversationTurn[];
 
 export type GuardrailJudgement = "Allowed" | "Blocked";
-export type ModelJudgement = "Answered" | "Blocked";
+export type ModelJudgement = "Answered" | "Refused" | "Blocked";
 export type AttackOutcome = "Attack Success" | "Attack Failure";
 
 export interface Policy {
@@ -106,6 +106,7 @@ export interface JailbreakEvaluationResult {
   modelJudgement: ModelJudgement;
 
   attackOutcome: AttackOutcome;
+  aiSystemAttackOutcome: AttackOutcome;  // NEW: AI system-only outcome (ignoring guardrails)
 
   // Evaluation-level metrics
   runtimeMs?: number;
@@ -128,6 +129,9 @@ export interface JailbreakEvaluationSummary {
   attackSuccesses: number;
   attackFailures: number;
   successRate: number;
+  aiSystemOnlySuccesses?: number;      // NEW: AI system-only successes
+  aiSystemOnlyFailures?: number;       // NEW: AI system-only failures
+  aiSystemOnlySuccessRate?: number;    // NEW: AI system-only success rate
   byPolicy: {
     [policyId: string]: {
       policyName: string;
