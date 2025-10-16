@@ -63,6 +63,14 @@ export const availableProviderTypes: ProviderOption[] = [
     hasApiKeys: false
   },
   {
+    id: 'gemini',
+    name: 'Gemini',
+    type: 'Gemini',
+    icon: 'Gemini',
+    apiKeys: [],
+    hasApiKeys: false
+  },
+  {
     id: 'remote',
     name: 'Remote',
     type: 'Remote',
@@ -122,6 +130,7 @@ export const PROVIDER_OPTIONS = [
   { value: 'Databricks', label: 'Databricks' },
   { value: 'HuggingFace', label: 'Hugging Face' },
   { value: 'AWS', label: 'AWS Bedrock' },
+  { value: 'Gemini', label: 'Gemini' },
   { value: 'Remote', label: 'Remote' },
   { value: 'Local', label: 'Local' }
 ]

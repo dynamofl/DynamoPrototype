@@ -124,15 +124,78 @@ export interface JailbreakEvaluationConfig {
   attackTypesDistribution?: AttackType[]; // Optional: customize attack type distribution
 }
 
-export interface JailbreakEvaluationSummary {
-  totalTests: number;
-  attackSuccesses: number;
-  attackFailures: number;
+export interface PolicyMetrics {
+  total: number;
+  failures: number;
+  successes: number;
+  policyName: string;
   successRate: number;
-  aiSystemOnlySuccesses?: number;      // NEW: AI system-only successes
-  aiSystemOnlyFailures?: number;       // NEW: AI system-only failures
-  aiSystemOnlySuccessRate?: number;    // NEW: AI system-only success rate
-  byPolicy: {
+}
+
+export interface AttackTypeMetrics {
+  total: number;
+  failures: number;
+  successes: number;
+  successRate: number;
+}
+
+export interface BehaviorTypeMetrics {
+  total: number;
+  failures: number;
+  successes: number;
+  successRate: number;
+}
+
+export interface GuardrailSummaryMetrics {
+  id: string;
+  name: string;
+  type: 'input' | 'output';
+  byPolicy: Record<string, PolicyMetrics>;
+  totalTests: number;
+  successRate: number;
+  byAttackType: Record<string, AttackTypeMetrics>;
+  attackFailures: number;
+  byBehaviorType: Record<string, BehaviorTypeMetrics>;
+  attackSuccesses: number;
+  guardrailOnlyFailures: number;
+  guardrailOnlySuccesses: number;
+  guardrailOnlySuccessRate: number;
+}
+
+export interface JailbreakEvaluationSummary {
+  // NEW: Nested structure with aiSystem and guardrails
+  aiSystem?: {
+    totalTests: number;
+    attackSuccesses: number;
+    attackFailures: number;
+    successRate: number;
+    aiSystemOnlySuccesses: number;
+    aiSystemOnlyFailures: number;
+    aiSystemOnlySuccessRate: number;
+    byPolicy: Record<string, PolicyMetrics>;
+    byAttackType: Record<string, AttackTypeMetrics>;
+    byBehaviorType: Record<string, BehaviorTypeMetrics>;
+  };
+  guardrails?: GuardrailSummaryMetrics[];
+
+  // NEW: Summary metrics for evaluation table columns
+  summaryMetrics?: {
+    aiSystemAttackSuccessRate: number;
+    aiSystemGuardrailAttackSuccessRate: number;
+    guardrailSuccessRate: number;
+    uniqueTopics: number;
+    uniqueAttackAreas: number;
+  };
+
+  // Legacy fields for backward compatibility
+  totalTests?: number;
+  attackSuccesses?: number;
+  attackFailures?: number;
+  successRate?: number;
+  aiSystemOnlySuccesses?: number;
+  aiSystemOnlyFailures?: number;
+  aiSystemOnlySuccessRate?: number;
+  byPolicy?: {
     [policyId: string]: {
       policyName: string;
       total: number;
@@ -141,7 +204,7 @@ export interface JailbreakEvaluationSummary {
       successRate: number;
     };
   };
-  byAttackType: {
+  byAttackType?: {
     [attackType: string]: {
       total: number;
       successes: number;
@@ -149,7 +212,7 @@ export interface JailbreakEvaluationSummary {
       successRate: number;
     };
   };
-  byBehaviorType: {
+  byBehaviorType?: {
     [behaviorType: string]: {
       total: number;
       successes: number;

@@ -6,13 +6,13 @@ export function calculateSummaryFromResults(results: JailbreakEvaluationResult[]
   const attackFailures = results.filter(r => r.attackOutcome === 'Attack Failure').length
   const successRate = totalTests > 0 ? (attackSuccesses / totalTests) * 100 : 0
 
-  // NEW: Calculate AI system-only metrics
+  // Calculate AI system-only metrics
   const aiSystemOnlySuccesses = results.filter(r => r.aiSystemAttackOutcome === 'Attack Success').length
   const aiSystemOnlyFailures = results.filter(r => r.aiSystemAttackOutcome === 'Attack Failure').length
   const aiSystemOnlySuccessRate = totalTests > 0 ? (aiSystemOnlySuccesses / totalTests) * 100 : 0
 
   // Calculate by policy
-  const byPolicy: JailbreakEvaluationSummary['byPolicy'] = {}
+  const byPolicy: Record<string, any> = {}
   results.forEach(result => {
     if (!byPolicy[result.policyId]) {
       byPolicy[result.policyId] = {
@@ -38,7 +38,7 @@ export function calculateSummaryFromResults(results: JailbreakEvaluationResult[]
   })
 
   // Calculate by attack type
-  const byAttackType: JailbreakEvaluationSummary['byAttackType'] = {}
+  const byAttackType: Record<string, any> = {}
   results.forEach(result => {
     if (!byAttackType[result.attackType]) {
       byAttackType[result.attackType] = {
@@ -63,7 +63,7 @@ export function calculateSummaryFromResults(results: JailbreakEvaluationResult[]
   })
 
   // Calculate by behavior type
-  const byBehaviorType: JailbreakEvaluationSummary['byBehaviorType'] = {}
+  const byBehaviorType: Record<string, any> = {}
   results.forEach(result => {
     if (!byBehaviorType[result.behaviorType]) {
       byBehaviorType[result.behaviorType] = {
@@ -87,14 +87,28 @@ export function calculateSummaryFromResults(results: JailbreakEvaluationResult[]
     stats.successRate = stats.total > 0 ? (stats.successes / stats.total) * 100 : 0
   })
 
+  // Return new nested structure with backward compatibility
   return {
+    aiSystem: {
+      totalTests,
+      attackSuccesses,
+      attackFailures,
+      successRate,
+      aiSystemOnlySuccesses,
+      aiSystemOnlyFailures,
+      aiSystemOnlySuccessRate,
+      byPolicy,
+      byAttackType,
+      byBehaviorType
+    },
+    // Legacy fields for backward compatibility
     totalTests,
     attackSuccesses,
     attackFailures,
     successRate,
-    aiSystemOnlySuccesses,       // NEW
-    aiSystemOnlyFailures,        // NEW
-    aiSystemOnlySuccessRate,     // NEW
+    aiSystemOnlySuccesses,
+    aiSystemOnlyFailures,
+    aiSystemOnlySuccessRate,
     byPolicy,
     byAttackType,
     byBehaviorType

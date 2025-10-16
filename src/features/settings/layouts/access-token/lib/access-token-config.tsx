@@ -55,13 +55,15 @@ export const accessTokenData = [
 ]
 
 // Map provider names to AISystemIcon types
-const providerIconMap: Record<string, 'OpenAI' | 'Azure' | 'Mistral' | 'Databricks' | 'HuggingFace' | 'Anthropic' | 'Remote' | 'Local' | 'AWS' | 'DynamoAI'> = {
+const providerIconMap: Record<string, 'OpenAI' | 'Azure' | 'Mistral' | 'Databricks' | 'HuggingFace' | 'Anthropic' | 'Remote' | 'Local' | 'AWS' | 'DynamoAI' | 'Gemini'> = {
   'OpenAI': 'OpenAI',
   'Azure OpenAI': 'Azure',
   'Databricks': 'Databricks',
   'Mistral': 'Mistral',
   'AWS Bedrock': 'AWS',
-  'Anthropic': 'Anthropic'
+  'Anthropic': 'Anthropic',
+  'Gemini': 'Gemini',
+  'Remote': 'Remote'
 }
 
 // Table columns configuration

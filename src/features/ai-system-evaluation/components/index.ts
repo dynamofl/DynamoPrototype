@@ -20,4 +20,6 @@ export { EvaluationResults } from './results/evaluation-results';
 export { EvaluationHistoryTableDirect } from './history/evaluation-history-table-direct';
 export { EvaluationHistoryFilters } from './history/evaluation-history-filters';
 export { EvaluationHistoryHeader } from './history/evaluation-history-header';
+export { EvaluationSummarySection } from './history/summary-section/evaluation-summary-section';
+// Deprecated: export { EvaluationListChart } from './history/evaluation-list-chart';
 export type { EvaluationHistoryFilterState } from './history/evaluation-history-filters';

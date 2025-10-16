@@ -5,7 +5,7 @@ export interface AISystem {
   owner: string;
   createdAt: string;
   status: 'active' | 'inactive';
-  icon: 'HuggingFace' | 'OpenAI' | 'Azure' | 'Mistral' | 'Anthropic' | 'Databricks' | 'Remote' | 'Local';
+  icon: 'HuggingFace' | 'OpenAI' | 'Azure' | 'Mistral' | 'Anthropic' | 'Databricks' | 'Remote' | 'Local' | 'Gemini';
   hasGuardrails: boolean;
   isEvaluated: boolean;
 }

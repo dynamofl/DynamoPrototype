@@ -23,6 +23,12 @@ export interface EvaluationTest {
   createdAt: string;
   startedAt?: string;
   completedAt?: string;
+  // NEW: Individual summary metric columns from evaluations table
+  aiSystemAttackSuccessRate?: number;
+  aiSystemGuardrailAttackSuccessRate?: number;
+  guardrailSuccessRate?: number;
+  uniqueTopics?: number;
+  uniqueAttackAreas?: number;
 }
 
 export interface EvaluationTestSummary {

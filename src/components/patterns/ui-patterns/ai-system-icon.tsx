@@ -1,9 +1,9 @@
 import { cn } from "@/lib/utils"
-import { 
-  OpenAIInlineIcon, 
-  RemoteInlineIcon, 
-  LocalInlineIcon, 
-  AnthropicInlineIcon 
+import {
+  OpenAIInlineIcon,
+  RemoteInlineIcon,
+  LocalInlineIcon,
+  AnthropicInlineIcon
 } from "./inline-ai-icons"
 
 // Import SVG files for non-theme-adaptive icons
@@ -13,9 +13,10 @@ import DatabricksSvg from "@/assets/icons/AISystem/Databricks.svg"
 import HuggingFaceSvg from "@/assets/icons/AISystem/HuggingFace.svg"
 import AWSSvg from "@/assets/icons/AISystem/AWS.svg"
 import DynamoAISvg from "@/assets/icons/AISystem/DynamoAI.svg"
+import GeminiSvg from "@/assets/icons/AISystem/Gemini.svg"
 
 interface AISystemIconProps {
-  type: 'OpenAI' | 'Azure' | 'Mistral' | 'Databricks' | 'HuggingFace' | 'Anthropic' | 'Remote' | 'Local' | 'AWS' | 'DynamoAI'
+  type: 'OpenAI' | 'Azure' | 'Mistral' | 'Databricks' | 'HuggingFace' | 'Anthropic' | 'Remote' | 'Local' | 'AWS' | 'DynamoAI' | 'Gemini'
   className?: string
 }
 
@@ -49,6 +50,8 @@ export function AISystemIcon({ type, className }: AISystemIconProps) {
         return AWSSvg
       case 'DynamoAI':
         return DynamoAISvg
+      case 'Gemini':
+        return GeminiSvg
       default:
         return AzureSvg // fallback
     }

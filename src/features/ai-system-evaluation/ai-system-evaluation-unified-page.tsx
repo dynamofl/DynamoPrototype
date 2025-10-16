@@ -22,7 +22,8 @@ import {
   EvaluationInProgress,
   EvaluationResults,
   EvaluationHistoryTableDirect,
-  EvaluationHistoryHeader
+  EvaluationHistoryHeader,
+  EvaluationSummarySection
 } from "./components";
 import {
   AlertDialog,
@@ -780,6 +781,9 @@ export function AISystemEvaluationUnifiedPage() {
                   <EvaluationHistoryHeader
                     onNewEvaluation={handleCreateEvaluation}
                   />
+
+                  {/* Evaluation Summary Section - Aggregated metrics across all evaluations */}
+                  <EvaluationSummarySection evaluations={evaluationHistory} />
 
                   {/* Evaluation Table */}
                   <EvaluationHistoryTableDirect

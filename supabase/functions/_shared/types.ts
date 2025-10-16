@@ -117,6 +117,12 @@ export interface Evaluation {
   current_stage?: string;
   current_prompt_text?: string;
   summary_metrics?: SummaryMetrics;
+  // NEW: Individual summary metric columns
+  ai_system_attack_success_rate?: number;
+  ai_system_guardrail_attack_success_rate?: number;
+  guardrail_success_rate?: number;
+  unique_topics?: number;
+  unique_attack_areas?: number;
   created_by: string;
   created_at: string;
   started_at?: string;
@@ -131,17 +137,77 @@ export interface EvaluationConfig {
   [key: string]: any;
 }
 
-export interface SummaryMetrics {
-  totalTests: number;
-  attackSuccesses: number;
-  attackFailures: number;
+export interface PolicyMetrics {
+  total: number;
+  failures: number;
+  successes: number;
+  policyName: string;
   successRate: number;
-  aiSystemOnlySuccesses?: number;      // NEW: AI system-only successes
-  aiSystemOnlyFailures?: number;       // NEW: AI system-only failures
-  aiSystemOnlySuccessRate?: number;    // NEW: AI system-only success rate
-  byPolicy: Record<string, any>;
-  byAttackType: Record<string, any>;
-  byBehaviorType: Record<string, any>;
+}
+
+export interface AttackTypeMetrics {
+  total: number;
+  failures: number;
+  successes: number;
+  successRate: number;
+}
+
+export interface BehaviorTypeMetrics {
+  total: number;
+  failures: number;
+  successes: number;
+  successRate: number;
+}
+
+export interface GuardrailSummaryMetrics {
+  id: string;
+  name: string;
+  type: 'input' | 'output';
+  byPolicy: Record<string, PolicyMetrics>;
+  totalTests: number;
+  successRate: number;
+  byAttackType: Record<string, AttackTypeMetrics>;
+  attackFailures: number;
+  byBehaviorType: Record<string, BehaviorTypeMetrics>;
+  attackSuccesses: number;
+  guardrailOnlyFailures: number;
+  guardrailOnlySuccesses: number;
+  guardrailOnlySuccessRate: number;
+}
+
+export interface SummaryMetrics {
+  aiSystem: {
+    totalTests: number;
+    attackSuccesses: number;
+    attackFailures: number;
+    successRate: number;
+    aiSystemOnlySuccesses: number;
+    aiSystemOnlyFailures: number;
+    aiSystemOnlySuccessRate: number;
+    byPolicy: Record<string, PolicyMetrics>;
+    byAttackType: Record<string, AttackTypeMetrics>;
+    byBehaviorType: Record<string, BehaviorTypeMetrics>;
+  };
+  guardrails?: GuardrailSummaryMetrics[];
+  // NEW: Summary metrics for evaluation table columns
+  summaryMetrics: {
+    aiSystemAttackSuccessRate: number;
+    aiSystemGuardrailAttackSuccessRate: number;
+    guardrailSuccessRate: number;
+    uniqueTopics: number;
+    uniqueAttackAreas: number;
+  };
+  // Legacy fields for backward compatibility
+  totalTests?: number;
+  attackSuccesses?: number;
+  attackFailures?: number;
+  successRate?: number;
+  aiSystemOnlySuccesses?: number;
+  aiSystemOnlyFailures?: number;
+  aiSystemOnlySuccessRate?: number;
+  byPolicy?: Record<string, any>;
+  byAttackType?: Record<string, any>;
+  byBehaviorType?: Record<string, any>;
 }
 
 export interface InternalModelConfig {

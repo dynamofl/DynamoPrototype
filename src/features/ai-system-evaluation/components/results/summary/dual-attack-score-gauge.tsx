@@ -7,12 +7,16 @@ interface DualAttackScoreGaugeProps {
 }
 
 export function DualAttackScoreGauge({ summary, hasGuardrails }: DualAttackScoreGaugeProps) {
+  // Support both new nested structure and legacy flat structure
+  const aiSystemOnlyRate = summary.aiSystem?.aiSystemOnlySuccessRate ?? summary.aiSystemOnlySuccessRate ?? summary.successRate ?? 0;
+  const withGuardrailsRate = summary.aiSystem?.successRate ?? summary.successRate ?? 0;
+
   // If no guardrails, show single gauge using AI system-only rate
   if (!hasGuardrails) {
     return (
       <div className="flex justify-end pr-3">
         <AttackScoreGauge
-          value={summary.aiSystemOnlySuccessRate ?? summary.successRate}
+          value={aiSystemOnlyRate}
           label=""
         />
       </div>
@@ -23,14 +27,14 @@ export function DualAttackScoreGauge({ summary, hasGuardrails }: DualAttackScore
   return (
     <div className="flex gap-2 items-end justify-end">
        <AttackScoreGauge
-        value={summary.aiSystemOnlySuccessRate ?? summary.successRate}
+        value={aiSystemOnlyRate}
         label="AI System ASR"
       />
       <AttackScoreGauge
-        value={summary.successRate}
+        value={withGuardrailsRate}
         label="With Guardrails ASR"
       />
-     
+
     </div>
   );
 }

@@ -63,6 +63,14 @@ export const availableProviderTypes: ProviderType[] = [
     isAvailable: false
   },
   {
+    id: 'gemini',
+    name: 'Gemini',
+    type: 'Gemini',
+    description: 'Google\'s multimodal AI models',
+    icon: 'Gemini',
+    isAvailable: false
+  },
+  {
     id: 'local',
     name: 'Local Model',
     type: 'Local',

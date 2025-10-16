@@ -39,8 +39,14 @@ export function mapSupabaseToEvaluationTests(
       current: evaluation.completedPrompts,
       total: evaluation.totalPrompts,
       currentPrompt: ''
-    }
-  }));
+    },
+    // NEW: Map individual summary metric columns from evaluations table
+    aiSystemAttackSuccessRate: evaluation.aiSystemAttackSuccessRate,
+    aiSystemGuardrailAttackSuccessRate: evaluation.aiSystemGuardrailAttackSuccessRate,
+    guardrailSuccessRate: evaluation.guardrailSuccessRate,
+    uniqueTopics: evaluation.uniqueTopics,
+    uniqueAttackAreas: evaluation.uniqueAttackAreas
+  } as any));
 }
 
 export function useEvaluationHistory(aiSystem: AISystem | null) {

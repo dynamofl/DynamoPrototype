@@ -27,6 +27,12 @@ export interface EvaluationSummary {
   startedAt?: string;
   completedAt?: string;
   summaryMetrics?: any;
+  // NEW: Individual summary metric columns
+  aiSystemAttackSuccessRate?: number;
+  aiSystemGuardrailAttackSuccessRate?: number;
+  guardrailSuccessRate?: number;
+  uniqueTopics?: number;
+  uniqueAttackAreas?: number;
 }
 
 export class EvaluationService {
@@ -245,7 +251,13 @@ export class EvaluationService {
       createdAt: evaluation.created_at,
       startedAt: evaluation.started_at,
       completedAt: evaluation.completed_at,
-      summaryMetrics: evaluation.summary_metrics
+      summaryMetrics: evaluation.summary_metrics,
+      // NEW: Map individual summary metric columns
+      aiSystemAttackSuccessRate: evaluation.ai_system_attack_success_rate,
+      aiSystemGuardrailAttackSuccessRate: evaluation.ai_system_guardrail_attack_success_rate,
+      guardrailSuccessRate: evaluation.guardrail_success_rate,
+      uniqueTopics: evaluation.unique_topics,
+      uniqueAttackAreas: evaluation.unique_attack_areas
     }));
   }
 

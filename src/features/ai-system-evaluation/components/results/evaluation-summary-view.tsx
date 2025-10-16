@@ -5,6 +5,8 @@ import { SummaryStatsCards } from "./summary/summary-stats-cards";
 import { PolicyResultsSection } from "./summary/policy-results-section";
 import { AttackTypeResultsSection } from "./summary/attack-type-results-section";
 import { BehaviorTypeResultsSection } from "./summary/behavior-type-results-section";
+import { AttackSuccessRateChart } from "./summary/attack-success-rate-chart";
+import { EvaluationSummaryCards } from "./summary/evaluation-summary-cards";
 import { AISystemIcon } from "@/components/patterns/ui-patterns/ai-system-icon";
 
 interface EvaluationSummaryViewProps {
@@ -67,7 +69,7 @@ export function EvaluationSummaryView({
 
   return (
     <div className="flex justify-center w-full py-6">
-      <div className="w-full max-w-4xl space-y-4">
+      <div className="w-full space-y-4">
         {/* AI System Header */}
         <div className="space-y-2 mx-3">
           <div className="flex items-center gap-1">
@@ -82,7 +84,7 @@ export function EvaluationSummaryView({
           {/* Main Title */}
           <h2 className="text-3xl font-550 text-gray-900">
             {evaluationName || "--"}
-            
+
           </h2>
         </div>
 
@@ -113,32 +115,48 @@ export function EvaluationSummaryView({
           </div>
         </div>
 
-        {/* Overview Section Title */}
+        {/* New Three-Card Layout */}
+        <div className="mx-3">
+          <EvaluationSummaryCards
+            summary={summary}
+            hasGuardrails={hasGuardrails}
+          />
+        </div>
 
         {/* Overview and Gauge - Two Column Layout */}
-        <div className={`grid ${hasGuardrails ? 'grid-cols-5' : 'grid-cols-4'} px-3 py-2 align-center items-center rounded-lg bg-gray-100`}>
-          {/* Left: Overview Description */}
-          <div className={hasGuardrails ? 'col-span-3' : 'col-span-3'}>
-            <OverviewSection summary={summary} hasGuardrails={hasGuardrails} />
-          </div>
+        <div className="max-w-4xl mx-auto">
+          <div className={`grid ${hasGuardrails ? 'grid-cols-5' : 'grid-cols-4'} px-3 py-2 align-center items-center rounded-lg bg-gray-100`}>
+            {/* Left: Overview Description */}
+            <div className={hasGuardrails ? 'col-span-3' : 'col-span-3'}>
+              <OverviewSection summary={summary} hasGuardrails={hasGuardrails} />
+            </div>
 
-          {/* Right: Attack Score Gauge */}
-          <div className={hasGuardrails ? 'col-span-2' : 'col-span-1'}>
-            <DualAttackScoreGauge summary={summary} hasGuardrails={hasGuardrails} />
+            {/* Right: Attack Score Gauge */}
+            <div className={hasGuardrails ? 'col-span-2' : 'col-span-1'}>
+              <DualAttackScoreGauge summary={summary} hasGuardrails={hasGuardrails} />
+            </div>
           </div>
         </div>
 
         {/* Overall Stats Cards */}
-        <SummaryStatsCards summary={summary} />
+        <div className="max-w-4xl mx-auto">
+          <SummaryStatsCards summary={summary} />
+        </div>
 
         {/* By Policy */}
-        <PolicyResultsSection byPolicy={summary.byPolicy} />
+        <div className="max-w-4xl mx-auto">
+          <PolicyResultsSection byPolicy={summary.byPolicy} />
+        </div>
 
         {/* By Attack Type */}
-        <AttackTypeResultsSection byAttackType={summary.byAttackType} />
+        <div className="max-w-4xl mx-auto">
+          <AttackTypeResultsSection byAttackType={summary.byAttackType} />
+        </div>
 
         {/* By Behavior Type */}
-        <BehaviorTypeResultsSection byBehaviorType={summary.byBehaviorType} />
+        <div className="max-w-4xl mx-auto">
+          <BehaviorTypeResultsSection byBehaviorType={summary.byBehaviorType} />
+        </div>
       </div>
     </div>
   );
