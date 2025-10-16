@@ -244,7 +244,7 @@ export function AISystemEvaluationUnifiedPage() {
       await new Promise(resolve => setTimeout(resolve, 300)); // Small delay to show loading state
 
       setEvaluationProgress({
-        stage: test.status === 'pending' ? 'Starting Evaluation...' : 'Running Evaluation',
+        stage: test.status === 'pending' ? 'Setting up test environment and preparing the prompts' : 'Running Evaluation',
         current: test.progress?.current || 0,
         total: test.progress?.total || 100,
         message: test.progress?.currentPrompt || ''
@@ -448,44 +448,16 @@ export function AISystemEvaluationUnifiedPage() {
       // Close creation flow
       setShowCreationFlow(false);
 
-      // Create a temporary test object with the form data
-      // This will be shown immediately in "Preparing..." state
-      const tempTest: EvaluationTest = {
-        id: 'temp-' + Date.now(),
-        name: data.name || 'New Evaluation',
-        status: 'pending',
-        aiSystemId: aiSystem.id,
-        aiSystemName: aiSystem.name,
-        createdAt: new Date().toISOString(),
-        config: {
-          candidateModel: aiSystem.selectedModel || 'Unknown',
-          judgeModel: 'GPT-4o',
-          temperature: 0.7,
-          maxLength: 2000,
-          topP: 1.0
-        } as any,
-        input: { prompts: [] },
-        progress: { current: 0, total: 100, currentPrompt: '' }
-      };
-
-      // Set the test and show progress overlay immediately with "Preparing..." state
-      setSelectedTest(tempTest);
-      setEvaluationProgress({
-        stage: 'Preparing Evaluation...',
-        current: 0,
-        total: 100,
-        message: 'Setting up test environment and generating prompts...'
-      });
-
-      // Create the evaluation in backend
+      // Create the evaluation in backend - this now returns immediately with evaluation ID
       const result = await EvaluationService.createEvaluation(data, aiSystem.id);
 
-      // Navigate to the actual evaluation URL
+      // Navigate to the evaluation URL IMMEDIATELY
+      // The backend will generate prompts in the background
       navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation/${result.evaluationId}`);
 
-      // Reload history in background - this will trigger the detail view useEffect
-      // which will load the actual test and update the progress overlay
-      await reloadHistory();
+      // Reload history in background to get the new evaluation
+      // Real-time subscriptions will handle updates as prompts are generated
+      reloadHistory();
 
     } catch (error) {
       console.error('Evaluation creation failed:', error);

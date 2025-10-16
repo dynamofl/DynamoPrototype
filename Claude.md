@@ -57,6 +57,31 @@ The application uses React Router with these main routes:
 - **Factory Pattern**: Storage factory creates appropriate storage instances
 - **Type Safety**: Comprehensive TypeScript definitions in `src/types/`
 
+### Notification System
+The application uses an event-based notification system that enables page-agnostic notifications:
+
+- **Global Monitoring**: `useGlobalEvaluationMonitor` hook (evaluation feature) mounted in App.tsx watches all evaluations via Supabase real-time
+- **Event Service**: `NotificationService` provides pub/sub pattern for decoupled communication between features and UI
+- **UI Rendering**: `useGlobalNotifications` hook mounted in App.tsx subscribes to events and renders Sonner toast notifications
+- **Page-Agnostic**: Notifications appear on any page when evaluations complete (works on Guardrails, Settings, AI Systems, etc.)
+- **Action Buttons**: Toast includes "View Results" button (navigates to evaluation) and "Close" button
+- **Persistent State**: Tracks last seen status in localStorage, prevents duplicates in sessionStorage
+- **Completed While Away**: Detects and notifies about evaluations that completed while app was closed
+
+**Key Files**:
+- `src/lib/notifications/notification-service.ts` - Event bus for pub/sub
+- `src/hooks/useGlobalNotifications.ts` - UI handler (subscribes and renders)
+- `src/features/ai-system-evaluation/hooks/useGlobalEvaluationMonitor.ts` - Evaluation monitor
+- `src/App.tsx` - Mounts both monitor and UI handler globally
+
+**Adding New Notification Types**:
+1. Update `NotificationService` with new event type and payload interface
+2. Add trigger method to `NotificationService`
+3. Create feature hook to monitor and trigger events
+4. Handle new event type in `useGlobalNotifications` to render appropriate toast
+
+See [docs/notification-system.md](docs/notification-system.md) for comprehensive documentation and examples
+
 ## Important Development Patterns
 
 ### Component Organization

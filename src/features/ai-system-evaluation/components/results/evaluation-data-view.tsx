@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import {
   EvaluationDataTable,
   EvaluationDataFilters,
@@ -7,13 +7,11 @@ import {
   EvaluationDataConversationView,
   EvaluationDataSideSheet
 } from './data-view-components'
-import { EvaluationDataDetail } from './evaluation-data-detail'
 import { EvaluationConversationView } from './evaluation-conversation-view'
 import { filterJailbreakRecords, paginateJailbreakRecords } from '../../lib/evaluation-data-utils'
 import { DEFAULT_PAGE_SIZE } from '../../constants/evaluation-data-constants'
 import type { JailbreakEvaluationResult } from '../../types/jailbreak-evaluation'
 import type { JailbreakFilterState, JailbreakPaginationState } from '../../types/evaluation-data-types'
-import { toUrlSlug } from '@/lib/utils'
 
 type ViewType = 'table' | 'conversation'
 
@@ -26,7 +24,6 @@ interface EvaluationDataViewProps {
 }
 
 export function EvaluationDataView({ results, aiSystemName, hasGuardrails = true, systemName, evaluationId }: EvaluationDataViewProps) {
-  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
 
   const [allData, setAllData] = useState<JailbreakEvaluationResult[]>([])
@@ -89,6 +86,8 @@ export function EvaluationDataView({ results, aiSystemName, hasGuardrails = true
       // Conversation view: item is mandatory (always a selected conversation)
       if (selectedConversationId) {
         newParams.set('item', selectedConversationId)
+      } else {
+        newParams.delete('item')
       }
     } else if (currentView === 'table') {
       // Table view: item only exists when side sheet is open
@@ -105,17 +104,30 @@ export function EvaluationDataView({ results, aiSystemName, hasGuardrails = true
     }
   }, [currentView, selectedConversationId, sideSheetOpen, sideSheetRecordId, systemName, evaluationId, searchParams, setSearchParams])
 
-  // Sync state with URL params when they change externally
+  // Sync state with URL params when they change externally (e.g., browser back/forward)
   useEffect(() => {
     const mode = searchParams.get('mode') as ViewType | null
     const item = searchParams.get('item')
 
-    // Sync view mode
-    if (mode && (mode === 'table' || mode === 'conversation') && mode !== currentView) {
-      setCurrentView(mode)
+    // Determine the target view (default to table if no mode param)
+    const targetView = mode === 'conversation' ? 'conversation' : 'table'
+
+    // Only sync if view actually needs to change
+    if (targetView !== currentView) {
+      setCurrentView(targetView)
+      // When changing views, clear conflicting state
+      if (targetView === 'table') {
+        setSelectedConversationId(null)
+        setSideSheetOpen(false)
+        setSideSheetRecordId(null)
+      } else {
+        setSideSheetOpen(false)
+        setSideSheetRecordId(null)
+      }
+      return
     }
 
-    // Sync item based on view mode
+    // Sync item based on current view
     if (currentView === 'conversation') {
       // In conversation view, sync selected conversation from URL
       if (item && item !== selectedConversationId) {
@@ -132,7 +144,7 @@ export function EvaluationDataView({ results, aiSystemName, hasGuardrails = true
         setSideSheetRecordId(null)
       }
     }
-  }, [searchParams, currentView])
+  }, [searchParams])
 
   // Load initial data
   useEffect(() => {
@@ -179,7 +191,7 @@ export function EvaluationDataView({ results, aiSystemName, hasGuardrails = true
         setSelectedConversationId(null)
       }
     }
-  }, [filteredData, pagination.page, pagination.pageSize, currentView, conversationDisplayCount, selectedConversationId])
+  }, [filteredData, pagination.page, pagination.pageSize, currentView, conversationDisplayCount])
 
   const handleFiltersChange = (newFilters: JailbreakFilterState) => {
     setFilters(newFilters)
@@ -210,16 +222,26 @@ export function EvaluationDataView({ results, aiSystemName, hasGuardrails = true
   const handleViewChange = (view: ViewType) => {
     if (view === currentView || transitionState !== 'idle') return
 
+    // Immediately update view and clear related state
+    setCurrentView(view)
+
+    if (view === 'conversation') {
+      // Clear side sheet state when switching to conversation view
+      setSideSheetOpen(false)
+      setSideSheetRecordId(null)
+      setConversationDisplayCount(25)
+    } else if (view === 'table') {
+      // Clear conversation selection when switching to table view
+      setSelectedConversationId(null)
+      setSideSheetOpen(false)
+      setSideSheetRecordId(null)
+    }
+
     // Start exit animation
     setTransitionState('exiting')
 
-    // After exit animation, switch view and start entrance
+    // After exit animation, start entrance
     setTimeout(() => {
-      setCurrentView(view)
-      // Reset conversation display count when switching to conversation view
-      if (view === 'conversation') {
-        setConversationDisplayCount(25)
-      }
       setTransitionState('entering')
 
       // Complete entrance animation

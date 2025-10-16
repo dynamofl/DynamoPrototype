@@ -537,62 +537,72 @@ export async function generatePromptsFromPolicies(
 
   let totalApiCalls = 0;
 
-  // Process each guardrail (policy)
-  for (const guardrail of guardrails) {
-    // Only process guardrails that are in the policyIds list
-    if (!policyIds.includes(guardrail.id)) {
-      continue;
-    }
+  // OPTIMIZED: Process all policies in PARALLEL for dramatic speed improvement
+  // Instead of sequential processing (30s for 3 policies), run concurrently (~8s for 3 policies)
+  const policiesWithScenarios = await Promise.all(
+    guardrails
+      .filter(guardrail => policyIds.includes(guardrail.id))
+      .map(async (guardrail) => {
+        console.log(`\n🔍 Processing policy: ${guardrail.name} (${guardrail.id})`);
 
-    console.log(`\n🔍 Processing policy: ${guardrail.name} (${guardrail.id})`);
+        // Get the policy data from the guardrail
+        const policyData = guardrail.policies && guardrail.policies[0]
+          ? guardrail.policies[0]
+          : {};
 
-    // Get the policy data from the guardrail
-    const policyData = guardrail.policies && guardrail.policies[0]
-      ? guardrail.policies[0]
-      : {};
+        const policyDescription = policyData.description || '';
+        const allowedBehavior = policyData.allowedBehavior || '';
+        const disallowedBehavior = policyData.disallowedBehavior || '';
 
-    const policyDescription = policyData.description || '';
-    const allowedBehavior = policyData.allowedBehavior || '';
-    const disallowedBehavior = policyData.disallowedBehavior || '';
+        // Enhanced logging with actual content preview
+        console.log(`\n📄 Policy Data Summary:`);
+        console.log(`   Description (${policyDescription.length} chars): "${policyDescription.substring(0, 200)}${policyDescription.length > 200 ? '...' : ''}"`);
 
-    // Enhanced logging with actual content preview
-    console.log(`\n📄 Policy Data Summary:`);
-    console.log(`   Description (${policyDescription.length} chars): "${policyDescription.substring(0, 200)}${policyDescription.length > 200 ? '...' : ''}"`);
+        const allowedLines = allowedBehavior.split('\n').filter(line => line.trim().length > 0);
+        console.log(`   Allowed Behaviors (${allowedLines.length} items):`);
+        if (allowedLines.length > 0) {
+          console.log(`      First: "${allowedLines[0].substring(0, 100)}${allowedLines[0].length > 100 ? '...' : ''}"`);
+        }
 
-    const allowedLines = allowedBehavior.split('\n').filter(line => line.trim().length > 0);
-    console.log(`   Allowed Behaviors (${allowedLines.length} items):`);
-    if (allowedLines.length > 0) {
-      console.log(`      First: "${allowedLines[0].substring(0, 100)}${allowedLines[0].length > 100 ? '...' : ''}"`);
-    }
+        const disallowedLines = disallowedBehavior.split('\n').filter(line => line.trim().length > 0);
+        console.log(`   Disallowed Behaviors (${disallowedLines.length} items):`);
+        if (disallowedLines.length > 0) {
+          console.log(`      First: "${disallowedLines[0].substring(0, 100)}${disallowedLines[0].length > 100 ? '...' : ''}"`);
+        }
 
-    const disallowedLines = disallowedBehavior.split('\n').filter(line => line.trim().length > 0);
-    console.log(`   Disallowed Behaviors (${disallowedLines.length} items):`);
-    if (disallowedLines.length > 0) {
-      console.log(`      First: "${disallowedLines[0].substring(0, 100)}${disallowedLines[0].length > 100 ? '...' : ''}"`);
-    }
+        // Warning if policy data is empty
+        if (!policyDescription && !allowedBehavior && !disallowedBehavior) {
+          console.warn(`\n⚠️  WARNING: Policy "${guardrail.name}" has NO description or behaviors defined!`);
+          console.warn(`⚠️  Generated prompts will be GENERIC. Please add policy content in the UI.`);
+          console.warn(`⚠️  This policy needs: description, allowedBehavior, and disallowedBehavior fields.\n`);
+        } else if (!disallowedBehavior) {
+          console.warn(`\n⚠️  WARNING: Policy "${guardrail.name}" has NO disallowed behaviors!`);
+          console.warn(`⚠️  Cannot generate meaningful test prompts without disallowed behaviors.\n`);
+        }
 
-    // Warning if policy data is empty
-    if (!policyDescription && !allowedBehavior && !disallowedBehavior) {
-      console.warn(`\n⚠️  WARNING: Policy "${guardrail.name}" has NO description or behaviors defined!`);
-      console.warn(`⚠️  Generated prompts will be GENERIC. Please add policy content in the UI.`);
-      console.warn(`⚠️  This policy needs: description, allowedBehavior, and disallowedBehavior fields.\n`);
-    } else if (!disallowedBehavior) {
-      console.warn(`\n⚠️  WARNING: Policy "${guardrail.name}" has NO disallowed behaviors!`);
-      console.warn(`⚠️  Cannot generate meaningful test prompts without disallowed behaviors.\n`);
-    }
+        // OPTIMIZED: Generate all topics and prompts in a SINGLE API call
+        const scenarios = await generateTopicsAndPromptsForPolicy(
+          guardrail.id,
+          guardrail.name,
+          policyDescription,
+          allowedBehavior,
+          disallowedBehavior,
+          modelConfig
+        );
 
-    // OPTIMIZED: Generate all topics and prompts in a SINGLE API call
-    const scenarios = await generateTopicsAndPromptsForPolicy(
-      guardrail.id,
-      guardrail.name,
-      policyDescription,
-      allowedBehavior,
-      disallowedBehavior,
-      modelConfig
-    );
-    totalApiCalls++;
+        console.log(`✅ Added ${scenarios.length} topics × 5 prompts = ${scenarios.length * 5} total prompts for ${guardrail.name}`);
 
-    // Process the generated scenarios
+        return {
+          guardrail,
+          scenarios
+        };
+      })
+  );
+
+  totalApiCalls = policiesWithScenarios.length;
+
+  // Process all scenarios and create prompts
+  for (const { guardrail, scenarios } of policiesWithScenarios) {
     for (const scenario of scenarios) {
       const { topic, prompts: topicPrompts } = scenario;
 
@@ -627,12 +637,10 @@ export async function generatePromptsFromPolicies(
         });
       }
     }
-
-    console.log(`✅ Added ${scenarios.length} topics × 5 prompts = ${scenarios.length * 5} total prompts for ${guardrail.name}`);
   }
 
   console.log(`\n🎯 Total prompts generated: ${prompts.length}`);
-  console.log(`📊 API Call Efficiency: ${totalApiCalls} total calls for ${policyIds.length} policies`);
+  console.log(`📊 API Call Efficiency: ${totalApiCalls} total calls for ${policyIds.length} policies (executed in PARALLEL)`);
   console.log(`💰 Optimization: Reduced from ${policyIds.length * 6} calls to ${totalApiCalls} (${Math.round((1 - totalApiCalls/(policyIds.length * 6)) * 100)}% reduction)`);
 
   return prompts;

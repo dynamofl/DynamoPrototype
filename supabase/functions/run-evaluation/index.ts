@@ -67,13 +67,20 @@ serve(async (req: Request) => {
 
     // Update status to running if pending
     if (evaluation.status === 'pending') {
+      // Only set started_at if it's not already set (preserve original start time from creation)
+      const updateData: any = {
+        status: 'running',
+        updated_at: new Date().toISOString()
+      };
+
+      // If started_at is not set, set it now (fallback for old evaluations)
+      if (!evaluation.started_at) {
+        updateData.started_at = new Date().toISOString();
+      }
+
       await supabase
         .from('evaluations')
-        .update({
-          status: 'running',
-          started_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', evaluationId);
 
       await logInfo(supabase, evaluationId, 'Evaluation started');
@@ -489,7 +496,7 @@ async function finalizeEvaluation(supabase: any, evaluationId: string) {
     })
     .eq('id', evaluationId);
 
-  await logInfo(supabase, evaluationId, 'Evaluation completed successfully');
+  await logInfo(supabase, evaluationId, 'Evaluation Successful');
 }
 
 function calculateSummaryMetrics(prompts: EvaluationPrompt[]): SummaryMetrics {

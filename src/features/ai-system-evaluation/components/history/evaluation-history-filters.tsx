@@ -16,7 +16,7 @@ const STATUS_OPTIONS = [
   { value: 'completed', label: 'Completed' },
   { value: 'running', label: 'Running' },
   { value: 'failed', label: 'Failed' },
-  { value: 'pending', label: 'Pending' }
+  { value: 'pending', label: 'Preparing' }
 ]
 
 const CATEGORY_OPTIONS = [

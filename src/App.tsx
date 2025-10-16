@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { AppBar, Breadcrumb, SmartRedirect } from '@/components/patterns'
 import { Button } from '@/components/ui/button'
+import { Toaster } from '@/components/ui/sonner'
 import { AIProvidersPage } from '@/features/ai-providers'
 import { AISystemsPage } from '@/features/ai-systems'
 import { AISystemEvaluationUnifiedPage } from '@/features/ai-system-evaluation'
@@ -12,11 +13,21 @@ import { ProjectsPage } from '@/features/projects'
 import { SettingsPage } from '@/features/settings'
 import { TablePatternDemo } from '@/components/table-pattern-demo'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { useGlobalNotifications } from '@/hooks/useGlobalNotifications'
+import { useGlobalEvaluationMonitor } from '@/features/ai-system-evaluation/hooks/useGlobalEvaluationMonitor'
 
 function App() {
   usePageTitle()
 
+  // Global evaluation monitor - watches all evaluations and triggers notification events
+  useGlobalEvaluationMonitor()
+
+  // Listen for notification events and display toast UI
+  useGlobalNotifications()
+
   return (
+    <>
+      <Toaster />
     <Routes>
       {/* Settings Route - Separate layout without AppBar */}
       <Route path="/settings" element={<SettingsPage />} />
@@ -81,6 +92,7 @@ function App() {
         </div>
       } />
     </Routes>
+    </>
   )
 }
 

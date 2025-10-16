@@ -140,9 +140,52 @@ export function EvaluationDataDetail({ record, hasGuardrails = true }: Evaluatio
           </h3>
           <div className="border border-gray-200 rounded p-2 space-y-2">
             <div className="w-full">
-              <p className="text-[0.8125rem]  font-400 leading-5 text-gray-900 whitespace-pre-wrap">
-                {record.adversarialPrompt}
-              </p>
+              {(() => {
+                const adversarial = record.adversarialPrompt
+
+                // If it's a simple text object: { text: string }
+                if (adversarial && typeof adversarial === 'object' && 'text' in adversarial) {
+                  return (
+                    <p className="text-[0.8125rem] font-400 leading-5 text-gray-900 whitespace-pre-wrap">
+                      {adversarial.text}
+                    </p>
+                  )
+                }
+
+                // If it's an array of conversation turns: ConversationTurn[]
+                if (Array.isArray(adversarial)) {
+                  return (
+                    <div className="space-y-3">
+                      {adversarial.map((turn, idx) => (
+                        <div key={idx} className="space-y-1">
+                          <div className="text-xs font-450 text-gray-600">
+                            {turn.role === 'user' ? 'User' : turn.role === 'assistant' ? 'Assistant' : 'System'}:
+                          </div>
+                          <p className="text-[0.8125rem] font-400 leading-5 text-gray-900 whitespace-pre-wrap pl-3 border-l-2 border-gray-300">
+                            {turn.content}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                }
+
+                // If it's a plain string (for backward compatibility)
+                if (typeof adversarial === 'string') {
+                  return (
+                    <p className="text-[0.8125rem] font-400 leading-5 text-gray-900 whitespace-pre-wrap">
+                      {adversarial}
+                    </p>
+                  )
+                }
+
+                // Fallback for unexpected formats
+                return (
+                  <p className="text-[0.8125rem] font-400 leading-5 text-gray-500 italic">
+                    No adversarial prompt available
+                  </p>
+                )
+              })()}
             </div>
           </div>
         </section>

@@ -27,9 +27,9 @@ import type { EvaluationHistoryFilterState } from './evaluation-history-filters'
 function TestDuration({ test }: { test: EvaluationTest }) {
   const [currentTime, setCurrentTime] = useState(Date.now())
 
-  // Update time every second for running tests
+  // Update time every second for pending and running tests
   useEffect(() => {
-    if (test.status === 'running' && test.startedAt) {
+    if ((test.status === 'running' || test.status === 'pending') && test.startedAt) {
       const interval = setInterval(() => {
         setCurrentTime(Date.now())
       }, 1000)
@@ -47,6 +47,20 @@ function TestDuration({ test }: { test: EvaluationTest }) {
 
     return (
       <span className="">
+        {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+      </span>
+    )
+  }
+
+  // For pending tests (generating prompts), show live duration
+  if (test.status === 'pending' && test.startedAt) {
+    const start = new Date(test.startedAt).getTime()
+    const durationMs = currentTime - start
+    const minutes = Math.floor(durationMs / 60000)
+    const seconds = Math.floor((durationMs % 60000) / 1000)
+
+    return (
+      <span className="text-gray-600">
         {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
       </span>
     )
@@ -189,7 +203,7 @@ export function EvaluationHistoryTableDirect({
       pending: {
         icon: Loader2,
         color: 'text-gray-400',
-        label: 'Pending'
+        label: 'Preparing'
       }
     }
 
@@ -326,6 +340,19 @@ export function EvaluationHistoryTableDirect({
                         className=""
                       >
                         View Result
+                      </Button>
+                    )}
+                    {test.status === 'pending' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onShowProgress(test)
+                        }}
+                        className=""
+                      >
+                        View Progress
                       </Button>
                     )}
                     {test.status === 'running' && (

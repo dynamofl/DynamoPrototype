@@ -103,9 +103,20 @@ serve(async (req: Request) => {
       }
     }
 
-    // PHASE 1: Create evaluation record IMMEDIATELY with total_prompts: 0
-    // This allows the frontend to navigate to the evaluation page right away
-    // Set started_at NOW to track total runtime including prompt generation
+    // Generate prompts based on POLICIES ONLY (not guardrails)
+    // policyIds: Used to generate test prompts
+    // guardrails: Full list of fetched guardrail records (filtered inside generator)
+    // internalModels: Model configurations for topic and prompt generation
+    const prompts = await generatePromptsFromPolicies(policyIds, guardrails, internalModels);
+
+    if (prompts.length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'No prompts generated from selected policies' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Create evaluation record with internal models in config
     const { data: evaluation, error: evalError } = await supabase
       .from('evaluations')
       .insert({
@@ -113,14 +124,13 @@ serve(async (req: Request) => {
         ai_system_id: aiSystemId,
         evaluation_type: evaluationType,
         status: 'pending',
-        started_at: new Date().toISOString(), // Start runtime timer NOW
         config: {
           ...config,
           policyIds,
           guardrailIds,
           internalModels // Store internal models in config for run-evaluation to use
         },
-        total_prompts: 0, // Will be updated after prompt generation
+        total_prompts: prompts.length,
         completed_prompts: 0,
         created_by: user.id
       })
@@ -131,114 +141,48 @@ serve(async (req: Request) => {
       throw new Error(`Failed to create evaluation: ${evalError.message}`);
     }
 
-    console.log(`✅ Evaluation ${evaluation.id} created at ${evaluation.started_at}, starting background prompt generation`);
+    // Create prompt records
+    const promptRecords = prompts.map((prompt) => ({
+      evaluation_id: evaluation.id,
+      ...prompt
+    }));
 
-    // PHASE 2: Generate prompts in BACKGROUND (fire-and-forget)
-    // This runs asynchronously without blocking the response
-    (async () => {
-      try {
-        console.log(`🔄 Generating prompts for evaluation ${evaluation.id}...`);
+    const { error: promptsError } = await supabase
+      .from('evaluation_prompts')
+      .insert(promptRecords);
 
-        // Generate prompts based on POLICIES ONLY (not guardrails)
-        const prompts = await generatePromptsFromPolicies(policyIds, guardrails, internalModels);
+    if (promptsError) {
+      // Rollback evaluation if prompts failed
+      await supabase.from('evaluations').delete().eq('id', evaluation.id);
+      throw new Error(`Failed to create prompts: ${promptsError.message}`);
+    }
 
-        if (prompts.length === 0) {
-          console.error('❌ No prompts generated from selected policies');
-          // Update evaluation status to failed
-          await supabase
-            .from('evaluations')
-            .update({ status: 'failed' })
-            .eq('id', evaluation.id);
+    // Log evaluation creation
+    await supabase.from('evaluation_logs').insert({
+      evaluation_id: evaluation.id,
+      level: 'info',
+      message: `Evaluation created with ${prompts.length} prompts`,
+      metadata: { policyIds, guardrailIds, promptCount: prompts.length }
+    });
 
-          await supabase.from('evaluation_logs').insert({
-            evaluation_id: evaluation.id,
-            level: 'error',
-            message: 'No prompts generated from selected policies',
-            metadata: { policyIds }
-          });
-          return;
-        }
+    // Trigger async execution (invoke run-evaluation function)
+    // Note: This is fire-and-forget, we don't wait for the response
+    fetch(`${supabaseUrl}/functions/v1/run-evaluation`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`
+      },
+      body: JSON.stringify({ evaluationId: evaluation.id })
+    }).catch((error) => {
+      console.error('Failed to trigger run-evaluation:', error);
+    });
 
-        console.log(`✅ Generated ${prompts.length} prompts for evaluation ${evaluation.id}`);
-
-        // Create prompt records
-        const promptRecords = prompts.map((prompt) => ({
-          evaluation_id: evaluation.id,
-          ...prompt
-        }));
-
-        const { error: promptsError } = await supabase
-          .from('evaluation_prompts')
-          .insert(promptRecords);
-
-        if (promptsError) {
-          console.error('❌ Failed to insert prompts:', promptsError);
-          // Update evaluation status to failed (don't delete - user already navigated)
-          await supabase
-            .from('evaluations')
-            .update({ status: 'failed' })
-            .eq('id', evaluation.id);
-
-          await supabase.from('evaluation_logs').insert({
-            evaluation_id: evaluation.id,
-            level: 'error',
-            message: `Failed to create prompts: ${promptsError.message}`,
-            metadata: { error: promptsError }
-          });
-          return;
-        }
-
-        // Update total_prompts - this will trigger real-time subscription on frontend
-        await supabase
-          .from('evaluations')
-          .update({ total_prompts: prompts.length })
-          .eq('id', evaluation.id);
-
-        console.log(`✅ Updated evaluation ${evaluation.id} with ${prompts.length} prompts`);
-
-        // Log evaluation creation
-        await supabase.from('evaluation_logs').insert({
-          evaluation_id: evaluation.id,
-          level: 'info',
-          message: `Evaluation created with ${prompts.length} prompts`,
-          metadata: { policyIds, guardrailIds, promptCount: prompts.length }
-        });
-
-        // Trigger async execution (invoke run-evaluation function)
-        fetch(`${supabaseUrl}/functions/v1/run-evaluation`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`
-          },
-          body: JSON.stringify({ evaluationId: evaluation.id })
-        }).catch((error) => {
-          console.error('Failed to trigger run-evaluation:', error);
-        });
-
-      } catch (error) {
-        console.error('❌ Background prompt generation failed:', error);
-        // Update evaluation status to failed
-        await supabase
-          .from('evaluations')
-          .update({ status: 'failed' })
-          .eq('id', evaluation.id);
-
-        await supabase.from('evaluation_logs').insert({
-          evaluation_id: evaluation.id,
-          level: 'error',
-          message: `Background prompt generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          metadata: { error }
-        });
-      }
-    })();
-
-    // Return response IMMEDIATELY with evaluation ID
-    // Frontend can navigate right away, background processing continues
+    // Return response
     const response: CreateEvaluationResponse = {
       evaluationId: evaluation.id,
       status: 'pending',
-      totalPrompts: 0 // Will be updated via real-time subscription
+      totalPrompts: prompts.length
     };
 
     return new Response(
