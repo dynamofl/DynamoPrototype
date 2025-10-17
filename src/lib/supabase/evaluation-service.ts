@@ -30,9 +30,10 @@ export interface EvaluationSummary {
   // NEW: Individual summary metric columns
   aiSystemAttackSuccessRate?: number;
   aiSystemGuardrailAttackSuccessRate?: number;
-  guardrailSuccessRate?: number;
+  guardrailSuccessRate?: number | null;
   uniqueTopics?: number;
   uniqueAttackAreas?: number;
+  guardrailsCount?: number;
 }
 
 export class EvaluationService {
@@ -257,7 +258,8 @@ export class EvaluationService {
       aiSystemGuardrailAttackSuccessRate: evaluation.ai_system_guardrail_attack_success_rate,
       guardrailSuccessRate: evaluation.guardrail_success_rate,
       uniqueTopics: evaluation.unique_topics,
-      uniqueAttackAreas: evaluation.unique_attack_areas
+      uniqueAttackAreas: evaluation.unique_attack_areas,
+      guardrailsCount: evaluation.guardrails_count
     }));
   }
 

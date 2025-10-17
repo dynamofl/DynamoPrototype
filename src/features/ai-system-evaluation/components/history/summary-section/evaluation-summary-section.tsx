@@ -63,7 +63,7 @@ export function EvaluationSummarySection({
 
   // Prepare jailbreak stats - format as "X Test • Y Prompts • Z Topics • W Attack Area"
   const jailbreakStats = data.jailbreak ? [
-    { label: 'Test', value: data.jailbreak.totalEvaluations },
+    { label: 'Evaluations', value: data.jailbreak.totalEvaluations },
     { label: 'Prompts', value: data.jailbreak.totalPrompts.toLocaleString() },
     { label: 'Topics', value: data.jailbreak.totalUniqueTopics },
     { label: 'Attack Area', value: data.jailbreak.totalUniqueAttackAreas },

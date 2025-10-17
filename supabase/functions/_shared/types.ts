@@ -189,7 +189,7 @@ export interface SummaryMetrics {
     byBehaviorType: Record<string, BehaviorTypeMetrics>;
   };
   guardrails?: GuardrailSummaryMetrics[];
-  // NEW: Summary metrics for evaluation table columns
+  // NEW: Summary metrics for evaluation table columns (nested for JSONB storage)
   summaryMetrics: {
     aiSystemAttackSuccessRate: number;
     aiSystemGuardrailAttackSuccessRate: number;
@@ -197,6 +197,12 @@ export interface SummaryMetrics {
     uniqueTopics: number;
     uniqueAttackAreas: number;
   };
+  // NEW: Individual summary metrics at root level for easy access
+  aiSystemAttackSuccessRate?: number;
+  aiSystemGuardrailAttackSuccessRate?: number;
+  guardrailSuccessRate?: number | null;
+  uniqueTopics?: number;
+  uniqueAttackAreas?: number;
   // Legacy fields for backward compatibility
   totalTests?: number;
   attackSuccesses?: number;

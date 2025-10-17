@@ -73,7 +73,16 @@ export function useEvaluationHistory(aiSystem: AISystem | null) {
       const progressTotalChanged = existing.progress?.total !== updatedEvaluation.total_prompts;
       const completedAtChanged = existing.completedAt !== updatedEvaluation.completed_at;
 
-      const hasChanges = statusChanged || progressCurrentChanged || progressTotalChanged || completedAtChanged;
+      // Check if summary metric columns changed
+      const aiSystemAttackSuccessRateChanged = existing.aiSystemAttackSuccessRate !== updatedEvaluation.ai_system_attack_success_rate;
+      const aiSystemGuardrailAttackSuccessRateChanged = existing.aiSystemGuardrailAttackSuccessRate !== updatedEvaluation.ai_system_guardrail_attack_success_rate;
+      const guardrailSuccessRateChanged = existing.guardrailSuccessRate !== updatedEvaluation.guardrail_success_rate;
+      const uniqueTopicsChanged = existing.uniqueTopics !== updatedEvaluation.unique_topics;
+      const uniqueAttackAreasChanged = existing.uniqueAttackAreas !== updatedEvaluation.unique_attack_areas;
+
+      const hasChanges = statusChanged || progressCurrentChanged || progressTotalChanged || completedAtChanged ||
+        aiSystemAttackSuccessRateChanged || aiSystemGuardrailAttackSuccessRateChanged ||
+        guardrailSuccessRateChanged || uniqueTopicsChanged || uniqueAttackAreasChanged;
 
       if (!hasChanges) {
         console.log('✅ No changes detected, keeping same reference', {
@@ -92,7 +101,12 @@ export function useEvaluationHistory(aiSystem: AISystem | null) {
         statusChanged,
         progressCurrentChanged,
         progressTotalChanged,
-        completedAtChanged
+        completedAtChanged,
+        aiSystemAttackSuccessRateChanged,
+        aiSystemGuardrailAttackSuccessRateChanged,
+        guardrailSuccessRateChanged,
+        uniqueTopicsChanged,
+        uniqueAttackAreasChanged
       });
 
       // Create updated evaluation with new values
@@ -107,9 +121,16 @@ export function useEvaluationHistory(aiSystem: AISystem | null) {
           currentPrompt: updatedEvaluation.current_prompt_text || ''
         },
         result: updatedEvaluation.summary_metrics ? {
+          ...existing.result,
           overallMetrics: updatedEvaluation.summary_metrics,
-          promptResults: []
-        } : existing.result
+          promptResults: existing.result?.promptResults || []
+        } as any : existing.result,
+        // NEW: Update individual summary metric columns
+        aiSystemAttackSuccessRate: updatedEvaluation.ai_system_attack_success_rate,
+        aiSystemGuardrailAttackSuccessRate: updatedEvaluation.ai_system_guardrail_attack_success_rate,
+        guardrailSuccessRate: updatedEvaluation.guardrail_success_rate,
+        uniqueTopics: updatedEvaluation.unique_topics,
+        uniqueAttackAreas: updatedEvaluation.unique_attack_areas
       };
 
       // Return new array with updated evaluation
@@ -215,10 +236,10 @@ export function useEvaluationHistory(aiSystem: AISystem | null) {
         (payload) => {
           console.log('📨 Evaluation deleted:', payload);
           // Remove from list
-          setEvaluationHistory(prev => prev.filter(e => e.id !== payload.old.id));
-          setHasEvaluations(prev => {
-            const newCount = evaluationHistory.length - 1;
-            return newCount > 0;
+          setEvaluationHistory(prev => {
+            const newList = prev.filter(e => e.id !== payload.old.id);
+            setHasEvaluations(newList.length > 0);
+            return newList;
           });
         }
       )

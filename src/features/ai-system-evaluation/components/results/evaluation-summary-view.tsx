@@ -69,7 +69,7 @@ export function EvaluationSummaryView({
 
   return (
     <div className="flex justify-center w-full py-6">
-      <div className="w-full space-y-4">
+      <div className="max-w-4xl mx-auto w-full space-y-4">
         {/* AI System Header */}
         <div className="space-y-2 mx-3">
           <div className="flex items-center gap-1">
@@ -116,15 +116,15 @@ export function EvaluationSummaryView({
         </div>
 
         {/* New Three-Card Layout */}
-        <div className="mx-3">
+        {/* <div className="mx-3">
           <EvaluationSummaryCards
             summary={summary}
             hasGuardrails={hasGuardrails}
           />
-        </div>
+        </div> */}
 
         {/* Overview and Gauge - Two Column Layout */}
-        <div className="max-w-4xl mx-auto">
+        <div className="mx-auto">
           <div className={`grid ${hasGuardrails ? 'grid-cols-5' : 'grid-cols-4'} px-3 py-2 align-center items-center rounded-lg bg-gray-100`}>
             {/* Left: Overview Description */}
             <div className={hasGuardrails ? 'col-span-3' : 'col-span-3'}>

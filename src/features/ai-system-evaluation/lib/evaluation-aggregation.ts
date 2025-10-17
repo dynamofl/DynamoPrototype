@@ -141,7 +141,9 @@ function aggregateCategoryMetrics(
       ?? overallMetrics?.successRate
       ?? 0;
 
-    const withGuardrailsRate = evaluation.aiSystemGuardrailAttackSuccessRate
+    // Use guardrailSuccessRate which represents the success rate when guardrails are applied
+    const withGuardrailsRate = evaluation.guardrailSuccessRate
+      ?? evaluation.aiSystemGuardrailAttackSuccessRate
       ?? overallMetrics?.summaryMetrics?.aiSystemGuardrailAttackSuccessRate
       ?? overallMetrics?.aiSystem?.successRate
       ?? overallMetrics?.successRate

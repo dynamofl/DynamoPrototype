@@ -70,14 +70,36 @@ export const ATTACK_SEVERITY_MAP: Record<AttackType, AttackSeverityInfo> = {
 
 /**
  * Get severity information for an attack type
+ * Returns a default Level 1 info if attack type is not found
  */
-export function getAttackSeverity(attackType: AttackType): AttackSeverityInfo {
-  return ATTACK_SEVERITY_MAP[attackType]
+export function getAttackSeverity(attackType: AttackType | undefined | null): AttackSeverityInfo {
+  if (!attackType) {
+    return {
+      level: 1,
+      label: 'Level 1',
+      description: 'Unknown attack type'
+    }
+  }
+  const severity = ATTACK_SEVERITY_MAP[attackType]
+  if (!severity) {
+    // Return default Level 1 severity for unknown attack types
+    return {
+      level: 1,
+      label: 'Level 1',
+      description: 'Unknown attack type'
+    }
+  }
+  return severity
 }
 
 /**
  * Get severity level (1, 2, or 3) for an attack type
+ * Returns 1 (lowest severity) if attack type is not found
  */
-export function getAttackSeverityLevel(attackType: AttackType): SeverityLevel {
-  return ATTACK_SEVERITY_MAP[attackType].level
+export function getAttackSeverityLevel(attackType: AttackType | undefined | null): SeverityLevel {
+  if (!attackType) {
+    return 1 // Default to Level 1 for undefined/null attack types
+  }
+  const severity = ATTACK_SEVERITY_MAP[attackType]
+  return severity?.level || 1 // Default to Level 1 if attack type not in map
 }

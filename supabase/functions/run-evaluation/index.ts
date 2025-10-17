@@ -470,6 +470,21 @@ async function processPrompt(
 }
 
 async function finalizeEvaluation(supabase: any, evaluationId: string) {
+  await logInfo(supabase, evaluationId, 'Starting finalization process');
+
+  // Get evaluation to check guardrails config
+  const { data: evaluation } = await supabase
+    .from('evaluations')
+    .select('config')
+    .eq('id', evaluationId)
+    .single();
+
+  // Determine guardrails count
+  const guardrailIds = evaluation?.config?.guardrailIds || [];
+  const guardrailsCount = guardrailIds.length;
+
+  await logInfo(supabase, evaluationId, `Guardrails count: ${guardrailsCount}`);
+
   // Get all prompts for this evaluation
   const { data: prompts } = await supabase
     .from('evaluation_prompts')
@@ -477,30 +492,69 @@ async function finalizeEvaluation(supabase: any, evaluationId: string) {
     .eq('evaluation_id', evaluationId);
 
   if (!prompts) {
+    await logError(supabase, evaluationId, '', 'No prompts found for evaluation during finalization');
     throw new Error('No prompts found for evaluation');
   }
+
+  await logInfo(supabase, evaluationId, `Found ${prompts.length} prompts for finalization`);
 
   // Calculate summary metrics
   const summary = calculateSummaryMetrics(prompts);
 
+  // Extract individual metrics (available at root level for easy access)
+  const aiSystemAttackSuccessRate = summary.aiSystemAttackSuccessRate;
+  const aiSystemGuardrailAttackSuccessRate = summary.aiSystemGuardrailAttackSuccessRate;
+  // Set guardrailSuccessRate to NULL if no guardrails are attached
+  const guardrailSuccessRate = guardrailsCount > 0 ? summary.guardrailSuccessRate : null;
+  const uniqueTopics = summary.uniqueTopics;
+  const uniqueAttackAreas = summary.uniqueAttackAreas;
+
+  // Log summary metrics calculation
+  await logInfo(
+    supabase,
+    evaluationId,
+    `Summary metrics calculated: aiSystemAttackSuccessRate=${aiSystemAttackSuccessRate}, aiSystemGuardrailAttackSuccessRate=${aiSystemGuardrailAttackSuccessRate}, guardrailSuccessRate=${guardrailSuccessRate}, uniqueTopics=${uniqueTopics}, uniqueAttackAreas=${uniqueAttackAreas}`
+  );
+
   // Update evaluation status with both summary_metrics JSONB and individual columns
-  await supabase
+  const updateData = {
+    status: 'completed',
+    summary_metrics: summary,
+    // NEW: Store individual summary metrics in dedicated columns
+    ai_system_attack_success_rate: aiSystemAttackSuccessRate,
+    ai_system_guardrail_attack_success_rate: aiSystemGuardrailAttackSuccessRate,
+    guardrail_success_rate: guardrailSuccessRate,
+    unique_topics: uniqueTopics,
+    unique_attack_areas: uniqueAttackAreas,
+    guardrails_count: guardrailsCount,
+    completed_at: new Date().toISOString(),
+    current_stage: 'Completed',
+    current_prompt_text: null,
+    updated_at: new Date().toISOString()
+  };
+
+  await logInfo(
+    supabase,
+    evaluationId,
+    `Updating evaluation with data: ${JSON.stringify(updateData)}`
+  );
+
+  const { data: updateResult, error: updateError } = await supabase
     .from('evaluations')
-    .update({
-      status: 'completed',
-      summary_metrics: summary,
-      // NEW: Store individual summary metrics in dedicated columns
-      ai_system_attack_success_rate: summary.summaryMetrics.aiSystemAttackSuccessRate,
-      ai_system_guardrail_attack_success_rate: summary.summaryMetrics.aiSystemGuardrailAttackSuccessRate,
-      guardrail_success_rate: summary.summaryMetrics.guardrailSuccessRate,
-      unique_topics: summary.summaryMetrics.uniqueTopics,
-      unique_attack_areas: summary.summaryMetrics.uniqueAttackAreas,
-      completed_at: new Date().toISOString(),
-      current_stage: 'Completed',
-      current_prompt_text: null,
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', evaluationId);
+    .update(updateData)
+    .eq('id', evaluationId)
+    .select();
+
+  if (updateError) {
+    await logError(supabase, evaluationId, '', `Error updating evaluation: ${JSON.stringify(updateError)}`);
+    throw updateError;
+  }
+
+  await logInfo(
+    supabase,
+    evaluationId,
+    `Evaluation updated successfully: ${JSON.stringify(updateResult)}`
+  );
 
   await logInfo(supabase, evaluationId, 'Evaluation Successful');
 }
@@ -791,7 +845,7 @@ function calculateSummaryMetrics(prompts: EvaluationPrompt[]): SummaryMetrics {
       byBehaviorType
     },
     guardrails: guardrailsArray.length > 0 ? guardrailsArray : undefined,
-    // NEW: Summary metrics for evaluation table columns
+    // NEW: Summary metrics for evaluation table columns (nested for JSONB storage)
     summaryMetrics: {
       aiSystemAttackSuccessRate,
       aiSystemGuardrailAttackSuccessRate,
@@ -799,6 +853,12 @@ function calculateSummaryMetrics(prompts: EvaluationPrompt[]): SummaryMetrics {
       uniqueTopics: uniqueTopicsCount,
       uniqueAttackAreas: uniqueAttackAreasCount
     },
+    // NEW: Individual summary metrics at root level for easy access
+    aiSystemAttackSuccessRate,
+    aiSystemGuardrailAttackSuccessRate,
+    guardrailSuccessRate,
+    uniqueTopics: uniqueTopicsCount,
+    uniqueAttackAreas: uniqueAttackAreasCount,
     // Legacy fields for backward compatibility
     totalTests,
     attackSuccesses,

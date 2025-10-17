@@ -26,12 +26,61 @@ interface SummaryMetricCardDetailedProps {
   chartData?: Array<{
     date: string;
     aiSystemOnly: number;
-    withGuardrails?: number;
+    withGuardrails?: number | null;
   }>;
 
   // Empty state
   isEmpty?: boolean;
   emptyMessage?: string;
+}
+
+/**
+ * Prepare chart data - add solid and dotted guardrail lines to single dataset
+ */
+function prepareChartData(data: Array<{
+  date: string;
+  aiSystemOnly: number;
+  withGuardrails?: number | null;
+}>) {
+  if (!data || data.length === 0) return data;
+
+  // Find first and last non-null guardrail values
+  const firstGuardrailIndex = data.findIndex(
+    d => d.withGuardrails !== null && d.withGuardrails !== undefined
+  );
+  const lastGuardrailIndex = data.length - 1 - [...data].reverse().findIndex(
+    d => d.withGuardrails !== null && d.withGuardrails !== undefined
+  );
+
+  // If no guardrail data exists at all
+  if (firstGuardrailIndex === -1) {
+    return data;
+  }
+
+  const firstGuardrailValue = data[firstGuardrailIndex].withGuardrails!;
+  const lastGuardrailValue = data[lastGuardrailIndex].withGuardrails!;
+
+  // Create single dataset with both solid and dotted lines
+  return data.map((point, index) => {
+    const result = { ...point } as any;
+
+    // Solid line (actual guardrail data)
+    if (index >= firstGuardrailIndex && index <= lastGuardrailIndex) {
+      result.withGuardrailsSolid = point.withGuardrails ?? undefined;
+    }
+
+    // Leading dotted line (before first guardrail)
+    if (index <= firstGuardrailIndex) {
+      result.withGuardrailsLeadingDotted = firstGuardrailValue;
+    }
+
+    // Trailing dotted line (after last guardrail)
+    if (index >= lastGuardrailIndex) {
+      result.withGuardrailsTrailingDotted = lastGuardrailValue;
+    }
+
+    return result;
+  });
 }
 
 export function SummaryMetricCardDetailed({
@@ -43,19 +92,25 @@ export function SummaryMetricCardDetailed({
   isEmpty = false,
   emptyMessage = 'No Evaluation Data to Display',
 }: SummaryMetricCardDetailedProps) {
-  const hasGuardrails = chartData?.some(d => d.withGuardrails !== undefined);
+  const hasGuardrails = chartData?.some(d => d.withGuardrails !== undefined && d.withGuardrails !== null);
 
-  // Chart configuration
+  // Prepare chart data - single dataset with both solid and dotted lines
+  const processedChartData = chartData ? prepareChartData(chartData) : undefined;
+
+  // Chart configuration - only include items that should appear in tooltip
   const chartConfig = {
     aiSystemOnly: {
       label: 'AI System',
-      color: '#3B82F6', // blue-500
+      color: 'var(--chart-1)',
     },
-    withGuardrails: {
+    withGuardrailsSolid: {
       label: 'AI System + Guardrails',
-      color: '#1E40AF', // blue-700
+      color: 'var(--chart-2)',
     },
   } satisfies ChartConfig;
+
+  // Color for dotted lines (not in chartConfig to hide from tooltip)
+  const guardrailColor = 'var(--chart-2)';
 
   return (
     <div className="bg-gray-0 border border-gray-200 rounded-lg p-4 flex flex-col gap-3">
@@ -141,61 +196,104 @@ export function SummaryMetricCardDetailed({
           {/* Chart Section */}
           {chartData && chartData.length > 0 && (
             <div className="flex flex-col gap-2">
-              <div className="h-[70px] w-full">
+              <div className="relative h-[70px] w-full rounded-md overflow-hidden">
+                {/* Dotted background pattern */}
+                <div
+                  className="absolute inset-0 [background-size:8px_8px] [background-image:radial-gradient(#e5e7eb_1px,transparent_1px)] dark:[background-image:radial-gradient(#404040_0.5px,transparent_0.5px)]"
+                  aria-hidden="true"
+                />
+
                 <ChartContainer
                   config={chartConfig}
-                  className="h-full w-full [&>div]:h-full [&>div]:w-full"
+                  className="relative z-10"
                   style={{ height: '70px', width: '100%', aspectRatio: 'auto' }}
                 >
                   <AreaChart
-                    data={chartData}
-                    margin={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                    data={processedChartData}
+                    margin={{ left: 0, right: 0, top: 4, bottom: 4 }}
                     height={70}
                     width={500}
                   >
-                  <CartesianGrid vertical={false} className="stroke-gray-200" />
-                  <XAxis
-                    dataKey="date"
-                    tickLine={false}
-                    axisLine={false}
-                    tick={false}
-                    hide={true}
-                  />
+                  <CartesianGrid vertical={false} horizontal={false}/>
+
 
                   <ChartTooltip
                     cursor={false}
-                    content={<ChartTooltipContent indicator="line" />}
+                    content={
+                      <ChartTooltipContent
+                        indicator="line"
+                        formatter={(value, name) => {
+                          // Filter out dotted line entries from tooltip
+                          if (
+                            name === 'withGuardrailsLeadingDotted' ||
+                            name === 'withGuardrailsTrailingDotted'
+                          ) {
+                            return null;
+                          }
+                          return <span>{value}</span>;
+                        }}
+                      />
+                    }
                   />
 
                   <defs>
-                    <linearGradient id="fillAiSystemOnly" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.05} />
-                    </linearGradient>
-                    <linearGradient id="fillWithGuardrails" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#1E40AF" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#1E40AF" stopOpacity={0.05} />
-                    </linearGradient>
+                    {/* <linearGradient id="fillAiSystemOnly" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={chartConfig.aiSystemOnly.color} stopOpacity={0.3} />
+                      <stop offset="95%" stopColor={chartConfig.aiSystemOnly.color} stopOpacity={0.05} />
+                    </linearGradient> */}
+                    {/* <linearGradient id="fillWithGuardrails" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={guardrailColor} stopOpacity={0.3} />
+                      <stop offset="95%" stopColor={guardrailColor} stopOpacity={0.05} />
+                    </linearGradient> */}
+                    {/* <linearGradient id="fillWithGuardrailsLight" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={guardrailColor} stopOpacity={0.15} />
+                      <stop offset="95%" stopColor={guardrailColor} stopOpacity={0.02} />
+                    </linearGradient> */}
                   </defs>
 
-                  {/* With Guardrails - render first (behind) */}
+                  {/* Leading dotted line (from start to first guardrail) - render first (behind) */}
                   {hasGuardrails && (
                     <Area
-                      dataKey="withGuardrails"
-                      type="natural"
-                      fill="url(#fillWithGuardrails)"
-                      stroke="#1E40AF"
+                      dataKey="withGuardrailsLeadingDotted"
+                      fill="url(#fillWithGuardrailsLight)"
+                      stroke={guardrailColor}
                       strokeWidth={2}
+                      strokeDasharray="4 4"
                       connectNulls={false}
+                      dot={false}
                     />
                   )}
 
-                  {/* AI System Only - render second (in front) */}
+                  {/* Trailing dotted line (from last guardrail to end) - render second */}
+                  {hasGuardrails && (
+                    <Area
+                      dataKey="withGuardrailsTrailingDotted"
+                      fill="url(#fillWithGuardrailsLight)"
+                      stroke={guardrailColor}
+                      strokeWidth={2}
+                      strokeDasharray="4 4"
+                      connectNulls={false}
+                      dot={false}
+                    />
+                  )}
+
+                  {/* Solid guardrail line (actual data) - render third */}
+                  {hasGuardrails && (
+                    <Area
+                      dataKey="withGuardrailsSolid"
+                      fill="url(#fillWithGuardrails)"
+                      stroke={chartConfig.withGuardrailsSolid.color}
+                      strokeWidth={2}
+                      connectNulls={true}
+                      dot={false}
+                    />
+                  )}
+
+                  {/* AI System Only - render last (in front) */}
                   <Area
                     dataKey="aiSystemOnly"
-                    type="natural"
                     fill="url(#fillAiSystemOnly)"
-                    stroke="#3B82F6"
+                    stroke={chartConfig.aiSystemOnly.color}
                     strokeWidth={2}
                   />
                 </AreaChart>
@@ -203,13 +301,13 @@ export function SummaryMetricCardDetailed({
               </div>
 
               {/* Date labels */}
-              {chartData.length > 0 && (
+              {processedChartData && processedChartData.length > 0 && (
                 <div className="flex justify-between items-center w-full">
                   <span className="text-xs font-425 text-gray-600 leading-4">
-                    {chartData[0].date}
+                    {processedChartData[0].date}
                   </span>
                   <span className="text-xs font-425 text-gray-600 leading-4">
-                    {chartData[chartData.length - 1].date}
+                    {processedChartData[processedChartData.length - 1].date}
                   </span>
                 </div>
               )}
