@@ -674,18 +674,85 @@ export function AISystemEvaluationUnifiedPage() {
       a.download = `evaluation-${evaluationResults.evaluationId}.json`;
       a.click();
     } else if (format === 'csv') {
-      const headers = ['Policy', 'Behavior Type', 'Attack Type', 'Base Prompt', 'Adversarial Prompt', 'Guardrail', 'Model', 'Outcome'];
-      const rows = evaluationResults.results.map(r => [
-        r.policyName,
-        r.behaviorType,
-        r.attackType,
-        r.basePrompt,
-        r.adversarialPrompt,
-        r.guardrailJudgement,
-        r.modelJudgement,
-        r.attackOutcome
-      ]);
-      const csvContent = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+      // Comprehensive headers including all new fields
+      const headers = [
+        'Policy ID',
+        'Policy Name',
+        'Topic',
+        'Prompt Title',
+        'Behavior Type',
+        'Attack Type',
+        'Base Prompt',
+        'Adversarial Prompt',
+        'System Response',
+        'Input Guardrail Judgement',
+        'Input Guardrail Reason',
+        'Output Guardrail Judgement',
+        'Output Guardrail Reason',
+        'Judge Model Judgement',
+        'Judge Model Reason',
+        'Judge Model Confidence',
+        'Attack Outcome',
+        'AI System Attack Outcome',
+        'Runtime (ms)',
+        'Input Tokens',
+        'Output Tokens',
+        'Total Tokens'
+      ];
+
+      const rows = evaluationResults.results.map(r => {
+        // Format adversarial prompt - handle both single-turn and multi-turn
+        let adversarialPromptText = '';
+        if (typeof r.adversarialPrompt === 'string') {
+          adversarialPromptText = r.adversarialPrompt;
+        } else if (Array.isArray(r.adversarialPrompt)) {
+          // Multi-turn conversation
+          adversarialPromptText = r.adversarialPrompt.map((turn: any) => `${turn.role}: ${turn.content}`).join('\n');
+        } else if (typeof r.adversarialPrompt === 'object' && 'text' in r.adversarialPrompt) {
+          // Single-turn object format
+          adversarialPromptText = (r.adversarialPrompt as any).text;
+        }
+
+        return [
+          r.policyId || '',
+          r.policyName || '',
+          r.topic || '',
+          r.promptTitle || '',
+          r.behaviorType || '',
+          r.attackType || '',
+          r.basePrompt || '',
+          adversarialPromptText,
+          r.systemResponse || '',
+          r.inputGuardrailJudgement || '',
+          r.inputGuardrailReason || '',
+          r.outputGuardrailJudgement || '',
+          r.outputGuardrailReason || '',
+          r.judgeModelJudgement || '',
+          r.judgeModelReason || '',
+          r.judgeModelConfidence?.toString() || '',
+          r.attackOutcome || '',
+          r.aiSystemAttackOutcome || '',
+          r.runtimeMs?.toString() || '',
+          r.inputTokens?.toString() || '',
+          r.outputTokens?.toString() || '',
+          r.totalTokens?.toString() || ''
+        ];
+      });
+
+      // Escape CSV cells properly
+      const escapeCsvCell = (cell: string) => {
+        // Replace double quotes with two double quotes and wrap in quotes if contains comma, quote, or newline
+        if (cell.includes(',') || cell.includes('"') || cell.includes('\n')) {
+          return `"${cell.replace(/"/g, '""')}"`;
+        }
+        return cell;
+      };
+
+      const csvContent = [
+        headers.map(escapeCsvCell).join(','),
+        ...rows.map(row => row.map(escapeCsvCell).join(','))
+      ].join('\n');
+
       const blob = new Blob([csvContent], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');

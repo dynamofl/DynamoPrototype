@@ -71,6 +71,12 @@ export interface AISystemResponseData {
   answerPhrases?: Array<{phrase: string, reasoning: string}>; // Key phrases that answer the question (only when judgement is 'Answered')
 }
 
+export interface PolicyContext {
+  description: string;
+  allowedBehaviors: string[];
+  disallowedBehaviors: string[];
+}
+
 export interface EvaluationPrompt {
   id?: string;
   evaluation_id?: string;
@@ -79,6 +85,7 @@ export interface EvaluationPrompt {
   policy_name: string;
   topic?: string; // The topic category this prompt belongs to (max 2 words)
   prompt_title?: string; // Concise title (max 5 words) describing the base prompt
+  policy_context?: PolicyContext; // Policy information used to generate this prompt
   base_prompt: string;
   adversarial_prompt: ConversationTurn[] | { text: string } | any; // JSONB: array for multi-turn (TAP, IRIS) or object for single-turn
   attack_type: string;
