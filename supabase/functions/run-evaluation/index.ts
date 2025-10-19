@@ -529,6 +529,57 @@ function calculateMode(values: number[], roundTo: number = 2): number {
 }
 
 /**
+ * Calculate standard deviation of an array of numbers
+ */
+function calculateStdDev(values: number[]): number {
+  if (values.length === 0) return 0;
+  const mean = calculateMean(values);
+  const squaredDiffs = values.map(val => Math.pow(val - mean, 2));
+  const variance = squaredDiffs.reduce((acc, val) => acc + val, 0) / values.length;
+  return Math.sqrt(variance);
+}
+
+/**
+ * Calculate variance of an array of numbers
+ */
+function calculateVariance(values: number[]): number {
+  if (values.length === 0) return 0;
+  const mean = calculateMean(values);
+  const squaredDiffs = values.map(val => Math.pow(val - mean, 2));
+  return squaredDiffs.reduce((acc, val) => acc + val, 0) / values.length;
+}
+
+/**
+ * Calculate interquartile range (IQR) of an array of numbers
+ * IQR = Q3 - Q1 (75th percentile - 25th percentile)
+ */
+function calculateIQR(values: number[]): number {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+
+  // Calculate Q1 (25th percentile)
+  const q1Index = Math.floor(sorted.length * 0.25);
+  const q1 = sorted[q1Index];
+
+  // Calculate Q3 (75th percentile)
+  const q3Index = Math.floor(sorted.length * 0.75);
+  const q3 = sorted[q3Index];
+
+  return q3 - q1;
+}
+
+/**
+ * Calculate range (min and max) of an array of numbers
+ */
+function calculateRange(values: number[]): { min: number; max: number } {
+  if (values.length === 0) return { min: 0, max: 0 };
+  return {
+    min: Math.min(...values),
+    max: Math.max(...values)
+  };
+}
+
+/**
  * Calculate logistic regression metrics for a topic
  * Compares topic success rate to baseline success rate
  */
@@ -638,32 +689,74 @@ function calculateTopicAnalysis(prompts: EvaluationPrompt[]): any {
         baselineTotalCount
       );
 
+      // Calculate range for each metric
+      const attackSuccessRange = calculateRange(attackSuccessRates);
+      const confidenceRange = calculateRange(confidenceScores);
+      const runtimeRange = calculateRange(runtimeSeconds);
+      const inputTokensRange = calculateRange(inputTokens);
+      const outputTokensRange = calculateRange(outputTokens);
+
       topics.push({
         topic_name: topicName,
         attack_success_rate: {
           mean: Math.round(calculateMean(attackSuccessRates) * 100) / 100,
           median: Math.round(calculateMedian(attackSuccessRates) * 100) / 100,
-          mode: Math.round(calculateMode(attackSuccessRates, 0))
+          mode: Math.round(calculateMode(attackSuccessRates, 0)),
+          std_dev: Math.round(calculateStdDev(attackSuccessRates) * 100) / 100,
+          variance: Math.round(calculateVariance(attackSuccessRates) * 100) / 100,
+          iqr: Math.round(calculateIQR(attackSuccessRates) * 100) / 100,
+          range: {
+            min: Math.round(attackSuccessRange.min),
+            max: Math.round(attackSuccessRange.max)
+          }
         },
         confidence: {
           mean: Math.round(calculateMean(confidenceScores) * 10000) / 10000,
           median: Math.round(calculateMedian(confidenceScores) * 10000) / 10000,
-          mode: Math.round(calculateMode(confidenceScores, 2) * 10000) / 10000
+          mode: Math.round(calculateMode(confidenceScores, 2) * 10000) / 10000,
+          std_dev: Math.round(calculateStdDev(confidenceScores) * 100) / 100,
+          variance: Math.round(calculateVariance(confidenceScores) * 100) / 100,
+          iqr: Math.round(calculateIQR(confidenceScores) * 100) / 100,
+          range: {
+            min: Math.round(confidenceRange.min * 100) / 100,
+            max: Math.round(confidenceRange.max * 100) / 100
+          }
         },
         runtime_seconds: {
           mean: Math.round(calculateMean(runtimeSeconds) * 100) / 100,
           median: Math.round(calculateMedian(runtimeSeconds) * 100) / 100,
-          mode: Math.round(calculateMode(runtimeSeconds, 2) * 100) / 100
+          mode: Math.round(calculateMode(runtimeSeconds, 2) * 100) / 100,
+          std_dev: Math.round(calculateStdDev(runtimeSeconds) * 100) / 100,
+          variance: Math.round(calculateVariance(runtimeSeconds) * 100) / 100,
+          iqr: Math.round(calculateIQR(runtimeSeconds) * 100) / 100,
+          range: {
+            min: Math.round(runtimeRange.min * 100) / 100,
+            max: Math.round(runtimeRange.max * 100) / 100
+          }
         },
         input_tokens: {
           mean: Math.round(calculateMean(inputTokens)),
           median: Math.round(calculateMedian(inputTokens)),
-          mode: Math.round(calculateMode(inputTokens, 0))
+          mode: Math.round(calculateMode(inputTokens, 0)),
+          std_dev: Math.round(calculateStdDev(inputTokens)),
+          variance: Math.round(calculateVariance(inputTokens)),
+          iqr: Math.round(calculateIQR(inputTokens)),
+          range: {
+            min: Math.round(inputTokensRange.min),
+            max: Math.round(inputTokensRange.max)
+          }
         },
         output_tokens: {
           mean: Math.round(calculateMean(outputTokens)),
           median: Math.round(calculateMedian(outputTokens)),
-          mode: Math.round(calculateMode(outputTokens, 0))
+          mode: Math.round(calculateMode(outputTokens, 0)),
+          std_dev: Math.round(calculateStdDev(outputTokens)),
+          variance: Math.round(calculateVariance(outputTokens)),
+          iqr: Math.round(calculateIQR(outputTokens)),
+          range: {
+            min: Math.round(outputTokensRange.min),
+            max: Math.round(outputTokensRange.max)
+          }
         },
         occurrence: topicPrompts.length,
         logistic_regression: logisticRegression

@@ -173,6 +173,13 @@ export interface StatisticalMetric {
   mean: number;
   median: number;
   mode: number;
+  std_dev: number;
+  variance: number;
+  iqr: number;
+  range: {
+    min: number;
+    max: number;
+  };
 }
 
 export interface LogisticRegressionResult {

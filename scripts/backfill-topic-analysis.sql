@@ -16,6 +16,14 @@ CREATE OR REPLACE FUNCTION array_median(numeric[]) RETURNS numeric AS $$
   FROM unnest($1) AS val;
 $$ LANGUAGE SQL IMMUTABLE STRICT;
 
+-- Function to calculate IQR (Q3 - Q1)
+CREATE OR REPLACE FUNCTION array_iqr(numeric[]) RETURNS numeric AS $$
+  SELECT
+    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY val) -
+    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY val)
+  FROM unnest($1) AS val;
+$$ LANGUAGE SQL IMMUTABLE STRICT;
+
 -- Main backfill query
 WITH topic_stats AS (
   -- Calculate statistics per topic per policy per evaluation
@@ -29,26 +37,51 @@ WITH topic_stats AS (
     AVG(CASE WHEN ep.attack_outcome = 'Attack Success' THEN 100.0 ELSE 0.0 END) as attack_success_rate_mean,
     array_median(ARRAY_AGG(CASE WHEN ep.attack_outcome = 'Attack Success' THEN 100.0 ELSE 0.0 END)) as attack_success_rate_median,
     array_mode(ARRAY_AGG(ROUND((CASE WHEN ep.attack_outcome = 'Attack Success' THEN 100.0 ELSE 0.0 END)::numeric, 0)::integer)) as attack_success_rate_mode,
+    STDDEV_POP(CASE WHEN ep.attack_outcome = 'Attack Success' THEN 100.0 ELSE 0.0 END) as attack_success_rate_std_dev,
+    VAR_POP(CASE WHEN ep.attack_outcome = 'Attack Success' THEN 100.0 ELSE 0.0 END) as attack_success_rate_variance,
+    array_iqr(ARRAY_AGG(CASE WHEN ep.attack_outcome = 'Attack Success' THEN 100.0 ELSE 0.0 END)) as attack_success_rate_iqr,
+    MIN(CASE WHEN ep.attack_outcome = 'Attack Success' THEN 100.0 ELSE 0.0 END) as attack_success_rate_min,
+    MAX(CASE WHEN ep.attack_outcome = 'Attack Success' THEN 100.0 ELSE 0.0 END) as attack_success_rate_max,
 
     -- Confidence metrics (from ai_system_response.confidenceScore)
     AVG(COALESCE((ep.ai_system_response->>'confidenceScore')::numeric, 0)) as confidence_mean,
     array_median(ARRAY_AGG(COALESCE((ep.ai_system_response->>'confidenceScore')::numeric, 0))) as confidence_median,
     array_mode(ARRAY_AGG(ROUND(COALESCE((ep.ai_system_response->>'confidenceScore')::numeric, 0)::numeric, 2))) as confidence_mode,
+    STDDEV_POP(COALESCE((ep.ai_system_response->>'confidenceScore')::numeric, 0)) as confidence_std_dev,
+    VAR_POP(COALESCE((ep.ai_system_response->>'confidenceScore')::numeric, 0)) as confidence_variance,
+    array_iqr(ARRAY_AGG(COALESCE((ep.ai_system_response->>'confidenceScore')::numeric, 0))) as confidence_iqr,
+    MIN(COALESCE((ep.ai_system_response->>'confidenceScore')::numeric, 0)) as confidence_min,
+    MAX(COALESCE((ep.ai_system_response->>'confidenceScore')::numeric, 0)) as confidence_max,
 
     -- Runtime metrics (converted to seconds)
     AVG(COALESCE(ep.runtime_ms, 0) / 1000.0) as runtime_seconds_mean,
     array_median(ARRAY_AGG(COALESCE(ep.runtime_ms, 0) / 1000.0)) as runtime_seconds_median,
     array_mode(ARRAY_AGG(ROUND((COALESCE(ep.runtime_ms, 0) / 1000.0)::numeric, 2))) as runtime_seconds_mode,
+    STDDEV_POP(COALESCE(ep.runtime_ms, 0) / 1000.0) as runtime_seconds_std_dev,
+    VAR_POP(COALESCE(ep.runtime_ms, 0) / 1000.0) as runtime_seconds_variance,
+    array_iqr(ARRAY_AGG(COALESCE(ep.runtime_ms, 0) / 1000.0)) as runtime_seconds_iqr,
+    MIN(COALESCE(ep.runtime_ms, 0) / 1000.0) as runtime_seconds_min,
+    MAX(COALESCE(ep.runtime_ms, 0) / 1000.0) as runtime_seconds_max,
 
     -- Input tokens metrics
     AVG(COALESCE(ep.input_tokens, 0)) as input_tokens_mean,
     array_median(ARRAY_AGG(COALESCE(ep.input_tokens, 0)::numeric)) as input_tokens_median,
     array_mode(ARRAY_AGG(COALESCE(ep.input_tokens, 0))) as input_tokens_mode,
+    STDDEV_POP(COALESCE(ep.input_tokens, 0)) as input_tokens_std_dev,
+    VAR_POP(COALESCE(ep.input_tokens, 0)) as input_tokens_variance,
+    array_iqr(ARRAY_AGG(COALESCE(ep.input_tokens, 0)::numeric)) as input_tokens_iqr,
+    MIN(COALESCE(ep.input_tokens, 0)) as input_tokens_min,
+    MAX(COALESCE(ep.input_tokens, 0)) as input_tokens_max,
 
     -- Output tokens metrics (from ai_system_response.outputTokens)
     AVG(COALESCE((ep.ai_system_response->>'outputTokens')::integer, 0)) as output_tokens_mean,
     array_median(ARRAY_AGG(COALESCE((ep.ai_system_response->>'outputTokens')::integer, 0)::numeric)) as output_tokens_median,
     array_mode(ARRAY_AGG(COALESCE((ep.ai_system_response->>'outputTokens')::integer, 0))) as output_tokens_mode,
+    STDDEV_POP(COALESCE((ep.ai_system_response->>'outputTokens')::integer, 0)) as output_tokens_std_dev,
+    VAR_POP(COALESCE((ep.ai_system_response->>'outputTokens')::integer, 0)) as output_tokens_variance,
+    array_iqr(ARRAY_AGG(COALESCE((ep.ai_system_response->>'outputTokens')::integer, 0)::numeric)) as output_tokens_iqr,
+    MIN(COALESCE((ep.ai_system_response->>'outputTokens')::integer, 0)) as output_tokens_min,
+    MAX(COALESCE((ep.ai_system_response->>'outputTokens')::integer, 0)) as output_tokens_max,
 
     -- Occurrence count
     COUNT(*) as occurrence,
@@ -115,27 +148,62 @@ policy_topics AS (
         'attack_success_rate', jsonb_build_object(
           'mean', ROUND(ts.attack_success_rate_mean::numeric, 2),
           'median', ROUND(ts.attack_success_rate_median::numeric, 2),
-          'mode', COALESCE(ts.attack_success_rate_mode, 0)
+          'mode', COALESCE(ts.attack_success_rate_mode, 0),
+          'std_dev', ROUND(COALESCE(ts.attack_success_rate_std_dev, 0)::numeric, 2),
+          'variance', ROUND(COALESCE(ts.attack_success_rate_variance, 0)::numeric, 2),
+          'iqr', ROUND(COALESCE(ts.attack_success_rate_iqr, 0)::numeric, 2),
+          'range', jsonb_build_object(
+            'min', ROUND(COALESCE(ts.attack_success_rate_min, 0)::numeric, 0)::integer,
+            'max', ROUND(COALESCE(ts.attack_success_rate_max, 0)::numeric, 0)::integer
+          )
         ),
         'confidence', jsonb_build_object(
           'mean', ROUND(ts.confidence_mean::numeric, 4),
           'median', ROUND(ts.confidence_median::numeric, 4),
-          'mode', ROUND(COALESCE(ts.confidence_mode, 0)::numeric, 4)
+          'mode', ROUND(COALESCE(ts.confidence_mode, 0)::numeric, 4),
+          'std_dev', ROUND(COALESCE(ts.confidence_std_dev, 0)::numeric, 2),
+          'variance', ROUND(COALESCE(ts.confidence_variance, 0)::numeric, 2),
+          'iqr', ROUND(COALESCE(ts.confidence_iqr, 0)::numeric, 2),
+          'range', jsonb_build_object(
+            'min', ROUND(COALESCE(ts.confidence_min, 0)::numeric, 2),
+            'max', ROUND(COALESCE(ts.confidence_max, 0)::numeric, 2)
+          )
         ),
         'runtime_seconds', jsonb_build_object(
           'mean', ROUND(ts.runtime_seconds_mean::numeric, 2),
           'median', ROUND(ts.runtime_seconds_median::numeric, 2),
-          'mode', ROUND(COALESCE(ts.runtime_seconds_mode, 0)::numeric, 2)
+          'mode', ROUND(COALESCE(ts.runtime_seconds_mode, 0)::numeric, 2),
+          'std_dev', ROUND(COALESCE(ts.runtime_seconds_std_dev, 0)::numeric, 2),
+          'variance', ROUND(COALESCE(ts.runtime_seconds_variance, 0)::numeric, 2),
+          'iqr', ROUND(COALESCE(ts.runtime_seconds_iqr, 0)::numeric, 2),
+          'range', jsonb_build_object(
+            'min', ROUND(COALESCE(ts.runtime_seconds_min, 0)::numeric, 2),
+            'max', ROUND(COALESCE(ts.runtime_seconds_max, 0)::numeric, 2)
+          )
         ),
         'input_tokens', jsonb_build_object(
           'mean', ROUND(ts.input_tokens_mean::numeric, 0)::integer,
           'median', ROUND(ts.input_tokens_median::numeric, 0)::integer,
-          'mode', COALESCE(ts.input_tokens_mode, 0)
+          'mode', COALESCE(ts.input_tokens_mode, 0),
+          'std_dev', ROUND(COALESCE(ts.input_tokens_std_dev, 0)::numeric, 0)::integer,
+          'variance', ROUND(COALESCE(ts.input_tokens_variance, 0)::numeric, 0)::integer,
+          'iqr', ROUND(COALESCE(ts.input_tokens_iqr, 0)::numeric, 0)::integer,
+          'range', jsonb_build_object(
+            'min', ROUND(COALESCE(ts.input_tokens_min, 0)::numeric, 0)::integer,
+            'max', ROUND(COALESCE(ts.input_tokens_max, 0)::numeric, 0)::integer
+          )
         ),
         'output_tokens', jsonb_build_object(
           'mean', ROUND(ts.output_tokens_mean::numeric, 0)::integer,
           'median', ROUND(ts.output_tokens_median::numeric, 0)::integer,
-          'mode', COALESCE(ts.output_tokens_mode, 0)
+          'mode', COALESCE(ts.output_tokens_mode, 0),
+          'std_dev', ROUND(COALESCE(ts.output_tokens_std_dev, 0)::numeric, 0)::integer,
+          'variance', ROUND(COALESCE(ts.output_tokens_variance, 0)::numeric, 0)::integer,
+          'iqr', ROUND(COALESCE(ts.output_tokens_iqr, 0)::numeric, 0)::integer,
+          'range', jsonb_build_object(
+            'min', ROUND(COALESCE(ts.output_tokens_min, 0)::numeric, 0)::integer,
+            'max', ROUND(COALESCE(ts.output_tokens_max, 0)::numeric, 0)::integer
+          )
         ),
         'occurrence', ts.occurrence,
         'logistic_regression', jsonb_build_object(
