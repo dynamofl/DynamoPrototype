@@ -26,6 +26,10 @@ export function EvaluationSettingsContent() {
     promptGeneration: null,
     evaluationJudgement: null,
     testExecution: null,
+    inputGuardrail: null,
+    outputGuardrail: null,
+    judgeModel: null,
+    topicInsightModel: null,
   });
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [modelToDelete, setModelToDelete] = useState<EvaluationModel | null>(null);
@@ -124,6 +128,14 @@ export function EvaluationSettingsContent() {
               selectedModelId={assignments.judgeModel}
               models={models}
               onModelChange={(value) => handleAssignmentChange('judgeModel', value)}
+            />
+
+            <ModelAssignmentCard
+              title="Topic Insight Model"
+              description="Analyzes topic statistics and generates insights about attack patterns and model behavior"
+              selectedModelId={assignments.topicInsightModel}
+              models={models}
+              onModelChange={(value) => handleAssignmentChange('topicInsightModel', value)}
             />
 
             <ModelAssignmentCard

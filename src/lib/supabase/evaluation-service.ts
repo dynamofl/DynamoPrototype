@@ -128,6 +128,19 @@ export class EvaluationService {
       }
     }
 
+    // Topic Insight Model
+    if (assignments.topicInsightModel) {
+      const topicInsightModel = models.find(m => m.id === assignments.topicInsightModel);
+      if (topicInsightModel) {
+        internalModels.topicInsightModel = {
+          provider: topicInsightModel.provider,
+          modelId: topicInsightModel.modelId,
+          apiKey: topicInsightModel.apiKey
+        };
+        console.log(`💡 Topic Insight Model: ${topicInsightModel.name} (${topicInsightModel.provider}/${topicInsightModel.modelId})`);
+      }
+    }
+
     // Test Execution Model (for backward compatibility)
     let testExecutionApiKey: string | undefined;
     let testExecutionModelName: string | undefined;

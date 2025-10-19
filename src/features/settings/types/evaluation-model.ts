@@ -20,6 +20,7 @@ export interface ModelAssignment {
   inputGuardrail: string | null; // model id - Input guardrail evaluation
   outputGuardrail: string | null; // model id - Output guardrail evaluation
   judgeModel: string | null; // model id - Judge model for answer/refusal determination
+  topicInsightModel: string | null; // model id - Topic insights generation from topic analysis
 }
 
 export interface EvaluationModelFormData {

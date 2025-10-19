@@ -130,7 +130,7 @@ export interface Evaluation {
   guardrail_success_rate?: number;
   unique_topics?: number;
   unique_attack_areas?: number;
-  // NEW: Topic-level analysis
+  // NEW: Topic-level analysis (includes embedded topic_insight)
   topic_analysis?: TopicAnalysis;
   created_by: string;
   created_at: string;
@@ -210,6 +210,7 @@ export interface TopicAnalysis {
     type: 'policy_group';
     policies: PolicyTopicAnalysis[];
   };
+  topic_insight?: string; // AI-generated insights about attack patterns and model behavior
 }
 
 export interface GuardrailSummaryMetrics {
@@ -293,6 +294,11 @@ export interface InternalModelConfig {
     apiKey: string;
   };
   judgeModel?: {
+    provider: string;
+    modelId: string;
+    apiKey: string;
+  };
+  topicInsightModel?: {
     provider: string;
     modelId: string;
     apiKey: string;
