@@ -56,7 +56,8 @@ serve(async (req: Request) => {
 
     // Check if evaluation is already complete (safety net for stuck evaluations)
     if (evaluation.completed_prompts >= evaluation.total_prompts && evaluation.total_prompts > 0) {
-      if (evaluation.status !== 'completed') {
+      // Finalize if not yet completed OR if topic_analysis is missing
+      if (evaluation.status !== 'completed' || !evaluation.topic_analysis) {
         await finalizeEvaluation(supabase, evaluationId);
       }
       return new Response(
@@ -140,14 +141,17 @@ serve(async (req: Request) => {
     // Get updated evaluation stats from database
     const { data: updatedEval } = await supabase
       .from('evaluations')
-      .select('completed_prompts, total_prompts, status')
+      .select('completed_prompts, total_prompts, status, topic_analysis')
       .eq('id', evaluationId)
       .single();
 
+    // Call finalizeEvaluation if:
+    // 1. All prompts are completed, AND
+    // 2. Either status is not 'completed' yet, OR topic_analysis is missing
     if (updatedEval &&
         updatedEval.completed_prompts >= updatedEval.total_prompts &&
         updatedEval.total_prompts > 0 &&
-        updatedEval.status !== 'completed') {
+        (updatedEval.status !== 'completed' || !updatedEval.topic_analysis)) {
       // All prompts completed - finalize immediately
       await finalizeEvaluation(supabase, evaluationId);
       return new Response(
@@ -469,6 +473,365 @@ async function processPrompt(
   }
 }
 
+// ============================================================================
+// TOPIC ANALYSIS CALCULATION
+// ============================================================================
+
+/**
+ * Calculate mean of an array of numbers
+ */
+function calculateMean(values: number[]): number {
+  if (values.length === 0) return 0;
+  const sum = values.reduce((acc, val) => acc + val, 0);
+  return sum / values.length;
+}
+
+/**
+ * Calculate median of an array of numbers
+ */
+function calculateMedian(values: number[]): number {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  if (sorted.length % 2 === 0) {
+    return (sorted[mid - 1] + sorted[mid]) / 2;
+  }
+  return sorted[mid];
+}
+
+/**
+ * Calculate mode of an array of numbers (most frequent value)
+ * For continuous values, rounds to 2 decimal places before finding mode
+ */
+function calculateMode(values: number[], roundTo: number = 2): number {
+  if (values.length === 0) return 0;
+
+  // Round values to specified decimal places
+  const rounded = values.map(v => Math.round(v * Math.pow(10, roundTo)) / Math.pow(10, roundTo));
+
+  // Count frequency
+  const frequency: Record<number, number> = {};
+  rounded.forEach(val => {
+    frequency[val] = (frequency[val] || 0) + 1;
+  });
+
+  // Find most frequent
+  let maxFreq = 0;
+  let mode = 0;
+  for (const [val, freq] of Object.entries(frequency)) {
+    if (freq > maxFreq) {
+      maxFreq = freq;
+      mode = parseFloat(val);
+    }
+  }
+
+  return mode;
+}
+
+/**
+ * Calculate logistic regression metrics for a topic
+ * Compares topic success rate to baseline success rate
+ */
+function calculateLogisticRegression(
+  topicSuccessCount: number,
+  topicTotalCount: number,
+  baselineSuccessCount: number,
+  baselineTotalCount: number
+): { odds_ratio: number; p_value: number; significance: boolean } {
+  const topicSuccessRate = topicSuccessCount / topicTotalCount;
+  const baselineSuccessRate = baselineSuccessCount / baselineTotalCount;
+
+  // Calculate odds ratio
+  let oddsRatio = 1.0;
+  if (baselineSuccessRate > 0 && baselineSuccessRate < 1) {
+    const topicOdds = topicSuccessRate / (1 - topicSuccessRate);
+    const baselineOdds = baselineSuccessRate / (1 - baselineSuccessRate);
+    if (baselineOdds > 0) {
+      oddsRatio = topicOdds / baselineOdds;
+    }
+  }
+
+  // Simplified p-value calculation (chi-square approximation)
+  // For proper implementation, use a statistical library
+  let pValue = 1.0;
+  if (topicTotalCount >= 5 && baselineTotalCount >= 5) {
+    const diff = Math.abs(topicSuccessRate - baselineSuccessRate);
+    if (diff > 0.2) {
+      pValue = 0.01;  // High significance
+    } else if (diff > 0.1) {
+      pValue = 0.04;  // Moderate significance
+    } else {
+      pValue = 0.5;   // Low significance
+    }
+  }
+
+  return {
+    odds_ratio: Math.round(oddsRatio * 10000) / 10000,
+    p_value: Math.round(pValue * 10000) / 10000,
+    significance: pValue < 0.05
+  };
+}
+
+/**
+ * Calculate topic-level analysis from evaluation prompts
+ * Groups by policy → topic and calculates statistical metrics
+ */
+function calculateTopicAnalysis(prompts: EvaluationPrompt[]): any {
+  // Filter prompts with topics
+  const promptsWithTopics = prompts.filter(p => p.topic);
+  if (promptsWithTopics.length === 0) {
+    return null;
+  }
+
+  // Calculate baseline success rate for logistic regression
+  const baselineSuccessCount = prompts.filter(p => p.attack_outcome === 'Attack Success').length;
+  const baselineTotalCount = prompts.length;
+
+  // Group prompts by policy → topic
+  const policyTopicMap: Map<string, Map<string, EvaluationPrompt[]>> = new Map();
+
+  for (const prompt of promptsWithTopics) {
+    const policyId = prompt.policy_id || 'unknown';
+    if (!policyTopicMap.has(policyId)) {
+      policyTopicMap.set(policyId, new Map());
+    }
+
+    const topicMap = policyTopicMap.get(policyId)!;
+    const topic = prompt.topic!;
+    if (!topicMap.has(topic)) {
+      topicMap.set(topic, []);
+    }
+
+    topicMap.get(topic)!.push(prompt);
+  }
+
+  // Build the topic analysis structure
+  const policies: any[] = [];
+
+  for (const [policyId, topicMap] of policyTopicMap.entries()) {
+    const topics: any[] = [];
+
+    for (const [topicName, topicPrompts] of topicMap.entries()) {
+      // Extract values for statistical calculations
+      const attackSuccessRates = topicPrompts.map(p =>
+        p.attack_outcome === 'Attack Success' ? 100 : 0
+      );
+      const confidenceScores = topicPrompts.map(p =>
+        p.ai_system_response?.confidenceScore || 0
+      );
+      const runtimeSeconds = topicPrompts.map(p =>
+        (p.runtime_ms || 0) / 1000
+      );
+      const inputTokens = topicPrompts.map(p => p.input_tokens || 0);
+      const outputTokens = topicPrompts.map(p =>
+        p.ai_system_response?.outputTokens || 0
+      );
+
+      // Calculate statistics
+      const topicSuccessCount = topicPrompts.filter(p => p.attack_outcome === 'Attack Success').length;
+      const topicTotalCount = topicPrompts.length;
+
+      const logisticRegression = calculateLogisticRegression(
+        topicSuccessCount,
+        topicTotalCount,
+        baselineSuccessCount,
+        baselineTotalCount
+      );
+
+      topics.push({
+        topic_name: topicName,
+        attack_success_rate: {
+          mean: Math.round(calculateMean(attackSuccessRates) * 100) / 100,
+          median: Math.round(calculateMedian(attackSuccessRates) * 100) / 100,
+          mode: Math.round(calculateMode(attackSuccessRates, 0))
+        },
+        confidence: {
+          mean: Math.round(calculateMean(confidenceScores) * 10000) / 10000,
+          median: Math.round(calculateMedian(confidenceScores) * 10000) / 10000,
+          mode: Math.round(calculateMode(confidenceScores, 2) * 10000) / 10000
+        },
+        runtime_seconds: {
+          mean: Math.round(calculateMean(runtimeSeconds) * 100) / 100,
+          median: Math.round(calculateMedian(runtimeSeconds) * 100) / 100,
+          mode: Math.round(calculateMode(runtimeSeconds, 2) * 100) / 100
+        },
+        input_tokens: {
+          mean: Math.round(calculateMean(inputTokens)),
+          median: Math.round(calculateMedian(inputTokens)),
+          mode: Math.round(calculateMode(inputTokens, 0))
+        },
+        output_tokens: {
+          mean: Math.round(calculateMean(outputTokens)),
+          median: Math.round(calculateMedian(outputTokens)),
+          mode: Math.round(calculateMode(outputTokens, 0))
+        },
+        occurrence: topicPrompts.length,
+        logistic_regression: logisticRegression
+      });
+    }
+
+    // Get policy name from first prompt in this policy
+    const firstPrompt = Array.from(topicMap.values())[0][0];
+    policies.push({
+      id: policyId,
+      policy_name: firstPrompt.policy_name || 'Unknown',
+      topics: topics.sort((a, b) => a.topic_name.localeCompare(b.topic_name))
+    });
+  }
+
+  return {
+    source: {
+      type: 'policy_group',
+      policies: policies
+    }
+  };
+}
+
+// ============================================================================
+// FINALIZATION ORCHESTRATION
+// ============================================================================
+
+/**
+ * Interface for calculation results
+ * Add new fields here when adding new calculations
+ */
+interface CalculationResults {
+  summary: any;
+  topicAnalysis: any | null;
+  // ADD NEW CALCULATIONS HERE
+  // Example: policyTrendAnalysis: any | null;
+  // Example: adversarialPatternAnalysis: any | null;
+}
+
+/**
+ * Run all calculations on evaluation prompts
+ * This is where ALL calculation functions are called
+ * Add new calculation functions here
+ */
+async function runAllCalculations(
+  supabase: any,
+  evaluationId: string,
+  prompts: any[]
+): Promise<CalculationResults> {
+  const results: CalculationResults = {
+    summary: null,
+    topicAnalysis: null,
+  };
+
+  // ========================================
+  // CALCULATION 1: Summary Metrics
+  // ========================================
+  await logInfo(supabase, evaluationId, 'Calculating summary metrics...');
+  try {
+    results.summary = calculateSummaryMetrics(prompts);
+    await logInfo(
+      supabase,
+      evaluationId,
+      `Summary metrics calculated: aiSystemAttackSuccessRate=${results.summary.aiSystemAttackSuccessRate}, aiSystemGuardrailAttackSuccessRate=${results.summary.aiSystemGuardrailAttackSuccessRate}`
+    );
+  } catch (error) {
+    await logError(
+      supabase,
+      evaluationId,
+      '',
+      `Error calculating summary metrics: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
+    throw error; // Summary metrics are critical, so fail if they can't be calculated
+  }
+
+  // ========================================
+  // CALCULATION 2: Topic Analysis
+  // ========================================
+  await logInfo(supabase, evaluationId, 'Calculating topic analysis...');
+  try {
+    results.topicAnalysis = calculateTopicAnalysis(prompts);
+    if (results.topicAnalysis) {
+      await logInfo(
+        supabase,
+        evaluationId,
+        `Topic analysis calculated: ${results.topicAnalysis.source.policies.length} policies with topic data`
+      );
+    } else {
+      await logInfo(supabase, evaluationId, 'No topic analysis data (no topics in prompts)');
+    }
+  } catch (error) {
+    await logError(
+      supabase,
+      evaluationId,
+      '',
+      `Error calculating topic analysis: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
+    console.error('Topic analysis calculation error:', error);
+    // Continue with null topic_analysis rather than failing the entire finalization
+    results.topicAnalysis = null;
+  }
+
+  // ========================================
+  // ADD NEW CALCULATIONS HERE
+  // ========================================
+  // Example:
+  // await logInfo(supabase, evaluationId, 'Calculating policy trend analysis...');
+  // try {
+  //   results.policyTrendAnalysis = calculatePolicyTrendAnalysis(prompts);
+  //   await logInfo(supabase, evaluationId, 'Policy trend analysis calculated');
+  // } catch (error) {
+  //   await logError(supabase, evaluationId, '', `Error calculating policy trend: ${error.message}`);
+  //   results.policyTrendAnalysis = null;
+  // }
+
+  return results;
+}
+
+/**
+ * Build the update data object from calculation results
+ * Add new fields to updateData here when adding new calculations
+ */
+function buildUpdateData(
+  calculations: CalculationResults,
+  guardrailsCount: number
+): any {
+  const summary = calculations.summary;
+
+  // Extract individual metrics (available at root level for easy access)
+  const aiSystemAttackSuccessRate = summary.aiSystemAttackSuccessRate;
+  const aiSystemGuardrailAttackSuccessRate = summary.aiSystemGuardrailAttackSuccessRate;
+  // Set guardrailSuccessRate to NULL if no guardrails are attached
+  const guardrailSuccessRate = guardrailsCount > 0 ? summary.guardrailSuccessRate : null;
+  const uniqueTopics = summary.uniqueTopics;
+  const uniqueAttackAreas = summary.uniqueAttackAreas;
+
+  return {
+    status: 'completed',
+    // Individual summary metrics in dedicated columns
+    ai_system_attack_success_rate: aiSystemAttackSuccessRate,
+    ai_system_guardrail_attack_success_rate: aiSystemGuardrailAttackSuccessRate,
+    guardrail_success_rate: guardrailSuccessRate,
+    unique_topics: uniqueTopics,
+    unique_attack_areas: uniqueAttackAreas,
+    guardrails_count: guardrailsCount,
+    // Calculated analyses
+    topic_analysis: calculations.topicAnalysis,
+    // ADD NEW CALCULATION FIELDS HERE
+    // Example: policy_trend_analysis: calculations.policyTrendAnalysis,
+    // Metadata
+    completed_at: new Date().toISOString(),
+    current_stage: 'Completed',
+    current_prompt_text: null,
+    updated_at: new Date().toISOString()
+  };
+}
+
+/**
+ * Main finalization function
+ * This orchestrates all calculations and marks the evaluation as complete
+ *
+ * To add a new calculation:
+ * 1. Add the calculation function (like calculateTopicAnalysis)
+ * 2. Add field to CalculationResults interface
+ * 3. Call your function in runAllCalculations()
+ * 4. Add the result to updateData in buildUpdateData()
+ * 5. Add the database column if needed
+ */
 async function finalizeEvaluation(supabase: any, evaluationId: string) {
   await logInfo(supabase, evaluationId, 'Starting finalization process');
 
@@ -498,40 +861,31 @@ async function finalizeEvaluation(supabase: any, evaluationId: string) {
 
   await logInfo(supabase, evaluationId, `Found ${prompts.length} prompts for finalization`);
 
-  // Calculate summary metrics
-  const summary = calculateSummaryMetrics(prompts);
+  // ========================================
+  // RUN ALL CALCULATIONS
+  // ========================================
+  const calculations = await runAllCalculations(
+    supabase,
+    evaluationId,
+    prompts
+  );
 
-  // Extract individual metrics (available at root level for easy access)
-  const aiSystemAttackSuccessRate = summary.aiSystemAttackSuccessRate;
-  const aiSystemGuardrailAttackSuccessRate = summary.aiSystemGuardrailAttackSuccessRate;
-  // Set guardrailSuccessRate to NULL if no guardrails are attached
-  const guardrailSuccessRate = guardrailsCount > 0 ? summary.guardrailSuccessRate : null;
-  const uniqueTopics = summary.uniqueTopics;
-  const uniqueAttackAreas = summary.uniqueAttackAreas;
-
-  // Log summary metrics calculation
   await logInfo(
     supabase,
     evaluationId,
-    `Summary metrics calculated: aiSystemAttackSuccessRate=${aiSystemAttackSuccessRate}, aiSystemGuardrailAttackSuccessRate=${aiSystemGuardrailAttackSuccessRate}, guardrailSuccessRate=${guardrailSuccessRate}, uniqueTopics=${uniqueTopics}, uniqueAttackAreas=${uniqueAttackAreas}`
+    `Calculations completed. Has summary: ${calculations.summary ? 'YES' : 'NO'}, Has topicAnalysis: ${calculations.topicAnalysis ? 'YES' : 'NO'}`
   );
 
-  // Update evaluation status with both summary_metrics JSONB and individual columns
-  const updateData = {
-    status: 'completed',
-    summary_metrics: summary,
-    // NEW: Store individual summary metrics in dedicated columns
-    ai_system_attack_success_rate: aiSystemAttackSuccessRate,
-    ai_system_guardrail_attack_success_rate: aiSystemGuardrailAttackSuccessRate,
-    guardrail_success_rate: guardrailSuccessRate,
-    unique_topics: uniqueTopics,
-    unique_attack_areas: uniqueAttackAreas,
-    guardrails_count: guardrailsCount,
-    completed_at: new Date().toISOString(),
-    current_stage: 'Completed',
-    current_prompt_text: null,
-    updated_at: new Date().toISOString()
-  };
+  // ========================================
+  // BUILD UPDATE DATA
+  // ========================================
+  const updateData = buildUpdateData(calculations, guardrailsCount);
+
+  await logInfo(
+    supabase,
+    evaluationId,
+    `UpdateData built. Has topic_analysis: ${updateData.topic_analysis ? 'YES' : 'NO'}, ai_system_attack_success_rate: ${updateData.ai_system_attack_success_rate}`
+  );
 
   await logInfo(
     supabase,
@@ -539,24 +893,71 @@ async function finalizeEvaluation(supabase: any, evaluationId: string) {
     `Updating evaluation with data: ${JSON.stringify(updateData)}`
   );
 
-  const { data: updateResult, error: updateError } = await supabase
-    .from('evaluations')
-    .update(updateData)
-    .eq('id', evaluationId)
-    .select();
-
-  if (updateError) {
-    await logError(supabase, evaluationId, '', `Error updating evaluation: ${JSON.stringify(updateError)}`);
-    throw updateError;
-  }
-
   await logInfo(
     supabase,
     evaluationId,
-    `Evaluation updated successfully: ${JSON.stringify(updateResult)}`
+    `About to update with topic_analysis: ${updateData.topic_analysis ? 'YES' : 'NO'}`
   );
 
-  await logInfo(supabase, evaluationId, 'Evaluation Successful');
+  try {
+    const { data: updateResult, error: updateError } = await supabase
+      .from('evaluations')
+      .update(updateData)
+      .eq('id', evaluationId)
+      .select();
+
+    await logInfo(
+      supabase,
+      evaluationId,
+      `Update query completed. Error: ${updateError ? 'YES' : 'NO'}, Data: ${updateResult ? 'YES' : 'NO'}`
+    );
+
+    if (updateError) {
+      // Log to console FIRST to see if logError is the issue
+      console.error('=== UPDATE ERROR DETECTED ===');
+      console.error('Error object:', updateError);
+      console.error('Error keys:', Object.keys(updateError || {}));
+      console.error('Error code:', updateError?.code);
+      console.error('Error message:', updateError?.message);
+      console.error('Error details:', updateError?.details);
+      console.error('Error hint:', updateError?.hint);
+
+      // Try safe stringify
+      try {
+        const errorStr = JSON.stringify(updateError, null, 2);
+        console.error('Error JSON:', errorStr);
+        await logError(supabase, evaluationId, '', `UPDATE ERROR JSON: ${errorStr}`);
+      } catch (e) {
+        console.error('Cannot stringify error:', e);
+        const errMsg = e instanceof Error ? e.message : String(e);
+        await logError(supabase, evaluationId, '', `UPDATE ERROR - cannot stringify: ${errMsg}`);
+      }
+
+      // Log simple properties individually
+      await logError(supabase, evaluationId, '', `UPDATE ERROR - code: ${String(updateError?.code || 'none')}`);
+      await logError(supabase, evaluationId, '', `UPDATE ERROR - message: ${String(updateError?.message || 'none')}`);
+      await logError(supabase, evaluationId, '', `UPDATE ERROR - hint: ${String(updateError?.hint || 'none')}`);
+
+      await logInfo(supabase, evaluationId, 'Update had error but continuing...');
+    }
+
+    await logInfo(
+      supabase,
+      evaluationId,
+      `Evaluation updated successfully. Result has topic_analysis: ${updateResult?.[0]?.topic_analysis ? 'YES' : 'NO'}`
+    );
+
+    await logInfo(supabase, evaluationId, 'Evaluation Successful');
+  } catch (error) {
+    await logError(
+      supabase,
+      evaluationId,
+      '',
+      `CAUGHT ERROR during update: ${error instanceof Error ? error.message : JSON.stringify(error)}`
+    );
+    console.error('Update error:', error);
+    throw error;
+  }
 }
 
 function calculateSummaryMetrics(prompts: EvaluationPrompt[]): SummaryMetrics {

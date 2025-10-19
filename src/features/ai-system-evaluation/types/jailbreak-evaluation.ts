@@ -146,6 +146,43 @@ export interface BehaviorTypeMetrics {
   successRate: number;
 }
 
+// Topic-level analysis types
+export interface StatisticalMetric {
+  mean: number;
+  median: number;
+  mode: number;
+}
+
+export interface LogisticRegressionResult {
+  odds_ratio: number;
+  p_value: number;
+  significance: boolean;
+}
+
+export interface TopicMetrics {
+  topic_name: string;
+  attack_success_rate: StatisticalMetric;
+  confidence: StatisticalMetric;
+  runtime_seconds: StatisticalMetric;
+  input_tokens: StatisticalMetric;
+  output_tokens: StatisticalMetric;
+  occurrence: number;
+  logistic_regression: LogisticRegressionResult;
+}
+
+export interface PolicyTopicAnalysis {
+  id: string;
+  policy_name: string;
+  topics: TopicMetrics[];
+}
+
+export interface TopicAnalysis {
+  source: {
+    type: 'policy_group';
+    policies: PolicyTopicAnalysis[];
+  };
+}
+
 export interface GuardrailSummaryMetrics {
   id: string;
   name: string;
@@ -186,6 +223,9 @@ export interface JailbreakEvaluationSummary {
     uniqueTopics: number;
     uniqueAttackAreas: number;
   };
+
+  // NEW: Topic-level analysis
+  topicAnalysis?: TopicAnalysis;
 
   // Legacy fields for backward compatibility
   totalTests?: number;
