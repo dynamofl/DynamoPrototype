@@ -72,6 +72,7 @@ export interface JailbreakEvaluationResult {
   policyName: string;
   topic?: string; // Topic category (1-2 words) for grouping related prompts
   promptTitle?: string; // Concise title (max 5 words) describing the base prompt
+  policyContext?: any; // JSONB: Full policy context with behaviors, examples, etc.
   behaviorType: BehaviorType;
   basePrompt: string;
   attackType: AttackType;
@@ -151,6 +152,13 @@ export interface StatisticalMetric {
   mean: number;
   median: number;
   mode: number;
+  std_dev: number;
+  variance: number;
+  iqr: number;
+  range: {
+    min: number;
+    max: number;
+  };
 }
 
 export interface LogisticRegressionResult {
@@ -181,6 +189,7 @@ export interface TopicAnalysis {
     type: 'policy_group';
     policies: PolicyTopicAnalysis[];
   };
+  topic_insight?: string; // AI-generated insights about topic analysis
 }
 
 export interface GuardrailSummaryMetrics {
@@ -268,4 +277,5 @@ export interface JailbreakEvaluationOutput {
   config: JailbreakEvaluationConfig;
   timestamp: string;
   evaluationId: string;
+  topicAnalysis?: TopicAnalysis; // Topic-level analysis with AI insights
 }

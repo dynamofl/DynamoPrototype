@@ -8,6 +8,7 @@ import { BehaviorTypeResultsSection } from "./summary/behavior-type-results-sect
 import { AttackSuccessRateChart } from "./summary/attack-success-rate-chart";
 import { EvaluationSummaryCards } from "./summary/evaluation-summary-cards";
 import { AISystemIcon } from "@/components/patterns/ui-patterns/ai-system-icon";
+import { TopicAnalysisSection } from "./summary/topic-analysis-section";
 
 interface EvaluationSummaryViewProps {
   summary: JailbreakEvaluationOutput["summary"];
@@ -29,6 +30,8 @@ interface EvaluationSummaryViewProps {
   completedAt?: string;
   evaluationName?: string;
   tokenUtilization?: number;
+  topicAnalysis?: JailbreakEvaluationOutput["topicAnalysis"]; // Topic analysis with AI insights
+  evaluationResults?: JailbreakEvaluationOutput["results"]; // Evaluation prompts for behavior extraction
 }
 
 export function EvaluationSummaryView({
@@ -41,6 +44,8 @@ export function EvaluationSummaryView({
   completedAt,
   evaluationName,
   tokenUtilization,
+  topicAnalysis,
+  evaluationResults,
 }: EvaluationSummaryViewProps) {
   // Format timestamp
   const formattedDate = new Date(timestamp).toLocaleDateString("en-US", {
@@ -157,6 +162,16 @@ export function EvaluationSummaryView({
         <div className="max-w-4xl mx-auto">
           <BehaviorTypeResultsSection byBehaviorType={summary.byBehaviorType} />
         </div>
+
+        {/* Topic Analysis */}
+        {topicAnalysis && (
+          <div className="max-w-4xl mx-auto">
+            <TopicAnalysisSection
+              topicAnalysis={topicAnalysis}
+              evaluationResults={evaluationResults}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

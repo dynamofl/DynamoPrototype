@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { ensureAuthenticated } from '@/lib/supabase/client'
 import type { AISystem } from '../types/types'
+import { aiSystemsStateManager } from './ai-systems-state-manager'
 
 /**
  * Hook to fetch AI systems from Supabase backend
@@ -76,12 +77,18 @@ export function useAISystemsSupabase() {
         modelDetails: item.config?.modelDetails,
         icon: item.config?.icon || 'custom',
         status: item.config?.status || 'active',
-        hasValidAPIKey: !!item.config?.apiKeyId || !!item.config?.hasValidAPIKey,
+        hasValidAPIKey: false, // Will be updated during enhancement
+        hasGuardrails: false,
+        isEvaluated: false,
+        lastValidated: 0,
         createdAt: item.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
         updatedAt: item.updated_at?.split('T')[0] || new Date().toISOString().split('T')[0]
       }))
 
-      setAISystems(transformedSystems)
+      // Enhance systems with actual API key validation
+      const enhancedSystems = await aiSystemsStateManager.enhanceAISystems(transformedSystems)
+
+      setAISystems(enhancedSystems)
     } catch (err) {
       console.error('Failed to load AI systems from Supabase:', err)
       setError(err instanceof Error ? err.message : 'Failed to load AI systems')
