@@ -1,6 +1,12 @@
 import { Download, Trash2, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { motion, AnimatePresence } from 'framer-motion'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 export interface BulkAction {
   key: string
@@ -8,6 +14,8 @@ export interface BulkAction {
   icon: React.ReactNode
   variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost'
   onClick: () => void
+  disabled?: boolean
+  disabledTooltip?: string
 }
 
 export interface BulkActionBarProps {
@@ -74,22 +82,43 @@ export function BulkActionBar({
 
               {/* Action Buttons */}
               <div className="flex items-center gap-2">
-                {allActions.map((action) => (
-                  <Button
-                    key={action.key}
-                    variant={action.variant || 'outline'}
-                    size="sm"
-                    onClick={action.onClick}
-                    className={`h-7 ${
-                      action.variant === 'destructive'
-                        ? 'bg-red-900 hover:bg-red-800 text-gray-0 hover:text-gray-50'
-                        : 'bg-gray-800 hover:bg-gray-700 text-gray-0 border-none hover:text-gray-50'
-                    }`}
-                  >
-                    {action.icon}
-                    <span className="ml-1.5">{action.label}</span>
-                  </Button>
-                ))}
+                <TooltipProvider>
+                  {allActions.map((action) => {
+                    const button = (
+                      <Button
+                        key={action.key}
+                        variant={action.variant || 'outline'}
+                        size="sm"
+                        onClick={action.onClick}
+                        disabled={action.disabled}
+                        className={`h-7 ${
+                          action.variant === 'destructive'
+                            ? 'bg-red-900 hover:bg-red-800 text-gray-0 hover:text-gray-50 disabled:bg-red-950 disabled:text-gray-600 disabled:opacity-50'
+                            : 'bg-gray-800 hover:bg-gray-700 text-gray-0 border-none hover:text-gray-50 disabled:bg-gray-850 disabled:text-gray-600 disabled:opacity-50'
+                        }`}
+                      >
+                        {action.icon}
+                        <span className="ml-1.5">{action.label}</span>
+                      </Button>
+                    )
+
+                    // Wrap with tooltip if disabled and tooltip text is provided
+                    if (action.disabled && action.disabledTooltip) {
+                      return (
+                        <Tooltip key={action.key}>
+                          <TooltipTrigger asChild>
+                            {button}
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{action.disabledTooltip}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )
+                    }
+
+                    return button
+                  })}
+                </TooltipProvider>
               </div>
 
               {/* Divider */}

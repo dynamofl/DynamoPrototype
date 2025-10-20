@@ -8,7 +8,8 @@ import {
   AISystemViewSheet,
   AISystemsHeader,
   AISystemsStats,
-  AISystemsTableDirect
+  AISystemsTableDirect,
+  APIKeyAssignmentDialog
 } from './components'
 import { useAISystemsSupabase } from './lib/useAISystemsSupabase'
 import { supabase, ensureAuthenticated } from '@/lib/supabase/client'
@@ -22,6 +23,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { BulkActionBar } from '@/components/patterns/ui-patterns/bulk-action-bar'
+import type { BulkAction } from '@/components/patterns/ui-patterns/bulk-action-bar'
+import { Key, Trash2 } from 'lucide-react'
 
 /**
  * AI Systems page - Main component using modular components
@@ -40,9 +44,14 @@ export function AISystemsPage() {
   // Delete confirmation dialog state
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [systemToDelete, setSystemToDelete] = useState<AISystem | null>(null)
+  const [isBulkDelete, setIsBulkDelete] = useState(false)
 
   // Selection state
   const [selectedRows, setSelectedRows] = useState<string[]>([])
+
+  // API key assignment dialog state
+  const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false)
+  const [selectedProviderType, setSelectedProviderType] = useState<string>('')
 
   // Use Supabase hook for AI systems data
   const { aiSystems, loading: aiSystemsLoading, reload: reloadAISystems } = useAISystemsSupabase()
@@ -142,30 +151,56 @@ export function AISystemsPage() {
 
   // Handle delete system confirmation
   const handleDeleteSystemConfirm = async () => {
-    if (!systemToDelete) return
-
     try {
-      // Ensure authenticated
-      await ensureAuthenticated()
+      if (isBulkDelete) {
+        // Bulk delete: delete all selected systems
+        if (selectedRows.length === 0) return
 
-      // Delete AI system from Supabase
-      const { error } = await supabase
-        .from('ai_systems')
-        .delete()
-        .eq('id', systemToDelete.id)
+        // Ensure authenticated
+        await ensureAuthenticated()
 
-      if (error) {
-        console.error('Failed to delete system from Supabase:', error)
-        throw error
+        // Delete all selected systems
+        const { error } = await supabase
+          .from('ai_systems')
+          .delete()
+          .in('id', selectedRows)
+
+        if (error) {
+          console.error('Failed to delete systems from Supabase:', error)
+          throw error
+        }
+
+        // Clear selection
+        setSelectedRows([])
+      } else {
+        // Single delete
+        if (!systemToDelete) return
+
+        // Ensure authenticated
+        await ensureAuthenticated()
+
+        // Delete AI system from Supabase
+        const { error } = await supabase
+          .from('ai_systems')
+          .delete()
+          .eq('id', systemToDelete.id)
+
+        if (error) {
+          console.error('Failed to delete system from Supabase:', error)
+          throw error
+        }
       }
 
       // Trigger reload of AI systems
       await reloadAISystems()
+
       // Close dialog and reset state
       setIsDeleteDialogOpen(false)
       setSystemToDelete(null)
+      setIsBulkDelete(false)
     } catch (error) {
-      console.error('Failed to delete system:', error)
+      console.error('Failed to delete system(s):', error)
+      alert(`Failed to delete system(s): ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -173,6 +208,7 @@ export function AISystemsPage() {
   const handleDeleteCancel = () => {
     setIsDeleteDialogOpen(false)
     setSystemToDelete(null)
+    setIsBulkDelete(false)
   }
 
   // Handle manage evaluation
@@ -208,6 +244,123 @@ export function AISystemsPage() {
   const handleSelectAll = (selected: boolean) => {
     setSelectedRows(selected ? aiSystems.map(system => system.id) : [])
   }
+
+  // Bulk action handlers
+  const handleBulkDelete = () => {
+    if (selectedRows.length === 0) return
+
+    // Open the delete dialog in bulk mode
+    setIsBulkDelete(true)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const handleBulkAssignApiKey = () => {
+    if (selectedRows.length === 0) return
+
+    // Get the selected systems
+    const selectedSystems = aiSystems.filter(system => selectedRows.includes(system.id))
+
+    // Check if all selected systems have the same provider type
+    const providerTypes = [...new Set(selectedSystems.map(system => system.icon))]
+
+    if (providerTypes.length > 1) {
+      // Multiple provider types selected - this shouldn't happen as the button should be disabled
+      return
+    }
+
+    // Open the API key assignment dialog
+    setSelectedProviderType(providerTypes[0])
+    setIsApiKeyDialogOpen(true)
+  }
+
+  const handleApiKeyAssignment = async (selectedKeyIds: string[], primaryKeyId: string) => {
+    try {
+      // Ensure authenticated
+      await ensureAuthenticated()
+
+      // Get the AccessTokenStorage to fetch key details
+      const { AccessTokenStorage } = await import('@/features/settings/layouts/access-token/lib/access-token-storage')
+      const storage = new AccessTokenStorage()
+      const primaryKey = (await storage.getAPIKeys(selectedProviderType)).find(k => k.id === primaryKeyId)
+
+      if (!primaryKey) {
+        throw new Error('Primary API key not found')
+      }
+
+      // Update all selected systems with the new API keys
+      const updates = selectedRows.map(async (systemId) => {
+        const system = aiSystems.find(s => s.id === systemId)
+        if (!system) return
+
+        // Fetch current config from Supabase
+        const { data: currentData } = await supabase
+          .from('ai_systems')
+          .select('config')
+          .eq('id', systemId)
+          .single()
+
+        const { error } = await supabase
+          .from('ai_systems')
+          .update({
+            config: {
+              ...(currentData?.config || {}),
+              apiKeyId: primaryKeyId,
+              apiKeyName: primaryKey.name,
+              selectedApiKeyIds: selectedKeyIds,
+              hasValidAPIKey: true
+            }
+          })
+          .eq('id', systemId)
+
+        if (error) throw error
+      })
+
+      await Promise.all(updates)
+
+      // Reload AI systems
+      await reloadAISystems()
+
+      // Clear selection
+      setSelectedRows([])
+
+      // Close dialog
+      setIsApiKeyDialogOpen(false)
+    } catch (error) {
+      console.error('Failed to assign API keys:', error)
+      alert(`Failed to assign API keys: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
+  const handleClearSelection = () => {
+    setSelectedRows([])
+  }
+
+  // Check if selected systems have different providers
+  const selectedSystems = aiSystems.filter(system => selectedRows.includes(system.id))
+  const providerTypes = [...new Set(selectedSystems.map(system => system.icon))]
+  const hasDifferentProviders = providerTypes.length > 1
+
+  // Define bulk actions with conditional disable for API key assignment
+  const bulkActions: BulkAction[] = [
+    {
+      key: 'assign-api-key',
+      label: 'Manage API Keys',
+      icon: <Key className="h-4 w-4" />,
+      variant: 'outline',
+      onClick: handleBulkAssignApiKey,
+      disabled: hasDifferentProviders,
+      disabledTooltip: hasDifferentProviders
+        ? 'Cannot assign API keys to systems with different providers. Please select systems from the same provider.'
+        : undefined
+    },
+    {
+      key: 'delete',
+      label: 'Delete',
+      icon: <Trash2 className="h-4 w-4" />,
+      variant: 'destructive',
+      onClick: handleBulkDelete
+    }
+  ]
 
   // Show loading state while AI systems are being fetched
   if (aiSystemsLoading) {
@@ -281,9 +434,14 @@ export function AISystemsPage() {
           <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Delete AI System</AlertDialogTitle>
+                <AlertDialogTitle>
+                  {isBulkDelete ? 'Delete AI Systems' : 'Delete AI System'}
+                </AlertDialogTitle>
                 <AlertDialogDescription>
-                  Are you sure you want to delete "{systemToDelete?.name}"? This action cannot be undone.
+                  {isBulkDelete
+                    ? `Are you sure you want to delete ${selectedRows.length} AI system${selectedRows.length > 1 ? 's' : ''}? This action cannot be undone.`
+                    : `Are you sure you want to delete "${systemToDelete?.name}"? This action cannot be undone.`
+                  }
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -300,9 +458,31 @@ export function AISystemsPage() {
             </AlertDialogContent>
           </AlertDialog>
 
-          
+          {/* API Key Assignment Dialog */}
+          <APIKeyAssignmentDialog
+            open={isApiKeyDialogOpen}
+            onOpenChange={setIsApiKeyDialogOpen}
+            providerType={selectedProviderType}
+            selectedCount={selectedRows.length}
+            selectedSystems={selectedSystems.map(system => ({
+              id: system.id,
+              name: system.name,
+              config: {
+                apiKeyId: system.apiKeyId,
+                selectedApiKeyIds: (system as any).config?.selectedApiKeyIds
+              }
+            }))}
+            onConfirm={handleApiKeyAssignment}
+          />
         </div>
       </main>
+
+      {/* Bulk Action Bar */}
+      <BulkActionBar
+        selectedCount={selectedRows.length}
+        onClearSelection={handleClearSelection}
+        actions={bulkActions}
+      />
     </div>
   )
 }
