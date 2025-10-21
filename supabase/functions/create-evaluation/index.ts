@@ -137,17 +137,45 @@ serve(async (req: Request) => {
     // This runs asynchronously without blocking the response
     (async () => {
       try {
-        console.log(`🔄 Generating prompts for evaluation ${evaluation.id}...`);
+        console.log(`🔄 [BACKGROUND] Starting prompt generation for evaluation ${evaluation.id}...`);
+        console.log(`📋 [BACKGROUND] Internal models config:`, internalModels ? Object.keys(internalModels) : 'None');
+
+        // Validate internal models are configured
+        if (!internalModels || Object.keys(internalModels).length === 0) {
+          console.warn('⚠️  [BACKGROUND] No internal models configured - will try environment fallback');
+        }
+
+        // Validate API keys are present if models are configured
+        if (internalModels) {
+          const missingKeys: string[] = [];
+          if (internalModels.topicGeneration && !internalModels.topicGeneration.apiKey && !Deno.env.get('OPENAI_API_KEY')) {
+            missingKeys.push('topicGeneration');
+          }
+          if (internalModels.promptGeneration && !internalModels.promptGeneration.apiKey && !Deno.env.get('OPENAI_API_KEY')) {
+            missingKeys.push('promptGeneration');
+          }
+
+          if (missingKeys.length > 0) {
+            const errorMsg = `Missing API keys for internal models: ${missingKeys.join(', ')}. Please configure them in Settings → Internal Models Usage.`;
+            console.error(`❌ [BACKGROUND] ${errorMsg}`);
+            throw new Error(errorMsg);
+          }
+        }
+
+        console.log(`🔄 [BACKGROUND] Generating prompts from ${policyIds.length} policies...`);
 
         // Generate prompts based on POLICIES ONLY (not guardrails)
         const prompts = await generatePromptsFromPolicies(policyIds, guardrails, internalModels);
 
         if (prompts.length === 0) {
-          console.error('❌ No prompts generated from selected policies');
+          console.error('❌ [BACKGROUND] No prompts generated from selected policies');
           // Update evaluation status to failed
           await supabase
             .from('evaluations')
-            .update({ status: 'failed' })
+            .update({
+              status: 'failed',
+              current_stage: 'Failed: No prompts generated'
+            })
             .eq('id', evaluation.id);
 
           await supabase.from('evaluation_logs').insert({
@@ -159,7 +187,7 @@ serve(async (req: Request) => {
           return;
         }
 
-        console.log(`✅ Generated ${prompts.length} prompts for evaluation ${evaluation.id}`);
+        console.log(`✅ [BACKGROUND] Generated ${prompts.length} prompts for evaluation ${evaluation.id}`);
 
         // Create prompt records
         const promptRecords = prompts.map((prompt) => ({
@@ -172,11 +200,14 @@ serve(async (req: Request) => {
           .insert(promptRecords);
 
         if (promptsError) {
-          console.error('❌ Failed to insert prompts:', promptsError);
+          console.error('❌ [BACKGROUND] Failed to insert prompts:', promptsError);
           // Update evaluation status to failed (don't delete - user already navigated)
           await supabase
             .from('evaluations')
-            .update({ status: 'failed' })
+            .update({
+              status: 'failed',
+              current_stage: 'Failed: Could not save prompts'
+            })
             .eq('id', evaluation.id);
 
           await supabase.from('evaluation_logs').insert({
@@ -191,10 +222,13 @@ serve(async (req: Request) => {
         // Update total_prompts - this will trigger real-time subscription on frontend
         await supabase
           .from('evaluations')
-          .update({ total_prompts: prompts.length })
+          .update({
+            total_prompts: prompts.length,
+            current_stage: 'Prompts generated, starting execution...'
+          })
           .eq('id', evaluation.id);
 
-        console.log(`✅ Updated evaluation ${evaluation.id} with ${prompts.length} prompts`);
+        console.log(`✅ [BACKGROUND] Updated evaluation ${evaluation.id} with ${prompts.length} prompts`);
 
         // Log evaluation creation
         await supabase.from('evaluation_logs').insert({
@@ -205,31 +239,54 @@ serve(async (req: Request) => {
         });
 
         // Trigger async execution (invoke run-evaluation function)
-        fetch(`${supabaseUrl}/functions/v1/run-evaluation`, {
+        console.log(`🚀 [BACKGROUND] Triggering run-evaluation for ${evaluation.id}...`);
+        const triggerResponse = await fetch(`${supabaseUrl}/functions/v1/run-evaluation`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`
           },
           body: JSON.stringify({ evaluationId: evaluation.id })
-        }).catch((error) => {
-          console.error('Failed to trigger run-evaluation:', error);
         });
+
+        if (!triggerResponse.ok) {
+          const errorText = await triggerResponse.text();
+          console.error(`❌ [BACKGROUND] Failed to trigger run-evaluation:`, errorText);
+          await supabase.from('evaluation_logs').insert({
+            evaluation_id: evaluation.id,
+            level: 'error',
+            message: `Failed to trigger run-evaluation: ${errorText}`,
+            metadata: { statusCode: triggerResponse.status }
+          });
+        } else {
+          console.log(`✅ [BACKGROUND] Successfully triggered run-evaluation`);
+        }
 
       } catch (error) {
-        console.error('❌ Background prompt generation failed:', error);
-        // Update evaluation status to failed
-        await supabase
-          .from('evaluations')
-          .update({ status: 'failed' })
-          .eq('id', evaluation.id);
+        console.error('❌ [BACKGROUND] Prompt generation failed with error:', error);
+        console.error('❌ [BACKGROUND] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
 
-        await supabase.from('evaluation_logs').insert({
-          evaluation_id: evaluation.id,
-          level: 'error',
-          message: `Background prompt generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          metadata: { error }
-        });
+        // CRITICAL: Always update status to failed so evaluation doesn't get stuck
+        try {
+          await supabase
+            .from('evaluations')
+            .update({
+              status: 'failed',
+              current_stage: `Failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+            })
+            .eq('id', evaluation.id);
+
+          await supabase.from('evaluation_logs').insert({
+            evaluation_id: evaluation.id,
+            level: 'error',
+            message: `Background prompt generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            metadata: {
+              error: error instanceof Error ? { message: error.message, stack: error.stack } : { error: String(error) }
+            }
+          });
+        } catch (updateError) {
+          console.error('❌❌ [BACKGROUND] CRITICAL: Could not update evaluation status to failed:', updateError);
+        }
       }
     })();
 

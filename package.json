@@ -12,7 +12,8 @@
     "build-storybook": "storybook build",
     "generate-story": "node scripts/generate-story.js",
     "generate-all-stories": "node scripts/generate-story.js --all",
-    "watch-stories": "node scripts/generate-story.js --watch"
+    "watch-stories": "node scripts/generate-story.js --watch",
+    "fix-stuck-evaluations": "tsx scripts/fix-stuck-evaluations.ts"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.15",

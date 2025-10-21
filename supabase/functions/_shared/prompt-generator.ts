@@ -65,8 +65,19 @@ async function callAI(
     const model = modelConfig?.modelId || DEFAULT_MODEL;
     const provider = modelConfig?.provider || 'OpenAI';
 
+    console.log(`📞 [Prompt Generator] Calling AI with config:`, {
+      hasModelConfig: !!modelConfig,
+      hasConfigApiKey: !!modelConfig?.apiKey,
+      hasEnvApiKey: !!Deno.env.get('OPENAI_API_KEY'),
+      model,
+      provider,
+      debugLabel
+    });
+
     if (!apiKey) {
-      throw new Error('No API key provided. Configure internal models in Settings → Internal Models Usage');
+      const errorMsg = 'No API key provided. Configure internal models in Settings → Internal Models Usage or set OPENAI_API_KEY environment variable.';
+      console.error(`❌ [Prompt Generator] ${errorMsg}`);
+      throw new Error(errorMsg);
     }
 
   // Debug logging to see what's being sent
