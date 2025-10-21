@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { AccessTokenStorage } from './lib/access-token-storage'
+import { SecureAPIKeyService } from '@/lib/supabase/secure-api-key-service'
 import { APIKeyCreateSheet, APIKeyEditSheet, TokenDialog, AccessTokenTable } from './components'
 import type { TableRow } from '@/types/table'
 
@@ -29,11 +30,39 @@ export function AccessTokenContent() {
   }
 
   const handleAPIKeyCreated = async (provider: TableRow, name: string, apiKey: string) => {
-    console.log('API key created for provider:', provider.provider, 'Name:', name, 'Key:', apiKey)
-    
-    // Save the API key to storage
-    await customStorage.addAPIKey(provider.provider, name, apiKey)
-    
+    console.log('API key created for provider:', provider.provider, 'Name:', name)
+
+    try {
+      // Map provider names to lowercase for consistency
+      // The store-api-key function expects lowercase provider names
+      const providerTypeMap: Record<string, string> = {
+        'OpenAI': 'openai',
+        'Anthropic': 'anthropic',
+        'Mistral': 'mistral',
+        'Cohere': 'cohere',
+        'Google': 'google'
+      };
+
+      const providerType = providerTypeMap[provider.provider] || provider.provider.toLowerCase();
+
+      // Store in Supabase Vault
+      const storedKey = await SecureAPIKeyService.storeAPIKey({
+        name,
+        provider: providerType as any,
+        apiKey
+      });
+
+      console.log('✅ API key successfully stored in Supabase Vault with ID:', storedKey.id);
+
+      // Also save metadata to localStorage for display purposes (without the actual key)
+      await customStorage.addAPIKey(provider.provider, name, `vault:${storedKey.id}`);
+
+    } catch (error) {
+      console.error('Failed to store API key in vault:', error);
+      // Don't fallback to localStorage - it's better to fail than to store insecurely
+      throw error;
+    }
+
     // Trigger refresh to update the table
     setRefreshTrigger(prev => prev + 1)
   }

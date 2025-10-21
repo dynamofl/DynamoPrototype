@@ -15,9 +15,29 @@ export async function callAISystemWithConversation(
 ): Promise<AISystemResponse> {
   const { provider, model, config } = aiSystem;
 
-  // Use evaluation API key if provided, otherwise try to get from vault
-  let apiKey = evaluationApiKey;
+  console.log('[AI Client - Conversation] callAISystemWithConversation invoked:', {
+    provider,
+    model,
+    hasConfig: !!config,
+    hasApiKey: !!config?.apiKey,
+    hasApiKeyId: !!config?.apiKeyId,
+    apiKeyId: config?.apiKeyId,
+    conversationTurns: conversationTurns.length
+  });
 
+  // IMPORTANT: For AI system calls, always use the system's own API key
+  // Priority: 1) config.apiKey (direct storage), 2) vault lookup
+  // The evaluationApiKey is for internal models (judge, guardrail evaluation, etc.)
+  // NOT for the target AI system being tested
+  let apiKey: string | undefined;
+
+  // First priority: Check if API key is directly in config
+  if (config?.apiKey) {
+    apiKey = config.apiKey;
+    console.log('[AI Client - Conversation] Using API key from config (direct storage)');
+  }
+
+  // Second priority: Fetch from vault if apiKeyId is present and we don't have a key yet
   if (!apiKey && config?.apiKeyId) {
     // Fetch API key from vault
     const supabase = createClient(
@@ -51,9 +71,39 @@ export async function callAISystemWithConversation(
     const response = await aiApiLimiter.execute(async () => {
       let apiResponse: AISystemResponse;
 
-      switch (provider.toLowerCase()) {
+      // Normalize provider name - handle all variations
+      let normalizedProvider = provider.toLowerCase().trim();
+
+      // Remove common suffixes and spaces
+      normalizedProvider = normalizedProvider
+        .replace(/\s+ai$/i, '')  // Remove trailing "AI"
+        .replace(/\s+/g, '');     // Remove all spaces
+
+      // Handle specific provider variations and common misspellings
+      const providerMap: Record<string, string> = {
+        'openai': 'openai',
+        'open-ai': 'openai',
+        'gpt': 'openai',
+        'anthropic': 'anthropic',
+        'claude': 'anthropic',
+        'mistral': 'mistral',
+        'mistralai': 'mistral',
+        'azure': 'openai',      // Azure OpenAI uses same API format
+        'azureopenai': 'openai',
+        'azure-openai': 'openai'
+      };
+
+      normalizedProvider = providerMap[normalizedProvider] || normalizedProvider;
+
+      console.log(`[AI Client] Provider normalization: "${provider}" -> "${normalizedProvider}"`);
+
+      switch (normalizedProvider) {
         case 'openai':
           apiResponse = await callOpenAIWithConversation(model, conversationTurns, { ...config, apiKey });
+          break;
+
+        case 'mistral':
+          apiResponse = await callMistralWithConversation(model, conversationTurns, { ...config, apiKey });
           break;
 
         case 'anthropic':
@@ -70,7 +120,7 @@ export async function callAISystemWithConversation(
           break;
 
         default:
-          throw new Error(`Unsupported AI provider: ${provider}`);
+          throw new Error(`Unsupported AI provider: ${provider} (normalized: ${normalizedProvider})`);
       }
 
       return apiResponse;
@@ -95,9 +145,28 @@ export async function callAISystem(
 ): Promise<AISystemResponse> {
   const { provider, model, config } = aiSystem;
 
-  // Use evaluation API key if provided, otherwise try to get from vault
-  let apiKey = evaluationApiKey;
+  console.log('[AI Client] callAISystem invoked:', {
+    provider,
+    model,
+    hasConfig: !!config,
+    hasApiKey: !!config?.apiKey,
+    hasApiKeyId: !!config?.apiKeyId,
+    apiKeyId: config?.apiKeyId
+  });
 
+  // IMPORTANT: For AI system calls, always use the system's own API key
+  // Priority: 1) config.apiKey (direct storage), 2) vault lookup
+  // The evaluationApiKey is for internal models (judge, guardrail evaluation, etc.)
+  // NOT for the target AI system being tested
+  let apiKey: string | undefined;
+
+  // First priority: Check if API key is directly in config
+  if (config?.apiKey) {
+    apiKey = config.apiKey;
+    console.log('[AI Client] Using API key from config (direct storage)');
+  }
+
+  // Second priority: Fetch from vault if apiKeyId is present and we don't have a key yet
   if (!apiKey && config?.apiKeyId) {
     // Fetch API key from vault
     const supabase = createClient(
@@ -105,23 +174,58 @@ export async function callAISystem(
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    const { data: apiKeyData } = await supabase
+    console.log(`[AI Client] Fetching API key for ID: ${config.apiKeyId}`);
+    console.log(`[AI Client] Provider: ${provider}`);
+
+    const { data: apiKeyData, error: apiKeyError } = await supabase
       .from('api_keys')
-      .select('vault_secret_id')
+      .select('vault_secret_id, provider, name')
       .eq('id', config.apiKeyId)
       .single();
 
+    if (apiKeyError) {
+      console.error('[AI Client] Error fetching API key metadata:', apiKeyError);
+      throw new Error(`API key not found in database. Please ensure the API key is properly configured in AI Providers.`);
+    }
+
+    console.log(`[AI Client] Found API key entry:`, {
+      provider: apiKeyData.provider,
+      name: apiKeyData.name,
+      vault_secret_id: apiKeyData.vault_secret_id
+    });
+
     if (apiKeyData?.vault_secret_id) {
-      const { data: secretData } = await supabase
+      console.log(`[AI Client] Fetching secret from vault: ${apiKeyData.vault_secret_id}`);
+
+      const { data: secretData, error: secretError } = await supabase
         .from('vault_secrets')
         .select('secret')
         .eq('id', apiKeyData.vault_secret_id)
         .single();
 
+      if (secretError) {
+        console.error('[AI Client] Error fetching secret from vault:', secretError);
+        throw new Error(`API key secret not found in vault. Please re-add your API key in AI Providers.`);
+      }
+
       if (secretData?.secret) {
         apiKey = secretData.secret;
+        console.log('[AI Client] Successfully retrieved API key from vault');
+        console.log('[AI Client] API key length:', apiKey.length);
+        console.log('[AI Client] API key starts with:', apiKey.substring(0, 10));
+        console.log('[AI Client] API key ends with:', apiKey.substring(apiKey.length - 10));
+      } else {
+        console.error('[AI Client] Vault secret is empty');
+        throw new Error(`API key secret is empty. Please re-add your API key in AI Providers.`);
       }
+    } else {
+      console.error('[AI Client] No vault_secret_id found for API key');
+      throw new Error(`API key has no vault secret reference. Please re-add your API key in AI Providers.`);
     }
+  }
+
+  if (!apiKey) {
+    throw new Error(`No API key available for ${provider} provider. Please configure an API key in AI Providers.`);
   }
 
   const startTime = Date.now();
@@ -131,9 +235,39 @@ export async function callAISystem(
     const response = await aiApiLimiter.execute(async () => {
       let apiResponse: AISystemResponse;
 
-      switch (provider.toLowerCase()) {
+      // Normalize provider name - handle all variations
+      let normalizedProvider = provider.toLowerCase().trim();
+
+      // Remove common suffixes and spaces
+      normalizedProvider = normalizedProvider
+        .replace(/\s+ai$/i, '')  // Remove trailing "AI"
+        .replace(/\s+/g, '');     // Remove all spaces
+
+      // Handle specific provider variations and common misspellings
+      const providerMap: Record<string, string> = {
+        'openai': 'openai',
+        'open-ai': 'openai',
+        'gpt': 'openai',
+        'anthropic': 'anthropic',
+        'claude': 'anthropic',
+        'mistral': 'mistral',
+        'mistralai': 'mistral',
+        'azure': 'openai',      // Azure OpenAI uses same API format
+        'azureopenai': 'openai',
+        'azure-openai': 'openai'
+      };
+
+      normalizedProvider = providerMap[normalizedProvider] || normalizedProvider;
+
+      console.log(`[AI Client] Provider normalization: "${provider}" -> "${normalizedProvider}"`);
+
+      switch (normalizedProvider) {
         case 'openai':
           apiResponse = await callOpenAI(model, prompt, { ...config, apiKey });
+          break;
+
+        case 'mistral':
+          apiResponse = await callMistral(model, prompt, { ...config, apiKey });
           break;
 
         case 'anthropic':
@@ -145,7 +279,7 @@ export async function callAISystem(
           break;
 
         default:
-          throw new Error(`Unsupported AI provider: ${provider}`);
+          throw new Error(`Unsupported AI provider: ${provider} (normalized: ${normalizedProvider})`);
       }
 
       return apiResponse;
@@ -233,13 +367,20 @@ async function callAnthropic(
     throw new Error('Anthropic API key not configured');
   }
 
+  // Trim any whitespace from the API key
+  const trimmedApiKey = apiKey.trim();
+
+  console.log('[Anthropic] API key length:', trimmedApiKey.length);
+  console.log('[Anthropic] API key prefix:', trimmedApiKey.substring(0, 10));
+  console.log('[Anthropic] API key suffix:', trimmedApiKey.substring(trimmedApiKey.length - 10));
+
   const startTime = Date.now();
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': apiKey,
+      'x-api-key': trimmedApiKey,
       'anthropic-version': '2023-06-01'
     },
     body: JSON.stringify({
@@ -255,6 +396,7 @@ async function callAnthropic(
 
   if (!response.ok) {
     const error = await response.text();
+    console.error('[Anthropic] API error:', error);
     throw new Error(`Anthropic API error: ${error}`);
   }
 
@@ -267,6 +409,54 @@ async function callAnthropic(
     outputTokens: data.usage?.output_tokens,
     totalTokens: (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0),
     confidenceScore: undefined, // Anthropic doesn't provide confidence scores
+    latencyMs: runtimeMs
+  };
+}
+
+async function callMistral(
+  model: string,
+  prompt: string,
+  config: Record<string, any>
+): Promise<AISystemResponse> {
+  const apiKey = config.apiKey || Deno.env.get('MISTRAL_API_KEY');
+  if (!apiKey) {
+    throw new Error('Mistral API key not configured');
+  }
+
+  const startTime = Date.now();
+
+  const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: model || 'mistral-large-latest',
+      messages: [
+        { role: 'user', content: prompt }
+      ],
+      temperature: config.temperature || 0.7,
+      max_tokens: config.maxTokens || 1000
+    })
+  });
+
+  const runtimeMs = Date.now() - startTime;
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Mistral API error: ${error}`);
+  }
+
+  const data = await response.json();
+
+  return {
+    content: data.choices[0].message.content,
+    runtimeMs,
+    inputTokens: data.usage?.prompt_tokens,
+    outputTokens: data.usage?.completion_tokens,
+    totalTokens: data.usage?.total_tokens,
+    confidenceScore: undefined, // Mistral doesn't provide confidence scores
     latencyMs: runtimeMs
   };
 }
@@ -394,6 +584,12 @@ async function callAnthropicWithConversation(
     throw new Error('Anthropic API key not configured');
   }
 
+  // Trim any whitespace from the API key
+  const trimmedApiKey = apiKey.trim();
+
+  console.log('[Anthropic Conversation] API key length:', trimmedApiKey.length);
+  console.log('[Anthropic Conversation] API key prefix:', trimmedApiKey.substring(0, 10));
+
   const startTime = Date.now();
 
   // Anthropic requires alternating user/assistant messages and no system messages in the messages array
@@ -409,7 +605,7 @@ async function callAnthropicWithConversation(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': apiKey,
+      'x-api-key': trimmedApiKey,
       'anthropic-version': '2023-06-01'
     },
     body: JSON.stringify({
@@ -423,6 +619,7 @@ async function callAnthropicWithConversation(
 
   if (!response.ok) {
     const error = await response.text();
+    console.error('[Anthropic Conversation] API error:', error);
     throw new Error(`Anthropic API error: ${error}`);
   }
 
@@ -434,6 +631,58 @@ async function callAnthropicWithConversation(
     inputTokens: data.usage?.input_tokens,
     outputTokens: data.usage?.output_tokens,
     totalTokens: (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0),
+    confidenceScore: undefined,
+    latencyMs: runtimeMs
+  };
+}
+
+async function callMistralWithConversation(
+  model: string,
+  conversationTurns: ConversationTurn[],
+  config: Record<string, any>
+): Promise<AISystemResponse> {
+  const apiKey = config.apiKey || Deno.env.get('MISTRAL_API_KEY');
+  if (!apiKey) {
+    throw new Error('Mistral API key not configured');
+  }
+
+  const startTime = Date.now();
+
+  // Convert ConversationTurn[] to Mistral message format (same as OpenAI)
+  const messages = conversationTurns.map(turn => ({
+    role: turn.role,
+    content: turn.content
+  }));
+
+  const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: model || 'mistral-large-latest',
+      messages: messages,
+      temperature: config.temperature || 0.7,
+      max_tokens: config.maxTokens || 1000
+    })
+  });
+
+  const runtimeMs = Date.now() - startTime;
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Mistral API error: ${error}`);
+  }
+
+  const data = await response.json();
+
+  return {
+    content: data.choices[0].message.content,
+    runtimeMs,
+    inputTokens: data.usage?.prompt_tokens,
+    outputTokens: data.usage?.completion_tokens,
+    totalTokens: data.usage?.total_tokens,
     confidenceScore: undefined,
     latencyMs: runtimeMs
   };

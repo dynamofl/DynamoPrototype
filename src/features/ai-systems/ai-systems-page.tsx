@@ -65,38 +65,92 @@ export function AISystemsPage() {
 
   // Handle system creation
   const handleSystemCreated = async (system: AISystem) => {
+    console.log('[AISystemsPage] handleSystemCreated called with system:', system)
+
     try {
       // Ensure authenticated
       await ensureAuthenticated()
+      console.log('[AISystemsPage] Authentication successful')
+
+      // IMPORTANT: Do NOT store actual API key in config
+      // The API key is already securely stored in Supabase Vault
+      // We only need to store the apiKeyId reference
+
+      // Map provider name to lowercase for consistency with Supabase
+      const providerTypeMap: Record<string, string> = {
+        'OpenAI': 'openai',
+        'Anthropic': 'anthropic',
+        'Mistral': 'mistral',
+        'Mistral AI': 'mistral',  // Handle both "Mistral" and "Mistral AI"
+        'Cohere': 'cohere',
+        'Google': 'google',
+        'Azure OpenAI': 'azure',
+        'Azure': 'azure',
+        'AWS Bedrock': 'aws',
+        'AWS': 'aws',
+        'Databricks': 'databricks',
+        'Hugging Face': 'huggingface',
+        'HuggingFace': 'huggingface',
+        'Gemini': 'gemini',
+        'Remote': 'remote',
+        'Local': 'local'
+      };
+
+      // Get the proper provider name from the system
+      let providerName = system.providerId;
+      if (system.providerName) {
+        providerName = providerTypeMap[system.providerName] || system.providerName.toLowerCase();
+      } else if (system.icon) {
+        // Fallback to icon type if providerName is not available
+        providerName = providerTypeMap[system.icon] || system.icon.toLowerCase();
+      }
+
+      console.log('[AISystemsPage] Provider mapping:', {
+        original: system.providerId,
+        providerName: system.providerName,
+        icon: system.icon,
+        mapped: providerName
+      });
+
+      // Prepare insert data
+      const insertData = {
+        id: system.id,
+        name: system.name,
+        description: '',  // AI System type doesn't have description
+        provider: providerName, // Use the mapped provider name
+        model: system.selectedModel,
+        config: {
+          apiKeyId: system.apiKeyId, // Only store the ID reference
+          apiKeyName: system.apiKeyName,
+          // DO NOT store actual API key here - it's in the vault
+          modelDetails: system.modelDetails,
+          icon: system.icon,
+          status: system.status,
+          hasValidAPIKey: system.hasValidAPIKey,
+          selectedApiKeyIds: (system as any).selectedAPIKeys || [system.apiKeyId]
+        }
+      }
+
+      console.log('[AISystemsPage] Inserting to Supabase:', insertData)
 
       // Create AI system in Supabase
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('ai_systems')
-        .insert({
-          id: system.id,
-          name: system.name,
-          description: '',  // AI System type doesn't have description
-          provider: system.providerId,
-          model: system.selectedModel,
-          config: {
-            apiKeyId: system.apiKeyId,
-            apiKeyName: system.apiKeyName,
-            modelDetails: system.modelDetails,
-            icon: system.icon,
-            status: system.status,
-            hasValidAPIKey: system.hasValidAPIKey
-          }
-        })
+        .insert(insertData)
+        .select()
 
       if (error) {
-        console.error('Failed to create system in Supabase:', error)
+        console.error('[AISystemsPage] Supabase insert error:', error)
         throw error
       }
 
+      console.log('[AISystemsPage] Supabase insert successful:', data)
+
       // Trigger reload of AI systems
       await reloadAISystems()
+      console.log('[AISystemsPage] AI systems reloaded')
     } catch (error) {
-      console.error('Failed to create system:', error)
+      console.error('[AISystemsPage] Failed to create system:', error)
     }
   }
 
@@ -278,14 +332,15 @@ export function AISystemsPage() {
       // Ensure authenticated
       await ensureAuthenticated()
 
-      // Get the AccessTokenStorage to fetch key details
-      const { AccessTokenStorage } = await import('@/features/settings/layouts/access-token/lib/access-token-storage')
-      const storage = new AccessTokenStorage()
-      const primaryKey = (await storage.getAPIKeys(selectedProviderType)).find(k => k.id === primaryKeyId)
+      // Get the primary key details from Supabase Vault
+      const { SecureAPIKeyService } = await import('@/lib/supabase/secure-api-key-service')
+      const primaryKey = await SecureAPIKeyService.getAPIKey(primaryKeyId)
 
       if (!primaryKey) {
         throw new Error('Primary API key not found')
       }
+
+      console.log('Assigning API keys:', { primaryKeyId, selectedKeyIds, primaryKeyName: primaryKey.name })
 
       // Update all selected systems with the new API keys
       const updates = selectedRows.map(async (systemId) => {
@@ -313,6 +368,7 @@ export function AISystemsPage() {
           .eq('id', systemId)
 
         if (error) throw error
+        console.log('✅ Updated AI system with API keys:', systemId)
       })
 
       await Promise.all(updates)
@@ -337,7 +393,7 @@ export function AISystemsPage() {
 
   // Check if selected systems have different providers
   const selectedSystems = aiSystems.filter(system => selectedRows.includes(system.id))
-  const providerTypes = [...new Set(selectedSystems.map(system => system.icon))]
+  const providerTypes = [...new Set(selectedSystems.map(system => system.providerId))]
   const hasDifferentProviders = providerTypes.length > 1
 
   // Define bulk actions with conditional disable for API key assignment

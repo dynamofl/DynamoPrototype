@@ -21,6 +21,8 @@ import {
 import { KeyRound, Loader2, CheckCircle, XCircle, Trash2, Plus } from 'lucide-react'
 import type { TableRow } from '@/types/table'
 import { createAndStoreAPIKey } from '@/features/ai-systems/lib/api-integration'
+import { getProviderKeyPlaceholder, type ProviderType } from '@/features/ai-systems/lib/provider-validation'
+import { SecureAPIKeyService } from '@/lib/supabase/secure-api-key-service'
 
 export interface APIKeyEditSheetProps {
   open: boolean
@@ -30,24 +32,6 @@ export interface APIKeyEditSheetProps {
   onAPIKeyUpdated: (provider: TableRow, apiKey: string) => void
   onAPIKeyDeleted: (provider: TableRow) => void
 }
-
-// Provider-specific format validation
-const getProviderFormatError = (provider: string, apiKey: string): string | null => {
-  if (provider === "OpenAI" && !apiKey.startsWith("sk-")) {
-    return 'OpenAI API keys must start with "sk-"';
-  } else if (provider === "Anthropic" && !apiKey.startsWith("sk-ant-")) {
-    return 'Anthropic API keys must start with "sk-ant-"';
-  } else if (provider === "Azure OpenAI" && apiKey.length < 20) {
-    return "Azure OpenAI API keys must be at least 20 characters long";
-  } else if (provider === "Mistral" && apiKey.length < 30) {
-    return "Mistral API keys must be at least 30 characters long";
-  } else if (provider === "AWS Bedrock" && apiKey.length < 20) {
-    return "AWS Bedrock API keys must be at least 20 characters long";
-  } else if (provider === "Databricks" && apiKey.length < 20) {
-    return "Databricks API keys must be at least 20 characters long";
-  }
-  return null;
-};
 
 
 export function APIKeyEditSheet({ 
@@ -63,11 +47,13 @@ export function APIKeyEditSheet({
   const [_showKeys, _setShowKeys] = useState<Record<string, boolean>>({})
   const [isValidating, setIsValidating] = useState(false)
   const [validationStatus, setValidationStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [validationError, setValidationError] = useState('')
   const [isAddingNewKey, setIsAddingNewKey] = useState(false)
   const [newKeyForm, setNewKeyForm] = useState({ name: '', key: '' })
   const [isValidatingNewKey, setIsValidatingNewKey] = useState(false)
   const [newKeyValidationStatus, setNewKeyValidationStatus] = useState<'idle' | 'success' | 'error'>('idle')
-  
+  const [newKeyValidationError, setNewKeyValidationError] = useState('')
+
   // Field-specific error states for new key form
   const [newKeyFieldErrors, setNewKeyFieldErrors] = useState({
     apiKeyName: '',
@@ -85,12 +71,40 @@ export function APIKeyEditSheet({
 
   // Load API keys when provider changes
   useEffect(() => {
-    if (provider && storage) {
+    if (provider) {
       const loadKeys = async () => {
         console.log('Loading API keys for provider:', provider.provider)
-        const keys = await storage.getAPIKeys(provider.provider)
-        console.log('Loaded keys:', keys)
-        setApiKeys(keys)
+
+        try {
+          // Map provider name to lowercase for Supabase
+          const providerTypeMap: Record<string, string> = {
+            'OpenAI': 'openai',
+            'Anthropic': 'anthropic',
+            'Mistral': 'mistral',
+            'Cohere': 'cohere',
+            'Google': 'google'
+          };
+          const vaultProviderType = providerTypeMap[provider.provider] || provider.provider.toLowerCase();
+
+          // Load keys from Supabase Vault
+          const vaultKeys = await SecureAPIKeyService.listAPIKeys()
+          const providerKeys = vaultKeys
+            .filter(key => key.provider === vaultProviderType)
+            .map(key => ({
+              id: key.id,
+              name: key.name,
+              key: `${key.keyPrefix}••••••${key.keySuffix}`, // Masked key for display
+              createdAt: key.createdAt
+            }))
+
+          console.log('Loaded keys from Supabase:', providerKeys)
+          setApiKeys(providerKeys)
+        } catch (error) {
+          console.error('Failed to load API keys:', error)
+          // Fallback to empty array if there's an error
+          setApiKeys([])
+        }
+
         setEditingKey(null)
         setValidationStatus('idle')
         // Reset add new key mode when opening
@@ -98,7 +112,7 @@ export function APIKeyEditSheet({
       }
       loadKeys()
     }
-  }, [provider, storage])
+  }, [provider])
 
   const _toggleKeyVisibility = (keyId: string) => {
     _setShowKeys(prev => ({
@@ -110,6 +124,7 @@ export function APIKeyEditSheet({
   const _handleEditKey = (key: { id: string; name: string; key: string }) => {
     setEditingKey({ ...key })
     setValidationStatus('idle')
+    setValidationError('')
   }
 
   const handleSaveKey = async () => {
@@ -166,14 +181,28 @@ export function APIKeyEditSheet({
   }
 
   const confirmDeleteKey = async () => {
-    if (!provider || !storage || !deleteConfirmDialog.keyId) return
-    
-    await storage.deleteAPIKey(provider.provider, deleteConfirmDialog.keyId)
-    setApiKeys(prev => prev.filter(k => k.id !== deleteConfirmDialog.keyId))
-    if (editingKey?.id === deleteConfirmDialog.keyId) {
-      setEditingKey(null)
+    if (!provider || !deleteConfirmDialog.keyId) return
+
+    try {
+      // Delete from Supabase Vault (this will also delete from database)
+      await SecureAPIKeyService.deleteAPIKey(deleteConfirmDialog.keyId)
+      console.log('✅ API key deleted from Supabase Vault')
+
+      // Also remove from localStorage for backward compatibility
+      if (storage) {
+        await storage.deleteAPIKey(provider.provider, deleteConfirmDialog.keyId)
+      }
+
+      // Update UI state
+      setApiKeys(prev => prev.filter(k => k.id !== deleteConfirmDialog.keyId))
+      if (editingKey?.id === deleteConfirmDialog.keyId) {
+        setEditingKey(null)
+      }
+      onAPIKeyDeleted(provider)
+    } catch (error) {
+      console.error('Failed to delete API key:', error)
+      alert('Failed to delete API key. Please try again.')
     }
-    onAPIKeyDeleted(provider)
 
     // Close the dialog
     setDeleteConfirmDialog({
@@ -194,12 +223,14 @@ export function APIKeyEditSheet({
   const handleCancelEdit = () => {
     setEditingKey(null)
     setValidationStatus('idle')
+    setValidationError('')
   }
 
   const handleAddNewKey = () => {
     setIsAddingNewKey(true)
     setNewKeyForm({ name: '', key: '' })
     setNewKeyValidationStatus('idle')
+    setNewKeyValidationError('')
     setNewKeyFieldErrors({ apiKeyName: '', apiKeyValue: '' })
   }
 
@@ -208,6 +239,7 @@ export function APIKeyEditSheet({
     setIsAddingNewKey(false)
     setNewKeyForm({ name: '', key: '' })
     setNewKeyValidationStatus('idle')
+    setNewKeyValidationError('')
     setNewKeyFieldErrors({ apiKeyName: '', apiKeyValue: '' })
   }
 
@@ -228,12 +260,7 @@ export function APIKeyEditSheet({
       return
     }
 
-    // Provider-specific format validation
-    const formatError = getProviderFormatError(provider.provider, newKeyForm.key.trim())
-    if (formatError) {
-      setNewKeyFieldErrors(prev => ({ ...prev, apiKeyValue: formatError }))
-      return
-    }
+    // Provider-specific format validation is now handled in createAndStoreAPIKey
 
     setIsValidatingNewKey(true)
     setNewKeyValidationStatus('idle')
@@ -466,11 +493,11 @@ export function APIKeyEditSheet({
                       </div>
                     )}
 
-                    {newKeyValidationStatus === "error" && (
+                    {newKeyValidationStatus === "error" && newKeyValidationError && (
                       <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-md">
                         <XCircle className="h-4 w-4 text-red-600" />
                         <span className="text-[0.8125rem]  text-red-800">
-                          API key validation failed
+                          {newKeyValidationError}
                         </span>
                       </div>
                     )}
@@ -508,11 +535,17 @@ export function APIKeyEditSheet({
                         />
                       </div>
 
-                      {/* Success Status */}
+                      {/* Validation Status */}
                       {validationStatus === 'success' && (
                         <div className="flex items-center space-x-2 p-3 bg-green-50 border border-green-200 rounded-md">
                           <CheckCircle className="h-4 w-4 text-green-600" />
                           <span className="text-[0.8125rem]  text-green-800">API key updated successfully!</span>
+                        </div>
+                      )}
+                      {validationStatus === 'error' && validationError && (
+                        <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-md">
+                          <XCircle className="h-4 w-4 text-red-600" />
+                          <span className="text-[0.8125rem]  text-red-800">{validationError}</span>
                         </div>
                       )}
                     </div>

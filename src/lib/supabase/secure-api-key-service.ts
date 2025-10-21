@@ -24,7 +24,7 @@ export interface APIKeyMetadata {
 
 export interface StoreAPIKeyRequest {
   name: string;
-  provider: 'openai' | 'anthropic';
+  provider: 'openai' | 'anthropic' | 'mistral' | 'cohere' | 'google';
   apiKey: string;
   expiresAt?: string;
 }

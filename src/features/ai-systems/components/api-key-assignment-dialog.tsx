@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
-import { AccessTokenStorage } from '@/features/settings/layouts/access-token/lib/access-token-storage'
+import { SecureAPIKeyService } from '@/lib/supabase/secure-api-key-service'
 import { KeyRound, Plus, Eye, EyeOff } from 'lucide-react'
 
 export interface APIKeyAssignmentDialogProps {
@@ -80,9 +80,35 @@ export function APIKeyAssignmentDialog({
   }, [open, providerType, selectedSystems])
 
   const loadApiKeys = async () => {
-    const storage = new AccessTokenStorage()
-    const keys = await storage.getAPIKeys(providerType)
-    setAvailableApiKeys(keys)
+    try {
+      // Map provider display name to lowercase for Supabase
+      const providerTypeMap: Record<string, string> = {
+        'OpenAI': 'openai',
+        'Anthropic': 'anthropic',
+        'Mistral': 'mistral',
+        'Mistral AI': 'mistral',
+        'Cohere': 'cohere',
+        'Google': 'google'
+      }
+      const vaultProviderType = providerTypeMap[providerType] || providerType.toLowerCase()
+
+      // Load keys from Supabase Vault
+      const vaultKeys = await SecureAPIKeyService.listAPIKeys()
+      const providerKeys = vaultKeys
+        .filter(key => key.provider === vaultProviderType)
+        .map(key => ({
+          id: key.id,
+          name: key.name,
+          key: key.masked, // Use masked key for display
+          createdAt: key.createdAt
+        }))
+
+      console.log('Loaded API keys from Supabase for provider:', vaultProviderType, providerKeys)
+      setAvailableApiKeys(providerKeys)
+    } catch (error) {
+      console.error('Failed to load API keys:', error)
+      setAvailableApiKeys([])
+    }
   }
 
   const checkSharedConfiguration = () => {
@@ -200,8 +226,25 @@ export function APIKeyAssignmentDialog({
     setIsValidating(true)
 
     try {
-      const storage = new AccessTokenStorage()
-      const createdKey = await storage.addAPIKey(providerType, newAPIKey.name, newAPIKey.key)
+      // Map provider display name to lowercase for Supabase
+      const providerTypeMap: Record<string, string> = {
+        'OpenAI': 'openai',
+        'Anthropic': 'anthropic',
+        'Mistral': 'mistral',
+        'Mistral AI': 'mistral',
+        'Cohere': 'cohere',
+        'Google': 'google'
+      }
+      const vaultProviderType = providerTypeMap[providerType] || providerType.toLowerCase()
+
+      // Create API key in Supabase Vault
+      const createdKey = await SecureAPIKeyService.storeAPIKey({
+        name: newAPIKey.name.trim(),
+        provider: vaultProviderType as 'openai' | 'anthropic' | 'mistral' | 'cohere' | 'google',
+        apiKey: newAPIKey.key.trim()
+      })
+
+      console.log('✅ API key created in Supabase Vault:', createdKey.id)
 
       // Reload keys
       await loadApiKeys()
@@ -218,9 +261,10 @@ export function APIKeyAssignmentDialog({
       setNewAPIKey({ name: '', key: '', showKey: false })
       setShowAddKeyForm(false)
     } catch (error) {
+      console.error('Failed to create API key:', error)
       setFieldErrors(prev => ({
         ...prev,
-        apiKeyValue: 'Failed to create API key. Please try again.'
+        apiKeyValue: error instanceof Error ? error.message : 'Failed to create API key. Please try again.'
       }))
     } finally {
       setIsValidating(false)

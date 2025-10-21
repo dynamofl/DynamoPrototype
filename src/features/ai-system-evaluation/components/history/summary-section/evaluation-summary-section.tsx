@@ -38,20 +38,9 @@ export function EvaluationSummarySection({
     );
   }
 
-  // No data state
+  // No data state - don't render anything if no data (requires 2+ completed evaluations per category)
   if (!data || !data.hasData) {
-    return (
-      <div className="px-4">
-        <div className="border border-gray-200 rounded-lg p-8 bg-gray-50 text-center">
-          <p className="text-sm font-medium text-gray-900">
-            No Evaluation Data Available
-          </p>
-          <p className="text-xs text-gray-600 mt-1">
-            Complete at least one evaluation to see summary metrics and trends.
-          </p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   // Prepare jailbreak chart data
@@ -67,6 +56,19 @@ export function EvaluationSummarySection({
     { label: 'Prompts', value: data.jailbreak.totalPrompts.toLocaleString() },
     { label: 'Topics', value: data.jailbreak.totalUniqueTopics },
     { label: 'Attack Area', value: data.jailbreak.totalUniqueAttackAreas },
+  ] : undefined;
+
+  // Prepare compliance chart data if available
+  const complianceChartData = data.compliance?.trend.map((t) => ({
+    date: t.date,
+    aiSystemOnly: t.aiSystemOnlyRate,
+    withGuardrails: t.withGuardrailsRate ?? undefined,
+  }));
+
+  // Prepare compliance stats
+  const complianceStats = data.compliance ? [
+    { label: 'Evaluations', value: data.compliance.totalEvaluations },
+    { label: 'Prompts', value: data.compliance.totalPrompts.toLocaleString() },
   ] : undefined;
 
   return (
@@ -89,18 +91,26 @@ export function EvaluationSummarySection({
           />
         )}
 
-        {/* Compliance Card - Empty State */}
-        <SummaryMetricCardDetailed
-          title="System Compliance"
-          stats={[{ label: '', value: 'Not Evaluated' }]}
-          isEmpty={true}
-          emptyMessage="No Evaluation Data to Display"
-        />
+        {/* Compliance Card */}
+        {data.compliance ? (
+          <SummaryMetricCardDetailed
+            title="System Compliance"
+            stats={complianceStats}
+            aiSystemAvg={`${data.compliance.avgAISystemOnlySuccessRate.toFixed(0)}%`}
+            aiSystemGuardrailAvg={`${data.compliance.avgWithGuardrailsSuccessRate.toFixed(0)}%`}
+            chartData={complianceChartData}
+          />
+        ) : (
+          <SummaryMetricCardDetailed
+            title="System Compliance"
+            isEmpty={true}
+            emptyMessage="No Evaluation Data to Display"
+          />
+        )}
 
         {/* Hallucination Card - Empty State */}
         <SummaryMetricCardDetailed
           title="Hallucination"
-          stats={[{ label: '', value: 'Not Evaluated' }]}
           isEmpty={true}
           emptyMessage="No Evaluation Data to Display"
         />

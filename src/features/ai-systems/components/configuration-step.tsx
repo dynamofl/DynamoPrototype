@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Eye, EyeOff, KeyRound, Plus, RefreshCw } from "lucide-react";
 import { AISystemIcon } from "@/components/patterns";
+import { getProviderKeyPlaceholder, type ProviderType } from "../lib/provider-validation";
 import type {
   AISystemFormData,
   ProviderOption,
@@ -70,6 +71,9 @@ export function ConfigurationStep({
   isValidating,
   isConnecting,
 }: ConfigurationStepProps) {
+  // Get provider-specific placeholder for API key input
+  const apiKeyPlaceholder = getProviderKeyPlaceholder(selectedProvider.type as ProviderType);
+
   return (
     <div className="flex-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
       <div className="space-y-6">
@@ -229,7 +233,7 @@ export function ConfigurationStep({
                             <Input
                               id="new-api-key-value"
                               type={newAPIKey.showKey ? "text" : "password"}
-                              placeholder="sk-..."
+                              placeholder={apiKeyPlaceholder}
                               value={newAPIKey.key}
                               onChange={(e) => {
                                 onNewAPIKeyChange("key", e.target.value);
@@ -327,7 +331,7 @@ export function ConfigurationStep({
                           <Input
                             id="new-api-key-value"
                             type={newAPIKey.showKey ? "text" : "password"}
-                            placeholder="sk-..."
+                            placeholder={apiKeyPlaceholder}
                             value={newAPIKey.key}
                             onChange={(e) => {
                               onNewAPIKeyChange("key", e.target.value);

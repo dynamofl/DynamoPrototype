@@ -16,7 +16,7 @@ import type {
 } from "../types";
 import {
   getProvidersWithAPIKeys,
-  fetchModelsFromOpenAI,
+  fetchModelsFromProvider,
   createAndStoreAPIKey,
 } from "../lib";
 
@@ -147,8 +147,8 @@ export function AISystemCreateSheet({
     try {
       const currentProvider = provider || selectedProvider;
       const apiKey = currentProvider?.apiKeys.find(ak => ak.id === apiKeyId);
-      if (apiKey) {
-        const models = await fetchModelsFromOpenAI(apiKey.key);
+      if (apiKey && currentProvider) {
+        const models = await fetchModelsFromProvider(currentProvider.type, apiKey.key);
         setAvailableModels(models);
       }
     } catch (error) {
@@ -181,11 +181,7 @@ export function AISystemCreateSheet({
       return;
     }
 
-    if (!newAPIKey.key.startsWith("sk-")) {
-      setFieldErrors(prev => ({ ...prev, apiKeyValue: 'OpenAI API keys must start with "sk-"' }));
-      return;
-    }
-
+    // Provider-specific validation is now handled in createAndStoreAPIKey
     setIsValidating(true);
 
     try {
@@ -316,8 +312,8 @@ export function AISystemCreateSheet({
       // Get the primary API key for the system
       const primaryKey = selectedProvider!.apiKeys.find(ak => ak.id === primaryAPIKey);
 
-      const newSystem = {
-        id: Date.now().toString(),
+      const newSystem: any = {
+        id: crypto.randomUUID(),
         name: formData.name.trim(),
         createdAt: new Date().toLocaleDateString("en-US", {
           month: "short",
@@ -335,6 +331,8 @@ export function AISystemCreateSheet({
         selectedAPIKeys: selectedAPIKeys, // Store all selected API keys
         selectedModel: selectedModel,
         modelDetails: selectedModelDetails,
+        hasValidAPIKey: true, // API key was just validated
+        lastValidated: Date.now(), // Timestamp of validation
         isExpanded: false,
       };
 

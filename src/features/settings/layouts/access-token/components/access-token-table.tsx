@@ -1,5 +1,6 @@
 /**
  * Access Token table component using flat table structure
+ * Now fetches dynamic data from Supabase backend
  */
 
 import { useState, useEffect } from 'react'
@@ -14,7 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { AccessTokenStorage } from '../lib/access-token-storage'
+import { fetchProviderStatistics } from '../lib/provider-statistics-service'
 
 interface AccessTokenData {
   id: string
@@ -32,13 +33,15 @@ interface AccessTokenTableProps {
 }
 
 // Map provider names to AISystemIcon types
-const providerIconMap: Record<string, 'OpenAI' | 'Azure' | 'Mistral' | 'Databricks' | 'HuggingFace' | 'Anthropic' | 'Remote' | 'Local' | 'AWS' | 'DynamoAI'> = {
+const providerIconMap: Record<string, 'OpenAI' | 'Azure' | 'Mistral' | 'Databricks' | 'HuggingFace' | 'Anthropic' | 'Remote' | 'Local' | 'AWS' | 'DynamoAI' | 'Gemini'> = {
   'OpenAI': 'OpenAI',
   'Azure OpenAI': 'Azure',
   'Databricks': 'Databricks',
   'Mistral': 'Mistral',
   'AWS Bedrock': 'AWS',
-  'Anthropic': 'Anthropic'
+  'Anthropic': 'Anthropic',
+  'Hugging Face': 'HuggingFace',
+  'Gemini': 'Gemini'
 }
 
 export function AccessTokenTable({
@@ -49,14 +52,26 @@ export function AccessTokenTable({
   const [data, setData] = useState<AccessTokenData[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  // Load data
+  // Load data dynamically from Supabase
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true)
-      const storage = new AccessTokenStorage()
-      const providers = await storage.load()
-      setData(providers as AccessTokenData[])
-      setIsLoading(false)
+      try {
+        const statistics = await fetchProviderStatistics()
+
+        // Add unique IDs for table rows
+        const dataWithIds = statistics.map((stat, index) => ({
+          id: `provider-${index}`,
+          ...stat
+        }))
+
+        setData(dataWithIds)
+      } catch (error) {
+        console.error('[AccessTokenTable] Failed to load provider statistics:', error)
+        setData([])
+      } finally {
+        setIsLoading(false)
+      }
     }
     loadData()
   }, [refreshTrigger])
@@ -111,13 +126,13 @@ export function AccessTokenTable({
                 </div>
               </TableCell>
               <TableCell>
-                <span className="text-[0.8125rem]  text-gray-900">
-                  {provider.availableKeys === 0 ? '-' : provider.availableKeys}
+                <span className="text-[0.8125rem] text-gray-900">
+                  {provider.availableKeys || '-'}
                 </span>
               </TableCell>
               <TableCell>
-                <span className="text-[0.8125rem]  text-gray-900">
-                  {provider.aiSystemUsage === 0 ? '-' : provider.aiSystemUsage}
+                <span className="text-[0.8125rem] text-gray-900">
+                  {provider.aiSystemUsage || '-'}
                 </span>
               </TableCell>
               <TableCell>

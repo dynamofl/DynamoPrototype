@@ -107,10 +107,12 @@ export function BulkActionBar({
                       return (
                         <Tooltip key={action.key}>
                           <TooltipTrigger asChild>
-                            {button}
+                            <span className="inline-flex">
+                              {button}
+                            </span>
                           </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{action.disabledTooltip}</p>
+                          <TooltipContent side="top" className="max-w-xs">
+                            <p className="text-xs">{action.disabledTooltip}</p>
                           </TooltipContent>
                         </Tooltip>
                       )

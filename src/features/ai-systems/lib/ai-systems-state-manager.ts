@@ -4,10 +4,8 @@
  */
 
 import type { AISystem } from '../types'
-import { AccessTokenStorage } from '@/features/settings/layouts/access-token/lib/access-token-storage'
-
-// Initialize access token storage
-const accessTokenStorage = new AccessTokenStorage()
+import { SecureAPIKeyService } from '@/lib/supabase/secure-api-key-service'
+import { supabase } from '@/lib/supabase/client'
 
 export class AISystemsStateManager {
   private static instance: AISystemsStateManager
@@ -26,13 +24,23 @@ export class AISystemsStateManager {
    */
   private async validateAPIKey(apiKeyId: string, providerId: string): Promise<boolean> {
     try {
-      const allAPIKeys = await accessTokenStorage.getAllAPIKeys()
-      
-      const matchingKey = allAPIKeys.find(apiKey => 
-        apiKey.id === apiKeyId && 
-        apiKey.provider.toLowerCase() === providerId.toLowerCase()
+      // Map provider names to lowercase for consistency
+      const providerTypeMap: Record<string, string> = {
+        'OpenAI': 'openai',
+        'Anthropic': 'anthropic',
+        'Mistral': 'mistral',
+        'Cohere': 'cohere',
+        'Google': 'google'
+      };
+      const normalizedProvider = providerTypeMap[providerId] || providerId.toLowerCase();
+
+      const allAPIKeys = await SecureAPIKeyService.listAPIKeys()
+
+      const matchingKey = allAPIKeys.find(apiKey =>
+        apiKey.id === apiKeyId &&
+        apiKey.provider === normalizedProvider
       )
-      
+
       return !!matchingKey
     } catch (error) {
       console.error('Failed to validate API key:', error)
@@ -79,12 +87,67 @@ export class AISystemsStateManager {
 
   /**
    * Enhance multiple AI systems with validation state
+   * Also updates the database to keep config.status in sync
    */
   async enhanceAISystems(systems: AISystem[]): Promise<AISystem[]> {
     const enhancedSystems = await Promise.all(
       systems.map(system => this.enhanceAISystem(system))
     )
+
+    // Update database with computed status to keep it in sync
+    await this.syncStatusToDatabase(enhancedSystems)
+
     return enhancedSystems
+  }
+
+  /**
+   * Sync computed status back to database
+   * Updates config.status field to match the validated hasValidAPIKey state
+   */
+  private async syncStatusToDatabase(systems: AISystem[]): Promise<void> {
+    try {
+      // Batch update all systems that need status changes
+      const updates = systems.map(async (system) => {
+        const computedStatus = system.hasValidAPIKey ? 'connected' : 'disconnected'
+
+        // Fetch current config to preserve other fields
+        const { data: currentSystem, error: fetchError } = await supabase
+          .from('ai_systems')
+          .select('config')
+          .eq('id', system.id)
+          .single()
+
+        if (fetchError) {
+          console.error(`[StateManager] Failed to fetch config for ${system.name}:`, fetchError)
+          return
+        }
+
+        const currentConfig = currentSystem?.config || {}
+
+        // Only update if status has changed to avoid unnecessary writes
+        if (currentConfig.status !== computedStatus) {
+          console.log(`[StateManager] Syncing status for ${system.name}: ${currentConfig.status} -> ${computedStatus}`)
+
+          const { error } = await supabase
+            .from('ai_systems')
+            .update({
+              config: {
+                ...currentConfig,
+                status: computedStatus
+              }
+            })
+            .eq('id', system.id)
+
+          if (error) {
+            console.error(`[StateManager] Failed to sync status for ${system.name}:`, error)
+          }
+        }
+      })
+
+      await Promise.all(updates)
+    } catch (error) {
+      console.error('[StateManager] Failed to sync status to database:', error)
+    }
   }
 
   /**

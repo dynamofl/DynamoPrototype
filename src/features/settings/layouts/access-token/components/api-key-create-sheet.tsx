@@ -11,6 +11,7 @@ import { AISystemIcon } from "@/components/patterns/ui-patterns/ai-system-icon";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
 import type { TableRow } from "@/types/table";
 import { createAndStoreAPIKey } from "@/features/ai-systems/lib/api-integration";
+import { getProviderKeyPlaceholder, type ProviderType } from "@/features/ai-systems/lib/provider-validation";
 
 export interface APIKeyCreateSheetProps {
   open: boolean;
@@ -18,24 +19,6 @@ export interface APIKeyCreateSheetProps {
   provider: TableRow | null;
   onAPIKeyCreated: (provider: TableRow, name: string, apiKey: string) => void;
 }
-
-// Provider-specific format validation
-const getProviderFormatError = (provider: string, apiKey: string): string | null => {
-  if (provider === "OpenAI" && !apiKey.startsWith("sk-")) {
-    return 'OpenAI API keys must start with "sk-"';
-  } else if (provider === "Anthropic" && !apiKey.startsWith("sk-ant-")) {
-    return 'Anthropic API keys must start with "sk-ant-"';
-  } else if (provider === "Azure OpenAI" && apiKey.length < 20) {
-    return "Azure OpenAI API keys must be at least 20 characters long";
-  } else if (provider === "Mistral" && apiKey.length < 30) {
-    return "Mistral API keys must be at least 30 characters long";
-  } else if (provider === "AWS Bedrock" && apiKey.length < 20) {
-    return "AWS Bedrock API keys must be at least 20 characters long";
-  } else if (provider === "Databricks" && apiKey.length < 20) {
-    return "Databricks API keys must be at least 20 characters long";
-  }
-  return null;
-};
 
 export function APIKeyCreateSheet({
   open,
@@ -95,12 +78,7 @@ export function APIKeyCreateSheet({
       return;
     }
 
-    // Provider-specific format validation
-    const formatError = getProviderFormatError(provider.provider, formData.apiKey.trim());
-    if (formatError) {
-      setFieldErrors(prev => ({ ...prev, apiKeyValue: formatError }));
-      return;
-    }
+    // Provider-specific format validation is now handled in createAndStoreAPIKey
 
     setIsValidating(true);
     setValidationStatus("idle");

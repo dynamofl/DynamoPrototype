@@ -1,9 +1,12 @@
 import type { GuardrailJudgement, ModelJudgement, AttackOutcome } from '../types/jailbreak-evaluation';
-import { APIKeyStorage, SecureStorage } from '@/lib/storage/secure-storage';
+import { SecureStorage } from '@/lib/storage/secure-storage';
 import { evaluatePromptAgainstGuardrails } from '@/features/guardrails/lib/guardrail';
 import { EvaluationModelStorage } from '@/features/settings/lib/evaluation-model-storage';
-import { getApiKeyForUsage, getModelIdForUsage } from '@/features/settings/lib/model-assignment-helper';
+import { getModelIdForUsage } from '@/features/settings/lib/model-assignment-helper';
 import type { Guardrail } from '@/types';
+import { createProviderChatCompletion } from '@/features/ai-systems/lib/provider-services';
+import type { ProviderType } from '@/features/ai-systems/lib/provider-validation';
+import { supabase } from '@/lib/supabase/client';
 
 interface AIProvider {
   id: string;
@@ -20,6 +23,8 @@ interface AISystem {
   providerId: string;
   apiKeyId: string;
   selectedModel: string;
+  provider?: string; // Supabase format uses 'provider' instead of 'providerId'
+  model?: string; // Supabase format uses 'model' instead of 'selectedModel'
 }
 
 // OpenAI client creator
@@ -51,45 +56,73 @@ const createOpenAIClient = (apiKey: string) => {
 
 /**
  * Send adversarial prompt to the target AI system and get response
- * Uses the model assigned for Test Execution
+ * Uses the AI system's own provider and model configuration
  */
 export async function sendToSystem(
   prompt: string,
   aiSystemId: string
 ): Promise<string> {
-  // Get AI system to retrieve model name
-  const aiSystemsData = SecureStorage.getItem('dynamo-ai-systems');
-  const aiSystems: AISystem[] = aiSystemsData ? JSON.parse(aiSystemsData) : [];
-  const aiSystem = aiSystems.find(s => s.id === aiSystemId);
+  // Fetch AI system from Supabase
+  const { data: aiSystemData, error: fetchError } = await supabase
+    .from('ai_systems')
+    .select('*')
+    .eq('id', aiSystemId)
+    .single();
 
-  if (!aiSystem) {
-    console.error('Available AI Systems:', aiSystems.map(s => ({ id: s.id, name: s.name })));
-    throw new Error(`AI System with ID ${aiSystemId} not found. Available systems: ${aiSystems.length}`);
+  if (fetchError || !aiSystemData) {
+    throw new Error(`AI System with ID ${aiSystemId} not found in database.`);
   }
 
-  // Get API key and model from Test Execution assignment
-  const apiKey = getApiKeyForUsage('testExecution');
-  const client = createOpenAIClient(apiKey);
+  // Extract provider and model from Supabase data
+  const providerType = aiSystemData.provider as ProviderType;
+  const modelId = aiSystemData.model;
+  const apiKeyId = aiSystemData.config?.apiKeyId;
+  const systemName = aiSystemData.name;
 
-  // Use the model from the AI system
-  const modelId = aiSystem.selectedModel;
+  if (!providerType) {
+    throw new Error(`No provider configured for AI System "${systemName}".`);
+  }
+
   if (!modelId) {
-    throw new Error(`No model configured for AI System "${aiSystem.name}". Please configure a model in the AI Systems page.`);
+    throw new Error(`No model configured for AI System "${systemName}". Please configure a model in the AI Systems page.`);
+  }
+
+  if (!apiKeyId) {
+    throw new Error(`No API key configured for AI System "${systemName}".`);
+  }
+
+  // Retrieve the actual API key from secure storage
+  const apiKeysData = SecureStorage.getItem('dynamo-api-keys');
+  const apiKeys = apiKeysData ? JSON.parse(apiKeysData) : [];
+  const apiKeyEntry = apiKeys.find((k: any) => k.id === apiKeyId);
+
+  if (!apiKeyEntry) {
+    throw new Error(`API key not found for AI System "${systemName}". The key may have been deleted.`);
   }
 
   try {
-    const response = await client.chat.completions.create({
-      model: modelId,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7,
-      max_tokens: 500
-    });
+    // Use provider-agnostic chat completion
+    const response = await createProviderChatCompletion(
+      providerType,
+      apiKeyEntry.key,
+      modelId,
+      [{ role: 'user', content: prompt }],
+      {
+        temperature: 0.7,
+        maxTokens: 500
+      }
+    );
 
-    return response.choices[0].message?.content || "";
+    return response.content;
   } catch (error) {
-    // If model not found, provide helpful error
-    if (error instanceof Error && error.message.includes('model')) {
-      throw new Error(`Model "${modelId}" not available with the Test Execution API key. Please check your Test Execution model assignment in Settings → Internal Models.`);
+    // Provide helpful error messages
+    if (error instanceof Error) {
+      if (error.message.includes('model')) {
+        throw new Error(`Model "${modelId}" not available with provider "${providerType}". Please check your AI System configuration.`);
+      }
+      if (error.message.includes('HTTP error')) {
+        throw new Error(`Failed to connect to ${providerType} API. Please check your API key and try again.`);
+      }
     }
     throw error;
   }

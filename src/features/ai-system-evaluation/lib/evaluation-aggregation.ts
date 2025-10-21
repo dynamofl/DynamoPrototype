@@ -1,7 +1,6 @@
 // Evaluation Aggregation Helper Functions
 // Aggregates metrics from multiple evaluations for summary visualization
 
-import { supabase } from '@/lib/supabase/client';
 import type { EvaluationTest } from '@/features/evaluation/types/evaluation-test';
 import type { JailbreakEvaluationSummary } from '../types/jailbreak-evaluation';
 import type { EvaluationSummaryData, EvaluationCategoryMetrics } from '../types/evaluation-summary';
@@ -67,8 +66,8 @@ export function aggregateEvaluationMetrics(
   const uniqueTopics = getUniqueTopicsForEvaluations(completedEvaluations);
   const uniqueAttackAreas = getUniqueAttackAreasForEvaluations(completedEvaluations);
 
-  // Process jailbreak evaluations
-  if (jailbreakEvaluations.length > 0) {
+  // Process jailbreak evaluations - only show if 2 or more completed evaluations
+  if (jailbreakEvaluations.length >= 2) {
     result.jailbreak = aggregateCategoryMetrics(
       jailbreakEvaluations,
       'jailbreak',
@@ -78,8 +77,8 @@ export function aggregateEvaluationMetrics(
     result.hasData = true;
   }
 
-  // Process compliance evaluations
-  if (complianceEvaluations.length > 0) {
+  // Process compliance evaluations - only show if 2 or more completed evaluations
+  if (complianceEvaluations.length >= 2) {
     result.compliance = aggregateCategoryMetrics(
       complianceEvaluations,
       'compliance',

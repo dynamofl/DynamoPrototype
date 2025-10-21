@@ -53,6 +53,17 @@ serve(async (req: Request) => {
       )
     }
 
+    // Anthropic keys should start with 'sk-ant-'
+    if (provider === 'anthropic' && !apiKey.startsWith('sk-ant-')) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid Anthropic API key format (must start with sk-ant-)' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Mistral keys validation (if needed)
+    // Mistral keys don't have a specific prefix pattern
+
     // Step 1: Validate the API key by testing it (skip for test keys)
     const isTestKey = apiKey.startsWith('sk-test-')
     let validationResult = { valid: true, error: '' }
@@ -190,9 +201,23 @@ async function validateAPIKey(provider: string, apiKey: string): Promise<{ valid
         const error = await response.json()
         return { valid: false, error: error.error?.message || 'Invalid API key' }
       }
+    } else if (provider === 'mistral') {
+      const response = await fetch('https://api.mistral.ai/v1/models', {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`
+        }
+      })
+
+      if (response.ok) {
+        return { valid: true }
+      } else {
+        const error = await response.json()
+        return { valid: false, error: error.message || 'Invalid API key' }
+      }
     }
 
-    return { valid: false, error: 'Unsupported provider' }
+    // For other providers, skip validation
+    return { valid: true }
   } catch (error) {
     return { valid: false, error: error.message }
   }

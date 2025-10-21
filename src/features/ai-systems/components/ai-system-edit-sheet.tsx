@@ -17,9 +17,10 @@ import type {
 } from "../types";
 import {
   getProvidersWithAPIKeys,
-  fetchModelsFromOpenAI,
+  fetchModelsFromProvider,
   createAndStoreAPIKey,
 } from "../lib";
+import { validateProviderKeyFormat, getProviderKeyPlaceholder, type ProviderType } from "../lib/provider-validation";
 
 export interface AISystemEditSheetProps {
   open: boolean;
@@ -27,24 +28,6 @@ export interface AISystemEditSheetProps {
   onAISystemUpdated: (system: AISystem) => void;
   aiSystem: AISystem | null;
 }
-
-// Provider-specific format validation
-const getProviderFormatError = (provider: string, apiKey: string): string | null => {
-  if (provider === "OpenAI" && !apiKey.startsWith("sk-")) {
-    return 'OpenAI API keys must start with "sk-"';
-  } else if (provider === "Anthropic" && !apiKey.startsWith("sk-ant-")) {
-    return 'Anthropic API keys must start with "sk-ant-"';
-  } else if (provider === "Azure OpenAI" && apiKey.length < 20) {
-    return "Azure OpenAI API keys must be at least 20 characters long";
-  } else if (provider === "Mistral" && apiKey.length < 30) {
-    return "Mistral API keys must be at least 30 characters long";
-  } else if (provider === "AWS Bedrock" && apiKey.length < 20) {
-    return "AWS Bedrock API keys must be at least 20 characters long";
-  } else if (provider === "Databricks" && apiKey.length < 20) {
-    return "Databricks API keys must be at least 20 characters long";
-  }
-  return null;
-};
 
 export function AISystemEditSheet({
   open,
@@ -151,8 +134,8 @@ export function AISystemEditSheet({
     try {
       const currentProviderToUse = provider || currentProvider;
       const apiKey = currentProviderToUse?.apiKeys.find(ak => ak.id === apiKeyId);
-      if (apiKey) {
-        const models = await fetchModelsFromOpenAI(apiKey.key);
+      if (apiKey && currentProviderToUse) {
+        const models = await fetchModelsFromProvider(currentProviderToUse.type, apiKey.key);
         setAvailableModels(models);
       }
     } catch (error) {
@@ -185,12 +168,8 @@ export function AISystemEditSheet({
       return;
     }
 
-    // Provider-specific format validation
-    const formatError = getProviderFormatError(currentProvider!.type, newAPIKey.key.trim());
-    if (formatError) {
-      setFieldErrors(prev => ({ ...prev, apiKeyValue: formatError }));
-      return;
-    }
+    // Provider-specific format validation (now handled in createAndStoreAPIKey)
+    // No need for manual validation here as it's centralized
 
     setIsValidating(true);
 

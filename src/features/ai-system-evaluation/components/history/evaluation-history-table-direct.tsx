@@ -74,7 +74,7 @@ function TestDuration({ test }: { test: EvaluationTest }) {
     const seconds = Math.floor((durationMs % 60000) / 1000)
 
     return (
-      <span className="text-amber-600">
+      <span className="text-gray-900">
         {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
       </span>
     )
@@ -177,7 +177,7 @@ export function EvaluationHistoryTableDirect({
             value={progressValue}
             size={16}
             strokeWidth={2}
-            color="text-amber-600"
+            color="text-blue-600"
           />
           <span>Running ({test.progress.current}/{test.progress.total})</span>
         </div>
@@ -192,7 +192,7 @@ export function EvaluationHistoryTableDirect({
       },
       running: {
         icon: Loader2,
-        color: 'text-amber-600',
+        color: 'text-blue-600',
         label: 'Running'
       },
       failed: {
