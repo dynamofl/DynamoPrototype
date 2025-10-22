@@ -89,6 +89,7 @@ export interface EvaluationPrompt {
   base_prompt: string;
   adversarial_prompt: ConversationTurn[] | { text: string } | any; // JSONB: array for multi-turn (TAP, IRIS) or object for single-turn
   attack_type: string;
+  transformation_type?: string; // NEW: Type of transformation applied (e.g., 'jailbreak', 'passthrough', 'demographic')
   behavior_type: string;
   status?: 'pending' | 'running' | 'completed' | 'failed';
 
@@ -143,6 +144,10 @@ export interface EvaluationConfig {
   guardrailIds: string[];
   temperature?: number;
   maxTokens?: number;
+  // NEW: Test type configuration (Layer 1 - base prompt generation)
+  testType?: 'jailbreak' | 'quality' | 'performance' | 'bias' | string;
+  // NEW: Evaluation type configuration (Layer 2 - transformation strategy)
+  evaluationType?: 'jailbreak' | 'quality' | 'performance' | 'bias' | string;
   [key: string]: any;
 }
 

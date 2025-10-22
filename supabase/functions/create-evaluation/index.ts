@@ -173,13 +173,14 @@ serve(async (req: Request) => {
           .eq('id', evaluation.id);
 
         // Generate prompts based on POLICIES ONLY (not guardrails)
-        // Pass evaluationId and supabase for real-time progress updates
+        // Pass evaluationId, supabase, and evaluation config for real-time progress updates
         const prompts = await generatePromptsFromPolicies(
           policyIds,
           guardrails,
           internalModels,
           evaluation.id,
-          supabase
+          supabase,
+          evaluation.config // Pass evaluation config for test type and evaluation type
         );
 
         if (prompts.length === 0) {
