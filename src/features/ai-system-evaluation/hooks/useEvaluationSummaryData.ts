@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import type { EvaluationTest } from '@/features/evaluation/types/evaluation-test';
 import type { EvaluationSummaryData } from '../types/evaluation-summary';
 import { aggregateEvaluationMetrics } from '../lib/evaluation-aggregation';
+import { EvaluationService } from '@/lib/supabase/evaluation-service';
 
 interface UseEvaluationSummaryDataResult {
   data: EvaluationSummaryData | null;
@@ -12,7 +13,8 @@ interface UseEvaluationSummaryDataResult {
 }
 
 export function useEvaluationSummaryData(
-  evaluations: EvaluationTest[]
+  evaluations: EvaluationTest[],
+  aiSystemName?: string
 ): UseEvaluationSummaryDataResult {
   const [data, setData] = useState<EvaluationSummaryData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -39,9 +41,20 @@ export function useEvaluationSummaryData(
           return;
         }
 
+        // Fetch globally unique topics and attack areas across ALL evaluations
+        let uniqueMetrics = { uniqueTopics: 0, uniqueAttackAreas: 0 };
+        if (aiSystemName) {
+          uniqueMetrics = await EvaluationService.getUniqueTopicsAndAttackAreas(aiSystemName);
+          console.log('📊 [SummaryData] Unique metrics across all evaluations:', uniqueMetrics);
+        }
+
         // OPTIMIZED: Aggregate metrics directly from evaluation objects
-        // No need to fetch from database - metrics are already in EvaluationTest objects
-        const summaryData = aggregateEvaluationMetrics(completedEvaluations);
+        // Pass the globally unique counts
+        const summaryData = aggregateEvaluationMetrics(
+          completedEvaluations,
+          uniqueMetrics.uniqueTopics,
+          uniqueMetrics.uniqueAttackAreas
+        );
 
         console.log('✅ [SummaryData] Summary data computed:', summaryData);
         setData(summaryData);
@@ -55,7 +68,7 @@ export function useEvaluationSummaryData(
     };
 
     fetchSummaryData();
-  }, [evaluations.length, JSON.stringify(evaluations.map(e => ({ id: e.id, status: e.status })))]);
+  }, [evaluations.length, JSON.stringify(evaluations.map(e => ({ id: e.id, status: e.status }))), aiSystemName]);
 
   return { data, loading, error };
 }

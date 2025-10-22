@@ -164,8 +164,23 @@ serve(async (req: Request) => {
 
         console.log(`🔄 [BACKGROUND] Generating prompts from ${policyIds.length} policies...`);
 
+        // Update evaluation status to show preparation starting
+        await supabase
+          .from('evaluations')
+          .update({
+            current_stage: 'Preparing to generate test prompts...'
+          })
+          .eq('id', evaluation.id);
+
         // Generate prompts based on POLICIES ONLY (not guardrails)
-        const prompts = await generatePromptsFromPolicies(policyIds, guardrails, internalModels);
+        // Pass evaluationId and supabase for real-time progress updates
+        const prompts = await generatePromptsFromPolicies(
+          policyIds,
+          guardrails,
+          internalModels,
+          evaluation.id,
+          supabase
+        );
 
         if (prompts.length === 0) {
           console.error('❌ [BACKGROUND] No prompts generated from selected policies');

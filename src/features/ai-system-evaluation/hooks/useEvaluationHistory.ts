@@ -71,6 +71,7 @@ export function useEvaluationHistory(aiSystem: AISystem | null) {
       const statusChanged = existing.status !== updatedEvaluation.status;
       const progressCurrentChanged = existing.progress?.current !== updatedEvaluation.completed_prompts;
       const progressTotalChanged = existing.progress?.total !== updatedEvaluation.total_prompts;
+      const currentStageChanged = existing.currentStage !== updatedEvaluation.current_stage;
       const completedAtChanged = existing.completedAt !== updatedEvaluation.completed_at;
 
       // Check if summary metric columns changed
@@ -80,7 +81,7 @@ export function useEvaluationHistory(aiSystem: AISystem | null) {
       const uniqueTopicsChanged = existing.uniqueTopics !== updatedEvaluation.unique_topics;
       const uniqueAttackAreasChanged = existing.uniqueAttackAreas !== updatedEvaluation.unique_attack_areas;
 
-      const hasChanges = statusChanged || progressCurrentChanged || progressTotalChanged || completedAtChanged ||
+      const hasChanges = statusChanged || progressCurrentChanged || progressTotalChanged || currentStageChanged || completedAtChanged ||
         aiSystemAttackSuccessRateChanged || aiSystemGuardrailAttackSuccessRateChanged ||
         guardrailSuccessRateChanged || uniqueTopicsChanged || uniqueAttackAreasChanged;
 
@@ -115,6 +116,7 @@ export function useEvaluationHistory(aiSystem: AISystem | null) {
         status: updatedEvaluation.status,
         startedAt: updatedEvaluation.started_at || existing.startedAt,
         completedAt: updatedEvaluation.completed_at,
+        currentStage: updatedEvaluation.current_stage,
         progress: {
           current: updatedEvaluation.completed_prompts || 0,
           total: updatedEvaluation.total_prompts || 0,

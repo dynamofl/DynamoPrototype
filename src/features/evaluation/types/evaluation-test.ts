@@ -16,6 +16,7 @@ export interface EvaluationTest {
     total: number;
     currentPrompt?: string;
   };
+  currentStage?: string; // Current stage of the evaluation (for progress tracking)
   metadata?: {
     evaluationData?: any; // Store original evaluation creation data for resuming
   };

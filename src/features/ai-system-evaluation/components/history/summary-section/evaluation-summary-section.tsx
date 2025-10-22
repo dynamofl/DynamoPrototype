@@ -8,12 +8,14 @@ import { SummaryMetricCardDetailed } from './summary-metric-card-detailed';
 
 interface EvaluationSummarySectionProps {
   evaluations: EvaluationTest[];
+  aiSystemName?: string;
 }
 
 export function EvaluationSummarySection({
   evaluations,
+  aiSystemName,
 }: EvaluationSummarySectionProps) {
-  const { data, loading, error } = useEvaluationSummaryData(evaluations);
+  const { data, loading, error } = useEvaluationSummaryData(evaluations, aiSystemName);
 
   // Loading state
   if (loading) {

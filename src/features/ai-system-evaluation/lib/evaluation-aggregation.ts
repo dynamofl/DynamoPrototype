@@ -28,9 +28,13 @@ export function getUniqueAttackAreasForEvaluations(
 /**
  * Aggregate metrics from multiple evaluations
  * OPTIMIZED: Uses pre-calculated metrics from evaluations table columns
+ * @param globalUniqueTopics - Global unique topics count across all evaluations (optional)
+ * @param globalUniqueAttackAreas - Global unique attack areas count across all evaluations (optional)
  */
 export function aggregateEvaluationMetrics(
-  evaluations: EvaluationTest[]
+  evaluations: EvaluationTest[],
+  globalUniqueTopics?: number,
+  globalUniqueAttackAreas?: number
 ): EvaluationSummaryData {
   // Filter completed evaluations only
   // Check for either new direct columns OR legacy summaryMetrics structure
@@ -62,9 +66,9 @@ export function aggregateEvaluationMetrics(
 
   const result: EvaluationSummaryData = { hasData: false };
 
-  // Calculate unique metrics from all completed evaluations
-  const uniqueTopics = getUniqueTopicsForEvaluations(completedEvaluations);
-  const uniqueAttackAreas = getUniqueAttackAreasForEvaluations(completedEvaluations);
+  // Use global unique counts if provided, otherwise calculate from evaluations
+  const uniqueTopics = globalUniqueTopics ?? getUniqueTopicsForEvaluations(completedEvaluations);
+  const uniqueAttackAreas = globalUniqueAttackAreas ?? getUniqueAttackAreasForEvaluations(completedEvaluations);
 
   // Process jailbreak evaluations - only show if 2 or more completed evaluations
   if (jailbreakEvaluations.length >= 2) {

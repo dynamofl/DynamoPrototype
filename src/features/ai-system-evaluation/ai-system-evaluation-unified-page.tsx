@@ -245,7 +245,7 @@ export function AISystemEvaluationUnifiedPage() {
       await new Promise(resolve => setTimeout(resolve, 300)); // Small delay to show loading state
 
       setEvaluationProgress({
-        stage: test.status === 'pending' ? 'Setting up test environment and preparing the prompts' : 'Running Evaluation',
+        stage: test.currentStage || (test.status === 'pending' ? 'Setting up test environment and preparing the prompts' : 'Running Evaluation'),
         current: test.progress?.current || 0,
         total: test.progress?.total || 100,
         message: test.progress?.currentPrompt || ''
@@ -390,6 +390,7 @@ export function AISystemEvaluationUnifiedPage() {
         setSelectedTest(prev => prev ? {
           ...prev,
           status: progress.status as any,
+          currentStage: progress.currentStage,
           progress: {
             current: progress.completed,
             total: progress.total,
@@ -402,6 +403,7 @@ export function AISystemEvaluationUnifiedPage() {
             ? {
                 ...test,
                 status: progress.status as any,
+                currentStage: progress.currentStage,
                 progress: {
                   current: progress.completed,
                   total: progress.total,
@@ -852,7 +854,10 @@ export function AISystemEvaluationUnifiedPage() {
                   />
 
                   {/* Evaluation Summary Section - Aggregated metrics across all evaluations */}
-                  <EvaluationSummarySection evaluations={evaluationHistory} />
+                  <EvaluationSummarySection
+                    evaluations={evaluationHistory}
+                    aiSystemName={aiSystem?.name}
+                  />
 
                   {/* Evaluation Table */}
                   <EvaluationHistoryTableDirect

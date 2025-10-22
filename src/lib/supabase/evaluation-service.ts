@@ -384,4 +384,81 @@ export class EvaluationService {
       throw new Error(`Failed to cancel evaluation: ${error.message}`);
     }
   }
+
+  /**
+   * Get unique topics and attack areas across all evaluations for an AI system
+   */
+  static async getUniqueTopicsAndAttackAreas(aiSystemName: string): Promise<{
+    uniqueTopics: number;
+    uniqueAttackAreas: number;
+  }> {
+    await ensureAuthenticated();
+
+    // Get the AI system to find its ID
+    const { data: aiSystem, error: aiSystemError } = await supabase
+      .from('ai_systems')
+      .select('id')
+      .eq('name', aiSystemName)
+      .single();
+
+    if (aiSystemError || !aiSystem) {
+      console.error('Failed to find AI system:', aiSystemError);
+      return { uniqueTopics: 0, uniqueAttackAreas: 0 };
+    }
+
+    // Get all evaluation IDs for this AI system
+    const { data: evaluations, error: evaluationsError } = await supabase
+      .from('evaluations')
+      .select('id')
+      .eq('ai_system_id', aiSystem.id);
+
+    if (evaluationsError || !evaluations || evaluations.length === 0) {
+      console.error('Failed to fetch evaluations or no evaluations found:', evaluationsError);
+      return { uniqueTopics: 0, uniqueAttackAreas: 0 };
+    }
+
+    const evaluationIds = evaluations.map(e => e.id);
+
+    // Query to get unique topics across all evaluations for this AI system
+    const { data: topicsData, error: topicsError } = await supabase
+      .from('evaluation_prompts')
+      .select('topic')
+      .in('evaluation_id', evaluationIds)
+      .not('topic', 'is', null);
+
+    if (topicsError) {
+      console.error('Failed to fetch topics:', topicsError);
+    }
+
+    // Query to get unique attack types across all evaluations for this AI system
+    const { data: attackTypesData, error: attackTypesError } = await supabase
+      .from('evaluation_prompts')
+      .select('attack_type')
+      .in('evaluation_id', evaluationIds)
+      .not('attack_type', 'is', null);
+
+    if (attackTypesError) {
+      console.error('Failed to fetch attack types:', attackTypesError);
+    }
+
+    // Count unique values
+    const uniqueTopics = topicsData
+      ? new Set(topicsData.map((row) => row.topic)).size
+      : 0;
+
+    const uniqueAttackAreas = attackTypesData
+      ? new Set(attackTypesData.map((row) => row.attack_type)).size
+      : 0;
+
+    console.log('📊 [getUniqueTopicsAndAttackAreas] Results:', {
+      aiSystemName,
+      evaluationCount: evaluations.length,
+      totalTopicRows: topicsData?.length || 0,
+      uniqueTopics,
+      totalAttackRows: attackTypesData?.length || 0,
+      uniqueAttackAreas
+    });
+
+    return { uniqueTopics, uniqueAttackAreas };
+  }
 }
