@@ -94,7 +94,7 @@ export function EvaluationResults({
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" onWheel={(e) => e.stopPropagation()}>
       {/* Header with Export */}
       <OverlayHeader
         title={

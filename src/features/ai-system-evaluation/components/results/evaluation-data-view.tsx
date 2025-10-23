@@ -400,7 +400,11 @@ export function EvaluationDataView({
                   const selectedRecord = displayData.find(record => (record as any).id === selectedConversationId)
                   return selectedRecord ? (
                     <div className="animate-in fade-in-0 slide-in-from-right-2 duration-300 h-full">
-                      <EvaluationConversationView record={selectedRecord} aiSystemName={aiSystemName} />
+                      <EvaluationConversationView
+                        key={selectedConversationId}
+                        record={selectedRecord as any}
+                        aiSystemName={aiSystemName}
+                      />
                     </div>
                   ) : (
                     <div className="flex items-center justify-center h-64 animate-in fade-in-0 duration-300">

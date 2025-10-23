@@ -63,6 +63,7 @@ export class JailbreakStrategy implements EvaluationStrategy {
         // Judge model (look in ai_system_response first, then fallback to judge_model)
         judgeModelJudgement: record.ai_system_response?.judgement || record.judge_model?.judgement || null,
         judgeModelReason: record.ai_system_response?.reason || record.judge_model?.reason || null,
+        judgeModelAnswerPhrases: record.ai_system_response?.answerPhrases || null,
 
         // Legacy fields for backward compatibility
         guardrailJudgement: record.input_guardrail?.judgement || record.output_guardrail?.judgement || 'Allowed',

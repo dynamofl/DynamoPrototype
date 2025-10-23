@@ -715,6 +715,7 @@ export function AISystemEvaluationUnifiedPage() {
             animate={{ opacity: 1, filter: "none", scaleY: 1 }}
             exit={{ opacity: 0, filter: "blur(10px)", scaleY: 0.98 }}
             transition={{ duration: 0.15, ease:easeInOut }}
+            onWheel={(e) => e.stopPropagation()}
           >
             <OverlayHeader
               title="New Evaluation"
@@ -744,6 +745,7 @@ export function AISystemEvaluationUnifiedPage() {
             animate={{ opacity: 1, filter: "none", scaleY: 1 }}
             exit={{ opacity: 0, filter: "blur(10px)", scaleY: 0.98 }}
             transition={{ duration: 0.15, ease: "easeInOut" }}
+            onWheel={(e) => e.stopPropagation()}
           >
             <OverlayHeader
               title={selectedTest.name}
@@ -781,6 +783,7 @@ export function AISystemEvaluationUnifiedPage() {
             animate={{ opacity: 1, filter: "none", scaleY: 1 }}
             exit={{ opacity: 0, filter: "blur(10px)", scaleY: 0.98 }}
             transition={{ duration: 0.15, ease: "easeInOut" }}
+            onWheel={(e) => e.stopPropagation()}
           >
             <OverlayHeader
               title={selectedTest.name}
@@ -820,6 +823,7 @@ export function AISystemEvaluationUnifiedPage() {
             animate={{ opacity: 1, filter: "none", scaleY: 1 }}
             exit={{ opacity: 0, filter: "blur(10px)", scaleY: 0.98 }}
             transition={{ duration: 0.15, ease: "easeInOut" }}
+            onWheel={(e) => e.stopPropagation()}
           >
             {loadingResults ? (
               /* Loading State */
