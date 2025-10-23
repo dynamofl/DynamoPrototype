@@ -56,13 +56,13 @@ export class ComplianceStrategy implements EvaluationStrategy {
       } : undefined,
       behavior_phrases: record.behavior_phrases,
 
-      // System response
-      systemResponse: record.ai_system_response?.content || record.system_response || '',
-      system_response: record.ai_system_response?.content || record.system_response || '',
+      // System response (from ai_system_response)
+      systemResponse: record.ai_system_response?.content || '',
+      system_response: record.ai_system_response?.content || '',
 
       // Judgement and outcome
-      complianceJudgement: record.ai_system_response?.judgement || null,
-      compliance_judgement: record.ai_system_response?.judgement || null,
+      complianceJudgement: record.ai_system_response?.judgement || record.compliance_judgement || null,
+      compliance_judgement: record.ai_system_response?.judgement || record.compliance_judgement || null,
       finalOutcome: record.final_outcome as FinalOutcome,
       final_outcome: record.final_outcome as FinalOutcome,
 
@@ -77,15 +77,17 @@ export class ComplianceStrategy implements EvaluationStrategy {
       outputGuardrailReason: record.output_guardrail?.reason || null,
       outputGuardrailDetails: record.output_guardrail?.details || null,
 
-      // Metrics
+      // Metrics (from ai_system_response)
       runtimeMs: record.runtime_ms,
       runtime_ms: record.runtime_ms,
-      inputTokens: record.ai_system_response?.input_tokens,
-      input_tokens: record.ai_system_response?.input_tokens,
-      outputTokens: record.ai_system_response?.output_tokens,
-      output_tokens: record.ai_system_response?.output_tokens,
-      totalTokens: (record.ai_system_response?.input_tokens || 0) + (record.ai_system_response?.output_tokens || 0),
-      total_tokens: (record.ai_system_response?.input_tokens || 0) + (record.ai_system_response?.output_tokens || 0)
+      inputTokens: record.ai_system_response?.inputTokens || record.input_tokens,
+      input_tokens: record.ai_system_response?.inputTokens || record.input_tokens,
+      outputTokens: record.ai_system_response?.outputTokens || record.output_tokens,
+      output_tokens: record.ai_system_response?.outputTokens || record.output_tokens,
+      totalTokens: (record.ai_system_response?.inputTokens || record.input_tokens || 0) +
+                   (record.ai_system_response?.outputTokens || record.output_tokens || 0),
+      total_tokens: (record.ai_system_response?.inputTokens || record.input_tokens || 0) +
+                    (record.ai_system_response?.outputTokens || record.output_tokens || 0)
     }))
   }
 

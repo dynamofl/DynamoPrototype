@@ -28,6 +28,7 @@ export interface CompliancePrompt extends BaseEvaluationPrompt {
   }
 
   // Results
+  ai_system_response?: any  // NEW: Primary field - JSONB format consistent with jailbreak_prompts
   compliance_judgement?: string  // Judge's determination
   final_outcome?: 'TP' | 'TN' | 'FP' | 'FN'
 }
@@ -45,6 +46,7 @@ export interface ComplianceEvaluationResult extends BaseEvaluationResult {
     phrases: string[]
     positions?: number[]
   }
+  ai_system_response?: any  // NEW: Primary field - JSONB format consistent with jailbreak_prompts
   compliance_judgement?: string
   final_outcome: 'TP' | 'TN' | 'FP' | 'FN'
 }

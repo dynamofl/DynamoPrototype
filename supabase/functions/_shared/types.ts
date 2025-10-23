@@ -143,7 +143,7 @@ export interface CompliancePrompt {
   status?: 'pending' | 'running' | 'completed' | 'failed';
 
   // Results
-  system_response?: string;
+  ai_system_response?: AISystemResponseData | null;  // JSONB format consistent with jailbreak_prompts
   compliance_judgement?: string;
   final_outcome?: 'TP' | 'TN' | 'FP' | 'FN';
 

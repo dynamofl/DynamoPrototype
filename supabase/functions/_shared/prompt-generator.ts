@@ -57,7 +57,19 @@ function generateFallbackTitle(promptText: string): string {
 }
 
 /**
- * Call AI API for prompt/topic generation with rate limiting
+ * Timeout wrapper for promises
+ */
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, errorMessage: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(errorMessage)), timeoutMs)
+    )
+  ]);
+}
+
+/**
+ * Call AI API for prompt/topic generation with rate limiting and timeout
  * Supports configurable models or falls back to OpenAI env var
  */
 async function callAI(
@@ -81,22 +93,26 @@ async function callAI(
       console.warn(`⚠️  Using fallback model '${model}'`);
     }
 
-  const response = await fetch(OPENAI_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model: model,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ],
-      temperature: 0.3, // Lower temperature for more deterministic output that follows instructions
-      response_format: { type: 'json_object' }
-    })
-  });
+  const response = await withTimeout(
+    fetch(OPENAI_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        temperature: 0.3, // Lower temperature for more deterministic output that follows instructions
+        response_format: { type: 'json_object' }
+      })
+    }),
+    60000, // 60 second timeout
+    `LLM API call timed out after 60 seconds for model ${model}`
+  );
 
   if (!response.ok) {
     const error = await response.json();

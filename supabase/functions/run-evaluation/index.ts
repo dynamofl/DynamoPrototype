@@ -472,9 +472,20 @@ async function processPrompt(
           total_tokens: response.totalTokens
         });
       } else {
-        // Compliance prompts - simplified data
+        // Compliance prompts - structured JSONB format similar to jailbreak prompts
+        const aiSystemResponseData = {
+          reason: judgeModelReason,
+          content: response.content,
+          judgement: judgeModelJudgement,
+          latencyMs: judgeResult.latencyMs || null,
+          outputTokens: response.outputTokens || null,
+          answerPhrases: judgeResult.answerPhrases || null,
+          confidenceScore: judgeResult.confidenceScore || null
+        };
+
         Object.assign(updateData, {
-          system_response: response.content,
+          // Save to ai_system_response for consistency with jailbreak_prompts
+          ai_system_response: aiSystemResponseData,
           compliance_judgement: judgeModelJudgement,
           // Calculate final_outcome based on ground_truth and compliance_judgement
           final_outcome: calculateComplianceOutcome(prompt.ground_truth, judgeModelJudgement)

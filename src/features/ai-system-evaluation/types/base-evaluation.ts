@@ -33,12 +33,30 @@ export interface BaseEvaluationPrompt {
 }
 
 /**
+ * AI System Response structure (JSONB format)
+ * Used for both jailbreak and compliance test types
+ */
+export interface AISystemResponse {
+  reason?: string
+  content: string
+  judgement?: 'Answered' | 'Refused' | string
+  latencyMs?: number
+  outputTokens?: number
+  inputTokens?: number
+  answerPhrases?: Array<{
+    phrase: string
+    reasoning: string
+  }>
+  confidenceScore?: number
+}
+
+/**
  * Base evaluation result interface that all test types extend
  * Contains fields common to all evaluation results for display
  */
 export interface BaseEvaluationResult extends BaseEvaluationPrompt {
-  // AI System Response
-  system_response?: string
+  // AI System Response (can be string for legacy data or AISystemResponse for new data)
+  system_response?: string | AISystemResponse
 
   // Guardrail evaluations - common to all test types
   input_guardrail_judgement?: string | null
