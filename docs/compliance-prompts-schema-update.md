@@ -14,7 +14,21 @@ Updated the `compliance_prompts` table to use a structured JSONB format for `sys
 - **Default**: NULL
 - **Structure**: Same as jailbreak prompts - `{reason, content, judgement, latencyMs, outputTokens, answerPhrases, confidenceScore}`
 
-#### 2. ~~Converted `system_response` from TEXT to JSONB~~ (REMOVED)
+#### 2. Added `input_guardrail` Column
+- **Type**: JSONB
+- **Purpose**: Store input guardrail evaluation results, consistent with `jailbreak_prompts.input_guardrail`
+- **Nullable**: Yes
+- **Default**: NULL
+- **Structure**: `{judgement, reason, latencyMs, confidenceScore, details[{guardrailId, guardrailName, judgement, reason, violations, latencyMs, confidenceScore}]}`
+
+#### 3. Added `output_guardrail` Column
+- **Type**: JSONB
+- **Purpose**: Store output guardrail evaluation results, consistent with `jailbreak_prompts.output_guardrail`
+- **Nullable**: Yes
+- **Default**: NULL
+- **Structure**: `{judgement, reason, latencyMs, confidenceScore, details[{guardrailId, guardrailName, judgement, reason, violations, latencyMs, confidenceScore}]}`
+
+#### 4. ~~Converted `system_response` from TEXT to JSONB~~ (REMOVED)
 
 > **Note**: The `system_response` column has been **completely removed** from the `compliance_prompts` table. Only `ai_system_response` is used for consistency with jailbreak prompts.
 
@@ -69,7 +83,23 @@ const aiSystemResponseData = {
   confidenceScore: judgeResult.confidenceScore || null
 };
 
-// Save to ai_system_response only
+// Save guardrail results (same structure as jailbreak)
+input_guardrail: inputGuardrailJudgement || inputGuardrailReason || inputGuardrailDetails?.length > 0 ? {
+  judgement: inputGuardrailJudgement,
+  reason: inputGuardrailReason,
+  latencyMs: inputResult?.latencyMs || null,
+  confidenceScore: inputResult?.confidenceScore || null,
+  details: inputGuardrailDetails || []
+} : null,
+output_guardrail: outputGuardrailJudgement || outputGuardrailReason || outputGuardrailDetails?.length > 0 ? {
+  judgement: outputGuardrailJudgement,
+  reason: outputGuardrailReason,
+  latencyMs: outputResult?.latencyMs || null,
+  confidenceScore: outputResult?.confidenceScore || null,
+  details: outputGuardrailDetails || []
+} : null,
+
+// Save AI system response
 ai_system_response: aiSystemResponseData,
 compliance_judgement: judgeModelJudgement,
 ```
@@ -78,7 +108,10 @@ compliance_judgement: judgeModelJudgement,
 
 Updated `CompliancePrompt` interface:
 ```typescript
-ai_system_response?: AISystemResponseData | null;  // JSONB format consistent with jailbreak_prompts
+// Results - consistent with jailbreak_prompts
+input_guardrail?: GuardrailEvaluation | null;   // Input guardrail evaluation
+output_guardrail?: GuardrailEvaluation | null;  // Output guardrail evaluation
+ai_system_response?: AISystemResponseData | null;  // AI system response with judge evaluation
 // system_response field removed
 ```
 
@@ -138,16 +171,18 @@ outputTokens: record.ai_system_response?.outputTokens || record.output_tokens,
 
 ## Benefits
 
-1. **Consistency**: Compliance prompts now use the same column name (`ai_system_response`) and structure as jailbreak prompts, making the codebase more maintainable
-2. **Rich Metadata**: Can now store additional information like:
-   - Reasoning for the judgement
-   - Confidence scores
-   - Answer phrases that highlight key parts of the response
-   - Performance metrics (latency, token counts)
-3. **Better Querying**: JSONB indexes enable efficient filtering and searching
-4. **Type Safety**: Proper TypeScript types for the response structure
-5. **No Data Loss**: Existing data is preserved and migrated automatically
-6. **Code Reusability**: Same data structure means shared components and utilities can work across both test types
+1. **Complete Consistency**: Compliance prompts now use the **exact same structure** as jailbreak prompts:
+   - `ai_system_response` - AI response with judge evaluation
+   - `input_guardrail` - Input guardrail evaluation results
+   - `output_guardrail` - Output guardrail evaluation results
+2. **Rich Metadata**: Can now store comprehensive evaluation data:
+   - **Guardrail Results**: Detailed violations, confidence scores, and latency for both input and output guardrails
+   - **Judge Model Results**: Reasoning, confidence, answer phrases, and latency
+   - **Performance Metrics**: Token counts, runtime metrics
+3. **Better Querying**: JSONB indexes enable efficient filtering and searching on all evaluation fields
+4. **Type Safety**: Proper TypeScript types for all response structures
+5. **Code Reusability**: Same data structure means shared components and utilities can work across both test types
+6. **Complete Picture**: Now captures the full evaluation workflow (input guardrail → AI system → output guardrail → judge model)
 
 ## Clean Architecture
 

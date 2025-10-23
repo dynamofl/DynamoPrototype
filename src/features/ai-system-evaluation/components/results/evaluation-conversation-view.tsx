@@ -200,10 +200,10 @@ export function EvaluationConversationView({ record, aiSystemName }: EvaluationC
     <div className="h-full grid grid-cols-[1fr_450px]" onWheel={(e) => e.stopPropagation()}>
       {/* Main Content - Left Side */}
       <div className="h-full overflow-y-auto border-l border-r border-gray-200 py-6 px-12" onWheel={(e) => e.stopPropagation()}>
-        <div className="max-w-2xl mx-auto space-y-6">
+        <div className="max-w-2xl mx-auto space-y-8">
 
           {/* Prompt Title & Attack Outcome Header */}
-          <section className="space-y-2 pb-2">
+          <section className="px-2 space-y-2 pb-2">
             {record.promptTitle && (
               <h2 className="text-lg font-450 leading-6 text-gray-900">
                 {record.promptTitle}
@@ -225,7 +225,7 @@ export function EvaluationConversationView({ record, aiSystemName }: EvaluationC
           </section>
 
           {/* Base Prompt */}
-          <section className="space-y-2">
+          <section className="px-2 space-y-2">
             <h3 className="text-[0.8125rem] font-450 leading-4 text-gray-600">
               Base Prompt
             </h3>
@@ -235,8 +235,8 @@ export function EvaluationConversationView({ record, aiSystemName }: EvaluationC
           </section>
 
           {/* Jailbreak Prompt */}
-          <section className="space-y-2">
-            <h3 className="text-[0.8125rem] font-450 leading-4 text-gray-600">
+          <section className="space-y-3">
+            <h3 className="px-2 text-[0.8125rem] font-450 leading-4 text-gray-600">
               Jailbreak Prompt {isMultiTurn && <span className="text-gray-500">(Multi-turn)</span>}
             </h3>
             {isMultiTurn ? (
@@ -267,9 +267,7 @@ export function EvaluationConversationView({ record, aiSystemName }: EvaluationC
                 ))}
               </div>
             ) : (
-              <div className="border border-gray-200 rounded-lg p-2 space-y-6">
-                <div className="space-y-2">
-                  <p className="text-[0.8125rem] font-425 leading-4 text-gray-600">User</p>
+                <div className="px-2 space-y-2">
                   <div className="text-sm leading-5 text-gray-900">
                     <HighlightedText
                       highlightPhrases={shouldHighlightPrompt ? highlightPhrases : allInputPhrases}
@@ -283,17 +281,16 @@ export function EvaluationConversationView({ record, aiSystemName }: EvaluationC
                       {adversarialPromptText}
                     </HighlightedText>
                   </div>
-                </div>
               </div>
             )}
           </section>
 
           {/* AI System Response */}
-          <section className="space-y-2">
-            <h3 className="text-[0.8125rem] font-450 leading-4 text-gray-600">
+          <section className="px-2 space-y-2">
+            <h3 className=" text-[0.8125rem] font-450 leading-4 text-gray-600">
               AI System Response
             </h3>
-            <div>
+            <div className=''>
               <HighlightedMarkdownRenderer
                 content={record.systemResponse}
                 highlightPhrases={shouldHighlightResponse ? highlightPhrases : allOutputPhrases}

@@ -142,8 +142,10 @@ export interface CompliancePrompt {
 
   status?: 'pending' | 'running' | 'completed' | 'failed';
 
-  // Results
-  ai_system_response?: AISystemResponseData | null;  // JSONB format consistent with jailbreak_prompts
+  // Results - consistent with jailbreak_prompts
+  input_guardrail?: GuardrailEvaluation | null;   // Input guardrail evaluation
+  output_guardrail?: GuardrailEvaluation | null;  // Output guardrail evaluation
+  ai_system_response?: AISystemResponseData | null;  // AI system response with judge evaluation
   compliance_judgement?: string;
   final_outcome?: 'TP' | 'TN' | 'FP' | 'FN';
 

@@ -473,19 +473,34 @@ async function processPrompt(
         });
       } else {
         // Compliance prompts - structured JSONB format similar to jailbreak prompts
-        const aiSystemResponseData = {
-          reason: judgeModelReason,
-          content: response.content,
-          judgement: judgeModelJudgement,
-          latencyMs: judgeResult.latencyMs || null,
-          outputTokens: response.outputTokens || null,
-          answerPhrases: judgeResult.answerPhrases || null,
-          confidenceScore: judgeResult.confidenceScore || null
-        };
-
         Object.assign(updateData, {
-          // Save to ai_system_response for consistency with jailbreak_prompts
-          ai_system_response: aiSystemResponseData,
+          // Consolidated guardrail evaluations WITH METRICS (same as jailbreak)
+          input_guardrail: inputGuardrailJudgement || inputGuardrailReason || inputGuardrailDetails?.length > 0 ? {
+            judgement: inputGuardrailJudgement,
+            reason: inputGuardrailReason,
+            latencyMs: inputResult?.latencyMs || null,
+            confidenceScore: inputResult?.confidenceScore || null,
+            details: inputGuardrailDetails || []
+          } : null,
+          output_guardrail: outputGuardrailJudgement || outputGuardrailReason || outputGuardrailDetails?.length > 0 ? {
+            judgement: outputGuardrailJudgement,
+            reason: outputGuardrailReason,
+            latencyMs: outputResult?.latencyMs || null,
+            confidenceScore: outputResult?.confidenceScore || null,
+            details: outputGuardrailDetails || []
+          } : null,
+
+          // Consolidated AI system response with judge evaluation AND METRICS
+          ai_system_response: {
+            reason: judgeModelReason,
+            content: response.content,
+            judgement: judgeModelJudgement,
+            latencyMs: judgeResult.latencyMs || null,
+            outputTokens: response.outputTokens || null,
+            answerPhrases: judgeResult.answerPhrases || null,
+            confidenceScore: judgeResult.confidenceScore || null
+          },
+
           compliance_judgement: judgeModelJudgement,
           // Calculate final_outcome based on ground_truth and compliance_judgement
           final_outcome: calculateComplianceOutcome(prompt.ground_truth, judgeModelJudgement)
