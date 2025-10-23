@@ -9,7 +9,9 @@ import type {
   SummaryCardConfig,
   DetailSectionConfig,
   ExportFieldConfig,
-  AnalysisSectionConfig
+  AnalysisSectionConfig,
+  ConversationSectionConfig,
+  HighlightingContext
 } from './base-strategy'
 import type { BaseEvaluationResult, BaseEvaluationSummary } from '../types/base-evaluation'
 import type {
@@ -743,5 +745,151 @@ export class ComplianceStrategy implements EvaluationStrategy {
     if (outcome === 'TP' || outcome === 'TN') return '#22c55e' // green
     if (outcome === 'FP' || outcome === 'FN') return '#ef4444' // red
     return '#6b7280' // gray
+  }
+
+  /**
+   * Get conversation sections for compliance test type
+   */
+  getConversationSections(): ConversationSectionConfig[] {
+    return [
+      {
+        key: 'basePrompt',
+        title: 'Base Prompt',
+        order: 1,
+        render: (record: BaseEvaluationResult, ctx?: HighlightingContext) => {
+          const complianceRecord = record as ComplianceEvaluationResult
+          return (
+            <>
+              <h3 className="px-2 text-[0.8125rem] font-450 leading-4 text-gray-600">
+                Base Prompt
+              </h3>
+              <div className="px-2 text-sm font-425 leading-5 text-gray-900">
+                {complianceRecord.basePrompt}
+              </div>
+            </>
+          )
+        }
+      },
+      {
+        key: 'actualPrompt',
+        title: 'Actual Prompt',
+        order: 2,
+        render: (record: BaseEvaluationResult, ctx?: HighlightingContext) => {
+          const complianceRecord = record as ComplianceEvaluationResult
+          return (
+            <>
+              <h3 className="px-2 text-[0.8125rem] font-450 leading-4 text-gray-600">
+                Actual Prompt
+                {complianceRecord.perturbationType && (
+                  <span className="text-gray-500"> ({complianceRecord.perturbationType})</span>
+                )}
+              </h3>
+              <div className="px-2 text-sm font-425 leading-5 text-gray-900">
+                {complianceRecord.actualPrompt}
+              </div>
+              {complianceRecord.perturbationType && (
+                <div className="px-2 text-xs text-gray-500 italic">
+                  Perturbation applied: {complianceRecord.perturbationType}
+                </div>
+              )}
+            </>
+          )
+        }
+      },
+      {
+        key: 'systemResponse',
+        title: 'AI System Response',
+        order: 3,
+        render: (record: BaseEvaluationResult, ctx?: HighlightingContext) => {
+          const complianceRecord = record as ComplianceEvaluationResult
+          return (
+            <>
+              <h3 className="px-2 text-[0.8125rem] font-450 leading-4 text-gray-600">
+                AI System Response
+              </h3>
+              <div className="px-2">
+                <div className="text-sm font-425 leading-relaxed text-gray-900">
+                  {complianceRecord.systemResponse || 'No response'}
+                </div>
+              </div>
+            </>
+          )
+        }
+      },
+      {
+        key: 'metadata',
+        title: 'Ground Truth & Outcome',
+        order: 4,
+        render: (record: BaseEvaluationResult, ctx?: HighlightingContext) => {
+          const complianceRecord = record as ComplianceEvaluationResult
+          return (
+            <>
+              <h3 className="px-2 text-[0.8125rem] font-450 leading-4 text-gray-600">
+                Ground Truth & Outcome
+              </h3>
+              <div className="px-2 space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-450">Ground Truth:</span>
+                  <span className={`px-2 py-1 rounded text-xs font-450 ${
+                    complianceRecord.groundTruth === 'Compliant'
+                      ? 'bg-green-50 text-green-800'
+                      : 'bg-red-50 text-red-800'
+                  }`}>
+                    {complianceRecord.groundTruth}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-450">Final Outcome:</span>
+                  <span className={`px-2 py-1 rounded text-xs font-450 ${
+                    complianceRecord.finalOutcome === 'TP' || complianceRecord.finalOutcome === 'TN'
+                      ? 'bg-green-50 text-green-800'
+                      : 'bg-red-50 text-red-800'
+                  }`}>
+                    {complianceRecord.finalOutcome}
+                  </span>
+                </div>
+                {complianceRecord.behaviorUsed && (
+                  <div className="mt-2">
+                    <span className="text-sm font-450">Behavior Used:</span>
+                    <div className="mt-1 p-2 bg-gray-50 rounded text-xs text-gray-700">
+                      {complianceRecord.behaviorUsed}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          )
+        }
+      }
+    ]
+  }
+
+  /**
+   * Get title for the conversation view
+   */
+  getConversationTitle(record: BaseEvaluationResult): string | null {
+    const complianceRecord = record as ComplianceEvaluationResult
+    return complianceRecord.promptTitle || complianceRecord.basePrompt.substring(0, 50) + '...'
+  }
+
+  /**
+   * Get badge info for the conversation view header
+   */
+  getConversationBadge(record: BaseEvaluationResult) {
+    const complianceRecord = record as ComplianceEvaluationResult
+    const isSuccess = complianceRecord.finalOutcome === 'TP' || complianceRecord.finalOutcome === 'TN'
+
+    const outcomeLabels = {
+      'TP': 'True Positive',
+      'TN': 'True Negative',
+      'FP': 'False Positive',
+      'FN': 'False Negative'
+    }
+
+    return {
+      text: outcomeLabels[complianceRecord.finalOutcome] || complianceRecord.finalOutcome,
+      variant: (isSuccess ? 'default' : 'destructive') as 'default' | 'destructive',
+      color: isSuccess ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+    }
   }
 }

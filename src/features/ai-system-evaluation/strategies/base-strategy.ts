@@ -77,6 +77,32 @@ export interface AnalysisSectionConfig {
 }
 
 /**
+ * Highlighting context for phrase highlighting in conversation view
+ */
+export interface HighlightingContext {
+  shouldHighlightPrompt: boolean
+  shouldHighlightResponse: boolean
+  highlightPhrases: any[]
+  allInputPhrases: any[]
+  allOutputPhrases: any[]
+  highlightColor: 'amber' | 'green' | 'red'
+  hoveredBehavior: any | null
+  selectedBehaviors: Set<string> | null
+  handlePhraseClick: (phraseIndex: number, type: 'input' | 'output') => void
+}
+
+/**
+ * Conversation section configuration (for conversation view)
+ */
+export interface ConversationSectionConfig {
+  key: string
+  title: string
+  order: number
+  render: (record: BaseEvaluationResult, highlightingContext?: HighlightingContext) => ReactNode
+  condition?: (record: BaseEvaluationResult) => boolean
+}
+
+/**
  * Main strategy interface that all test types must implement
  * This is the core of the strategy pattern
  */
@@ -144,6 +170,26 @@ export interface EvaluationStrategy {
    * Get outcome color (for charts and visualizations)
    */
   getOutcomeColor(outcome: string): string
+
+  /**
+   * UI Configuration - Conversation Sections
+   * Define sections for conversation detail view
+   */
+  getConversationSections(): ConversationSectionConfig[]
+
+  /**
+   * Get title for the conversation view (e.g., "Jailbreak Prompt" vs "Actual Prompt")
+   */
+  getConversationTitle(record: BaseEvaluationResult): string | null
+
+  /**
+   * Get badge info for the conversation view header
+   */
+  getConversationBadge(record: BaseEvaluationResult): {
+    text: string
+    variant: 'default' | 'secondary' | 'destructive' | 'outline'
+    color?: string
+  } | null
 }
 
 /**

@@ -9,7 +9,9 @@ import type {
   SummaryCardConfig,
   DetailSectionConfig,
   ExportFieldConfig,
-  AnalysisSectionConfig
+  AnalysisSectionConfig,
+  ConversationSectionConfig,
+  HighlightingContext
 } from './base-strategy'
 import type { BaseEvaluationResult, BaseEvaluationSummary } from '../types/base-evaluation'
 import type {
@@ -22,6 +24,8 @@ import { Badge } from '@/components/ui/badge'
 import { SeverityIcon } from '../components/results/severity-icon'
 import { getAttackSeverityLevel } from '../lib/attack-severity'
 import { calculateSummaryFromResults } from '../lib/calculate-summary'
+import { HighlightedText } from '@/components/patterns/ui-patterns/phrase-highlighter'
+import { HighlightedMarkdownRenderer } from '../components/results/conversation-view-components/shared-components'
 
 export class JailbreakStrategy implements EvaluationStrategy {
   readonly testType = 'jailbreak'
@@ -618,5 +622,162 @@ export class JailbreakStrategy implements EvaluationStrategy {
     if (outcome === 'Attack Failure') return '#22c55e' // green
     if (outcome === 'Attack Success') return '#ef4444' // red
     return '#6b7280' // gray
+  }
+
+  /**
+   * Get conversation sections for jailbreak test type
+   */
+  getConversationSections(): ConversationSectionConfig[] {
+    return [
+      {
+        key: 'basePrompt',
+        title: 'Base Prompt',
+        order: 1,
+        render: (record: BaseEvaluationResult, ctx?: HighlightingContext) => {
+          const jailbreakRecord = record as JailbreakEvaluationResult
+          return (
+            <>
+              <h3 className="px-2 text-[0.8125rem] font-450 leading-4 text-gray-600">
+                Base Prompt
+              </h3>
+              <div className="px-2 text-sm font-425 leading-5 text-gray-900">
+                {jailbreakRecord.basePrompt}
+              </div>
+            </>
+          )
+        }
+      },
+      {
+        key: 'adversarialPrompt',
+        title: 'Jailbreak Prompt',
+        order: 2,
+        render: (record: BaseEvaluationResult, ctx?: HighlightingContext) => {
+          const jailbreakRecord = record as JailbreakEvaluationResult
+          const isMultiTurn = Array.isArray(jailbreakRecord.adversarialPrompt)
+          const adversarialPrompt = jailbreakRecord.adversarialPrompt
+
+          // Get adversarial prompt text for single-turn
+          const getPromptText = (prompt: AdversarialPrompt): string => {
+            if (Array.isArray(prompt)) {
+              return prompt.map((turn) => `[${turn.role}]: ${turn.content}`).join('\n\n')
+            }
+            if (typeof prompt === 'object' && 'text' in prompt) {
+              return prompt.text
+            }
+            return typeof prompt === 'string' ? prompt : ''
+          }
+
+          return (
+            <>
+              <h3 className="px-2 text-[0.8125rem] font-450 leading-4 text-gray-600">
+                Jailbreak Prompt {isMultiTurn && <span className="text-gray-500">(Multi-turn)</span>}
+              </h3>
+              {isMultiTurn ? (
+                <div className="border border-gray-200 rounded-lg p-2 space-y-4">
+                  {(adversarialPrompt as any[]).map((turn: any, idx: number) => (
+                    <div key={idx} className="space-y-2">
+                      <p className="text-[0.8125rem] font-425 leading-4 text-gray-600 capitalize">
+                        {turn.role}
+                      </p>
+                      <div className="text-sm leading-5 text-gray-900 whitespace-pre-wrap">
+                        {turn.role === 'user' && ctx ? (
+                          <HighlightedText
+                            highlightPhrases={ctx.shouldHighlightPrompt ? ctx.highlightPhrases : ctx.allInputPhrases}
+                            className="text-sm leading-5 text-gray-900"
+                            highlightColor={ctx.highlightColor}
+                            hoveredBehavior={ctx.hoveredBehavior}
+                            selectedBehaviors={ctx.selectedBehaviors}
+                            onPhraseClick={(idx) => ctx.handlePhraseClick(idx, 'input')}
+                            showHighlightByDefault={true}
+                          >
+                            {turn.content}
+                          </HighlightedText>
+                        ) : (
+                          turn.content
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="px-2 space-y-2">
+                  <div className="text-sm leading-5 text-gray-900">
+                    {ctx ? (
+                      <HighlightedText
+                        highlightPhrases={ctx.shouldHighlightPrompt ? ctx.highlightPhrases : ctx.allInputPhrases}
+                        className="text-sm leading-5 text-gray-900"
+                        highlightColor={ctx.highlightColor}
+                        hoveredBehavior={ctx.hoveredBehavior}
+                        selectedBehaviors={ctx.selectedBehaviors}
+                        onPhraseClick={(idx) => ctx.handlePhraseClick(idx, 'input')}
+                        showHighlightByDefault={true}
+                      >
+                        {getPromptText(adversarialPrompt)}
+                      </HighlightedText>
+                    ) : (
+                      getPromptText(adversarialPrompt)
+                    )}
+                  </div>
+                </div>
+              )}
+            </>
+          )
+        }
+      },
+      {
+        key: 'systemResponse',
+        title: 'AI System Response',
+        order: 3,
+        render: (record: BaseEvaluationResult, ctx?: HighlightingContext) => {
+          const jailbreakRecord = record as JailbreakEvaluationResult
+          return (
+            <>
+              <h3 className="px-2 text-[0.8125rem] font-450 leading-4 text-gray-600">
+                AI System Response
+              </h3>
+              <div className="px-2">
+                {ctx ? (
+                  <HighlightedMarkdownRenderer
+                    content={jailbreakRecord.systemResponse}
+                    highlightPhrases={ctx.shouldHighlightResponse ? ctx.highlightPhrases : ctx.allOutputPhrases}
+                    highlightColor={ctx.highlightColor}
+                    hoveredBehavior={ctx.hoveredBehavior}
+                    selectedBehaviors={ctx.selectedBehaviors}
+                    onPhraseClick={(idx) => ctx.handlePhraseClick(idx, 'output')}
+                    showHighlightByDefault={true}
+                  />
+                ) : (
+                  <div className="text-sm font-425 leading-relaxed text-gray-900">
+                    {jailbreakRecord.systemResponse}
+                  </div>
+                )}
+              </div>
+            </>
+          )
+        }
+      }
+    ]
+  }
+
+  /**
+   * Get title for the conversation view
+   */
+  getConversationTitle(record: BaseEvaluationResult): string | null {
+    const jailbreakRecord = record as JailbreakEvaluationResult
+    return jailbreakRecord.promptTitle || null
+  }
+
+  /**
+   * Get badge info for the conversation view header
+   */
+  getConversationBadge(record: BaseEvaluationResult) {
+    const jailbreakRecord = record as JailbreakEvaluationResult
+    const isAttackSuccess = jailbreakRecord.attackOutcome === 'Attack Success'
+
+    return {
+      text: jailbreakRecord.attackOutcome,
+      variant: (isAttackSuccess ? 'destructive' : 'default') as 'default' | 'destructive',
+      color: isAttackSuccess ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'
+    }
   }
 }

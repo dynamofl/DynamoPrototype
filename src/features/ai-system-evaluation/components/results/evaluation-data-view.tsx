@@ -7,7 +7,7 @@ import {
 } from './data-view-components'
 import { GenericEvaluationTable } from './data-view-components/generic-evaluation-table'
 import { GenericEvaluationFilters } from './data-view-components/generic-evaluation-filters'
-import { EvaluationConversationView } from './evaluation-conversation-view'
+import { GenericConversationView } from './conversation-view-components/generic-conversation-view'
 import { DEFAULT_PAGE_SIZE } from '../../constants/evaluation-data-constants'
 import type { BaseEvaluationResult } from '../../types/base-evaluation'
 import type { EvaluationStrategy } from '../../strategies/base-strategy'
@@ -400,9 +400,10 @@ export function EvaluationDataView({
                   const selectedRecord = displayData.find(record => (record as any).id === selectedConversationId)
                   return selectedRecord ? (
                     <div className="animate-in fade-in-0 slide-in-from-right-2 duration-300 h-full">
-                      <EvaluationConversationView
+                      <GenericConversationView
                         key={selectedConversationId}
-                        record={selectedRecord as any}
+                        record={selectedRecord}
+                        strategy={strategy}
                         aiSystemName={aiSystemName}
                       />
                     </div>
