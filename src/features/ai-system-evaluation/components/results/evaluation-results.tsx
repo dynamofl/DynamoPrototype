@@ -227,7 +227,7 @@ export function EvaluationResults({
       />
 
       {/* Tab Content */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto" onWheel={(e) => e.stopPropagation()}>
         {selectedTab === 'summary' && (
           <EvaluationSummaryView
             summary={results.summary}

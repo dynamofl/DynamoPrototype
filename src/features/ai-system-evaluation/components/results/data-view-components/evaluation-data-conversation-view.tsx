@@ -129,7 +129,7 @@ export function EvaluationDataConversationView({
       </div>
 
       {/* Conversation List - Scrollable */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto" onWheel={(e) => e.stopPropagation()}>
         {data.length > 0 ? (
           <div>
             {data.map((record, index) => {

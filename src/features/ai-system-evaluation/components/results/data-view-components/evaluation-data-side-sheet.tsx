@@ -41,7 +41,10 @@ export function EvaluationDataSideSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-[600px] sm:max-w-[600px] p-0 flex flex-col [&>button]:hidden">
+      <SheetContent
+        className="w-[600px] sm:max-w-[600px] p-0 flex flex-col [&>button]:hidden"
+        onWheel={(e) => e.stopPropagation()}
+      >
         {/* Custom Header */}
         <div className="flex-shrink-0 border-b border-gray-200 p-4 bg-gray-50">
           <div className="flex items-center justify-between">
@@ -104,7 +107,10 @@ export function EvaluationDataSideSheet({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-hidden">
+        <div
+          className="flex-1 overflow-hidden"
+          onWheel={(e) => e.stopPropagation()}
+        >
           <EvaluationDataDetail record={record} hasGuardrails={hasGuardrails} />
         </div>
       </SheetContent>

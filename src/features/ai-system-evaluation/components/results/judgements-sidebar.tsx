@@ -379,7 +379,7 @@ export function JudgementsSidebar({
   const selectedGuardrail = guardrails.find(g => g.id === selectedGuardrailId) || null
 
   return (
-    <div className="h-full overflow-y-auto bg-gray-0">
+    <div className="h-full overflow-y-auto bg-gray-0" onWheel={(e) => e.stopPropagation()}>
       <div className="flex flex-col gap-6 items-start py-5 px-4">
         {/* Title */}
         <div className="flex flex-col gap-3 items-start w-full">

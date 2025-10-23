@@ -103,7 +103,7 @@ export interface EvaluationStrategy {
    * UI Configuration - Table
    * Define columns for table display
    */
-  getTableColumns(hasGuardrails?: boolean): ColumnConfig[]
+  getTableColumns(options?: { hasInputGuardrails?: boolean; hasOutputGuardrails?: boolean }): ColumnConfig[]
 
   /**
    * UI Configuration - Filters

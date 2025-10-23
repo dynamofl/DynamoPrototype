@@ -294,8 +294,6 @@ export class EvaluationService {
     // Determine test type from config (default to jailbreak for backward compatibility)
     const testType = evaluation.config?.testType || evaluation.config?.test_type || 'jailbreak';
 
-    console.log(`📊 Fetching ${testType} evaluation results for: ${evaluationId}`);
-
     // Route to correct table based on test type
     const tableName = testType === 'compliance'
       ? 'compliance_prompts'

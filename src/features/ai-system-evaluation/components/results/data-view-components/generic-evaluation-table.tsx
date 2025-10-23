@@ -11,7 +11,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
 import type { EvaluationStrategy } from '../../../strategies/base-strategy'
 import type { BaseEvaluationResult } from '../../../types/base-evaluation'
 
@@ -37,8 +36,15 @@ export function GenericEvaluationTable({
   const allSelected = data.length > 0 && selectedRows.length === data.length
   const someSelected = selectedRows.length > 0 && selectedRows.length < data.length
 
+  // Check if any records have input/output guardrail judgements
+  const hasInputGuardrails = data.some(record =>
+    (record as any).inputGuardrailJudgement !== null && (record as any).inputGuardrailJudgement !== undefined
+  )
+  const hasOutputGuardrails = data.some(record =>
+    (record as any).outputGuardrailJudgement !== null && (record as any).outputGuardrailJudgement !== undefined
+  )
   // Get column configuration from strategy
-  const columns = strategy.getTableColumns(hasGuardrails)
+  const columns = strategy.getTableColumns({ hasInputGuardrails, hasOutputGuardrails })
 
   return (
     <div className="px-4">

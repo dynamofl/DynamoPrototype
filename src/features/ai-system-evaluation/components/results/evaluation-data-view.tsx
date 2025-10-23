@@ -78,8 +78,6 @@ export function EvaluationDataView({
     total: 0
   })
 
-  console.log(`📊 EvaluationDataView: testType="${testType}", strategy="${strategy.displayName}", results=${results.length}`)
-
   // Update URL when view mode or selected item changes
   useEffect(() => {
     if (!systemName || !evaluationId) return
@@ -160,15 +158,18 @@ export function EvaluationDataView({
 
   // Load initial data
   useEffect(() => {
+    // Transform database records to frontend format using strategy
+    const transformedResults = strategy.transformPrompts(results as any)
+
     // Add unique IDs to results for tracking
-    const dataWithIds = results.map((result, index) => ({
+    const dataWithIds = transformedResults.map((result, index) => ({
       ...result,
-      id: `${result.policyId}-${index}`
+      id: `${result.policyId || result.policy_id}-${index}`
     }))
     setAllData(dataWithIds as any)
     setFilteredData(dataWithIds as any)
     setPagination(prev => ({ ...prev, total: dataWithIds.length }))
-  }, [results])
+  }, [results, strategy])
 
   // Apply filters when data or filters change
   useEffect(() => {
@@ -180,8 +181,8 @@ export function EvaluationDataView({
       if (filters.searchTerm && filters.searchTerm.length > 0) {
         const searchLower = filters.searchTerm.toLowerCase()
         const matchesSearch =
-          record.base_prompt?.toLowerCase().includes(searchLower) ||
-          record.policy_name?.toLowerCase().includes(searchLower) ||
+          (record as any).basePrompt?.toLowerCase().includes(searchLower) ||
+          (record as any).policyName?.toLowerCase().includes(searchLower) ||
           record.topic?.toLowerCase().includes(searchLower)
 
         if (!matchesSearch) return false
@@ -338,7 +339,7 @@ export function EvaluationDataView({
   }
 
   return (
-    <div className="flex flex-col h-full py-2">
+    <div className="flex flex-col h-full py-2" onWheel={(e) => e.stopPropagation()}>
       {/* Filters */}
       <GenericEvaluationFilters
         strategy={strategy}
@@ -351,9 +352,9 @@ export function EvaluationDataView({
       />
 
       {/* Content Area */}
-      <div className="flex flex-1 overflow-hidden min-h-0">
+      <div className="flex flex-1 overflow-hidden min-h-0" onWheel={(e) => e.stopPropagation()}>
         {/* Table/Conversation View */}
-        <div className={`${currentView === 'conversation' ? 'max-w-[400px]' : 'flex-1'} ${currentView === 'table' ? 'overflow-auto' : 'flex flex-col overflow-hidden'}`}>
+        <div className={`${currentView === 'conversation' ? 'max-w-[400px]' : 'flex-1'} ${currentView === 'table' ? 'overflow-auto' : 'flex flex-col overflow-hidden'}`} onWheel={(e) => e.stopPropagation()}>
           <div
             className={`h-full transition-all  ${
               transitionState === 'exiting'
@@ -392,8 +393,8 @@ export function EvaluationDataView({
 
         {/* Right Detail Area for Conversation View */}
         {currentView === 'conversation' && (
-          <div className="flex-1 overflow-hidden">
-            <div className="transition-all duration-300 ease-in-out h-full">
+          <div className="flex-1 overflow-hidden" onWheel={(e) => e.stopPropagation()}>
+            <div className="transition-all duration-300 ease-in-out h-full" onWheel={(e) => e.stopPropagation()}>
               {selectedConversationId && displayData.length > 0 && (
                 (() => {
                   const selectedRecord = displayData.find(record => (record as any).id === selectedConversationId)

@@ -2,7 +2,7 @@
 // Provides a single point to get the correct strategy for any test type
 
 import type { EvaluationStrategy } from './base-strategy'
-import { JailbreakStrategy } from './jailbreak-strategy'
+import { JailbreakStrategy } from './jailbreak-strategy.tsx'
 import { ComplianceStrategy } from './compliance-strategy'
 import type { BaseEvaluationResult } from '../types/base-evaluation'
 import type { JailbreakEvaluationResult } from '../types/jailbreak-evaluation'

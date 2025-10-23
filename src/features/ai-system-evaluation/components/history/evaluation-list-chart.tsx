@@ -42,16 +42,7 @@ export function EvaluationListChart({ evaluations }: EvaluationListChartProps) {
 
     // Debug: Log the evaluation data
     if (!overallMetrics) {
-      console.warn('⚠️ No overallMetrics for:', evaluation.name, {
-        hasResult: !!evaluation.result,
-        result: evaluation.result,
-        rawEvaluation: evaluation
-      });
-    } else {
-      console.log('✅ Metrics found for:', evaluation.name, {
-        aiSystemOnlySuccessRate: overallMetrics.aiSystemOnlySuccessRate,
-        successRate: overallMetrics.successRate
-      });
+      // No metrics available for this evaluation
     }
 
     const aiSystemOnlyRate = overallMetrics?.aiSystemOnlySuccessRate ?? 0;
@@ -79,19 +70,6 @@ export function EvaluationListChart({ evaluations }: EvaluationListChartProps) {
 
   // Determine if any evaluation has guardrails - check if rates differ
   const hasAnyGuardrails = chartData.some((d) => d.hasGuardrails);
-
-  // Debug: Log to see what data we have
-  console.log('📊 Chart Debug:', {
-    hasAnyGuardrails,
-    totalEvaluations: chartData.length,
-    guardrailEvaluations: chartData.filter(d => d.hasGuardrails).length,
-    sampleData: chartData.slice(0, 3).map(d => ({
-      name: d.evaluationName,
-      aiSystemOnly: d.aiSystemOnly,
-      withGuardrails: d.withGuardrails,
-      hasGuardrails: d.hasGuardrails
-    }))
-  });
 
   // Chart configuration
   const chartConfig = {

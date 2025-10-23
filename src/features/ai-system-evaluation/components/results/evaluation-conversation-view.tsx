@@ -197,9 +197,9 @@ export function EvaluationConversationView({ record, aiSystemName }: EvaluationC
   }
 
   return (
-    <div className="h-full grid grid-cols-[1fr_450px]">
+    <div className="h-full grid grid-cols-[1fr_450px]" onWheel={(e) => e.stopPropagation()}>
       {/* Main Content - Left Side */}
-      <div className="h-full overflow-y-auto border-l border-r border-gray-200 py-6 px-12">
+      <div className="h-full overflow-y-auto border-l border-r border-gray-200 py-6 px-12" onWheel={(e) => e.stopPropagation()}>
         <div className="max-w-2xl mx-auto space-y-6">
 
           {/* Prompt Title & Attack Outcome Header */}

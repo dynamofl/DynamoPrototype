@@ -43,12 +43,8 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults }: Topic
   // Extract and group behaviors from evaluation results
   const violatingBehaviors = useMemo(() => {
     if (!evaluationResults || evaluationResults.length === 0) {
-      console.log('[TopicAnalysis] No evaluation results available');
       return [];
     }
-
-    console.log('[TopicAnalysis] Processing evaluation results:', evaluationResults.length);
-    console.log('[TopicAnalysis] High violating topics:', highlyViolatingTopics);
 
     // Filter to only high-risk prompts and group behaviors
     const behaviorMap = new Map<string, { behavior: string; count: number; policyName: string }>();
@@ -57,8 +53,6 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults }: Topic
       // Check if this result is for a high-violating topic
       const isHighViolating = highlyViolatingTopics.some(topic => topic.topic_name === result.topic);
 
-      console.log('[TopicAnalysis] Result topic:', result.topic, 'isHighViolating:', isHighViolating, 'policyContext:', result.policyContext);
-
       if (isHighViolating && result.policyContext) {
         // Extract disallowed behaviors from policy_context
         // Try different possible structures
@@ -66,8 +60,6 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults }: Topic
           result.policyContext?.disallowed ||
           result.policyContext?.behaviors?.disallowed ||
           [];
-
-        console.log('[TopicAnalysis] Found disallowed behaviors:', disallowedBehaviors);
 
         disallowedBehaviors.forEach((behavior: string) => {
           if (behaviorMap.has(behavior)) {
@@ -85,7 +77,6 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults }: Topic
     });
 
     const behaviors = Array.from(behaviorMap.values()).sort((a, b) => b.count - a.count);
-    console.log('[TopicAnalysis] Final violating behaviors:', behaviors);
 
     // Convert to array and sort by count (descending)
     return behaviors;

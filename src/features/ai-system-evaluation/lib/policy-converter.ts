@@ -43,8 +43,6 @@ export function guardrailsToPolicies(guardrails: Guardrail[]): Policy[] {
  * NOTE: This is now an async function that fetches from Supabase
  */
 export async function loadPoliciesFromGuardrailIds(guardrailIds: string[]): Promise<Policy[]> {
-  console.log('📂 loadPoliciesFromGuardrailIds called with IDs:', guardrailIds);
-
   try {
     // Fetch guardrails from Supabase
     const { data, error } = await supabase
@@ -78,12 +76,8 @@ export async function loadPoliciesFromGuardrailIds(guardrailIds: string[]): Prom
       };
     });
 
-    console.log('📂 Total guardrails fetched from Supabase:', allGuardrails.length);
-    console.log('📂 All guardrail IDs:', allGuardrails.map(g => g.id));
-
     // Convert to policies
     const policies = guardrailsToPolicies(allGuardrails);
-    console.log('📂 Converted policies:', policies);
     return policies;
   } catch (err) {
     console.error('Failed to load guardrails from Supabase:', err);

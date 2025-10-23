@@ -1,6 +1,7 @@
 // Generic Evaluation Filters Component
 // Uses strategy pattern to provide filters for different test types
 
+import { useMemo, useCallback } from 'react'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { FilterSearch } from '@/components/patterns/ui-patterns'
 import type { FilterConfig as UIFilterConfig, FilterChip } from '@/components/patterns/ui-patterns'
@@ -26,14 +27,14 @@ export function GenericEvaluationFilters({
   hasGuardrails = true,
   data = []
 }: GenericEvaluationFiltersProps) {
-  // Get filter configurations from strategy
-  const strategyFilters = strategy.getFilters(hasGuardrails)
+  // Memoize UI filters to prevent infinite loops
+  // Only depend on data.length to avoid re-creating when array reference changes
+  const uiFilters = useMemo(() => {
+    const strategyFilters = strategy.getFilters(hasGuardrails)
 
-  // Convert strategy filters to UI filter configs
-  const convertToUIFilters = (strategyFilters: StrategyFilterConfig[]): UIFilterConfig[] => {
     return strategyFilters.map(filter => {
       // If options not provided in strategy, derive from data
-      let options = filter.options || []
+      let options = filter.options ?? []
 
       if (options.length === 0 && data.length > 0) {
         // Auto-generate options from data based on filter key
@@ -45,7 +46,6 @@ export function GenericEvaluationFilters({
           }
         })
         options = [
-          { value: 'all', label: 'All' },
           ...Array.from(uniqueValues).map(v => ({ value: v, label: v }))
         ]
       }
@@ -53,29 +53,27 @@ export function GenericEvaluationFilters({
       return {
         key: filter.key,
         label: filter.label,
-        options,
+        options: options.length > 0 ? options : [{ value: '', label: 'No options' }],
         type: 'array'
       }
     })
-  }
+  }, [strategy, hasGuardrails, data.length])
 
-  const uiFilters = convertToUIFilters(strategyFilters)
-
-  const handleFilterChange = (filterKey: string, value: any) => {
+  const handleFilterChange = useCallback((filterKey: string, value: any) => {
     onFiltersChange({
       ...filters,
       [filterKey]: value
     })
-  }
+  }, [filters, onFiltersChange])
 
-  const handleSearchChange = (value: string) => {
+  const handleSearchChange = useCallback((value: string) => {
     onFiltersChange({
       ...filters,
       searchTerm: value
     })
-  }
+  }, [filters, onFiltersChange])
 
-  const removeFilter = (filterType: string, value: string | number | boolean) => {
+  const removeFilter = useCallback((filterType: string, value: string | number | boolean) => {
     const newFilters = { ...filters }
 
     if (filterType !== 'searchTerm') {
@@ -86,26 +84,29 @@ export function GenericEvaluationFilters({
     }
 
     onFiltersChange(newFilters)
-  }
+  }, [filters, onFiltersChange])
 
-  const clearAllFilters = () => {
+  const clearAllFilters = useCallback(() => {
     const clearedFilters: Record<string, any> = { searchTerm: '' }
     uiFilters.forEach(filter => {
       clearedFilters[filter.key] = []
     })
     onFiltersChange(clearedFilters)
-  }
+  }, [uiFilters, onFiltersChange])
 
-  const hasActiveFilters = () => {
+  const hasActiveFiltersValue = useMemo(() => {
     return Object.entries(filters).some(([key, value]) => {
       if (key === 'searchTerm') {
         return typeof value === 'string' && value.length > 0
       }
       return Array.isArray(value) && value.length > 0
     })
-  }
+  }, [filters])
 
-  const getActiveFilterChips = (): FilterChip[] => {
+  const primaryFilters = useMemo(() => uiFilters.slice(0, 3), [uiFilters])
+  const additionalFilters = useMemo(() => uiFilters.slice(3), [uiFilters])
+
+  const activeFilterChips = useMemo((): FilterChip[] => {
     const chips: FilterChip[] = []
 
     Object.entries(filters).forEach(([filterType, filterValues]) => {
@@ -119,40 +120,44 @@ export function GenericEvaluationFilters({
           chips.push({
             type: filterType,
             value: value as string,
-            label: option?.label || String(value)
+            label: option?.label ?? String(value)
           })
         })
       }
     })
 
     return chips
-  }
+  }, [filters, uiFilters])
+
+  // Right content for view switcher
+  const rightContent = (
+    <Tabs value={currentView} onValueChange={(value) => onViewChange(value as 'table' | 'conversation')}>
+      <TabsList className="px-0.5 rounded-full">
+        <TabsTrigger value="table" className="text-[0.8125rem] px-3 rounded-full">
+          Table View
+        </TabsTrigger>
+        <TabsTrigger value="conversation" className="text-[0.8125rem] px-3 rounded-full">
+          Conversation View
+        </TabsTrigger>
+      </TabsList>
+    </Tabs>
+  )
 
   return (
-    <div className="space-y-4 px-4">
-      {/* View Toggle */}
-      <div className="flex justify-between items-center">
-        <Tabs value={currentView} onValueChange={(value) => onViewChange(value as 'table' | 'conversation')}>
-          <TabsList>
-            <TabsTrigger value="table">Table View</TabsTrigger>
-            <TabsTrigger value="conversation">Conversation View</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
-
-      {/* Filters */}
+   
       <FilterSearch
-        primaryFilters={uiFilters.slice(0, 3)}
-        additionalFilters={uiFilters.slice(3)}
-        activeFilterChips={getActiveFilterChips()}
+        primaryFilters={primaryFilters}
+        additionalFilters={additionalFilters}
+        filterChips={activeFilterChips}
         searchValue={filters.searchTerm || ''}
         onFilterChange={handleFilterChange}
         onSearchChange={handleSearchChange}
         onRemoveFilter={removeFilter}
         onClearAll={clearAllFilters}
-        hasActiveFilters={hasActiveFilters()}
-        filterState={filters}
+        hasActiveFilters={hasActiveFiltersValue}
+        filterValues={filters}
+        rightContent={rightContent}
       />
-    </div>
+
   )
 }

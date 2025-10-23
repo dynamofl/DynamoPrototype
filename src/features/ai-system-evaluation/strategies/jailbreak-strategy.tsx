@@ -31,46 +31,55 @@ export class JailbreakStrategy implements EvaluationStrategy {
    * Transform database records to frontend result format
    */
   transformPrompts(dbRecords: any[]): JailbreakEvaluationResult[] {
-    return dbRecords.map(record => ({
-      policyId: record.policy_id,
-      policyName: record.policy_name,
-      topic: record.topic,
-      promptTitle: record.prompt_title,
-      policyContext: record.policy_context,
-      behaviorType: record.behavior_type,
-      basePrompt: record.base_prompt,
-      attackType: record.attack_type as AttackType,
-      adversarialPrompt: record.adversarial_prompt as AdversarialPrompt,
-      systemResponse: record.ai_system_response?.content || record.system_response || '',
+    const transformed = dbRecords.map(record => {
+      // Check if already transformed (has camelCase properties)
+      if ('basePrompt' in record && 'behaviorType' in record && 'attackType' in record) {
+        return record as JailbreakEvaluationResult
+      }
 
-      // Input guardrail
-      inputGuardrailJudgement: record.input_guardrail?.judgement || null,
-      inputGuardrailReason: record.input_guardrail?.reason || null,
-      inputGuardrailDetails: record.input_guardrail?.details || null,
+      // Transform snake_case DB record to camelCase
+      return {
+        policyId: record.policy_id,
+        policyName: record.policy_name,
+        topic: record.topic,
+        promptTitle: record.prompt_title,
+        policyContext: record.policy_context,
+        behaviorType: record.behavior_type,
+        basePrompt: record.base_prompt,
+        attackType: record.attack_type as AttackType,
+        adversarialPrompt: record.adversarial_prompt as AdversarialPrompt,
+        systemResponse: record.ai_system_response?.content || record.system_response || '',
 
-      // Output guardrail
-      outputGuardrailJudgement: record.output_guardrail?.judgement || null,
-      outputGuardrailReason: record.output_guardrail?.reason || null,
-      outputGuardrailDetails: record.output_guardrail?.details || null,
+        // Input guardrail
+        inputGuardrailJudgement: record.input_guardrail?.judgement || null,
+        inputGuardrailReason: record.input_guardrail?.reason || null,
+        inputGuardrailDetails: record.input_guardrail?.details || null,
 
-      // Judge model (look in ai_system_response first, then fallback to judge_model)
-      judgeModelJudgement: record.ai_system_response?.judgement || record.judge_model?.judgement || null,
-      judgeModelReason: record.ai_system_response?.reason || record.judge_model?.reason || null,
+        // Output guardrail
+        outputGuardrailJudgement: record.output_guardrail?.judgement || null,
+        outputGuardrailReason: record.output_guardrail?.reason || null,
+        outputGuardrailDetails: record.output_guardrail?.details || null,
 
-      // Legacy fields for backward compatibility
-      guardrailJudgement: record.input_guardrail?.judgement || record.output_guardrail?.judgement || 'Allowed',
-      modelJudgement: record.ai_system_response?.judgement || 'Answered',
+        // Judge model (look in ai_system_response first, then fallback to judge_model)
+        judgeModelJudgement: record.ai_system_response?.judgement || record.judge_model?.judgement || null,
+        judgeModelReason: record.ai_system_response?.reason || record.judge_model?.reason || null,
 
-      // Attack outcomes
-      attackOutcome: record.attack_outcome || 'Attack Failure',
-      aiSystemAttackOutcome: record.ai_system_attack_outcome || record.attack_outcome || 'Attack Failure',
+        // Legacy fields for backward compatibility
+        guardrailJudgement: record.input_guardrail?.judgement || record.output_guardrail?.judgement || 'Allowed',
+        modelJudgement: record.ai_system_response?.judgement || 'Answered',
 
-      // Metrics
-      runtimeMs: record.runtime_ms,
-      inputTokens: record.ai_system_response?.input_tokens,
-      outputTokens: record.ai_system_response?.output_tokens,
-      totalTokens: (record.ai_system_response?.input_tokens || 0) + (record.ai_system_response?.output_tokens || 0)
-    }))
+        // Attack outcomes
+        attackOutcome: record.attack_outcome || 'Attack Failure',
+        aiSystemAttackOutcome: record.ai_system_attack_outcome || record.attack_outcome || 'Attack Failure',
+
+        // Metrics
+        runtimeMs: record.runtime_ms,
+        inputTokens: record.ai_system_response?.input_tokens,
+        outputTokens: record.ai_system_response?.output_tokens,
+        totalTokens: (record.ai_system_response?.input_tokens || 0) + (record.ai_system_response?.output_tokens || 0)
+      }
+    })
+    return transformed
   }
 
   /**
@@ -83,41 +92,45 @@ export class JailbreakStrategy implements EvaluationStrategy {
   /**
    * Get table columns configuration
    */
-  getTableColumns(hasGuardrails = true): ColumnConfig[] {
+  getTableColumns(options?: { hasInputGuardrails?: boolean; hasOutputGuardrails?: boolean }): ColumnConfig[] {
+    const { hasInputGuardrails = false, hasOutputGuardrails = false } = options || {}
     const columns: ColumnConfig[] = [
-      {
-        key: 'icon',
-        label: '',
-        width: 'w-8',
-        className: 'pr-[0px]',
-        render: () => <MessagesSquare className="h-4 w-4 text-gray-500" strokeWidth="2" />
-      },
       {
         key: 'basePrompt',
         label: 'Test Conversations',
-        render: (record) => (
-          <div className="truncate max-w-md group-hover:underline" title={record.base_prompt}>
-            {record.base_prompt}
-          </div>
-        )
+        className: 'font-450 text-gray-900',
+        render: (record) => {
+          const jailbreakRecord = record as JailbreakEvaluationResult
+          return (
+            <div className="truncate max-w-md group-hover:underline" title={jailbreakRecord.basePrompt}>
+              {jailbreakRecord.basePrompt}
+            </div>
+          )
+        }
       },
       {
         key: 'topic',
         label: 'Topic',
-        render: (record) => (
-          <Badge variant="outline" className="text-xs">
-            {record.topic || 'General'}
-          </Badge>
-        )
+        render: (record) => {
+          const jailbreakRecord = record as JailbreakEvaluationResult
+          return (
+            <Badge variant="outline" className="text-xs">
+              {jailbreakRecord.topic || 'General'}
+            </Badge>
+          )
+        }
       },
       {
         key: 'behaviorType',
         label: 'Behavior Type',
-        render: (record) => (
-          <Badge variant="secondary">
-            {record.behavior_type}
-          </Badge>
-        )
+        render: (record) => {
+          const jailbreakRecord = record as JailbreakEvaluationResult
+          return (
+            <Badge variant="secondary">
+              {jailbreakRecord.behaviorType}
+            </Badge>
+          )
+        }
       },
       {
         key: 'attackType',
@@ -127,51 +140,101 @@ export class JailbreakStrategy implements EvaluationStrategy {
           return (
             <div className="flex items-center gap-2">
               <SeverityIcon level={getAttackSeverityLevel(jailbreakRecord.attackType)} size="sm" />
-              <span>{jailbreakRecord.attackType}</span>
+              <span className="">{jailbreakRecord.attackType}</span>
             </div>
           )
         }
       }
     ]
 
-    // Add guardrail columns if applicable
-    if (hasGuardrails) {
-      columns.push(
-        {
-          key: 'inputGuardrail',
-          label: 'Input Guardrail',
-          render: (record) => {
-            if (!record.input_guardrail_judgement) return <span className="text-gray-400">—</span>
-            const isBlocked = record.input_guardrail_judgement === 'Blocked'
+    // Add input guardrail column if applicable
+    if (hasInputGuardrails) {
+      columns.push({
+        key: 'inputGuardrail',
+        label: 'Input Guardrail',
+        render: (record) => {
+          const jailbreakRecord = record as JailbreakEvaluationResult
+          if (!jailbreakRecord.inputGuardrailJudgement) {
+            return <span className="text-gray-400">—</span>
+          }
+
+          // Handle multiple guardrails with details
+          if (jailbreakRecord.inputGuardrailDetails && jailbreakRecord.inputGuardrailDetails.length > 1) {
+            const blockedCount = jailbreakRecord.inputGuardrailDetails.filter(d => d.judgement === 'Blocked').length
+            const totalCount = jailbreakRecord.inputGuardrailDetails.length
+            const hasBlocked = blockedCount > 0
+
             return (
               <div className="flex items-center gap-2">
-                {isBlocked ?
+                {hasBlocked ?
                   <ShieldBan className="w-4 h-4 text-red-600" /> :
                   <ShieldCheck className="w-4 h-4 text-green-600" />
                 }
-                <span>{record.input_guardrail_judgement}</span>
+                <span className="text-xs">
+                  {blockedCount > 0 ? `${blockedCount}/${totalCount} Blocked` : `${totalCount}/${totalCount} Allowed`}
+                </span>
               </div>
             )
           }
-        },
-        {
-          key: 'outputGuardrail',
-          label: 'Output Guardrail',
-          render: (record) => {
-            if (!record.output_guardrail_judgement) return <span className="text-gray-400">—</span>
-            const isBlocked = record.output_guardrail_judgement === 'Blocked'
-            return (
-              <div className="flex items-center gap-2">
-                {isBlocked ?
-                  <ShieldBan className="w-4 h-4 text-red-600" /> :
-                  <ShieldCheck className="w-4 h-4 text-green-600" />
-                }
-                <span>{record.output_guardrail_judgement}</span>
-              </div>
-            )
-          }
+
+          // Single guardrail
+          const isBlocked = jailbreakRecord.inputGuardrailJudgement === 'Blocked'
+          return (
+            <div className="flex items-center gap-2">
+              {isBlocked ?
+                <ShieldBan className="w-4 h-4 text-red-600" /> :
+                <ShieldCheck className="w-4 h-4 text-green-600" />
+              }
+              <span className="">{jailbreakRecord.inputGuardrailJudgement}</span>
+            </div>
+          )
         }
-      )
+      })
+    }
+
+    // Add output guardrail column if applicable
+    if (hasOutputGuardrails) {
+      columns.push({
+        key: 'outputGuardrail',
+        label: 'Output Guardrail',
+        render: (record) => {
+          const jailbreakRecord = record as JailbreakEvaluationResult
+          if (!jailbreakRecord.outputGuardrailJudgement) {
+            return <span className="text-gray-400">—</span>
+          }
+
+          // Handle multiple guardrails with details
+          if (jailbreakRecord.outputGuardrailDetails && jailbreakRecord.outputGuardrailDetails.length > 1) {
+            const blockedCount = jailbreakRecord.outputGuardrailDetails.filter(d => d.judgement === 'Blocked').length
+            const totalCount = jailbreakRecord.outputGuardrailDetails.length
+            const hasBlocked = blockedCount > 0
+
+            return (
+              <div className="flex items-center gap-2">
+                {hasBlocked ?
+                  <ShieldBan className="w-4 h-4 text-red-600" /> :
+                  <ShieldCheck className="w-4 h-4 text-green-600" />
+                }
+                <span className="text-xs">
+                  {blockedCount > 0 ? `${blockedCount}/${totalCount} Blocked` : `${totalCount}/${totalCount} Allowed`}
+                </span>
+              </div>
+            )
+          }
+
+          // Single guardrail
+          const isBlocked = jailbreakRecord.outputGuardrailJudgement === 'Blocked'
+          return (
+            <div className="flex items-center gap-2">
+              {isBlocked ?
+                <ShieldBan className="w-4 h-4 text-red-600" /> :
+                <ShieldCheck className="w-4 h-4 text-green-600" />
+              }
+              <span className="">{jailbreakRecord.outputGuardrailJudgement}</span>
+            </div>
+          )
+        }
+      })
     }
 
     // Judge model column
@@ -188,19 +251,20 @@ export class JailbreakStrategy implements EvaluationStrategy {
               <MessageCircleOff className="w-4 h-4 text-red-600" /> :
               <CircleCheckBig className="w-4 h-4 text-green-600" />
             }
-            <span>{judgement}</span>
+            <span className="">{judgement}</span>
           </div>
         )
       }
     })
 
     // Attack outcome column
+    const hasAnyGuardrails = hasInputGuardrails || hasOutputGuardrails
     columns.push({
       key: 'attackOutcome',
-      label: hasGuardrails ? 'Attack Outcome' : 'AI System Attack Outcome',
+      label: hasAnyGuardrails ? 'Attack Outcome' : 'AI System Attack Outcome',
       render: (record) => {
         const jailbreakRecord = record as JailbreakEvaluationResult
-        const outcome = hasGuardrails
+        const outcome = hasAnyGuardrails
           ? jailbreakRecord.attackOutcome
           : (jailbreakRecord.aiSystemAttackOutcome || jailbreakRecord.attackOutcome)
 
