@@ -15,6 +15,7 @@ export function mapSupabaseToEvaluationTests(
   return supabaseHistory.map(evaluation => ({
     id: evaluation.id,
     name: evaluation.name,
+    type: evaluation.evaluationType as 'compliance' | 'jailbreak' | undefined,
     status: evaluation.status as 'pending' | 'running' | 'completed' | 'failed' | 'cancelled',
     aiSystemId: evaluation.aiSystemId,
     aiSystemName: aiSystem.name,
@@ -40,12 +41,8 @@ export function mapSupabaseToEvaluationTests(
       total: evaluation.totalPrompts,
       currentPrompt: ''
     },
-    // NEW: Map individual summary metric columns from evaluations table
-    aiSystemAttackSuccessRate: evaluation.aiSystemAttackSuccessRate,
-    aiSystemGuardrailAttackSuccessRate: evaluation.aiSystemGuardrailAttackSuccessRate,
-    guardrailSuccessRate: evaluation.guardrailSuccessRate,
-    uniqueTopics: evaluation.uniqueTopics,
-    uniqueAttackAreas: evaluation.uniqueAttackAreas
+    // CRITICAL: Map metrics JSONB column (this is the source of truth)
+    metrics: evaluation.metrics || {}
   } as any));
 }
 
@@ -61,7 +58,6 @@ export function useEvaluationHistory(aiSystem: AISystem | null) {
     setEvaluationHistory(prev => {
       const index = prev.findIndex(e => e.id === updatedEvaluation.id);
       if (index === -1) {
-        console.log('⚠️ Evaluation not in list:', updatedEvaluation.id);
         return prev; // Not in list, no update needed
       }
 
@@ -74,41 +70,15 @@ export function useEvaluationHistory(aiSystem: AISystem | null) {
       const currentStageChanged = existing.currentStage !== updatedEvaluation.current_stage;
       const completedAtChanged = existing.completedAt !== updatedEvaluation.completed_at;
 
-      // Check if summary metric columns changed
-      const aiSystemAttackSuccessRateChanged = existing.aiSystemAttackSuccessRate !== updatedEvaluation.ai_system_attack_success_rate;
-      const aiSystemGuardrailAttackSuccessRateChanged = existing.aiSystemGuardrailAttackSuccessRate !== updatedEvaluation.ai_system_guardrail_attack_success_rate;
-      const guardrailSuccessRateChanged = existing.guardrailSuccessRate !== updatedEvaluation.guardrail_success_rate;
-      const uniqueTopicsChanged = existing.uniqueTopics !== updatedEvaluation.unique_topics;
-      const uniqueAttackAreasChanged = existing.uniqueAttackAreas !== updatedEvaluation.unique_attack_areas;
+      // Check if metrics changed
+      const metricsChanged = JSON.stringify(existing.metrics) !== JSON.stringify(updatedEvaluation.metrics);
 
-      const hasChanges = statusChanged || progressCurrentChanged || progressTotalChanged || currentStageChanged || completedAtChanged ||
-        aiSystemAttackSuccessRateChanged || aiSystemGuardrailAttackSuccessRateChanged ||
-        guardrailSuccessRateChanged || uniqueTopicsChanged || uniqueAttackAreasChanged;
+      const hasChanges = statusChanged || progressCurrentChanged || progressTotalChanged ||
+        currentStageChanged || completedAtChanged || metricsChanged;
 
       if (!hasChanges) {
-        console.log('✅ No changes detected, keeping same reference', {
-          existingStatus: existing.status,
-          newStatus: updatedEvaluation.status,
-          existingProgress: existing.progress?.current,
-          newProgress: updatedEvaluation.completed_prompts,
-          existingTotal: existing.progress?.total,
-          newTotal: updatedEvaluation.total_prompts
-        });
         return prev; // No changes, return same reference to prevent re-render
       }
-
-      console.log('🔄 Updating evaluation in list:', {
-        id: updatedEvaluation.id,
-        statusChanged,
-        progressCurrentChanged,
-        progressTotalChanged,
-        completedAtChanged,
-        aiSystemAttackSuccessRateChanged,
-        aiSystemGuardrailAttackSuccessRateChanged,
-        guardrailSuccessRateChanged,
-        uniqueTopicsChanged,
-        uniqueAttackAreasChanged
-      });
 
       // Create updated evaluation with new values
       const updated: EvaluationTest = {
@@ -127,12 +97,8 @@ export function useEvaluationHistory(aiSystem: AISystem | null) {
           overallMetrics: updatedEvaluation.summary_metrics,
           promptResults: existing.result?.promptResults || []
         } as any : existing.result,
-        // NEW: Update individual summary metric columns
-        aiSystemAttackSuccessRate: updatedEvaluation.ai_system_attack_success_rate,
-        aiSystemGuardrailAttackSuccessRate: updatedEvaluation.ai_system_guardrail_attack_success_rate,
-        guardrailSuccessRate: updatedEvaluation.guardrail_success_rate,
-        uniqueTopics: updatedEvaluation.unique_topics,
-        uniqueAttackAreas: updatedEvaluation.unique_attack_areas
+        // Metrics JSONB column
+        metrics: updatedEvaluation.metrics || {}
       };
 
       // Return new array with updated evaluation
@@ -145,12 +111,6 @@ export function useEvaluationHistory(aiSystem: AISystem | null) {
   // Throttled update function - max once per 500ms
   const throttledUpdate = useRef(
     throttle((evaluation: any) => {
-      console.log('🔄 Real-time update received:', {
-        id: evaluation.id,
-        status: evaluation.status,
-        completed: evaluation.completed_prompts,
-        total: evaluation.total_prompts
-      });
       updateEvaluationInList(evaluation);
     }, 500)
   ).current;
@@ -193,8 +153,6 @@ export function useEvaluationHistory(aiSystem: AISystem | null) {
 
     // Store the AI system ID for filtering
     aiSystemIdRef.current = aiSystem.id;
-
-    console.log('📡 Setting up real-time subscription for AI system:', aiSystem.name);
 
     // Create a channel for this AI system's evaluations
     const channel = supabase
@@ -245,9 +203,7 @@ export function useEvaluationHistory(aiSystem: AISystem | null) {
           });
         }
       )
-      .subscribe((status) => {
-        console.log('📡 Subscription status:', status);
-      });
+      .subscribe();
 
     channelRef.current = channel;
 

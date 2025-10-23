@@ -216,6 +216,3 @@ export async function fixInvalidUUIDs(): Promise<{
 if (typeof window !== 'undefined') {
   (window as any).fixInvalidUUIDs = fixInvalidUUIDs;
 }
-
-// Auto-run on import
-console.log('🔧 Invalid UUID fixer loaded. Run fixInvalidUUIDs() from console if needed.');

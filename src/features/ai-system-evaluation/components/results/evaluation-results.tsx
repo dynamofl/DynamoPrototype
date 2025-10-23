@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowDownToLine, ChevronsUpDown } from "lucide-react";
-import type { JailbreakEvaluationOutput } from "../../types/jailbreak-evaluation";
+import type { BaseEvaluationOutput } from "../../types/base-evaluation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,9 +18,10 @@ import { EvaluationDataView } from "./evaluation-data-view";
 import { EvaluationSummaryView } from "./evaluation-summary-view";
 import type { EvaluationTest } from "@/features/evaluation/types/evaluation-test";
 import type { AISystem } from "@/features/ai-systems/types/types";
+import { getEvaluationStrategy } from "../../strategies/strategy-factory";
 
 interface EvaluationResultsProps {
-  results: JailbreakEvaluationOutput;
+  results: BaseEvaluationOutput;
   evaluationName?: string;
   evaluationType?: string; // Type of evaluation (Jailbreak, Compliance, etc.)
   aiSystemName?: string; // AI system name for breadcrumb
@@ -63,9 +64,15 @@ export function EvaluationResults({
   const { systemName, evaluationId, view } = useParams<{ systemName: string; evaluationId?: string; view?: string }>();
   const [selectedTab, setSelectedTab] = useState<'summary' | 'data'>((view as 'summary' | 'data') || (propTab as 'summary' | 'data') || 'summary');
 
+  // Get strategy based on test type
+  const testType = results.test_type || 'jailbreak';
+  const strategy = getEvaluationStrategy(testType);
+
+  console.log(`📊 EvaluationResults: testType="${testType}", strategy="${strategy.displayName}"`);
+
   // Calculate total token utilization from all results
   const totalTokenUtilization = results.results.reduce((total, result) => {
-    return total + (result.totalTokens || 0);
+    return total + (result.total_tokens || 0);
   }, 0);
 
   // Update selectedTab when view or propTab changes
@@ -226,7 +233,9 @@ export function EvaluationResults({
         {selectedTab === 'summary' && (
           <EvaluationSummaryView
             summary={results.summary}
-            hasGuardrails={results.config.guardrailIds && results.config.guardrailIds.length > 0}
+            strategy={strategy}
+            testType={testType}
+            hasGuardrails={results.config.guardrail_ids && results.config.guardrail_ids.length > 0}
             aiSystemName={aiSystemName}
             aiSystemIcon={aiSystemIcon}
             timestamp={results.timestamp}
@@ -234,7 +243,7 @@ export function EvaluationResults({
             completedAt={completedAt}
             evaluationName={evaluationName}
             tokenUtilization={totalTokenUtilization}
-            topicAnalysis={results.topicAnalysis}
+            topicAnalysis={results.topic_analysis}
             evaluationResults={results.results}
           />
         )}
@@ -242,8 +251,10 @@ export function EvaluationResults({
         {selectedTab === 'data' && (
           <EvaluationDataView
             results={results.results}
+            strategy={strategy}
+            testType={testType}
             aiSystemName={aiSystemName}
-            hasGuardrails={results.config.guardrailIds && results.config.guardrailIds.length > 0}
+            hasGuardrails={results.config.guardrail_ids && results.config.guardrail_ids.length > 0}
             systemName={systemName}
             evaluationId={evaluationId}
           />

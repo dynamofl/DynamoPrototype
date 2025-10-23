@@ -17,10 +17,7 @@ window.quickMigrate = async () => {
   try {
     await migrateLocalStorageToSupabase()
     console.log('✅ Migration completed! Please refresh the page.')
-    console.log('📝 Next: Try creating an evaluation - it should now work with UUID IDs')
   } catch (error) {
     console.error('❌ Migration failed:', error)
   }
 }
-
-console.log('💡 Migration helper loaded. Run window.quickMigrate() to migrate your data.')

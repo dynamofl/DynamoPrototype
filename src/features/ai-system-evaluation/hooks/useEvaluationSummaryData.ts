@@ -22,7 +22,6 @@ export function useEvaluationSummaryData(
 
   useEffect(() => {
     const fetchSummaryData = async () => {
-      console.log('🔄 [SummaryData] Fetching summary data, evaluations:', evaluations.length);
       setLoading(true);
       setError(null);
 
@@ -32,9 +31,6 @@ export function useEvaluationSummaryData(
           (evaluation) => evaluation.status === 'completed'
         );
 
-        console.log('📊 [SummaryData] Completed evaluations:', completedEvaluations.length,
-          completedEvaluations.map(e => ({ id: e.id, name: e.name, type: e.type })));
-
         if (completedEvaluations.length === 0) {
           setData({ hasData: false });
           setLoading(false);
@@ -42,21 +38,22 @@ export function useEvaluationSummaryData(
         }
 
         // Fetch globally unique topics and attack areas across ALL evaluations
-        let uniqueMetrics = { uniqueTopics: 0, uniqueAttackAreas: 0 };
+        // Separated by test type (jailbreak/compliance)
+        let uniqueMetrics = {
+          jailbreak: { uniqueTopics: 0, uniqueAttackAreas: 0 },
+          compliance: { uniqueTopics: 0, uniqueAttackAreas: 0 }
+        };
         if (aiSystemName) {
           uniqueMetrics = await EvaluationService.getUniqueTopicsAndAttackAreas(aiSystemName);
-          console.log('📊 [SummaryData] Unique metrics across all evaluations:', uniqueMetrics);
         }
 
         // OPTIMIZED: Aggregate metrics directly from evaluation objects
-        // Pass the globally unique counts
+        // Pass the type-specific unique counts
         const summaryData = aggregateEvaluationMetrics(
           completedEvaluations,
-          uniqueMetrics.uniqueTopics,
-          uniqueMetrics.uniqueAttackAreas
+          uniqueMetrics
         );
 
-        console.log('✅ [SummaryData] Summary data computed:', summaryData);
         setData(summaryData);
         setLoading(false);
       } catch (err) {

@@ -46,18 +46,10 @@ export function useAISystemsSupabase() {
       // Ensure authenticated
       await ensureAuthenticated()
 
-      console.log('[useAISystemsSupabase] Fetching AI systems from Supabase...')
-
       const { data, error: fetchError } = await supabase
         .from('ai_systems')
         .select('*')
         .order('created_at', { ascending: false })
-
-      console.log('[useAISystemsSupabase] Fetch result:', {
-        count: data?.length || 0,
-        systems: data?.map(s => ({ id: s.id, name: s.name })) || [],
-        error: fetchError
-      })
 
       if (fetchError) {
         throw fetchError

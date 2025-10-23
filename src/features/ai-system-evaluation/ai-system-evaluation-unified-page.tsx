@@ -44,13 +44,13 @@ import { useAISystemsSupabase } from "@/features/ai-systems/lib/useAISystemsSupa
 
 // Types and services
 import type { EvaluationCreationData } from "./types/evaluation-creation";
-import type { JailbreakEvaluationOutput } from "./types/jailbreak-evaluation";
+import type { BaseEvaluationOutput } from "./types/base-evaluation";
 import type { EvaluationTest } from "@/features/evaluation/types/evaluation-test";
 import { validateModelAssignments } from "@/features/settings/lib/model-assignment-helper";
 import { EvaluationService } from "@/lib/supabase/evaluation-service";
 import { toUrlSlug } from "@/lib/utils";
-import { ensureValidSummary } from "./lib/calculate-summary";
 import { exportEvaluationsToCSV } from "./lib/export-utils";
+import { getEvaluationStrategy } from "./strategies/strategy-factory";
 
 export function AISystemEvaluationUnifiedPage() {
   const { systemName, evaluationId, view } = useParams<{
@@ -79,14 +79,8 @@ export function AISystemEvaluationUnifiedPage() {
   // Load all AI systems for system switching
   const { aiSystems, loading: aiSystemsLoading, reload: reloadAISystems } = useAISystemsSupabase();
 
-  // Debug log to check what systems are loaded
-  useEffect(() => {
-    console.log('[UnifiedPage] AI Systems loaded from backend:', aiSystems.length, aiSystems.map(s => ({ id: s.id, name: s.name })));
-  }, [aiSystems]);
-
   // Force reload AI systems on mount to ensure fresh data
   useEffect(() => {
-    console.log('[UnifiedPage] Forcing AI systems reload on mount');
     reloadAISystems();
   }, []);
 
@@ -97,7 +91,7 @@ export function AISystemEvaluationUnifiedPage() {
   const [selectedTest, setSelectedTest] = useState<EvaluationTest | null>(null);
   const [loadingResults, setLoadingResults] = useState(false); // Track if we're loading evaluation results
   const [loadingProgress, setLoadingProgress] = useState(false); // Track if we're loading progress details
-  const [evaluationResults, setEvaluationResults] = useState<JailbreakEvaluationOutput | null>(null);
+  const [evaluationResults, setEvaluationResults] = useState<BaseEvaluationOutput | null>(null);
   const [evaluationProgress, setEvaluationProgress] = useState({
     stage: '',
     current: 0,
@@ -151,24 +145,12 @@ export function AISystemEvaluationUnifiedPage() {
 
   // Handle evaluation detail view separately
   useEffect(() => {
-    console.log('📍 Detail view useEffect triggered:', {
-      evaluationId,
-      aiSystemLoading,
-      historyLoading,
-      hasEvaluations,
-      evaluationHistoryLength: evaluationHistory.length,
-      selectedTestId: selectedTest?.id,
-      timestamp: new Date().toISOString()
-    });
-
     if (aiSystemLoading || historyLoading) {
-      console.log('⏳ Skipping detail load - still loading');
       return;
     }
 
     // Clear selection when no evaluationId
     if (!evaluationId) {
-      console.log('🧹 No evaluationId, clearing selection');
       setSelectedTest(null);
       setEvaluationResults(null);
       return;
@@ -176,33 +158,23 @@ export function AISystemEvaluationUnifiedPage() {
 
     // Wait for evaluations to load
     if (!hasEvaluations || evaluationHistory.length === 0) {
-      console.log('⏳ Waiting for evaluations to load');
       return;
     }
 
     // IMPORTANT: Only load details if we don't already have this evaluation selected
     // This prevents re-loading when evaluationHistory updates from subscriptions
     if (selectedTest?.id === evaluationId) {
-      console.log('✅ Already have this evaluation selected, skipping reload');
       return;
     }
 
     // Load evaluation details
     const test = evaluationHistory.find(t => t.id === evaluationId);
     if (test) {
-      console.log('✅ Found evaluation, loading details:', {
-        testId: test.id,
-        testName: test.name,
-        status: test.status
-      });
       loadEvaluationDetails(test);
     } else {
-      console.warn('❌ Evaluation not found in history:', evaluationId);
-      console.log('Available IDs:', evaluationHistory.map(t => t.id));
       // Evaluation not found, go back to list after a short delay to avoid race conditions
       setTimeout(() => {
         if (aiSystem) {
-          console.log('🔙 Navigating back to list');
           navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation`);
         }
       }, 100);
@@ -222,7 +194,6 @@ export function AISystemEvaluationUnifiedPage() {
           selectedTest.progress?.total !== updatedTest.progress?.total;
 
         if (hasChanges) {
-          console.log('🔄 Syncing selectedTest with real-time update');
           setSelectedTest(updatedTest);
         }
       }
@@ -257,66 +228,10 @@ export function AISystemEvaluationUnifiedPage() {
         setLoadingResults(true);
         setEvaluationResults(null);
 
-        const { evaluation, prompts } = await EvaluationService.getEvaluationResults(test.id);
+        // Service already returns BaseEvaluationOutput with transformed data
+        const evaluationOutput = await EvaluationService.getEvaluationResults(test.id);
 
-        const results = prompts.map(prompt => ({
-          policyId: prompt.policy_id || 'unknown',
-          policyName: prompt.policy_name || 'Policy',
-          topic: prompt.topic || 'General', // Add topic field from database
-          promptTitle: prompt.prompt_title || null, // Add prompt title from database
-          policyContext: prompt.policy_context || null, // JSONB: Full policy context with behaviors
-          behaviorType: prompt.behavior_type || 'Disallowed',
-          basePrompt: prompt.base_prompt || '',
-          attackType: prompt.attack_type || 'Unknown',
-          adversarialPrompt: prompt.adversarial_prompt || prompt.base_prompt || '',
-          systemResponse: prompt.ai_system_response?.content || '',
-
-          // Consolidated guardrail evaluations
-          inputGuardrailJudgement: prompt.input_guardrail?.judgement || null,
-          inputGuardrailReason: prompt.input_guardrail?.reason || null,
-          inputGuardrailViolations: null, // No longer used - violations are in details
-          outputGuardrailJudgement: prompt.output_guardrail?.judgement || null,
-          outputGuardrailReason: prompt.output_guardrail?.reason || null,
-          outputGuardrailViolations: null, // No longer used - violations are in details
-
-          // Judge model evaluation (from consolidated ai_system_response)
-          judgeModelJudgement: prompt.ai_system_response?.judgement || null,
-          judgeModelReason: prompt.ai_system_response?.reason || null,
-          judgeModelConfidence: prompt.ai_system_response?.confidenceScore || null,
-          judgeModelLatency: prompt.ai_system_response?.latencyMs || null,
-          judgeModelAnswerPhrases: prompt.ai_system_response?.answerPhrases || null,
-
-          // Per-guardrail DETAILED results (for multi-guardrail evaluations)
-          inputGuardrailDetails: prompt.input_guardrail?.details || null,
-          outputGuardrailDetails: prompt.output_guardrail?.details || null,
-
-          // Legacy fields (kept for backward compatibility)
-          guardrailJudgement: prompt.guardrail_judgement || 'Unknown',
-          modelJudgement: prompt.model_judgement || 'Unknown',
-
-          attackOutcome: prompt.attack_outcome || 'Unknown',
-          aiSystemAttackOutcome: prompt.ai_system_attack_outcome || prompt.attack_outcome || 'Unknown', // NEW: AI system-only outcome
-
-          // Evaluation-level metrics
-          runtimeMs: prompt.runtime_ms,
-          inputTokens: prompt.input_tokens,
-          outputTokens: prompt.ai_system_response?.outputTokens || null,
-          totalTokens: prompt.total_tokens
-        }));
-
-        const jailbreakOutput: JailbreakEvaluationOutput = {
-          evaluationId: evaluation.id,
-          timestamp: evaluation.created_at,
-          config: evaluation.config || {
-            aiSystemId: evaluation.ai_system_id,
-            policies: [],
-            guardrailIds: []
-          },
-          results,
-          summary: ensureValidSummary(evaluation.summary_metrics, results),
-          topicAnalysis: evaluation.topic_analysis || undefined
-        };
-        setEvaluationResults(jailbreakOutput);
+        setEvaluationResults(evaluationOutput);
         setLoadingResults(false);
       } catch (error) {
         console.error('Failed to load evaluation results:', error);
@@ -436,11 +351,6 @@ export function AISystemEvaluationUnifiedPage() {
   };
 
   const handleEvaluationCreated = async (data: EvaluationCreationData) => {
-    if (data.type !== 'jailbreak') {
-      setShowCreationFlow(false);
-      return;
-    }
-
     const validation = validateModelAssignments();
     if (!validation.valid) {
       alert(`Please configure model assignments in Settings → Internal Models.\n\nMissing assignments for:\n- ${validation.missing.join('\n- ')}`);
@@ -480,55 +390,23 @@ export function AISystemEvaluationUnifiedPage() {
 
   // Handle clicks from history table - memoized to prevent table re-renders
   const handleViewResults = useCallback((test: EvaluationTest) => {
-    console.log('🔀 handleViewResults called:', {
-      testId: test.id,
-      testName: test.name,
-      aiSystemName: aiSystem?.name,
-      timestamp: new Date().toISOString()
-    });
-
     if (aiSystem) {
       const url = `/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation/${test.id}/summary`;
-      console.log('🔀 Navigating to:', url);
       navigate(url);
-    } else {
-      console.warn('⚠️ No aiSystem available for navigation');
     }
   }, [aiSystem, navigate]);
 
   const handleShowProgress = useCallback((test: EvaluationTest) => {
-    console.log('🔀 handleShowProgress called:', {
-      testId: test.id,
-      testName: test.name,
-      testStatus: test.status,
-      aiSystemName: aiSystem?.name,
-      timestamp: new Date().toISOString()
-    });
-
     if (aiSystem) {
       const url = `/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation/${test.id}`;
-      console.log('🔀 Navigating to:', url);
       navigate(url);
-    } else {
-      console.warn('⚠️ No aiSystem available for navigation');
     }
   }, [aiSystem, navigate]);
 
   const handleTestDetails = useCallback((test: EvaluationTest) => {
-    console.log('🔀 handleTestDetails called:', {
-      testId: test.id,
-      testName: test.name,
-      testStatus: test.status,
-      aiSystemName: aiSystem?.name,
-      timestamp: new Date().toISOString()
-    });
-
     if (aiSystem) {
       const url = `/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation/${test.id}`;
-      console.log('🔀 Navigating to:', url);
       navigate(url);
-    } else {
-      console.warn('⚠️ No aiSystem available for navigation');
     }
   }, [aiSystem, navigate]);
 
@@ -675,73 +553,23 @@ export function AISystemEvaluationUnifiedPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `evaluation-${evaluationResults.evaluationId}.json`;
+      a.download = `evaluation-${evaluationResults.evaluation_id}.json`;
       a.click();
     } else if (format === 'csv') {
-      // Comprehensive headers including all new fields
-      const headers = [
-        'Policy ID',
-        'Policy Name',
-        'Topic',
-        'Prompt Title',
-        'Behavior Type',
-        'Attack Type',
-        'Base Prompt',
-        'Adversarial Prompt',
-        'System Response',
-        'Input Guardrail Judgement',
-        'Input Guardrail Reason',
-        'Output Guardrail Judgement',
-        'Output Guardrail Reason',
-        'Judge Model Judgement',
-        'Judge Model Reason',
-        'Judge Model Confidence',
-        'Attack Outcome',
-        'AI System Attack Outcome',
-        'Runtime (ms)',
-        'Input Tokens',
-        'Output Tokens',
-        'Total Tokens'
-      ];
+      // Use strategy to get export fields
+      const strategy = getEvaluationStrategy(evaluationResults.test_type);
+      const exportFields = strategy.getExportFields();
 
-      const rows = evaluationResults.results.map(r => {
-        // Format adversarial prompt - handle both single-turn and multi-turn
-        let adversarialPromptText = '';
-        if (typeof r.adversarialPrompt === 'string') {
-          adversarialPromptText = r.adversarialPrompt;
-        } else if (Array.isArray(r.adversarialPrompt)) {
-          // Multi-turn conversation
-          adversarialPromptText = r.adversarialPrompt.map((turn: any) => `${turn.role}: ${turn.content}`).join('\n');
-        } else if (typeof r.adversarialPrompt === 'object' && 'text' in r.adversarialPrompt) {
-          // Single-turn object format
-          adversarialPromptText = (r.adversarialPrompt as any).text;
-        }
+      // Extract headers
+      const headers = exportFields.map(field => field.label);
 
-        return [
-          r.policyId || '',
-          r.policyName || '',
-          r.topic || '',
-          r.promptTitle || '',
-          r.behaviorType || '',
-          r.attackType || '',
-          r.basePrompt || '',
-          adversarialPromptText,
-          r.systemResponse || '',
-          r.inputGuardrailJudgement || '',
-          r.inputGuardrailReason || '',
-          r.outputGuardrailJudgement || '',
-          r.outputGuardrailReason || '',
-          r.judgeModelJudgement || '',
-          r.judgeModelReason || '',
-          r.judgeModelConfidence?.toString() || '',
-          r.attackOutcome || '',
-          r.aiSystemAttackOutcome || '',
-          r.runtimeMs?.toString() || '',
-          r.inputTokens?.toString() || '',
-          r.outputTokens?.toString() || '',
-          r.totalTokens?.toString() || ''
-        ];
-      });
+      // Extract rows using strategy's getValue functions
+      const rows = evaluationResults.results.map(result =>
+        exportFields.map(field => {
+          const value = field.getValue(result);
+          return value !== null && value !== undefined ? String(value) : '';
+        })
+      );
 
       // Escape CSV cells properly
       const escapeCsvCell = (cell: string) => {
@@ -761,7 +589,7 @@ export function AISystemEvaluationUnifiedPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `evaluation-${evaluationResults.evaluationId}.csv`;
+      a.download = `evaluation-${evaluationResults.evaluation_id}.csv`;
       a.click();
     }
   };

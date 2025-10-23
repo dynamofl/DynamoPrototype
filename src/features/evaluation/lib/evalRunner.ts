@@ -273,7 +273,6 @@ export function debugProviderConfiguration() {
 // Global debug function - available immediately
 if (typeof window !== 'undefined') {
   (window as any).debugProviders = debugProviderConfiguration;
-  console.log('🔧 Debug function ready: window.debugProviders()');
 }
 
 // Helper function to get available models from stored providers

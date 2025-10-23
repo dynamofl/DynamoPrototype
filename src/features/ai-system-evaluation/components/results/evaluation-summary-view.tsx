@@ -1,4 +1,6 @@
-import type { JailbreakEvaluationOutput } from "../../types/jailbreak-evaluation";
+import type { BaseEvaluationSummary, BaseEvaluationResult } from "../../types/base-evaluation";
+import type { JailbreakEvaluationSummary } from "../../types/jailbreak-evaluation";
+import type { EvaluationStrategy } from "../../strategies/base-strategy";
 import { OverviewSection } from "./summary/overview-section";
 import { DualAttackScoreGauge } from "./summary/dual-attack-score-gauge";
 import { SummaryStatsCards } from "./summary/summary-stats-cards";
@@ -7,11 +9,14 @@ import { AttackTypeResultsSection } from "./summary/attack-type-results-section"
 import { BehaviorTypeResultsSection } from "./summary/behavior-type-results-section";
 import { AttackSuccessRateChart } from "./summary/attack-success-rate-chart";
 import { EvaluationSummaryCards } from "./summary/evaluation-summary-cards";
+import { GenericSummaryCards } from "./summary/generic-summary-cards";
 import { AISystemIcon } from "@/components/patterns/ui-patterns/ai-system-icon";
 import { TopicAnalysisSection } from "./summary/topic-analysis-section";
 
 interface EvaluationSummaryViewProps {
-  summary: JailbreakEvaluationOutput["summary"];
+  summary: BaseEvaluationSummary;
+  strategy: EvaluationStrategy;
+  testType: string;
   hasGuardrails?: boolean;  // NEW: Whether evaluation has guardrails configured
   aiSystemName?: string;
   aiSystemIcon?:
@@ -30,12 +35,14 @@ interface EvaluationSummaryViewProps {
   completedAt?: string;
   evaluationName?: string;
   tokenUtilization?: number;
-  topicAnalysis?: JailbreakEvaluationOutput["topicAnalysis"]; // Topic analysis with AI insights
-  evaluationResults?: JailbreakEvaluationOutput["results"]; // Evaluation prompts for behavior extraction
+  topicAnalysis?: any; // Topic analysis with AI insights
+  evaluationResults?: BaseEvaluationResult[]; // Evaluation prompts for behavior extraction
 }
 
 export function EvaluationSummaryView({
   summary,
+  strategy,
+  testType,
   hasGuardrails = false,
   aiSystemName,
   aiSystemIcon,
@@ -47,6 +54,11 @@ export function EvaluationSummaryView({
   topicAnalysis,
   evaluationResults,
 }: EvaluationSummaryViewProps) {
+  // Check if this is a jailbreak evaluation (use existing components) or other type (use generic)
+  const isJailbreak = testType === 'jailbreak';
+
+  console.log(`📊 EvaluationSummaryView: testType="${testType}", strategy="${strategy.displayName}", isJailbreak=${isJailbreak}`);
+
   // Format timestamp
   const formattedDate = new Date(timestamp).toLocaleDateString("en-US", {
     month: "short",
@@ -97,7 +109,7 @@ export function EvaluationSummaryView({
         <div className="grid grid-cols-4 gap-6 mx-3 py-3 border-t border-dashed border-gray-200">
           <div className="flex flex-col gap-1">
             <p className="text-sm  text-gray-600">Evaluation Category</p>
-            <p className="text-sm text-gray-900">Policy Jailbreaking</p>
+            <p className="text-sm text-gray-900">{strategy.displayName}</p>
           </div>
 
           <div className="flex flex-col gap-1">
@@ -120,57 +132,76 @@ export function EvaluationSummaryView({
           </div>
         </div>
 
-        {/* New Three-Card Layout */}
-        {/* <div className="mx-3">
-          <EvaluationSummaryCards
-            summary={summary}
-            hasGuardrails={hasGuardrails}
-          />
-        </div> */}
+        {/* Conditional rendering based on test type */}
+        {isJailbreak ? (
+          // Jailbreak-specific components (existing UI)
+          <>
+            {/* Overview and Gauge - Two Column Layout */}
+            <div className="max-w-4xl mx-auto">
+              <div className={`grid ${hasGuardrails ? 'grid-cols-5' : 'grid-cols-4'} px-3 py-2 align-center items-center rounded-lg bg-gray-100`}>
+                {/* Left: Overview Description */}
+                <div className={hasGuardrails ? 'col-span-3' : 'col-span-3'}>
+                  <OverviewSection summary={summary as JailbreakEvaluationSummary} hasGuardrails={hasGuardrails} />
+                </div>
 
-        {/* Overview and Gauge - Two Column Layout */}
-        <div className="max-w-4xl mx-auto">
-          <div className={`grid ${hasGuardrails ? 'grid-cols-5' : 'grid-cols-4'} px-3 py-2 align-center items-center rounded-lg bg-gray-100`}>
-            {/* Left: Overview Description */}
-            <div className={hasGuardrails ? 'col-span-3' : 'col-span-3'}>
-              <OverviewSection summary={summary} hasGuardrails={hasGuardrails} />
+                {/* Right: Attack Score Gauge */}
+                <div className={hasGuardrails ? 'col-span-2' : 'col-span-1'}>
+                  <DualAttackScoreGauge summary={summary as JailbreakEvaluationSummary} hasGuardrails={hasGuardrails} />
+                </div>
+              </div>
             </div>
 
-            {/* Right: Attack Score Gauge */}
-            <div className={hasGuardrails ? 'col-span-2' : 'col-span-1'}>
-              <DualAttackScoreGauge summary={summary} hasGuardrails={hasGuardrails} />
+            {/* Overall Stats Cards */}
+            <div className="max-w-4xl mx-auto">
+              <SummaryStatsCards summary={summary as JailbreakEvaluationSummary} />
             </div>
-          </div>
-        </div>
 
-        {/* Overall Stats Cards */}
-        <div className="max-w-4xl mx-auto">
-          <SummaryStatsCards summary={summary} />
-        </div>
+            {/* By Policy */}
+            <div className="max-w-4xl mx-auto">
+              <PolicyResultsSection byPolicy={(summary as JailbreakEvaluationSummary).byPolicy} />
+            </div>
 
-        {/* By Policy */}
-        <div className="max-w-4xl mx-auto">
-          <PolicyResultsSection byPolicy={summary.byPolicy} />
-        </div>
+            {/* By Attack Type */}
+            <div className="max-w-4xl mx-auto">
+              <AttackTypeResultsSection byAttackType={(summary as JailbreakEvaluationSummary).byAttackType} />
+            </div>
 
-        {/* By Attack Type */}
-        <div className="max-w-4xl mx-auto">
-          <AttackTypeResultsSection byAttackType={summary.byAttackType} />
-        </div>
+            {/* By Behavior Type */}
+            <div className="max-w-4xl mx-auto">
+              <BehaviorTypeResultsSection byBehaviorType={(summary as JailbreakEvaluationSummary).byBehaviorType} />
+            </div>
 
-        {/* By Behavior Type */}
-        <div className="max-w-4xl mx-auto">
-          <BehaviorTypeResultsSection byBehaviorType={summary.byBehaviorType} />
-        </div>
+            {/* Topic Analysis */}
+            {topicAnalysis && (
+              <div className="max-w-4xl mx-auto">
+                <TopicAnalysisSection
+                  topicAnalysis={topicAnalysis}
+                  evaluationResults={evaluationResults}
+                />
+              </div>
+            )}
+          </>
+        ) : (
+          // Generic summary cards for other test types (compliance, etc.)
+          <>
+            <div className="max-w-4xl mx-auto">
+              <GenericSummaryCards
+                summary={summary}
+                strategy={strategy}
+                testType={testType}
+              />
+            </div>
 
-        {/* Topic Analysis */}
-        {topicAnalysis && (
-          <div className="max-w-4xl mx-auto">
-            <TopicAnalysisSection
-              topicAnalysis={topicAnalysis}
-              evaluationResults={evaluationResults}
-            />
-          </div>
+            {/* By Policy */}
+            <div className="max-w-4xl mx-auto">
+              <PolicyResultsSection byPolicy={summary.by_policy} />
+            </div>
+
+            {/* By Behavior Type */}
+            <div className="max-w-4xl mx-auto">
+              <BehaviorTypeResultsSection byBehaviorType={summary.by_behavior_type} />
+            </div>
+          </>
         )}
       </div>
     </div>

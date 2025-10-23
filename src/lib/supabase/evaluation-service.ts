@@ -4,6 +4,8 @@ import { supabase, getAuthToken, ensureAuthenticated } from './client';
 import type { EvaluationCreationData } from '@/features/ai-system-evaluation/types/evaluation-creation';
 import { ModelAssignmentStorage } from '@/features/settings/lib/model-assignment-storage';
 import { EvaluationModelStorage } from '@/features/settings/lib/evaluation-model-storage';
+import { getEvaluationStrategy } from '@/features/ai-system-evaluation/strategies/strategy-factory';
+import type { BaseEvaluationOutput } from '@/features/ai-system-evaluation/types/base-evaluation';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
 
@@ -20,6 +22,7 @@ export interface EvaluationSummary {
   id: string;
   name: string;
   status: string;
+  evaluationType?: string;
   aiSystemId: string;
   totalPrompts: number;
   completedPrompts: number;
@@ -27,12 +30,8 @@ export interface EvaluationSummary {
   startedAt?: string;
   completedAt?: string;
   summaryMetrics?: any;
-  // NEW: Individual summary metric columns
-  aiSystemAttackSuccessRate?: number;
-  aiSystemGuardrailAttackSuccessRate?: number;
-  guardrailSuccessRate?: number | null;
-  uniqueTopics?: number;
-  uniqueAttackAreas?: number;
+  // Metrics JSONB column - structure varies by evaluation type
+  metrics?: Record<string, any>;
   guardrailsCount?: number;
 }
 
@@ -176,6 +175,7 @@ export class EvaluationService {
         policyIds: data.policyIds || [],
         guardrailIds: data.guardrailIds || [],
         config: {
+          testType: data.type || 'jailbreak', // Add testType to config for backend prompt generation
           temperature: 0.7,
           maxTokens: 1000,
           testExecutionApiKey,
@@ -259,6 +259,7 @@ export class EvaluationService {
       id: evaluation.id,
       name: evaluation.name,
       status: evaluation.status,
+      evaluationType: evaluation.evaluation_type,
       aiSystemId: evaluation.ai_system_id,
       totalPrompts: evaluation.total_prompts,
       completedPrompts: evaluation.completed_prompts,
@@ -266,20 +267,88 @@ export class EvaluationService {
       startedAt: evaluation.started_at,
       completedAt: evaluation.completed_at,
       summaryMetrics: evaluation.summary_metrics,
-      // NEW: Map individual summary metric columns
-      aiSystemAttackSuccessRate: evaluation.ai_system_attack_success_rate,
-      aiSystemGuardrailAttackSuccessRate: evaluation.ai_system_guardrail_attack_success_rate,
-      guardrailSuccessRate: evaluation.guardrail_success_rate,
-      uniqueTopics: evaluation.unique_topics,
-      uniqueAttackAreas: evaluation.unique_attack_areas,
+      // Metrics JSONB column
+      metrics: evaluation.metrics || {},
       guardrailsCount: evaluation.guardrails_count
     }));
   }
 
   /**
-   * Get evaluation results
+   * Get evaluation results with multi-test-type support
+   * Uses strategy pattern to handle different test types (jailbreak, compliance, etc.)
    */
-  static async getEvaluationResults(evaluationId: string): Promise<{
+  static async getEvaluationResults(evaluationId: string): Promise<BaseEvaluationOutput> {
+    await ensureAuthenticated();
+
+    // Get evaluation config to determine test type
+    const { data: evaluation, error: evalError } = await supabase
+      .from('evaluations')
+      .select('*')
+      .eq('id', evaluationId)
+      .single();
+
+    if (evalError || !evaluation) {
+      throw new Error('Evaluation not found');
+    }
+
+    // Determine test type from config (default to jailbreak for backward compatibility)
+    const testType = evaluation.config?.testType || evaluation.config?.test_type || 'jailbreak';
+
+    console.log(`📊 Fetching ${testType} evaluation results for: ${evaluationId}`);
+
+    // Route to correct table based on test type
+    const tableName = testType === 'compliance'
+      ? 'compliance_prompts'
+      : 'jailbreak_prompts';
+
+    // Fetch prompts from the appropriate table
+    const { data: prompts, error: promptsError } = await supabase
+      .from(tableName)
+      .select('*')
+      .eq('evaluation_id', evaluationId)
+      .order('prompt_index');
+
+    if (promptsError) {
+      console.error(`Failed to fetch prompts from ${tableName}:`, promptsError);
+      throw new Error(`Failed to fetch prompts: ${promptsError.message}`);
+    }
+
+    console.log(`✅ Fetched ${prompts?.length || 0} prompts from ${tableName}`);
+
+    // Get strategy for this test type
+    const strategy = getEvaluationStrategy(testType);
+    console.log(`🔧 Using ${strategy.displayName} strategy`);
+
+    // Transform prompts using strategy
+    const results = strategy.transformPrompts(prompts || []);
+    console.log(`✅ Transformed ${results.length} results`);
+
+    // Calculate summary using strategy
+    const summary = strategy.calculateSummary(results);
+    console.log(`✅ Calculated summary metrics`);
+
+    // Return standardized BaseEvaluationOutput
+    return {
+      evaluation_id: evaluationId,
+      test_type: testType,
+      timestamp: evaluation.created_at,
+      results,
+      summary,
+      config: {
+        ...evaluation.config,
+        test_type: testType,
+        policy_ids: evaluation.config?.policyIds || evaluation.config?.policy_ids,
+        guardrail_ids: evaluation.config?.guardrailIds || evaluation.config?.guardrail_ids
+      },
+      topic_analysis: evaluation.topic_analysis
+    };
+  }
+
+  /**
+   * Legacy method for backward compatibility
+   * @deprecated Use getEvaluationResults() which returns BaseEvaluationOutput
+   */
+  static async getEvaluationResultsLegacy(evaluationId: string): Promise<{
     evaluation: any;
     prompts: any[];
   }> {
@@ -296,9 +365,15 @@ export class EvaluationService {
       throw new Error('Evaluation not found');
     }
 
+    // Determine table based on test type
+    const testType = evaluation.config?.testType || evaluation.config?.test_type || 'jailbreak';
+    const tableName = testType === 'compliance'
+      ? 'compliance_prompts'
+      : 'jailbreak_prompts';
+
     // Get all prompts
     const { data: prompts, error: promptsError } = await supabase
-      .from('evaluation_prompts')
+      .from(tableName)
       .select('*')
       .eq('evaluation_id', evaluationId)
       .order('prompt_index');
@@ -387,10 +462,17 @@ export class EvaluationService {
 
   /**
    * Get unique topics and attack areas across all evaluations for an AI system
+   * Separated by test type (jailbreak/compliance)
    */
   static async getUniqueTopicsAndAttackAreas(aiSystemName: string): Promise<{
-    uniqueTopics: number;
-    uniqueAttackAreas: number;
+    jailbreak: {
+      uniqueTopics: number;
+      uniqueAttackAreas: number;
+    };
+    compliance: {
+      uniqueTopics: number;
+      uniqueAttackAreas: number;
+    };
   }> {
     await ensureAuthenticated();
 
@@ -403,62 +485,76 @@ export class EvaluationService {
 
     if (aiSystemError || !aiSystem) {
       console.error('Failed to find AI system:', aiSystemError);
-      return { uniqueTopics: 0, uniqueAttackAreas: 0 };
+      return {
+        jailbreak: { uniqueTopics: 0, uniqueAttackAreas: 0 },
+        compliance: { uniqueTopics: 0, uniqueAttackAreas: 0 }
+      };
     }
 
-    // Get all evaluation IDs for this AI system
+    // Get all evaluation IDs for this AI system, separated by type
     const { data: evaluations, error: evaluationsError } = await supabase
       .from('evaluations')
-      .select('id')
+      .select('id, evaluation_type')
       .eq('ai_system_id', aiSystem.id);
 
     if (evaluationsError || !evaluations || evaluations.length === 0) {
       console.error('Failed to fetch evaluations or no evaluations found:', evaluationsError);
-      return { uniqueTopics: 0, uniqueAttackAreas: 0 };
+      return {
+        jailbreak: { uniqueTopics: 0, uniqueAttackAreas: 0 },
+        compliance: { uniqueTopics: 0, uniqueAttackAreas: 0 }
+      };
     }
 
-    const evaluationIds = evaluations.map(e => e.id);
+    // Separate evaluation IDs by type
+    const jailbreakEvaluationIds = evaluations
+      .filter(e => (e.evaluation_type || 'jailbreak') === 'jailbreak')
+      .map(e => e.id);
+    const complianceEvaluationIds = evaluations
+      .filter(e => e.evaluation_type === 'compliance')
+      .map(e => e.id);
 
-    // Query to get unique topics across all evaluations for this AI system
-    const { data: topicsData, error: topicsError } = await supabase
-      .from('evaluation_prompts')
-      .select('topic')
-      .in('evaluation_id', evaluationIds)
-      .not('topic', 'is', null);
+    // Query jailbreak prompts for unique topics and attack areas
+    let jailbreakMetrics = { uniqueTopics: 0, uniqueAttackAreas: 0 };
+    if (jailbreakEvaluationIds.length > 0) {
+      const { data: jailbreakTopicsData } = await supabase
+        .from('jailbreak_prompts')
+        .select('topic')
+        .in('evaluation_id', jailbreakEvaluationIds)
+        .not('topic', 'is', null);
 
-    if (topicsError) {
-      console.error('Failed to fetch topics:', topicsError);
+      const { data: jailbreakAttackTypesData } = await supabase
+        .from('jailbreak_prompts')
+        .select('attack_type')
+        .in('evaluation_id', jailbreakEvaluationIds)
+        .not('attack_type', 'is', null);
+
+      jailbreakMetrics = {
+        uniqueTopics: jailbreakTopicsData
+          ? new Set(jailbreakTopicsData.map((row) => row.topic)).size
+          : 0,
+        uniqueAttackAreas: jailbreakAttackTypesData
+          ? new Set(jailbreakAttackTypesData.map((row) => row.attack_type)).size
+          : 0
+      };
     }
 
-    // Query to get unique attack types across all evaluations for this AI system
-    const { data: attackTypesData, error: attackTypesError } = await supabase
-      .from('evaluation_prompts')
-      .select('attack_type')
-      .in('evaluation_id', evaluationIds)
-      .not('attack_type', 'is', null);
+    // Query compliance prompts for unique topics
+    let complianceMetrics = { uniqueTopics: 0, uniqueAttackAreas: 0 };
+    if (complianceEvaluationIds.length > 0) {
+      const { data: complianceTopicsData } = await supabase
+        .from('compliance_prompts')
+        .select('topic')
+        .in('evaluation_id', complianceEvaluationIds)
+        .not('topic', 'is', null);
 
-    if (attackTypesError) {
-      console.error('Failed to fetch attack types:', attackTypesError);
+      complianceMetrics = {
+        uniqueTopics: complianceTopicsData
+          ? new Set(complianceTopicsData.map((row) => row.topic)).size
+          : 0,
+        uniqueAttackAreas: 0 // Compliance doesn't have attack areas
+      };
     }
 
-    // Count unique values
-    const uniqueTopics = topicsData
-      ? new Set(topicsData.map((row) => row.topic)).size
-      : 0;
-
-    const uniqueAttackAreas = attackTypesData
-      ? new Set(attackTypesData.map((row) => row.attack_type)).size
-      : 0;
-
-    console.log('📊 [getUniqueTopicsAndAttackAreas] Results:', {
-      aiSystemName,
-      evaluationCount: evaluations.length,
-      totalTopicRows: topicsData?.length || 0,
-      uniqueTopics,
-      totalAttackRows: attackTypesData?.length || 0,
-      uniqueAttackAreas
-    });
-
-    return { uniqueTopics, uniqueAttackAreas };
+    return { jailbreak: jailbreakMetrics, compliance: complianceMetrics };
   }
 }

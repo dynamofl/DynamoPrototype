@@ -268,5 +268,4 @@ export async function fixMissingSummaryMetrics() {
 // Make it available globally in browser console
 if (typeof window !== 'undefined') {
   (window as any).fixMissingSummaryMetrics = fixMissingSummaryMetrics;
-  console.log('✅ Fix script loaded. Run window.fixMissingSummaryMetrics() to fix evaluations with missing summary_metrics.');
 }

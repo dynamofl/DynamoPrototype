@@ -133,8 +133,6 @@ export function useGlobalEvaluationMonitor() {
   useEffect(() => {
     if (!isInitialized) return;
 
-    console.log('📡 [Global Monitor] Setting up evaluation monitoring');
-
     const channel = supabase
       .channel('global-evaluation-monitor')
       .on(
@@ -185,9 +183,7 @@ export function useGlobalEvaluationMonitor() {
           }
         }
       )
-      .subscribe((status) => {
-        console.log('📡 [Global Monitor] Subscription status:', status);
-      });
+      .subscribe();
 
     channelRef.current = channel;
 

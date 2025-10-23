@@ -4,10 +4,26 @@
 // LAYER 3: Evaluation Execution (generic, in run-evaluation)
 // LAYER 4: Outcome Determination (evaluation-type specific, in run-evaluation)
 
-import type { Policy, EvaluationPrompt, InternalModelConfig, EvaluationConfig } from './types.ts';
+import type {
+  Policy,
+  JailbreakPrompt,
+  CompliancePrompt,
+  EvaluationPrompt,
+  InternalModelConfig,
+  EvaluationConfig
+} from './types.ts';
 import { aiApiLimiter } from './rate-limiter.ts';
-import { getBasePromptGenerator, type BasePromptContext } from './base-prompt-generators.ts';
-import { getTransformer, JailbreakTransformer, type TransformContext } from './prompt-transformers.ts';
+import {
+  getBasePromptGenerator,
+  type BasePromptContext,
+  type ComplianceBasePrompt
+} from './base-prompt-generators.ts';
+import {
+  getTransformer,
+  JailbreakTransformer,
+  type TransformContext,
+  type PerturbationResult
+} from './prompt-transformers.ts';
 
 // Default OpenAI API configuration (fallback only)
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
@@ -324,7 +340,7 @@ async function generateTopicsAndPromptsForPolicy(
         allowedBehavior,
         disallowedBehavior,
         modelConfig,
-        testType
+        testType // Use the testType parameter passed to this function
       );
 
       if (!prompts) {
@@ -362,16 +378,63 @@ export async function generatePromptsFromPolicies(
   evaluationId?: string,
   supabase?: any,
   evaluationConfig?: EvaluationConfig
-): Promise<EvaluationPrompt[]> {
-  const prompts: EvaluationPrompt[] = [];
-  let promptIndex = 0;
-
+): Promise<JailbreakPrompt[] | CompliancePrompt[]> {
   // Extract test type and evaluation type from config (with defaults for backward compatibility)
   const testType = evaluationConfig?.testType || 'jailbreak';
-  const evaluationType = evaluationConfig?.evaluationType || 'jailbreak';
+  const evaluationType = evaluationConfig?.evaluationType || testType;
+  const perturbationTypes = evaluationConfig?.perturbationTypes || [];
 
   console.log(`🎯 Layer 1 - Base Prompt Generation: testType="${testType}"`);
   console.log(`🎯 Layer 2 - Prompt Transformation: evaluationType="${evaluationType}"`);
+  console.log(`📋 Full evaluation config:`, JSON.stringify(evaluationConfig, null, 2));
+
+  // Route to appropriate generator based on test type
+  if (testType === 'jailbreak') {
+    return generateJailbreakPrompts(
+      policyIds,
+      guardrails,
+      internalModels,
+      evaluationId,
+      supabase,
+      evaluationType
+    );
+  } else if (testType === 'compliance') {
+    return generateCompliancePrompts(
+      policyIds,
+      guardrails,
+      internalModels,
+      evaluationId,
+      supabase,
+      evaluationType,
+      perturbationTypes
+    );
+  } else {
+    // Fallback to jailbreak for unknown test types
+    console.warn(`Unknown test type "${testType}", defaulting to jailbreak`);
+    return generateJailbreakPrompts(
+      policyIds,
+      guardrails,
+      internalModels,
+      evaluationId,
+      supabase,
+      evaluationType
+    );
+  }
+}
+
+/**
+ * Generate jailbreak prompts (original implementation)
+ */
+async function generateJailbreakPrompts(
+  policyIds: string[],
+  guardrails: any[],
+  internalModels?: InternalModelConfig,
+  evaluationId?: string,
+  supabase?: any,
+  evaluationType: string = 'jailbreak'
+): Promise<JailbreakPrompt[]> {
+  const prompts: JailbreakPrompt[] = [];
+  let promptIndex = 0;
 
   // Get the appropriate transformer for Layer 2
   const transformer = getTransformer(evaluationType);
@@ -431,7 +494,7 @@ export async function generatePromptsFromPolicies(
           allowedBehavior,
           disallowedBehavior,
           modelConfig,
-          testType
+          'jailbreak'
         );
 
         // Update completion count (atomic increment)
@@ -477,14 +540,13 @@ export async function generatePromptsFromPolicies(
         // LAYER 2: Apply transformation using the strategy pattern
         const transformContext: TransformContext = {
           promptIndex,
-          testType,
+          testType: 'jailbreak',
           evaluationType
         };
 
         const transformedResult = transformer.transform(basePrompt, transformContext);
 
-        // Determine transformation type and attack type (for jailbreak evaluations)
-        let transformationType = transformer.name;
+        // Determine attack type (for jailbreak evaluations)
         let attackType = 'None';
 
         if (transformer.name === 'jailbreak' && transformer instanceof JailbreakTransformer) {
@@ -502,15 +564,212 @@ export async function generatePromptsFromPolicies(
           prompt_index: promptIndex++,
           policy_id: guardrail.id,
           policy_name: guardrail.name,
-          topic: topic, // Store the topic
-          prompt_title: promptTitle, // Store the prompt title
-          policy_context: policyContext, // Store the policy context (description + behaviors used)
+          topic: topic,
+          prompt_title: promptTitle,
+          policy_context: policyContext,
           base_prompt: basePrompt,
           adversarial_prompt: adversarialPrompt,
           attack_type: attackType,
-          transformation_type: transformationType, // NEW: Record which transformation was applied
           behavior_type: 'Disallowed'
         });
+      }
+    }
+  }
+
+  return prompts;
+}
+
+/**
+ * Generate compliance prompts with optional perturbations
+ */
+async function generateCompliancePrompts(
+  policyIds: string[],
+  guardrails: any[],
+  internalModels?: InternalModelConfig,
+  evaluationId?: string,
+  supabase?: any,
+  evaluationType: string = 'compliance',
+  perturbationTypes: string[] = []
+): Promise<CompliancePrompt[]> {
+  console.log(`🔵 COMPLIANCE: generateCompliancePrompts called`);
+  console.log(`🔵 COMPLIANCE: policyIds=${policyIds.length}, perturbationTypes=${perturbationTypes.join(',')}`);
+
+  const prompts: CompliancePrompt[] = [];
+  let promptIndex = 0;
+
+  // Get the appropriate transformer for Layer 2
+  const transformer = getTransformer(evaluationType, perturbationTypes);
+  console.log(`🔵 COMPLIANCE: transformer=${transformer.name}`);
+
+  // Extract model configurations
+  const topicGenConfig = internalModels?.topicGeneration || null;
+  const promptGenConfig = internalModels?.promptGeneration || null;
+
+  // Use topic generation model for the bulk generation (or prompt gen as fallback)
+  const modelConfig = topicGenConfig || promptGenConfig || null;
+
+  if (!modelConfig) {
+    console.warn(`⚠️  No model configured, using fallback: ${DEFAULT_MODEL}`);
+  }
+
+  const totalPolicies = guardrails.filter(g => policyIds.includes(g.id)).length;
+  let completedPolicies = 0;
+
+  // Update initial status for parallel processing
+  if (evaluationId && supabase) {
+    try {
+      await supabase
+        .from('evaluations')
+        .update({
+          current_stage: `Generating compliance test prompts for ${totalPolicies} ${totalPolicies === 1 ? 'policy' : 'policies'}... (0/${totalPolicies} complete)`
+        })
+        .eq('id', evaluationId);
+    } catch (error) {
+      console.warn('Failed to update initial status:', error);
+    }
+  }
+
+  const policiesWithScenarios = await Promise.all(
+    guardrails
+      .filter(guardrail => policyIds.includes(guardrail.id))
+      .map(async (guardrail) => {
+        // Get the policy data from the guardrail
+        const policyData = guardrail.policies && guardrail.policies[0]
+          ? guardrail.policies[0]
+          : {};
+
+        const policyDescription = policyData.description || '';
+        const allowedBehavior = policyData.allowedBehavior || '';
+        const disallowedBehavior = policyData.disallowedBehavior || '';
+
+        console.log(`🔵 COMPLIANCE: Policy "${guardrail.name}"`);
+        console.log(`🔵 COMPLIANCE:   - description: ${policyDescription ? 'YES' : 'NO'}`);
+        console.log(`🔵 COMPLIANCE:   - allowedBehavior: ${allowedBehavior ? 'YES' : 'NO'}`);
+        console.log(`🔵 COMPLIANCE:   - disallowedBehavior: ${disallowedBehavior ? 'YES' : 'NO'}`);
+
+        // Warning if policy data is empty
+        if (!policyDescription && !allowedBehavior && !disallowedBehavior) {
+          console.warn(`⚠️  Policy "${guardrail.name}" has no description or behaviors defined - prompts will be generic`);
+        }
+
+        const scenarios = await generateTopicsAndPromptsForPolicy(
+          guardrail.id,
+          guardrail.name,
+          policyDescription,
+          allowedBehavior,
+          disallowedBehavior,
+          modelConfig,
+          'compliance' // Use compliance test type
+        );
+
+        // Update completion count (atomic increment)
+        completedPolicies++;
+        const currentCompleted = completedPolicies;
+
+        // Update evaluation status to show progress
+        if (evaluationId && supabase) {
+          try {
+            await supabase
+              .from('evaluations')
+              .update({
+                current_stage: currentCompleted < totalPolicies
+                  ? `Generating compliance test prompts for ${totalPolicies} ${totalPolicies === 1 ? 'policy' : 'policies'}... (${currentCompleted}/${totalPolicies} complete)`
+                  : 'All compliance prompts generated successfully ✓'
+              })
+              .eq('id', evaluationId);
+          } catch (error) {
+            console.warn('Failed to update completion status:', error);
+          }
+        }
+
+        return {
+          guardrail,
+          scenarios
+        };
+      })
+  );
+
+  // Process all scenarios and create compliance prompts
+  // LAYER 2: Apply perturbation transformations if specified
+  for (const { guardrail, scenarios } of policiesWithScenarios) {
+    console.log(`🔵 COMPLIANCE: Processing ${scenarios.length} scenarios for policy "${guardrail.name}"`);
+
+    for (const scenario of scenarios) {
+      const { topic, prompts: topicPrompts } = scenario;
+      console.log(`🔵 COMPLIANCE: Topic="${topic}", prompts=${topicPrompts?.length || 0}`);
+
+      // Warn if topic is missing
+      if (!topic) {
+        console.warn(`⚠️ COMPLIANCE: Missing topic for scenario in policy "${guardrail.name}"!`);
+      }
+
+      // Create compliance prompts - apply Layer 2 transformations
+      for (let i = 0; i < topicPrompts.length; i++) {
+        const promptData = topicPrompts[i] as ComplianceBasePrompt;
+        const basePrompt = promptData.text;
+        const promptTitle = promptData.title;
+        const policyContext = promptData.policyContext;
+
+        // LAYER 2: Apply transformation using the strategy pattern
+        const transformContext: TransformContext = {
+          promptIndex,
+          testType: 'compliance',
+          evaluationType
+        };
+
+        const transformedResult = transformer.transform(basePrompt, transformContext);
+
+        // Handle perturbation results (can be multiple variations)
+        if (Array.isArray(transformedResult) && transformedResult.length > 0 &&
+            'perturbationType' in transformedResult[0]) {
+          // Perturbation transformer returns array of variations
+          const variations = transformedResult as PerturbationResult[];
+
+          for (const variation of variations) {
+            prompts.push({
+              prompt_index: promptIndex++,
+              policy_id: guardrail.id,
+              policy_name: guardrail.name,
+              topic: topic,
+              prompt_title: promptTitle,
+              base_prompt: variation.basePrompt,
+              actual_prompt: variation.actualPrompt,
+              perturbation_type: variation.perturbationType,
+              ground_truth: promptData.groundTruth,
+              behavior_type: promptData.behaviorType,
+              behavior_used: promptData.behaviorUsed,
+              behavior_phrases: promptData.behaviorPhrases
+                ? { phrases: promptData.behaviorPhrases }
+                : undefined,
+              policy_context: policyContext,
+              status: 'pending'
+            });
+          }
+        } else {
+          // No perturbations - single prompt
+          const actualPrompt = typeof transformedResult === 'string'
+            ? transformedResult
+            : basePrompt;
+
+          prompts.push({
+            prompt_index: promptIndex++,
+            policy_id: guardrail.id,
+            policy_name: guardrail.name,
+            topic: topic,
+            prompt_title: promptTitle,
+            base_prompt: basePrompt,
+            actual_prompt: actualPrompt,
+            perturbation_type: null,
+            ground_truth: promptData.groundTruth,
+            behavior_type: promptData.behaviorType,
+            behavior_used: promptData.behaviorUsed,
+            behavior_phrases: promptData.behaviorPhrases
+              ? { phrases: promptData.behaviorPhrases }
+              : undefined,
+            policy_context: policyContext,
+            status: 'pending'
+          });
+        }
       }
     }
   }

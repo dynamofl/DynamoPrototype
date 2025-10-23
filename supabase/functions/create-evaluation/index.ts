@@ -116,6 +116,7 @@ serve(async (req: Request) => {
         started_at: new Date().toISOString(), // Start runtime timer NOW
         config: {
           ...config,
+          testType: config?.testType || evaluationType || 'jailbreak', // Ensure testType is in config
           policyIds,
           guardrailIds,
           internalModels // Store internal models in config for run-evaluation to use
@@ -205,6 +206,12 @@ serve(async (req: Request) => {
 
         console.log(`✅ [BACKGROUND] Generated ${prompts.length} prompts for evaluation ${evaluation.id}`);
 
+        // Determine which table to insert into based on test type
+        const testType = evaluation.config?.testType || 'jailbreak';
+        const tableName = testType === 'compliance' ? 'compliance_prompts' : 'jailbreak_prompts';
+
+        console.log(`📊 [BACKGROUND] Inserting prompts into ${tableName} table...`);
+
         // Create prompt records
         const promptRecords = prompts.map((prompt) => ({
           evaluation_id: evaluation.id,
@@ -212,11 +219,11 @@ serve(async (req: Request) => {
         }));
 
         const { error: promptsError } = await supabase
-          .from('evaluation_prompts')
+          .from(tableName)
           .insert(promptRecords);
 
         if (promptsError) {
-          console.error('❌ [BACKGROUND] Failed to insert prompts:', promptsError);
+          console.error(`❌ [BACKGROUND] Failed to insert prompts into ${tableName}:`, promptsError);
           // Update evaluation status to failed (don't delete - user already navigated)
           await supabase
             .from('evaluations')

@@ -32,7 +32,6 @@ export async function migrateAISystemsToUUID(): Promise<{
     const rawData = localStorage.getItem(AI_SYSTEMS_STORAGE_KEY);
 
     if (!rawData) {
-      console.log('✅ No AI systems found - migration not needed');
       return { success: true, migrated: 0, errors: [] };
     }
 

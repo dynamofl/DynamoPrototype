@@ -126,8 +126,8 @@ export function EvaluationHistoryTableDirect({
 
       // Category filter
       if (filters.category.length > 0) {
-        const testType = test.type || 'jailbreak' // Default to jailbreak if not set
-        if (!filters.category.includes(testType)) {
+        // Only match if test has a type and it's in the filter
+        if (!test.type || !filters.category.includes(test.type)) {
           return false
         }
       }
@@ -219,8 +219,15 @@ export function EvaluationHistoryTableDirect({
   }
 
   const renderCategory = (test: EvaluationTest) => {
-    const category = test.type || 'jailbreak' // Default to jailbreak if not set
-    const categoryLabel = category === 'compliance' ? 'Compliance' : 'Jailbreak'
+    if (!test.type) {
+      return (
+        <Badge variant="secondary" className="bg-gray-200 text-gray-600">
+          Unknown
+        </Badge>
+      )
+    }
+
+    const categoryLabel = test.type === 'compliance' ? 'Compliance' : 'Jailbreak'
 
     return (
       <Badge variant="secondary">

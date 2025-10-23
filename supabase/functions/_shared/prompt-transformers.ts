@@ -10,6 +10,15 @@ import type { ConversationTurn } from './types.ts';
 export type TransformResult = string | ConversationTurn[];
 
 /**
+ * Perturbation result structure
+ */
+export interface PerturbationResult {
+  basePrompt: string;
+  actualPrompt: string;
+  perturbationType: string | null;
+}
+
+/**
  * Context for transformation
  */
 export interface TransformContext {
@@ -345,17 +354,78 @@ export class DemographicTransformer implements PromptTransformer {
   }
 }
 
+/**
+ * Perturbation Transformer
+ * Used for compliance testing with optional perturbations
+ * Creates multiple variations of each base prompt
+ */
+export class PerturbationTransformer implements PromptTransformer {
+  readonly name = 'perturbation';
+  readonly evaluationType = 'compliance_with_perturbations';
+
+  constructor(private perturbationTypes: string[]) {}
+
+  transform(basePrompt: string, context: TransformContext): PerturbationResult[] {
+    const results: PerturbationResult[] = [];
+
+    // Always include the base prompt (no perturbation)
+    results.push({
+      basePrompt,
+      actualPrompt: basePrompt,
+      perturbationType: null
+    });
+
+    // Apply each perturbation type
+    for (const type of this.perturbationTypes) {
+      const perturbed = this.applyPerturbation(basePrompt, type);
+      results.push({
+        basePrompt,
+        actualPrompt: perturbed,
+        perturbationType: type
+      });
+    }
+
+    console.log(`  🔀 Created ${results.length} variations (1 base + ${this.perturbationTypes.length} perturbations)`);
+    return results;
+  }
+
+  private applyPerturbation(text: string, type: string): string {
+    switch (type.toLowerCase()) {
+      case 'typos':
+        return introduceTypos(text);
+      case 'casing':
+      case 'casing changes':
+        return applyCasingChanges(text);
+      case 'synonyms':
+        return applySynonyms(text);
+      case 'leetspeak':
+        return applyLeetspeak(text);
+      default:
+        console.warn(`Unknown perturbation type "${type}", returning original text`);
+        return text;
+    }
+  }
+}
+
 // ============================================================================
 // FACTORY FUNCTION
 // ============================================================================
 
 /**
  * Get the appropriate transformer based on evaluation type
+ * For compliance_with_perturbations, perturbationTypes must be provided
  */
-export function getTransformer(evaluationType: string): PromptTransformer {
+export function getTransformer(
+  evaluationType: string,
+  perturbationTypes?: string[]
+): PromptTransformer {
   switch (evaluationType.toLowerCase()) {
     case 'jailbreak':
       return new JailbreakTransformer();
+    case 'compliance':
+      return new PassthroughTransformer();
+    case 'compliance_with_perturbations':
+      return new PerturbationTransformer(perturbationTypes || []);
     case 'quality':
     case 'performance':
       return new PassthroughTransformer();

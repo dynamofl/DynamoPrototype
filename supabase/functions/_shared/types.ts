@@ -77,7 +77,8 @@ export interface PolicyContext {
   disallowedBehaviors: string[];
 }
 
-export interface EvaluationPrompt {
+// Jailbreak prompt type (renamed from EvaluationPrompt)
+export interface JailbreakPrompt {
   id?: string;
   evaluation_id?: string;
   prompt_index: number;
@@ -89,7 +90,6 @@ export interface EvaluationPrompt {
   base_prompt: string;
   adversarial_prompt: ConversationTurn[] | { text: string } | any; // JSONB: array for multi-turn (TAP, IRIS) or object for single-turn
   attack_type: string;
-  transformation_type?: string; // NEW: Type of transformation applied (e.g., 'jailbreak', 'passthrough', 'demographic')
   behavior_type: string;
   status?: 'pending' | 'running' | 'completed' | 'failed';
 
@@ -111,6 +111,48 @@ export interface EvaluationPrompt {
   runtime_ms?: number;
   input_tokens?: number;
   total_tokens?: number;
+}
+
+// Backward compatibility alias
+export type EvaluationPrompt = JailbreakPrompt;
+
+// Compliance prompt type
+export interface CompliancePrompt {
+  id?: string;
+  evaluation_id?: string;
+  prompt_index: number;
+  policy_id?: string;
+  policy_name?: string;
+  topic?: string;
+  prompt_title?: string;
+
+  // Prompt and variations
+  base_prompt: string;          // Grouping identifier
+  actual_prompt: string;        // What's actually sent
+  perturbation_type?: string | null;   // NULL, 'typos', 'casing', etc.
+
+  // Ground truth
+  ground_truth: 'Compliant' | 'Non-Compliant';
+  behavior_type: 'Allowed' | 'Disallowed';
+  behavior_used?: string;
+  behavior_phrases?: {
+    phrases: string[];
+    positions?: number[];
+  };
+
+  status?: 'pending' | 'running' | 'completed' | 'failed';
+
+  // Results
+  system_response?: string;
+  compliance_judgement?: string;
+  final_outcome?: 'TP' | 'TN' | 'FP' | 'FN';
+
+  policy_context?: PolicyContext;
+
+  created_at?: string;
+  started_at?: string;
+  completed_at?: string;
+  error_message?: string;
 }
 
 export interface Evaluation {
@@ -139,15 +181,27 @@ export interface Evaluation {
   completed_at?: string;
 }
 
+// Test type enums
+export type TestType = 'jailbreak' | 'compliance';
+export type EvaluationType =
+  | 'jailbreak'
+  | 'compliance'
+  | 'compliance_with_perturbations'
+  | 'quality'
+  | 'performance'
+  | 'bias';
+
 export interface EvaluationConfig {
   policyIds: string[];
   guardrailIds: string[];
   temperature?: number;
   maxTokens?: number;
-  // NEW: Test type configuration (Layer 1 - base prompt generation)
-  testType?: 'jailbreak' | 'quality' | 'performance' | 'bias' | string;
-  // NEW: Evaluation type configuration (Layer 2 - transformation strategy)
-  evaluationType?: 'jailbreak' | 'quality' | 'performance' | 'bias' | string;
+  // Test type configuration (Layer 1 - base prompt generation)
+  testType?: TestType | string;
+  // Evaluation type configuration (Layer 2 - transformation strategy)
+  evaluationType?: EvaluationType | string;
+  // Perturbation types for compliance testing
+  perturbationTypes?: string[];
   [key: string]: any;
 }
 

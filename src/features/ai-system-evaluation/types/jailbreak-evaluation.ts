@@ -1,4 +1,13 @@
 // Jailbreak Evaluation Types based on requirements
+// Extends base evaluation types with jailbreak-specific fields
+
+import type {
+  BaseEvaluationPrompt,
+  BaseEvaluationResult,
+  BaseEvaluationSummary,
+  BaseEvaluationOutput,
+  BaseEvaluationConfig
+} from './base-evaluation'
 
 export type BehaviorType = "Allowed" | "Disallowed";
 
@@ -118,10 +127,14 @@ export interface JailbreakEvaluationResult {
   aiSystemLatency?: number;     // AI system response time (same as runtimeMs)
 }
 
-export interface JailbreakEvaluationConfig {
+// Jailbreak evaluation config (extends BaseEvaluationConfig)
+export interface JailbreakEvaluationConfig extends BaseEvaluationConfig {
+  test_type?: 'jailbreak'
   aiSystemId: string;
+  ai_system_id?: string; // snake_case version for consistency
   policies: Policy[];
   guardrailIds?: string[];
+  guardrail_ids?: string[]; // snake_case version for consistency
   attackTypesDistribution?: AttackType[]; // Optional: customize attack type distribution
 }
 
@@ -271,11 +284,15 @@ export interface JailbreakEvaluationSummary {
   };
 }
 
-export interface JailbreakEvaluationOutput {
+// Jailbreak evaluation output (extends BaseEvaluationOutput)
+export interface JailbreakEvaluationOutput extends Omit<BaseEvaluationOutput, 'results' | 'summary' | 'config'> {
+  test_type: 'jailbreak'
   results: JailbreakEvaluationResult[];
   summary: JailbreakEvaluationSummary;
   config: JailbreakEvaluationConfig;
   timestamp: string;
-  evaluationId: string;
+  evaluation_id: string;
+  evaluationId: string;  // Keep for backward compatibility
   topicAnalysis?: TopicAnalysis; // Topic-level analysis with AI insights
+  topic_analysis?: TopicAnalysis; // snake_case version for consistency with backend
 }

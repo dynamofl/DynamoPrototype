@@ -245,5 +245,4 @@ export async function migrateEvaluationSummaries() {
 // Make it available globally in browser console
 if (typeof window !== 'undefined') {
   (window as any).migrateEvaluationSummaries = migrateEvaluationSummaries;
-  console.log('✅ Migration script loaded. Run window.migrateEvaluationSummaries() to migrate existing evaluations.');
 }

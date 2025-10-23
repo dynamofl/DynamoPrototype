@@ -7,58 +7,59 @@ import type { EvaluationSummaryData, EvaluationCategoryMetrics } from '../types/
 
 /**
  * Get total unique topics count from evaluations
- * OPTIMIZED: Uses unique_topics column from evaluations table
+ * Uses metrics JSONB column from evaluations table
  */
 export function getUniqueTopicsForEvaluations(
   evaluations: EvaluationTest[]
 ): number {
-  return evaluations.reduce((sum, e) => sum + (e.uniqueTopics || 0), 0);
+  return evaluations.reduce((sum, e) => {
+    const uniqueTopics = (e.metrics as any)?.unique_topics ?? 0;
+    return sum + uniqueTopics;
+  }, 0);
 }
 
 /**
  * Get total unique attack areas count from evaluations
- * OPTIMIZED: Uses unique_attack_areas column from evaluations table
+ * Uses metrics JSONB column from evaluations table
  */
 export function getUniqueAttackAreasForEvaluations(
   evaluations: EvaluationTest[]
 ): number {
-  return evaluations.reduce((sum, e) => sum + (e.uniqueAttackAreas || 0), 0);
+  return evaluations.reduce((sum, e) => {
+    const uniqueAttackAreas = (e.metrics as any)?.unique_attack_areas ?? 0;
+    return sum + uniqueAttackAreas;
+  }, 0);
 }
 
 /**
  * Aggregate metrics from multiple evaluations
  * OPTIMIZED: Uses pre-calculated metrics from evaluations table columns
- * @param globalUniqueTopics - Global unique topics count across all evaluations (optional)
- * @param globalUniqueAttackAreas - Global unique attack areas count across all evaluations (optional)
+ * @param uniqueMetrics - Type-specific unique topics and attack areas counts
  */
 export function aggregateEvaluationMetrics(
   evaluations: EvaluationTest[],
-  globalUniqueTopics?: number,
-  globalUniqueAttackAreas?: number
+  uniqueMetrics?: {
+    jailbreak: { uniqueTopics: number; uniqueAttackAreas: number };
+    compliance: { uniqueTopics: number; uniqueAttackAreas: number };
+  }
 ): EvaluationSummaryData {
   // Filter completed evaluations only
-  // Check for either new direct columns OR legacy summaryMetrics structure
+  // Check for either metrics JSONB OR legacy summaryMetrics structure
   const completedEvaluations = evaluations.filter(
     (evaluation) => evaluation.status === 'completed' && (
       evaluation.result?.overallMetrics ||
-      evaluation.aiSystemAttackSuccessRate !== undefined ||
-      evaluation.aiSystemGuardrailAttackSuccessRate !== undefined
+      (evaluation.metrics && Object.keys(evaluation.metrics).length > 0)
     )
   );
-
-  console.log('📊 [Aggregation] Completed evaluations with data:', completedEvaluations.length, {
-    total: evaluations.length,
-    completed: evaluations.filter(e => e.status === 'completed').length,
-    withMetrics: completedEvaluations.length
-  });
 
   if (completedEvaluations.length === 0) {
     return { hasData: false };
   }
 
   // Group evaluations by category (jailbreak/compliance)
+  // Use strict filtering - only count evaluations that are explicitly typed
   const jailbreakEvaluations = completedEvaluations.filter(
-    (e) => (e.type || 'jailbreak') === 'jailbreak'
+    (e) => e.type === 'jailbreak'
   );
   const complianceEvaluations = completedEvaluations.filter(
     (e) => e.type === 'compliance'
@@ -66,28 +67,29 @@ export function aggregateEvaluationMetrics(
 
   const result: EvaluationSummaryData = { hasData: false };
 
-  // Use global unique counts if provided, otherwise calculate from evaluations
-  const uniqueTopics = globalUniqueTopics ?? getUniqueTopicsForEvaluations(completedEvaluations);
-  const uniqueAttackAreas = globalUniqueAttackAreas ?? getUniqueAttackAreasForEvaluations(completedEvaluations);
+  // Use type-specific unique counts if provided, otherwise fallback to evaluation-level counts
+  const jailbreakUniqueTopics = uniqueMetrics?.jailbreak?.uniqueTopics ?? getUniqueTopicsForEvaluations(jailbreakEvaluations);
+  const jailbreakUniqueAttackAreas = uniqueMetrics?.jailbreak?.uniqueAttackAreas ?? getUniqueAttackAreasForEvaluations(jailbreakEvaluations);
+  const complianceUniqueTopics = uniqueMetrics?.compliance?.uniqueTopics ?? getUniqueTopicsForEvaluations(complianceEvaluations);
 
-  // Process jailbreak evaluations - only show if 2 or more completed evaluations
-  if (jailbreakEvaluations.length >= 2) {
+  // Process jailbreak evaluations - only show if 1 or more completed evaluations
+  if (jailbreakEvaluations.length >= 1) {
     result.jailbreak = aggregateCategoryMetrics(
       jailbreakEvaluations,
       'jailbreak',
-      uniqueTopics,
-      uniqueAttackAreas
+      jailbreakUniqueTopics,
+      jailbreakUniqueAttackAreas
     );
     result.hasData = true;
   }
 
-  // Process compliance evaluations - only show if 2 or more completed evaluations
-  if (complianceEvaluations.length >= 2) {
+  // Process compliance evaluations - only show if 1 or more completed evaluations
+  if (complianceEvaluations.length >= 1) {
     result.compliance = aggregateCategoryMetrics(
       complianceEvaluations,
       'compliance',
-      uniqueTopics,
-      uniqueAttackAreas
+      complianceUniqueTopics,
+      0 // Compliance doesn't have attack areas
     );
     result.hasData = true;
   }
@@ -127,56 +129,70 @@ function aggregateCategoryMetrics(
 
     // Get summary metrics from evaluation
     const overallMetrics = evaluation.result?.overallMetrics as JailbreakEvaluationSummary | undefined;
+    const metrics = evaluation.metrics as any;
 
-    console.log(`📈 [Aggregation] ${category} - ${evaluation.name} - Raw metrics:`, {
-      overallMetrics,
-      hasOverallMetrics: !!overallMetrics,
-      summaryMetricsType: typeof overallMetrics,
-    });
+    // Determine evaluation type
+    const isCompliance = category === 'compliance';
 
-    // PRIORITY 1: Use direct columns from evaluations table (NEW)
-    // These are the pre-calculated metrics stored as individual columns
-    const aiSystemOnlyRate = evaluation.aiSystemAttackSuccessRate
-      ?? overallMetrics?.summaryMetrics?.aiSystemAttackSuccessRate
-      ?? overallMetrics?.aiSystem?.aiSystemOnlySuccessRate
-      ?? overallMetrics?.aiSystemOnlySuccessRate
-      ?? overallMetrics?.aiSystem?.successRate
-      ?? overallMetrics?.successRate
-      ?? 0;
+    // PRIORITY 1: Use metrics JSONB column from evaluations table
+    // These are the pre-calculated metrics stored as JSONB
+    let aiSystemOnlyRate: number;
+    let withGuardrailsRate: number;
 
-    // Use guardrailSuccessRate which represents the success rate when guardrails are applied
-    const withGuardrailsRate = evaluation.guardrailSuccessRate
-      ?? evaluation.aiSystemGuardrailAttackSuccessRate
-      ?? overallMetrics?.summaryMetrics?.aiSystemGuardrailAttackSuccessRate
-      ?? overallMetrics?.aiSystem?.successRate
-      ?? overallMetrics?.successRate
-      ?? 0;
+    if (isCompliance) {
+      // For compliance: Read from nested structure
+      // Use compliance_rate directly (already in percentage format)
+      aiSystemOnlyRate = metrics?.ai_system?.compliance_rate ?? 0;
+
+      // Check if guardrails data exists and is meaningful
+      // Guardrails are considered present if the with_guardrails object exists
+      // and has different values OR if there are actual guardrail evaluations
+      const hasGuardrailData = metrics?.ai_system_with_guardrails?.compliance_rate !== undefined
+        && metrics?.ai_system_with_guardrails?.compliance_rate !== null;
+
+      withGuardrailsRate = hasGuardrailData
+        ? (metrics?.ai_system_with_guardrails?.compliance_rate ?? 0)
+        : 0;
+    } else {
+      // For jailbreak: Use existing flat structure
+      aiSystemOnlyRate = metrics?.ai_system_attack_success_rate
+        ?? overallMetrics?.summaryMetrics?.aiSystemAttackSuccessRate
+        ?? overallMetrics?.aiSystem?.aiSystemOnlySuccessRate
+        ?? overallMetrics?.aiSystemOnlySuccessRate
+        ?? overallMetrics?.aiSystem?.successRate
+        ?? overallMetrics?.successRate
+        ?? 0;
+
+      withGuardrailsRate = metrics?.ai_system_guardrail_attack_success_rate
+        ?? metrics?.guardrail_success_rate
+        ?? overallMetrics?.summaryMetrics?.aiSystemGuardrailAttackSuccessRate
+        ?? overallMetrics?.aiSystem?.successRate
+        ?? overallMetrics?.successRate
+        ?? 0;
+    }
 
     // Check if evaluation has guardrails
-    // If the two rates are different, it means guardrails were used
-    const hasGuardrails = (
-      aiSystemOnlyRate !== withGuardrailsRate ||
-      (evaluation.guardrailSuccessRate !== undefined && evaluation.guardrailSuccessRate !== null) ||
-      (overallMetrics?.aiSystem?.aiSystemOnlySuccessRate !== undefined && overallMetrics.aiSystem.aiSystemOnlySuccessRate !== overallMetrics.aiSystem.successRate) ||
-      (overallMetrics?.aiSystemOnlySuccessRate !== undefined && overallMetrics.aiSystemOnlySuccessRate !== overallMetrics.successRate) ||
-      (overallMetrics?.guardrails && overallMetrics.guardrails.length > 0)
-    );
-
-    console.log(`📈 [Aggregation] ${category} - ${evaluation.name}:`, {
-      aiSystemOnlyRate,
-      withGuardrailsRate,
-      hasGuardrails,
-      fromDirectColumns: {
-        aiSystemAttackSuccessRate: evaluation.aiSystemAttackSuccessRate,
-        aiSystemGuardrailAttackSuccessRate: evaluation.aiSystemGuardrailAttackSuccessRate,
-        guardrailSuccessRate: evaluation.guardrailSuccessRate
-      },
-      fromJSONB: {
-        aiSystemOnlySuccessRate: overallMetrics?.aiSystemOnlySuccessRate,
-        successRate: overallMetrics?.successRate,
-        totalTests: overallMetrics?.totalTests
-      }
-    });
+    // For compliance: Check if guardrails object exists and has different values
+    // For jailbreak: Check if rates differ or if guardrail fields exist
+    const hasGuardrails = isCompliance
+      ? (
+          metrics?.ai_system_with_guardrails?.compliance_rate !== undefined &&
+          metrics?.ai_system_with_guardrails?.compliance_rate !== null &&
+          (
+            metrics?.ai_system_with_guardrails?.compliance_rate !== metrics?.ai_system?.compliance_rate ||
+            metrics?.ai_system_with_guardrails?.tp !== metrics?.ai_system?.tp ||
+            metrics?.ai_system_with_guardrails?.tn !== metrics?.ai_system?.tn ||
+            metrics?.ai_system_with_guardrails?.fp !== metrics?.ai_system?.fp ||
+            metrics?.ai_system_with_guardrails?.fn !== metrics?.ai_system?.fn
+          )
+        )
+      : (
+          aiSystemOnlyRate !== withGuardrailsRate ||
+          (metrics?.guardrail_success_rate !== undefined && metrics?.guardrail_success_rate !== null) ||
+          (overallMetrics?.aiSystem?.aiSystemOnlySuccessRate !== undefined && overallMetrics.aiSystem.aiSystemOnlySuccessRate !== overallMetrics.aiSystem.successRate) ||
+          (overallMetrics?.aiSystemOnlySuccessRate !== undefined && overallMetrics.aiSystemOnlySuccessRate !== overallMetrics.successRate) ||
+          (overallMetrics?.guardrails && overallMetrics.guardrails.length > 0)
+        );
 
     // Accumulate for averages
     // Use progress.total as fallback since it's always available
@@ -204,18 +220,10 @@ function aggregateCategoryMetrics(
     : 0;
 
   // Only average guardrail rates for evaluations that actually have guardrails
+  // Return undefined if no guardrails so UI can show "--"
   const avgWithGuardrailsSuccessRate = evaluationsWithGuardrails > 0
     ? sumWithGuardrailsRate / evaluationsWithGuardrails
-    : 0;
-
-  console.log(`🎯 [Aggregation] ${category} Final Averages:`, {
-    totalEvaluations: evaluations.length,
-    evaluationsWithGuardrails,
-    sumAISystemOnlyRate,
-    sumWithGuardrailsRate,
-    avgAISystemOnlySuccessRate: avgAISystemOnlySuccessRate.toFixed(1) + '%',
-    avgWithGuardrailsSuccessRate: avgWithGuardrailsSuccessRate.toFixed(1) + '%'
-  });
+    : undefined;
 
   return {
     category,

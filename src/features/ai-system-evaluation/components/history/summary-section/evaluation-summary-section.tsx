@@ -71,6 +71,7 @@ export function EvaluationSummarySection({
   const complianceStats = data.compliance ? [
     { label: 'Evaluations', value: data.compliance.totalEvaluations },
     { label: 'Prompts', value: data.compliance.totalPrompts.toLocaleString() },
+    { label: 'Topics', value: data.compliance.totalUniqueTopics },
   ] : undefined;
 
   return (
@@ -99,14 +100,20 @@ export function EvaluationSummarySection({
             title="System Compliance"
             stats={complianceStats}
             aiSystemAvg={`${data.compliance.avgAISystemOnlySuccessRate.toFixed(0)}%`}
-            aiSystemGuardrailAvg={`${data.compliance.avgWithGuardrailsSuccessRate.toFixed(0)}%`}
+            aiSystemGuardrailAvg={data.compliance.avgWithGuardrailsSuccessRate !== undefined
+              ? `${data.compliance.avgWithGuardrailsSuccessRate.toFixed(0)}%`
+              : undefined}
             chartData={complianceChartData}
+            aiSystemLabel="AI System Compliance"
+            aiSystemGuardrailLabel="AI System + Guardrail Compliance"
           />
         ) : (
           <SummaryMetricCardDetailed
             title="System Compliance"
             isEmpty={true}
             emptyMessage="No Evaluation Data to Display"
+            aiSystemLabel="AI System Compliance"
+            aiSystemGuardrailLabel="AI System + Guardrail Compliance"
           />
         )}
 

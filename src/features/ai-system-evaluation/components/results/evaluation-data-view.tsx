@@ -1,34 +1,49 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
-  EvaluationDataTable,
-  EvaluationDataFilters,
   EvaluationDataPagination,
   EvaluationDataConversationView,
   EvaluationDataSideSheet
 } from './data-view-components'
+import { GenericEvaluationTable } from './data-view-components/generic-evaluation-table'
+import { GenericEvaluationFilters } from './data-view-components/generic-evaluation-filters'
 import { EvaluationConversationView } from './evaluation-conversation-view'
-import { filterJailbreakRecords, paginateJailbreakRecords } from '../../lib/evaluation-data-utils'
 import { DEFAULT_PAGE_SIZE } from '../../constants/evaluation-data-constants'
-import type { JailbreakEvaluationResult } from '../../types/jailbreak-evaluation'
-import type { JailbreakFilterState, JailbreakPaginationState } from '../../types/evaluation-data-types'
+import type { BaseEvaluationResult } from '../../types/base-evaluation'
+import type { EvaluationStrategy } from '../../strategies/base-strategy'
 
 type ViewType = 'table' | 'conversation'
 
+interface PaginationState {
+  page: number
+  pageSize: number
+  total: number
+}
+
 interface EvaluationDataViewProps {
-  results: JailbreakEvaluationResult[]
+  results: BaseEvaluationResult[]
+  strategy: EvaluationStrategy
+  testType: string
   aiSystemName?: string
   hasGuardrails?: boolean
   systemName?: string
   evaluationId?: string
 }
 
-export function EvaluationDataView({ results, aiSystemName, hasGuardrails = true, systemName, evaluationId }: EvaluationDataViewProps) {
+export function EvaluationDataView({
+  results,
+  strategy,
+  testType,
+  aiSystemName,
+  hasGuardrails = true,
+  systemName,
+  evaluationId
+}: EvaluationDataViewProps) {
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const [allData, setAllData] = useState<JailbreakEvaluationResult[]>([])
-  const [filteredData, setFilteredData] = useState<JailbreakEvaluationResult[]>([])
-  const [displayData, setDisplayData] = useState<JailbreakEvaluationResult[]>([])
+  const [allData, setAllData] = useState<BaseEvaluationResult[]>([])
+  const [filteredData, setFilteredData] = useState<BaseEvaluationResult[]>([])
+  const [displayData, setDisplayData] = useState<BaseEvaluationResult[]>([])
   const [selectedRows, setSelectedRows] = useState<string[]>([])
 
   // Initialize state from URL params
@@ -52,21 +67,18 @@ export function EvaluationDataView({ results, aiSystemName, hasGuardrails = true
     modeFromUrl === 'table' ? itemFromUrl : null
   )
 
-  const [filters, setFilters] = useState<JailbreakFilterState>({
-    attackOutcome: [],
-    attackType: [],
-    guardrailJudgment: [],
-    modelJudgment: [],
-    behaviorType: [],
-    topic: [],
+  // Generic filter state (works for all test types)
+  const [filters, setFilters] = useState<Record<string, any>>({
     searchTerm: ''
   })
 
-  const [pagination, setPagination] = useState<JailbreakPaginationState>({
+  const [pagination, setPagination] = useState<PaginationState>({
     page: 1,
     pageSize: DEFAULT_PAGE_SIZE,
     total: 0
   })
+
+  console.log(`📊 EvaluationDataView: testType="${testType}", strategy="${strategy.displayName}", results=${results.length}`)
 
   // Update URL when view mode or selected item changes
   useEffect(() => {
@@ -160,20 +172,47 @@ export function EvaluationDataView({ results, aiSystemName, hasGuardrails = true
 
   // Apply filters when data or filters change
   useEffect(() => {
-    const filtered = filterJailbreakRecords(allData, filters)
+    // Apply filters using strategy
+    const strategyFilters = strategy.getFilters(hasGuardrails)
+
+    const filtered = allData.filter(record => {
+      // Search term filter
+      if (filters.searchTerm && filters.searchTerm.length > 0) {
+        const searchLower = filters.searchTerm.toLowerCase()
+        const matchesSearch =
+          record.base_prompt?.toLowerCase().includes(searchLower) ||
+          record.policy_name?.toLowerCase().includes(searchLower) ||
+          record.topic?.toLowerCase().includes(searchLower)
+
+        if (!matchesSearch) return false
+      }
+
+      // Apply strategy-defined filters
+      return strategyFilters.every(filterConfig => {
+        const filterValue = filters[filterConfig.key]
+        if (!filterValue || (Array.isArray(filterValue) && filterValue.length === 0)) {
+          return true // No filter applied
+        }
+        return filterConfig.filterFn(record, filterValue)
+      })
+    })
+
     setFilteredData(filtered)
     setPagination(prev => ({
       ...prev,
       total: filtered.length,
       page: 1 // Reset to first page when filters change
     }))
-  }, [allData, filters])
+  }, [allData, filters, strategy, hasGuardrails])
 
   // Apply pagination when filtered data or pagination settings change
   useEffect(() => {
     if (currentView === 'table') {
-      const { data } = paginateJailbreakRecords(filteredData, pagination.page, pagination.pageSize)
-      setDisplayData(data)
+      // Pagination for table view
+      const start = (pagination.page - 1) * pagination.pageSize
+      const end = start + pagination.pageSize
+      const paginatedData = filteredData.slice(start, end)
+      setDisplayData(paginatedData)
     } else {
       // For conversation view, show the first N items based on conversationDisplayCount
       const conversationData = filteredData.slice(0, conversationDisplayCount)
@@ -191,15 +230,15 @@ export function EvaluationDataView({ results, aiSystemName, hasGuardrails = true
         setSelectedConversationId(null)
       }
     }
-  }, [filteredData, pagination.page, pagination.pageSize, currentView, conversationDisplayCount])
+  }, [filteredData, pagination.page, pagination.pageSize, currentView, conversationDisplayCount, selectedConversationId])
 
-  const handleFiltersChange = (newFilters: JailbreakFilterState) => {
+  const handleFiltersChange = (newFilters: Record<string, any>) => {
     setFilters(newFilters)
     // Reset conversation display count when filters change
     setConversationDisplayCount(25)
   }
 
-  const handlePaginationChange = (newPagination: JailbreakPaginationState) => {
+  const handlePaginationChange = (newPagination: PaginationState) => {
     setPagination(newPagination)
   }
 
@@ -259,7 +298,7 @@ export function EvaluationDataView({ results, aiSystemName, hasGuardrails = true
     setSelectedConversationId(id)
   }
 
-  const handleRowClick = (record: JailbreakEvaluationResult) => {
+  const handleRowClick = (record: BaseEvaluationResult) => {
     setSideSheetRecordId((record as any).id)
     setSideSheetOpen(true)
   }
@@ -301,12 +340,14 @@ export function EvaluationDataView({ results, aiSystemName, hasGuardrails = true
   return (
     <div className="flex flex-col h-full py-2">
       {/* Filters */}
-      <EvaluationDataFilters
+      <GenericEvaluationFilters
+        strategy={strategy}
         filters={filters}
         onFiltersChange={handleFiltersChange}
         currentView={currentView}
         onViewChange={handleViewChange}
         hasGuardrails={hasGuardrails}
+        data={allData}
       />
 
       {/* Content Area */}
@@ -327,8 +368,9 @@ export function EvaluationDataView({ results, aiSystemName, hasGuardrails = true
             }`}
           >
             {currentView === 'table' ? (
-              <EvaluationDataTable
+              <GenericEvaluationTable
                 data={displayData}
+                strategy={strategy}
                 selectedRows={selectedRows}
                 onRowSelect={handleRowSelect}
                 onSelectAll={handleSelectAll}

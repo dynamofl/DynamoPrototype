@@ -29,6 +29,10 @@ interface SummaryMetricCardDetailedProps {
     withGuardrails?: number | null;
   }>;
 
+  // Custom labels (optional, defaults to ASR labels)
+  aiSystemLabel?: string;
+  aiSystemGuardrailLabel?: string;
+
   // Empty state
   isEmpty?: boolean;
   emptyMessage?: string;
@@ -89,6 +93,8 @@ export function SummaryMetricCardDetailed({
   aiSystemAvg,
   aiSystemGuardrailAvg,
   chartData,
+  aiSystemLabel = 'AI System ASR',
+  aiSystemGuardrailLabel = 'AI System + Guardrail ASR',
   isEmpty = false,
   emptyMessage = 'No Evaluation Data to Display',
 }: SummaryMetricCardDetailedProps) {
@@ -140,20 +146,20 @@ export function SummaryMetricCardDetailed({
         <div className="flex flex-col gap-3">
           {/* Metrics Row with dashes */}
           <div className="flex items-center justify-between h-12">
-            {/* AI System ASR */}
+            {/* AI System metric */}
             <div className="flex flex-col gap-1">
               <p className="text-xs font-425 text-gray-600 leading-5">
-                AI System ASR
+                {aiSystemLabel}
               </p>
               <p className="text-xl font-550 text-gray-900 leading-6 tracking-[-0.3px]">
                 --
               </p>
             </div>
 
-            {/* AI System + Guardrail ASR */}
+            {/* AI System + Guardrail metric */}
             <div className="flex flex-col gap-1 text-right">
               <p className="text-xs font-425 text-gray-600 leading-5 whitespace-nowrap">
-                AI System + Guardrail ASR
+                {aiSystemGuardrailLabel}
               </p>
               <p className="text-xl font-550 text-gray-900 leading-6 tracking-[-0.3px] whitespace-nowrap">
                 --
@@ -172,20 +178,20 @@ export function SummaryMetricCardDetailed({
         <div className="flex flex-col gap-3">
           {/* Metrics Row */}
           <div className="flex items-center justify-between h-12">
-            {/* AI System ASR */}
+            {/* AI System metric */}
             <div className="flex flex-col gap-1">
               <p className="text-xs font-425 text-gray-600 leading-5">
-                AI System ASR
+                {aiSystemLabel}
               </p>
               <p className="text-xl font-550 text-gray-900 leading-6 tracking-[-0.3px]">
                 {aiSystemAvg ?? '--'}
               </p>
             </div>
 
-            {/* AI System + Guardrail ASR */}
+            {/* AI System + Guardrail metric */}
             <div className="flex flex-col gap-1 text-right">
               <p className="text-xs font-425 text-gray-600 leading-5 whitespace-nowrap">
-                AI System + Guardrail ASR
+                {aiSystemGuardrailLabel}
               </p>
               <p className="text-xl font-550 text-gray-900 leading-6 tracking-[-0.3px] whitespace-nowrap">
                 {aiSystemGuardrailAvg ?? '--'}

@@ -35,8 +35,19 @@ export async function playNotificationSound(): Promise<void> {
     }
 
     // Resume context if it's suspended (common on mobile browsers)
-    if (context.state === 'suspended') {
-      await context.resume();
+    if (context && context.state === 'suspended') {
+      try {
+        await context.resume();
+      } catch (error) {
+        console.warn('Failed to resume AudioContext:', error);
+        return;
+      }
+    }
+
+    // Additional safety check
+    if (!context || !context.createOscillator) {
+      console.warn('AudioContext not fully available');
+      return;
     }
 
     const now = context.currentTime;

@@ -3,6 +3,26 @@ import type { EvaluationConfig, EvaluationInput, EvaluationResult } from './eval
 export type EvaluationTestStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
 export type EvaluationTestType = 'compliance' | 'jailbreak';
 
+// Metrics structure for jailbreak evaluations
+export interface JailbreakMetrics {
+  ai_system_attack_success_rate?: number;
+  ai_system_guardrail_attack_success_rate?: number;
+  guardrail_success_rate?: number;
+  unique_topics?: number;
+  unique_attack_areas?: number;
+}
+
+// Metrics structure for compliance evaluations
+export interface ComplianceMetrics {
+  compliance_rate?: number;
+  violation_rate?: number;
+  unique_topics?: number;
+  unique_policies?: number;
+}
+
+// Union type for all metrics
+export type EvaluationMetrics = JailbreakMetrics | ComplianceMetrics | Record<string, any>;
+
 export interface EvaluationTest {
   id: string;
   name: string;
@@ -24,12 +44,8 @@ export interface EvaluationTest {
   createdAt: string;
   startedAt?: string;
   completedAt?: string;
-  // NEW: Individual summary metric columns from evaluations table
-  aiSystemAttackSuccessRate?: number;
-  aiSystemGuardrailAttackSuccessRate?: number;
-  guardrailSuccessRate?: number;
-  uniqueTopics?: number;
-  uniqueAttackAreas?: number;
+  // Evaluation metrics - stored as JSONB, structure varies by evaluation type
+  metrics?: EvaluationMetrics;
 }
 
 export interface EvaluationTestSummary {
