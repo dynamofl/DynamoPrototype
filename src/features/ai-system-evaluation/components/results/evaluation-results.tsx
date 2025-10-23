@@ -68,8 +68,6 @@ export function EvaluationResults({
   const testType = results.test_type || 'jailbreak';
   const strategy = getEvaluationStrategy(testType);
 
-  console.log(`📊 EvaluationResults: testType="${testType}", strategy="${strategy.displayName}"`);
-
   // Calculate total token utilization from all results
   const totalTokenUtilization = results.results.reduce((total, result) => {
     return total + (result.total_tokens || 0);

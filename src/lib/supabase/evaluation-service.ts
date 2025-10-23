@@ -313,19 +313,14 @@ export class EvaluationService {
       throw new Error(`Failed to fetch prompts: ${promptsError.message}`);
     }
 
-    console.log(`✅ Fetched ${prompts?.length || 0} prompts from ${tableName}`);
-
     // Get strategy for this test type
     const strategy = getEvaluationStrategy(testType);
-    console.log(`🔧 Using ${strategy.displayName} strategy`);
 
     // Transform prompts using strategy
     const results = strategy.transformPrompts(prompts || []);
-    console.log(`✅ Transformed ${results.length} results`);
 
     // Calculate summary using strategy
     const summary = strategy.calculateSummary(results);
-    console.log(`✅ Calculated summary metrics`);
 
     // Return standardized BaseEvaluationOutput
     return {

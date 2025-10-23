@@ -8,7 +8,6 @@ import { PolicyResultsSection } from "./summary/policy-results-section";
 import { AttackTypeResultsSection } from "./summary/attack-type-results-section";
 import { BehaviorTypeResultsSection } from "./summary/behavior-type-results-section";
 import { AttackSuccessRateChart } from "./summary/attack-success-rate-chart";
-import { EvaluationSummaryCards } from "./summary/evaluation-summary-cards";
 import { GenericSummaryCards } from "./summary/generic-summary-cards";
 import { AISystemIcon } from "@/components/patterns/ui-patterns/ai-system-icon";
 import { TopicAnalysisSection } from "./summary/topic-analysis-section";
@@ -56,8 +55,6 @@ export function EvaluationSummaryView({
 }: EvaluationSummaryViewProps) {
   // Check if this is a jailbreak evaluation (use existing components) or other type (use generic)
   const isJailbreak = testType === 'jailbreak';
-
-  console.log(`📊 EvaluationSummaryView: testType="${testType}", strategy="${strategy.displayName}", isJailbreak=${isJailbreak}`);
 
   // Format timestamp
   const formattedDate = new Date(timestamp).toLocaleDateString("en-US", {

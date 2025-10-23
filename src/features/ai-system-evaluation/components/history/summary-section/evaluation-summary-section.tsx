@@ -111,7 +111,7 @@ export function EvaluationSummarySection({
           <SummaryMetricCardDetailed
             title="System Compliance"
             isEmpty={true}
-            emptyMessage="No Evaluation Data to Display"
+            emptyMessage="Run Compliance Evaluation"
             aiSystemLabel="AI System Compliance"
             aiSystemGuardrailLabel="AI System + Guardrail Compliance"
           />
@@ -121,7 +121,10 @@ export function EvaluationSummarySection({
         <SummaryMetricCardDetailed
           title="Hallucination"
           isEmpty={true}
-          emptyMessage="No Evaluation Data to Display"
+          emptyMessage="Run Jailbreak Evaluation"
+          aiSystemLabel="AI System Hallucination"
+          aiSystemGuardrailLabel="AI System + Guardrail Hallucination"
+
         />
       </div>
     </div>

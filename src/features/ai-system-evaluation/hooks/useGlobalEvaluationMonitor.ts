@@ -170,11 +170,6 @@ export function useGlobalEvaluationMonitor() {
 
             sessionShownRef.current.add(updatedEval.id);
             saveSessionShown();
-
-            console.log('🎉 [Global Monitor] Evaluation completion detected:', {
-              id: updatedEval.id,
-              name: updatedEval.name,
-            });
           }
 
           if (lastSeenStatus !== currentStatus) {
@@ -188,7 +183,6 @@ export function useGlobalEvaluationMonitor() {
     channelRef.current = channel;
 
     return () => {
-      console.log('🔌 [Global Monitor] Unsubscribing');
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;

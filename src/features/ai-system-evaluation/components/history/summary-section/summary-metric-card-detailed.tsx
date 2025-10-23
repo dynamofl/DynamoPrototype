@@ -8,6 +8,8 @@ import {
   ChartTooltipContent,
 } from '@/components/ui/chart';
 import type { ChartConfig } from '@/components/ui/chart';
+import { Button } from '@/components/ui';
+import { Plus } from 'lucide-react';
 
 interface SummaryMetricCardDetailedProps {
   title: string;
@@ -127,8 +129,8 @@ export function SummaryMetricCardDetailed({
         </h3>
 
         {/* Stats bullet list */}
-        {stats && stats.length > 0 && (
-          <div className="flex items-center gap-1 text-xs font-425 text-gray-600 leading-5">
+        {stats && stats.length > 0 ? (
+          <div className="flex items-center gap-1 text-xs font-400 text-gray-600 leading-5">
             {stats.map((stat, index) => (
               <div key={index} className="flex items-center gap-1">
                 {index > 0 && <span>•</span>}
@@ -138,7 +140,7 @@ export function SummaryMetricCardDetailed({
               </div>
             ))}
           </div>
-        )}
+        ) : <div className='flex text-xs font-400 text-gray-600 leading-5'> No Evaluations Data to Display</div>}
       </div>
 
       {isEmpty ? (
@@ -148,9 +150,12 @@ export function SummaryMetricCardDetailed({
           <div className="flex items-center justify-between h-12">
             {/* AI System metric */}
             <div className="flex flex-col gap-1">
-              <p className="text-xs font-425 text-gray-600 leading-5">
-                {aiSystemLabel}
-              </p>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-[--chart-1]" />
+                <p className="text-xs font-425 text-gray-600 leading-5">
+                  {aiSystemLabel}
+                </p>
+              </div>
               <p className="text-xl font-550 text-gray-900 leading-6 tracking-[-0.3px]">
                 --
               </p>
@@ -158,9 +163,12 @@ export function SummaryMetricCardDetailed({
 
             {/* AI System + Guardrail metric */}
             <div className="flex flex-col gap-1 text-right">
-              <p className="text-xs font-425 text-gray-600 leading-5 whitespace-nowrap">
-                {aiSystemGuardrailLabel}
-              </p>
+              <div className="flex items-center gap-1.5 justify-end">
+                <div className="w-2 h-2 rounded-full bg-[--chart-2]" />
+                <p className="text-xs font-425 text-gray-600 leading-5 whitespace-nowrap">
+                  {aiSystemGuardrailLabel}
+                </p>
+              </div>
               <p className="text-xl font-550 text-gray-900 leading-6 tracking-[-0.3px] whitespace-nowrap">
                 --
               </p>
@@ -168,10 +176,22 @@ export function SummaryMetricCardDetailed({
           </div>
 
           {/* Empty message */}
-          <div className="flex items-center justify-center h-[94px]">
-            <p className="text-xs font-425 text-gray-500 leading-4">
-              {emptyMessage}
-            </p>
+
+           <div className="relative h-[70px] w-full rounded-md overflow-hidden flex items-center justify-center">
+                {/* Dotted background pattern */}
+                <div className=''>
+                  
+                  <Button size="sm" variant="outline" className='relative z-[1] gap-1'><Plus /> {emptyMessage}</Button>
+                </div>
+                 
+                <div
+                  className="absolute inset-0 [background-size:8px_8px] [background-image:radial-gradient(#e5e7eb_1px,transparent_1px)] dark:[background-image:radial-gradient(#404040_0.5px,transparent_0.5px)]"
+                  aria-hidden="true"
+                />
+                 
+                </div>
+          <div className="flex items-center justify-center h-[24px]">
+          
           </div>
         </div>
       ) : (
@@ -180,9 +200,12 @@ export function SummaryMetricCardDetailed({
           <div className="flex items-center justify-between h-12">
             {/* AI System metric */}
             <div className="flex flex-col gap-1">
-              <p className="text-xs font-425 text-gray-600 leading-5">
-                {aiSystemLabel}
-              </p>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-[--chart-1]" />
+                <p className="text-xs font-425 text-gray-600 leading-5">
+                  {aiSystemLabel}
+                </p>
+              </div>
               <p className="text-xl font-550 text-gray-900 leading-6 tracking-[-0.3px]">
                 {aiSystemAvg ?? '--'}
               </p>
@@ -190,9 +213,12 @@ export function SummaryMetricCardDetailed({
 
             {/* AI System + Guardrail metric */}
             <div className="flex flex-col gap-1 text-right">
-              <p className="text-xs font-425 text-gray-600 leading-5 whitespace-nowrap">
-                {aiSystemGuardrailLabel}
-              </p>
+              <div className="flex items-center gap-1.5 justify-end">
+                <div className="w-2 h-2 rounded-full bg-[--chart-2]" />
+                <p className="text-xs font-425 text-gray-600 leading-5 whitespace-nowrap">
+                  {aiSystemGuardrailLabel}
+                </p>
+              </div>
               <p className="text-xl font-550 text-gray-900 leading-6 tracking-[-0.3px] whitespace-nowrap">
                 {aiSystemGuardrailAvg ?? '--'}
               </p>

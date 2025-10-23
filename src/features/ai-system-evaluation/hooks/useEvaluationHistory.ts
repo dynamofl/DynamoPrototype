@@ -166,7 +166,6 @@ export function useEvaluationHistory(aiSystem: AISystem | null) {
           filter: `ai_system_id=eq.${aiSystem.id}`
         },
         (payload) => {
-          console.log('📨 Evaluation update event:', payload);
           // Use throttled update to prevent excessive re-renders
           throttledUpdate(payload.new);
         }
@@ -180,7 +179,6 @@ export function useEvaluationHistory(aiSystem: AISystem | null) {
           filter: `ai_system_id=eq.${aiSystem.id}`
         },
         (payload) => {
-          console.log('📨 New evaluation created:', payload);
           // Reload full history when new evaluation is created
           reloadHistory();
         }
@@ -194,7 +192,6 @@ export function useEvaluationHistory(aiSystem: AISystem | null) {
           filter: `ai_system_id=eq.${aiSystem.id}`
         },
         (payload) => {
-          console.log('📨 Evaluation deleted:', payload);
           // Remove from list
           setEvaluationHistory(prev => {
             const newList = prev.filter(e => e.id !== payload.old.id);
@@ -209,7 +206,6 @@ export function useEvaluationHistory(aiSystem: AISystem | null) {
 
     // Cleanup function
     return () => {
-      console.log('🔌 Unsubscribing from evaluations channel');
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;

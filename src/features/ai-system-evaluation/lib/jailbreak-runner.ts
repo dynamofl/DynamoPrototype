@@ -39,29 +39,21 @@ export async function runJailbreakEvaluation(
   guardrails: Guardrail[] = [],
   onProgress?: ProgressCallback
 ): Promise<JailbreakEvaluationOutput> {
-  console.log('🎯 runJailbreakEvaluation started');
-  console.log('Config:', config);
-  console.log('Number of policies:', config.policies.length);
-
   const results: JailbreakEvaluationResult[] = [];
   // Get API keys for different usage types
   const promptGenApiKey = getApiKeyForUsage('promptGeneration');
   const evalJudgeApiKey = getApiKeyForUsage('evaluationJudgement');
-  console.log('API keys retrieved - promptGen:', !!promptGenApiKey, 'evalJudge:', !!evalJudgeApiKey);
 
   const evaluationId = crypto.randomUUID();
 
   // Get attack types to use
   const attackTypes = config.attackTypesDistribution || getDefaultAttackTypes();
-  console.log('Attack types:', attackTypes);
 
   let currentStep = 0;
   const totalSteps = config.policies.length * 6; // 5 base prompts + 1 adversarial each = 6 per policy
-  console.log('Total steps:', totalSteps);
 
   // Process each policy
   for (const policy of config.policies) {
-    console.log('📋 Processing policy:', policy.name);
     onProgress?.({
       stage: 'Generating base prompts',
       current: currentStep,
@@ -70,9 +62,7 @@ export async function runJailbreakEvaluation(
     });
 
     // Step 1: Generate 5 base prompts for this policy using Prompt Generation model
-    console.log('Calling generateBasePrompts...');
     const basePrompts = await generateBasePrompts(policy, promptGenApiKey);
-    console.log('Base prompts generated:', basePrompts.length);
     currentStep++;
 
     // Step 2: Distribute attack types across base prompts
