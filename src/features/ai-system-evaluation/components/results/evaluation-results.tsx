@@ -268,9 +268,9 @@ export function EvaluationResults({
           {selectedTab === 'summary' && (
             <motion.div
               key="summary"
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 10 }}
+              initial={{ opacity: 0, scale: 0.99 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.99 }}
               transition={{ duration: 0.2, ease: "easeInOut" }}
               className="h-full overflow-auto"
             >
@@ -295,9 +295,9 @@ export function EvaluationResults({
           {selectedTab === 'data' && (
             <motion.div
               key="data"
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
+              initial={{ opacity: 0,scale: 0.99  }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.99  }}
               transition={{ duration: 0.2, ease: "easeInOut" }}
               className="h-full"
             >
