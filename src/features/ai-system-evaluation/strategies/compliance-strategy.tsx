@@ -11,7 +11,9 @@ import type {
   ExportFieldConfig,
   AnalysisSectionConfig,
   ConversationSectionConfig,
-  HighlightingContext
+  HighlightingContext,
+  SummarySectionConfig,
+  SummaryViewContext
 } from './base-strategy'
 import type { BaseEvaluationResult, BaseEvaluationSummary } from '../types/base-evaluation'
 import type {
@@ -113,10 +115,10 @@ export class ComplianceStrategy implements EvaluationStrategy {
     const complianceResults = results as ComplianceEvaluationResult[]
 
     // Calculate confusion matrix
-    const tp = complianceResults.filter(r => r.finalOutcome === 'TP').length
-    const tn = complianceResults.filter(r => r.finalOutcome === 'TN').length
-    const fp = complianceResults.filter(r => r.finalOutcome === 'FP').length
-    const fn = complianceResults.filter(r => r.finalOutcome === 'FN').length
+    const tp = complianceResults.filter(r => r.final_outcome === 'TP').length
+    const tn = complianceResults.filter(r => r.final_outcome === 'TN').length
+    const fp = complianceResults.filter(r => r.final_outcome === 'FP').length
+    const fn = complianceResults.filter(r => r.final_outcome === 'FN').length
 
     const totalTests = complianceResults.length
 
@@ -129,9 +131,9 @@ export class ComplianceStrategy implements EvaluationStrategy {
     // Calculate by policy
     const byPolicy: Record<string, any> = {}
     complianceResults.forEach(result => {
-      if (!byPolicy[result.policyId]) {
-        byPolicy[result.policyId] = {
-          policy_name: result.policyName,
+      if (!byPolicy[result.policy_id]) {
+        byPolicy[result.policy_id] = {
+          policy_name: result.policy_name,
           total: 0,
           tp: 0,
           tn: 0,
@@ -142,19 +144,19 @@ export class ComplianceStrategy implements EvaluationStrategy {
           success_rate: 0
         }
       }
-      byPolicy[result.policyId].total++
+      byPolicy[result.policy_id].total++
 
       // Count outcomes
-      if (result.finalOutcome === 'TP') byPolicy[result.policyId].tp++
-      if (result.finalOutcome === 'TN') byPolicy[result.policyId].tn++
-      if (result.finalOutcome === 'FP') byPolicy[result.policyId].fp++
-      if (result.finalOutcome === 'FN') byPolicy[result.policyId].fn++
+      if (result.final_outcome === 'TP') byPolicy[result.policy_id].tp++
+      if (result.final_outcome === 'TN') byPolicy[result.policy_id].tn++
+      if (result.final_outcome === 'FP') byPolicy[result.policy_id].fp++
+      if (result.final_outcome === 'FN') byPolicy[result.policy_id].fn++
 
       // Success = TP or TN, Failure = FP or FN
-      if (result.finalOutcome === 'TP' || result.finalOutcome === 'TN') {
-        byPolicy[result.policyId].successes++
+      if (result.final_outcome === 'TP' || result.final_outcome === 'TN') {
+        byPolicy[result.policy_id].successes++
       } else {
-        byPolicy[result.policyId].failures++
+        byPolicy[result.policy_id].failures++
       }
     })
 
@@ -167,8 +169,8 @@ export class ComplianceStrategy implements EvaluationStrategy {
     // Calculate by behavior type
     const byBehaviorType: Record<string, any> = {}
     complianceResults.forEach(result => {
-      if (!byBehaviorType[result.behaviorType]) {
-        byBehaviorType[result.behaviorType] = {
+      if (!byBehaviorType[result.behavior_type]) {
+        byBehaviorType[result.behavior_type] = {
           total: 0,
           tp: 0,
           tn: 0,
@@ -179,17 +181,17 @@ export class ComplianceStrategy implements EvaluationStrategy {
           success_rate: 0
         }
       }
-      byBehaviorType[result.behaviorType].total++
+      byBehaviorType[result.behavior_type].total++
 
-      if (result.finalOutcome === 'TP') byBehaviorType[result.behaviorType].tp++
-      if (result.finalOutcome === 'TN') byBehaviorType[result.behaviorType].tn++
-      if (result.finalOutcome === 'FP') byBehaviorType[result.behaviorType].fp++
-      if (result.finalOutcome === 'FN') byBehaviorType[result.behaviorType].fn++
+      if (result.final_outcome === 'TP') byBehaviorType[result.behavior_type].tp++
+      if (result.final_outcome === 'TN') byBehaviorType[result.behavior_type].tn++
+      if (result.final_outcome === 'FP') byBehaviorType[result.behavior_type].fp++
+      if (result.final_outcome === 'FN') byBehaviorType[result.behavior_type].fn++
 
-      if (result.finalOutcome === 'TP' || result.finalOutcome === 'TN') {
-        byBehaviorType[result.behaviorType].successes++
+      if (result.final_outcome === 'TP' || result.final_outcome === 'TN') {
+        byBehaviorType[result.behavior_type].successes++
       } else {
-        byBehaviorType[result.behaviorType].failures++
+        byBehaviorType[result.behavior_type].failures++
       }
     })
 
@@ -202,7 +204,7 @@ export class ComplianceStrategy implements EvaluationStrategy {
     // Calculate by perturbation type
     const byPerturbationType: Record<string, PerturbationMetrics> = {}
     complianceResults.forEach(result => {
-      const perturbationType = result.perturbationType || 'None'
+      const perturbationType = result.perturbation_type || 'None'
       if (!byPerturbationType[perturbationType]) {
         byPerturbationType[perturbationType] = {
           perturbation_type: perturbationType,
@@ -216,10 +218,10 @@ export class ComplianceStrategy implements EvaluationStrategy {
       }
       byPerturbationType[perturbationType].total++
 
-      if (result.finalOutcome === 'TP') byPerturbationType[perturbationType].tp++
-      if (result.finalOutcome === 'TN') byPerturbationType[perturbationType].tn++
-      if (result.finalOutcome === 'FP') byPerturbationType[perturbationType].fp++
-      if (result.finalOutcome === 'FN') byPerturbationType[perturbationType].fn++
+      if (result.final_outcome === 'TP') byPerturbationType[perturbationType].tp++
+      if (result.final_outcome === 'TN') byPerturbationType[perturbationType].tn++
+      if (result.final_outcome === 'FP') byPerturbationType[perturbationType].fp++
+      if (result.final_outcome === 'FN') byPerturbationType[perturbationType].fn++
     })
 
     // Calculate accuracy for perturbation types
@@ -946,5 +948,60 @@ export class ComplianceStrategy implements EvaluationStrategy {
       variant: (isSuccess ? 'default' : 'destructive') as 'default' | 'destructive',
       color: isSuccess ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
     }
+  }
+
+  /**
+   * Get summary view configuration for compliance evaluations
+   * Defines the layout and components for the summary page
+   */
+  getSummaryViewConfig(): SummarySectionConfig[] {
+    return [
+      // Section 1: Generic Summary Cards (TP, TN, FP, FN, F1, Accuracy)
+      {
+        key: 'summaryCards',
+        order: 1,
+        componentKey: 'GenericSummaryCards',
+        layout: {
+          container: 'constrained',
+          className: 'max-w-4xl mx-auto'
+        }
+      },
+
+      // Section 2: By Policy Results (conditional)
+      {
+        key: 'byPolicy',
+        order: 2,
+        componentKey: 'PolicyResultsSection',
+        layout: {
+          container: 'constrained',
+          className: 'max-w-4xl mx-auto'
+        },
+        condition: (ctx: SummaryViewContext) => {
+          const complianceSummary = ctx.summary as ComplianceEvaluationSummary
+          return !!complianceSummary.by_policy && Object.keys(complianceSummary.by_policy).length > 0
+        },
+        props: {
+          byPolicy: (ctx: SummaryViewContext) => (ctx.summary as ComplianceEvaluationSummary).by_policy
+        }
+      },
+
+      // Section 3: By Behavior Type Results (conditional)
+      {
+        key: 'byBehaviorType',
+        order: 3,
+        componentKey: 'BehaviorTypeResultsSection',
+        layout: {
+          container: 'constrained',
+          className: 'max-w-4xl mx-auto'
+        },
+        condition: (ctx: SummaryViewContext) => {
+          const complianceSummary = ctx.summary as ComplianceEvaluationSummary
+          return !!complianceSummary.by_behavior_type && Object.keys(complianceSummary.by_behavior_type).length > 0
+        },
+        props: {
+          byBehaviorType: (ctx: SummaryViewContext) => (ctx.summary as ComplianceEvaluationSummary).by_behavior_type
+        }
+      }
+    ]
   }
 }

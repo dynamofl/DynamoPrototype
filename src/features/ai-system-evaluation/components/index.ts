@@ -7,7 +7,6 @@ export { AISystemSelection } from './creation/ai-system-selection';
 export { EvaluationReview } from './creation/evaluation-review';
 export { EvaluationCreationFlow } from './creation/evaluation-creation-flow';
 export type { EvaluationCreationFlowProps } from './creation/evaluation-creation-flow';
-export { EvaluationEmptyState } from './creation/evaluation-empty-state';
 export { UploadPromptsSheet } from './creation/upload-prompts-sheet';
 
 // Progress components
@@ -21,5 +20,4 @@ export { EvaluationHistoryTableDirect } from './history/evaluation-history-table
 export { EvaluationHistoryFilters } from './history/evaluation-history-filters';
 export { EvaluationHistoryHeader } from './history/evaluation-history-header';
 export { EvaluationSummarySection } from './history/summary-section/evaluation-summary-section';
-// Deprecated: export { EvaluationListChart } from './history/evaluation-list-chart';
 export type { EvaluationHistoryFilterState } from './history/evaluation-history-filters';

@@ -1,16 +1,7 @@
 import type { BaseEvaluationSummary, BaseEvaluationResult } from "../../types/base-evaluation";
-import type { JailbreakEvaluationSummary } from "../../types/jailbreak-evaluation";
 import type { EvaluationStrategy } from "../../strategies/base-strategy";
-import { OverviewSection } from "./summary/overview-section";
-import { DualAttackScoreGauge } from "./summary/dual-attack-score-gauge";
-import { SummaryStatsCards } from "./summary/summary-stats-cards";
-import { PolicyResultsSection } from "./summary/policy-results-section";
-import { AttackTypeResultsSection } from "./summary/attack-type-results-section";
-import { BehaviorTypeResultsSection } from "./summary/behavior-type-results-section";
-import { AttackSuccessRateChart } from "./summary/attack-success-rate-chart";
-import { GenericSummaryCards } from "./summary/generic-summary-cards";
 import { AISystemIcon } from "@/components/patterns/ui-patterns/ai-system-icon";
-import { TopicAnalysisSection } from "./summary/topic-analysis-section";
+import { SummaryViewRenderer } from "./summary/summary-view-renderer";
 
 interface EvaluationSummaryViewProps {
   summary: BaseEvaluationSummary;
@@ -53,9 +44,6 @@ export function EvaluationSummaryView({
   topicAnalysis,
   evaluationResults,
 }: EvaluationSummaryViewProps) {
-  // Check if this is a jailbreak evaluation (use existing components) or other type (use generic)
-  const isJailbreak = testType === 'jailbreak';
-
   // Format timestamp
   const formattedDate = new Date(timestamp).toLocaleDateString("en-US", {
     month: "short",
@@ -98,7 +86,6 @@ export function EvaluationSummaryView({
           {/* Main Title */}
           <h2 className="text-3xl font-550 text-gray-900">
             {evaluationName || "--"}
-
           </h2>
         </div>
 
@@ -129,81 +116,15 @@ export function EvaluationSummaryView({
           </div>
         </div>
 
-        {/* Conditional rendering based on test type */}
-        {isJailbreak ? (
-          // Jailbreak-specific components (existing UI)
-          <>
-            {/* Overview and Gauge - Two Column Layout */}
-            <div className="max-w-4xl mx-auto">
-              <div className={`grid ${hasGuardrails ? 'grid-cols-5' : 'grid-cols-4'} px-3 py-2 align-center items-center rounded-lg bg-gray-100`}>
-                {/* Left: Overview Description */}
-                <div className={hasGuardrails ? 'col-span-3' : 'col-span-3'}>
-                  <OverviewSection summary={summary as JailbreakEvaluationSummary} hasGuardrails={hasGuardrails} />
-                </div>
-
-                {/* Right: Attack Score Gauge */}
-                <div className={hasGuardrails ? 'col-span-2' : 'col-span-1'}>
-                  <DualAttackScoreGauge summary={summary as JailbreakEvaluationSummary} hasGuardrails={hasGuardrails} />
-                </div>
-              </div>
-            </div>
-
-            {/* Overall Stats Cards */}
-            <div className="max-w-4xl mx-auto">
-              <SummaryStatsCards summary={summary as JailbreakEvaluationSummary} />
-            </div>
-
-            {/* By Policy */}
-            <div className="max-w-4xl mx-auto">
-              <PolicyResultsSection byPolicy={(summary as JailbreakEvaluationSummary).byPolicy} />
-            </div>
-
-            {/* By Attack Type */}
-            <div className="max-w-4xl mx-auto">
-              <AttackTypeResultsSection byAttackType={(summary as JailbreakEvaluationSummary).byAttackType} />
-            </div>
-
-            {/* By Behavior Type */}
-            <div className="max-w-4xl mx-auto">
-              <BehaviorTypeResultsSection byBehaviorType={(summary as JailbreakEvaluationSummary).byBehaviorType} />
-            </div>
-
-            {/* Topic Analysis */}
-            {topicAnalysis && (
-              <div className="max-w-4xl mx-auto">
-                <TopicAnalysisSection
-                  topicAnalysis={topicAnalysis}
-                  evaluationResults={evaluationResults}
-                />
-              </div>
-            )}
-          </>
-        ) : (
-          // Generic summary cards for other test types (compliance, etc.)
-          <>
-            <div className="max-w-4xl mx-auto">
-              <GenericSummaryCards
-                summary={summary}
-                strategy={strategy}
-                testType={testType}
-              />
-            </div>
-
-            {/* By Policy - Only show if by_policy exists */}
-            {(summary as any).by_policy && (
-              <div className="max-w-4xl mx-auto">
-                <PolicyResultsSection byPolicy={(summary as any).by_policy} />
-              </div>
-            )}
-
-            {/* By Behavior Type - Only show if by_behavior_type exists */}
-            {(summary as any).by_behavior_type && (
-              <div className="max-w-4xl mx-auto">
-                <BehaviorTypeResultsSection byBehaviorType={(summary as any).by_behavior_type} />
-              </div>
-            )}
-          </>
-        )}
+        {/* Config-driven summary view rendering */}
+        <SummaryViewRenderer
+          strategy={strategy}
+          summary={summary}
+          testType={testType}
+          hasGuardrails={hasGuardrails}
+          topicAnalysis={topicAnalysis}
+          evaluationResults={evaluationResults}
+        />
       </div>
     </div>
   );

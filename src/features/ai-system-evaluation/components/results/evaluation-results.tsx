@@ -263,7 +263,7 @@ export function EvaluationResults({
       />
 
       {/* Tab Content */}
-      <div className="flex-1 overflow-auto" onWheel={(e) => e.stopPropagation()}>
+      <div className="flex-1 overflow-hidden" onWheel={(e) => e.stopPropagation()}>
         <AnimatePresence mode="wait">
           {selectedTab === 'summary' && (
             <motion.div
@@ -272,6 +272,7 @@ export function EvaluationResults({
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 10 }}
               transition={{ duration: 0.2, ease: "easeInOut" }}
+              className="h-full overflow-auto"
             >
               <EvaluationSummaryView
                 summary={results.summary}
@@ -298,6 +299,7 @@ export function EvaluationResults({
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.2, ease: "easeInOut" }}
+              className="h-full"
             >
               <EvaluationDataView
                 results={results.results}

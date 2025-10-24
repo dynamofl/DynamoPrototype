@@ -66,6 +66,46 @@ export interface ExportFieldConfig {
 }
 
 /**
+ * Summary section configuration for config-driven summary view rendering
+ * Each section defines what component to render, with what props, and in what layout
+ */
+export interface SummarySectionConfig {
+  /** Unique key for this section */
+  key: string
+  /** Display order (lower numbers render first) */
+  order: number
+  /** Component identifier or type (resolved via component registry) */
+  componentKey: string
+  /** Props to pass to the component (can include data mappings) */
+  props?: Record<string, any>
+  /** Optional: only render if condition is true */
+  condition?: (context: SummaryViewContext) => boolean
+  /** Layout configuration for this section */
+  layout?: {
+    /** Container width: 'full' | 'constrained' (max-w-4xl) */
+    container?: 'full' | 'constrained'
+    /** Grid columns class (e.g., 'grid-cols-5') */
+    gridCols?: string
+    /** Additional CSS classes */
+    className?: string
+    /** Padding classes */
+    padding?: string
+  }
+}
+
+/**
+ * Context passed to summary view sections for data access
+ */
+export interface SummaryViewContext {
+  summary: BaseEvaluationSummary
+  results?: BaseEvaluationResult[]
+  hasGuardrails?: boolean
+  topicAnalysis?: any
+  evaluationResults?: BaseEvaluationResult[]
+  [key: string]: any // Allow additional context properties
+}
+
+/**
  * Analysis section configuration (for summary view)
  */
 export interface AnalysisSectionConfig {
@@ -190,6 +230,13 @@ export interface EvaluationStrategy {
     variant: 'default' | 'secondary' | 'destructive' | 'outline'
     color?: string
   } | null
+
+  /**
+   * UI Configuration - Summary View Sections
+   * Define sections for summary view in declarative config format
+   * This enables config-driven rendering for different test types
+   */
+  getSummaryViewConfig(): SummarySectionConfig[]
 }
 
 /**
