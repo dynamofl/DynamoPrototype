@@ -1,5 +1,5 @@
 import { useMemo, Fragment, useState } from "react";
-import { AlertTriangle, ArrowUpRight, ChevronRight } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Table,
@@ -9,16 +9,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { TopicAnalysis, JailbreakEvaluationResult, Policy } from "../../../types/jailbreak-evaluation";
+import type { TopicAnalysis, Policy } from "../../../types/jailbreak-evaluation";
 import { PolicyViewSheet } from "./policy-view-sheet";
 
 interface TopicAnalysisSectionProps {
   topicAnalysis: TopicAnalysis;
-  evaluationResults?: JailbreakEvaluationResult[];
   policies?: Policy[]; // Full policy definitions from config
 }
 
-export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policies: configPolicies }: TopicAnalysisSectionProps) {
+export function TopicAnalysisSection({ topicAnalysis, policies: configPolicies }: TopicAnalysisSectionProps) {
   const [viewPolicySheetOpen, setViewPolicySheetOpen] = useState(false);
   const [selectedPolicyName, setSelectedPolicyName] = useState<string | null>(null);
 
@@ -34,44 +33,27 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policie
 
   // Get policy data from config (full policy definition)
   const selectedPolicy = useMemo(() => {
-    if (!selectedPolicyName) {
+    if (!selectedPolicyName || !configPolicies) {
       return null;
     }
 
-    // First try to get full policy from config
-    if (configPolicies && configPolicies.length > 0) {
-      const configPolicy = configPolicies.find((p: any) => p.name === selectedPolicyName);
-      if (configPolicy) {
-        return {
-          id: configPolicy.id,
-          name: configPolicy.name,
-          description: configPolicy.description || '',
-          allowed: configPolicy.allowed || [],
-          disallowed: configPolicy.disallowed || [],
-          type: configPolicy.type || '',
-          category: configPolicy.category || '',
-          createdAt: configPolicy.createdAt || '',
-          updatedAt: configPolicy.updatedAt || ''
-        };
-      }
-    }
-
-    // Fallback: try to get from evaluation results (but this has limited data)
-    if (evaluationResults && evaluationResults.length > 0) {
-      const result = evaluationResults.find(r => r.policyName === selectedPolicyName);
-      if (result?.policyContext) {
-        return {
-          id: result.policyId,
-          name: result.policyName,
-          description: result.policyContext.description || '',
-          allowed: result.policyContext.allowedBehaviors || [],
-          disallowed: result.policyContext.disallowedBehaviors || []
-        };
-      }
+    const configPolicy = configPolicies.find((p: any) => p.name === selectedPolicyName);
+    if (configPolicy) {
+      return {
+        id: configPolicy.id,
+        name: configPolicy.name,
+        description: configPolicy.description || '',
+        allowed: configPolicy.allowed || [],
+        disallowed: configPolicy.disallowed || [],
+        type: configPolicy.type || '',
+        category: configPolicy.category || '',
+        createdAt: configPolicy.createdAt || '',
+        updatedAt: configPolicy.updatedAt || ''
+      };
     }
 
     return null;
-  }, [selectedPolicyName, configPolicies, evaluationResults]);
+  }, [selectedPolicyName, configPolicies]);
 
   // Flatten all topics for statistics calculations
   const allTopics = policies.flatMap(policy =>
@@ -94,66 +76,8 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policie
   // Generate dynamic insights if not provided by AI
   const displayInsights = topicAnalysis.topic_insight || `The topic-level view covers ${totalPrompts} adversarial prompts across ${uniqueTopics} topic${uniqueTopics > 1 ? 's' : ''} spanning ${policies.length} ${policies.length > 1 ? 'policies' : 'policy'}. Attack success varied widely, ranging from ${Math.round(attackSuccessRateRange.min)}% to ${Math.round(attackSuccessRateRange.max)}% per topic, with an average judge confidence of ${avgConfidence.toFixed(2)}. This breakdown highlights where failures are most concentrated and where defenses are holding.`;
 
-  // Get highly violating topics (ASR > 75%) - assuming ASR is already in percentage (0-100)
-  const highlyViolatingTopics = allTopics.filter(topic => topic.attack_success_rate.mean > 75);
-
-  // Extract and group behaviors from evaluation results
-  const violatingBehaviorsByPolicy = useMemo(() => {
-    if (!evaluationResults || evaluationResults.length === 0) {
-      return {};
-    }
-
-    // Group behaviors by policy
-    const behaviorsByPolicy = new Map<string, Map<string, { behavior: string; count: number }>>();
-
-    evaluationResults.forEach((result) => {
-      // Check if this result is for a high-violating topic
-      const isHighViolating = highlyViolatingTopics.some(topic => topic.topic_name === result.topic);
-
-      if (isHighViolating && result.policyContext) {
-        // Extract disallowed behaviors from policy_context
-        // The correct property is 'disallowedBehaviors' (camelCase)
-        const disallowedBehaviors =
-          result.policyContext?.disallowedBehaviors ||
-          result.policyContext?.disallowed ||
-          result.policyContext?.behaviors?.disallowed ||
-          [];
-
-        disallowedBehaviors.forEach((behavior: string) => {
-          if (!behaviorsByPolicy.has(result.policyName)) {
-            behaviorsByPolicy.set(result.policyName, new Map());
-          }
-
-          const policyBehaviors = behaviorsByPolicy.get(result.policyName)!;
-
-          if (policyBehaviors.has(behavior)) {
-            const existing = policyBehaviors.get(behavior)!;
-            policyBehaviors.set(behavior, { ...existing, count: existing.count + 1 });
-          } else {
-            policyBehaviors.set(behavior, { behavior, count: 1 });
-          }
-        });
-      }
-    });
-
-    // Convert to object, filter behaviors with count > 3, and sort
-    const result: Record<string, Array<{ behavior: string; count: number }>> = {};
-
-    behaviorsByPolicy.forEach((behaviors, policyName) => {
-      const filteredBehaviors = Array.from(behaviors.values())
-        .filter(b => b.count > 3)  // Only show behaviors with more than 3 prompts
-        .sort((a, b) => b.count - a.count);  // Sort by count descending
-
-      if (filteredBehaviors.length > 0) {
-        result[policyName] = filteredBehaviors;
-      }
-    });
-
-    return result;
-  }, [evaluationResults, highlyViolatingTopics]);
-
   return (
-    <div className="max-w-4xl mx-auto space-y-2 my-2">
+    <div className="max-w-4xl mx-auto space-y-2 my-4">
       {/* Header and Insights */}
       <div className="space-y-3 pt-4 rounded-xl">
         <div className="space-y-2">
@@ -169,7 +93,7 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policie
 
         {/* Policy Cards - Show when multiple policies */}
         {policies.length > 1 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-1 px-3">
             {policies.map((policy) => {
               // Calculate average attack success rate for this policy
               const avgAttackSuccessRate = policy.topics.reduce(
@@ -183,14 +107,15 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policie
                   className="bg-gray-0 border border-gray-200 rounded-lg p-3"
                 >
                   <div className="flex flex-col gap-4">
-                    <h4 className="text-[0.9375rem] font-450 text-gray-900">
+                    <h4 className="text-sm font-450 text-gray-900">
                       {policy.policy_name}
                     </h4>
                     <div className="flex flex-col items-baseline gap-1">
-                      <p className="text-xs text-gray-600">Attack Success Rate</p>
-                      <p className={`text-lg font-450 ${avgAttackSuccessRate > 75 ? 'text-red-600' : 'text-gray-600'}`}>
+                      <p className={`text-lg font-450 ${avgAttackSuccessRate > 75 ? 'text-gray-900' : 'text-gray-900'}`}>
                         {Math.round(avgAttackSuccessRate)}%
                       </p>
+                      <p className="text-xs text-gray-600">Attack Success Rate</p>
+
                     </div>
                   </div>
                 </div>
@@ -200,14 +125,14 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policie
         )}
 
         <div className="space-y-2 py-2 px-3">
-          <p className="text-[0.9375rem] font-[425] leading-5 text-gray-900 leading-relaxed">
+          <p className="text-[0.9375rem] font-[425] leading-5 text-gray-600 leading-relaxed">
             {displayInsights}
           </p>
         </div>
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="breakdown" className="px-0.5 pt-2 space-y-4">
+      <Tabs defaultValue="breakdown" className="px-3 px-0.5 pt-1 space-y-4 ">
         <TabsList>
           <TabsTrigger value="breakdown">Topic Breakdown</TabsTrigger>
           <TabsTrigger value="statistical">Statistical Summary</TabsTrigger>
@@ -225,7 +150,7 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policie
                   <TableHead className="font-450 text-right w-[160px]">Attack Success Rate</TableHead>
                   <TableHead className="font-450 text-right w-[100px]">Confidence</TableHead>
                   <TableHead className="font-450 text-right w-[170px]">Response Time (in sec)</TableHead>
-                  <TableHead className="font-450 text-right w-[100px]">Occurence</TableHead>
+                  <TableHead className="font-450 text-right w-[80px]">Occurence</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -388,52 +313,6 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policie
         </TabsContent>
    
       </Tabs>
-
-      {/* Highly Violating Behaviors Section */}
-      {Object.keys(violatingBehaviorsByPolicy).length > 0 && (
-        <div className="space-y-4 p-3 border border-gray-200 rounded-lg">
-          <h3 className="text-[0.9375rem] font-450 text-gray-600">
-            Highly Violating Behaviors:
-          </h3>
-          <div className="flex flex-col">
-            {Object.entries(violatingBehaviorsByPolicy).map(([policyName, behaviors], policyIndex) => (
-              <div key={policyName}>
-                {/* Behaviors List */}
-                <div className="flex flex-col gap-3 pb-4">
-                  {behaviors.map((item) => (
-                    <div key={item.behavior} className="flex gap-2 items-start">
-                      <span className="text-gray-400 text-[0.9375rem] leading-6">•</span>
-                      <span className="text-[0.9375rem] text-gray-900 flex-1 leading-6">{item.behavior}</span>
-                      <div className="bg-gray-0 flex items-center justify-center px-3 py-1 rounded-full">
-                        <span className="text-xs font-450 text-gray-600">
-                          {item.count} Prompts
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Source / Preview Policy */}
-                <div className="flex items-center gap-1 pl-4 pb-4">
-                  <span className="text-[0.9375rem] text-gray-600">Source:</span>
-                  <button
-                    onClick={() => handlePreviewPolicy(policyName)}
-                    className="flex items-center gap-1 text-[0.9375rem] font-450 text-gray-600 hover:text-gray-900 transition-colors"
-                  >
-                    {policyName}
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {/* Horizontal separator (not for last item) */}
-                {policyIndex < Object.keys(violatingBehaviorsByPolicy).length - 1 && (
-                  <div className="border-t border-gray-200 mb-4" />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Policy View Sheet */}
       <PolicyViewSheet

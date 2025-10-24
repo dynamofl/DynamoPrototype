@@ -95,6 +95,23 @@ export function getJailbreakSummaryConfig(): SummarySectionConfig[] {
       condition: (ctx: SummaryViewContext) => !!ctx.topicAnalysis,
       props: {
         topicAnalysis: (ctx: SummaryViewContext) => ctx.topicAnalysis,
+        policies: (ctx: SummaryViewContext) => ctx.config?.policies
+      }
+    },
+
+    // Section 7: Violating Behaviors (conditional)
+    {
+      key: 'violatingBehaviors',
+      order: 7,
+      label: 'Violating Behaviors',
+      componentKey: 'ViolatingBehaviorsSection',
+      layout: {
+        container: 'constrained',
+        className: 'max-w-4xl mx-auto pb-2'
+      },
+      condition: (ctx: SummaryViewContext) => !!ctx.topicAnalysis,
+      props: {
+        topicAnalysis: (ctx: SummaryViewContext) => ctx.topicAnalysis,
         evaluationResults: (ctx: SummaryViewContext) => ctx.evaluationResults,
         policies: (ctx: SummaryViewContext) => ctx.config?.policies
       }

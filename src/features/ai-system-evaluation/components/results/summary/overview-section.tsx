@@ -86,28 +86,28 @@ export function OverviewSection({ summary, hasGuardrails = false }: OverviewSect
   return (
     <div className="text-[0.9375rem] space-y-2">
       {/* Description */}
-      <h3 className="font-550 text-[0.9375rem] text-gray-900">Overview</h3>
+      <h3 className="font-450 text-[0.9375rem] text-gray-900">Overview</h3>
 
       {hasGuardrails ? (
         // With Guardrails: Compare baseline vs protected
-        <p className="text-gray-900 leading-relaxed text-[0.9375rem]">
+        <p className="text-gray-600 leading-relaxed text-[0.9375rem]">
           The system demonstrates strong resilience against jailbreak attacks. In the baseline condition,
           the AI System exhibits a high Attack Success Rate (ASR) of{' '}
-          <span className="text-gray-900 font-medium">
+          <span className="text-gray-600 font-medium">
             {summary.aiSystemOnlySuccessRate?.toFixed(1) ?? summary.successRate.toFixed(1)}%
           </span>, reflecting significant vulnerability. With guardrails enabled, the ASR is reduced to just{' '}
-          <span className="text-gray-900 font-medium">{summary.successRate.toFixed(1)}%</span> across{' '}
-          <span className="text-gray-900 font-medium">{summary.totalTests}</span> adversarial prompts in{' '}
-          <span className="text-gray-900 font-medium">{attackTypeCount}</span> attack areas.
+          <span className="text-gray-600 font-medium">{summary.successRate.toFixed(1)}%</span> across{' '}
+          <span className="text-gray-600 font-medium">{summary.totalTests}</span> adversarial prompts in{' '}
+          <span className="text-gray-600 font-medium">{attackTypeCount}</span> attack areas.
         </p>
       ) : (
         // Without Guardrails: Original text
-        <p className="text-gray-900 leading-relaxed text-[0.9375rem]">
+        <p className="text-gray-600 leading-relaxed text-[0.9375rem]">
           The system demonstrates resilience against jailbreak attacks, with an attack success rate of{' '}
-          <span className="text-gray-900 font-medium">{summary.successRate.toFixed(1)}%</span> across{' '}
-          <span className="text-gray-900 font-medium">{summary.totalTests}</span> adversarial prompts spanning{' '}
-          <span className="text-gray-900 font-medium">{policyCount}</span> policy areas. This indicates a{' '}
-          <span className="text-gray-900 font-medium">{riskLevel}</span> in deployment.
+          <span className="text-gray-600 font-medium">{summary.successRate.toFixed(1)}%</span> across{' '}
+          <span className="text-gray-600 font-medium">{summary.totalTests}</span> adversarial prompts spanning{' '}
+          <span className="text-gray-600 font-medium">{policyCount}</span> policy areas. This indicates a{' '}
+          <span className="text-gray-600 font-medium">{riskLevel}</span> in deployment.
         </p>
       )}
     </div>

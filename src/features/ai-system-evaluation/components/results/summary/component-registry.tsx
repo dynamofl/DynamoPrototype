@@ -12,6 +12,7 @@ import { PolicyResultsSection } from './policy-results-section'
 import { AttackTypeResultsSection } from './attack-type-results-section'
 import { BehaviorTypeResultsSection } from './behavior-type-results-section'
 import { TopicAnalysisSection } from './topic-analysis-section'
+import { ViolatingBehaviorsSection } from './violating-behaviors-section'
 
 /**
  * Component registry mapping component keys to React components
@@ -23,7 +24,7 @@ export const componentRegistry: Record<string, ComponentType<any>> = {
   DualAttackScoreGauge,
   SummaryStatsCards,
   HeroSection: ({ summary, hasGuardrails }: any) => (
-    <div className={`grid ${hasGuardrails ? 'grid-cols-5' : 'grid-cols-4'} px-3 py-2 align-center items-center rounded-lg bg-gray-100`}>
+    <div className={`grid ${hasGuardrails ? 'grid-cols-5' : 'grid-cols-4'} -mt-4 mx-3 px-3 py-3 align-center items-center rounded-lg border`}>
       {/* Left: Overview Description */}
       <div className={hasGuardrails ? 'col-span-3' : 'col-span-3'}>
         <OverviewSection summary={summary} hasGuardrails={hasGuardrails} />
@@ -42,6 +43,7 @@ export const componentRegistry: Record<string, ComponentType<any>> = {
   AttackTypeResultsSection,
   BehaviorTypeResultsSection,
   TopicAnalysisSection,
+  ViolatingBehaviorsSection,
 }
 
 /**
