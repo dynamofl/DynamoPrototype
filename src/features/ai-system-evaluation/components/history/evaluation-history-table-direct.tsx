@@ -312,8 +312,21 @@ export function EvaluationHistoryTableDirect({
                   ) : null}
                 </TableCell>
                
-                <TableCell className="font-450 text-gray-900">
-                  <span className="truncate">{test.name}</span>
+                <TableCell
+                  className="font-450 text-gray-900 cursor-pointer group/name"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    // Trigger appropriate action based on status
+                    if (test.status === 'completed') {
+                      onViewReport(test)
+                    } else if (test.status === 'pending' || test.status === 'running') {
+                      onShowProgress(test)
+                    } else if (test.status === 'failed') {
+                      onTestDetails(test)
+                    }
+                  }}
+                >
+                  <span className="truncate group-hover/name:underline">{test.name}</span>
                 </TableCell>
                 <TableCell>
                   {renderCategory(test)}

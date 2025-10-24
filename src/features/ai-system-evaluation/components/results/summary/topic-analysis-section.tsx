@@ -22,8 +22,6 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults }: Topic
   const policies = topicAnalysis.source.policies;
   if (!policies || policies.length === 0) return null;
 
-  const firstPolicy = policies[0];
-
   // Flatten all topics for statistics calculations
   const allTopics = policies.flatMap(policy =>
     policy.topics.map(topic => ({
@@ -98,12 +96,45 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults }: Topic
           <div className="flex items-center gap-2.5">
             <p className="text-sm font-semibold leading-4 text-gray-900">
               {policies.length > 1
-                ? `Attack Areas of Interest: ${policies.map(p => p.policy_name).join(', ')}`
-                : `Attack Area of Interest: ${firstPolicy.policy_name}`
+                ? 'Attack Areas of Interest'
+                : 'Attack Area of Interest'
               }
             </p>
           </div>
         </div>
+
+        {/* Policy Cards - Show when multiple policies */}
+        {policies.length > 1 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {policies.map((policy) => {
+              // Calculate average attack success rate for this policy
+              const avgAttackSuccessRate = policy.topics.reduce(
+                (sum, topic) => sum + topic.attack_success_rate.mean,
+                0
+              ) / policy.topics.length;
+
+              return (
+                <div
+                  key={policy.id}
+                  className="bg-gray-0 border border-gray-200 rounded-lg p-3"
+                >
+                  <div className="flex flex-col gap-2">
+                    <h4 className="text-sm font-semibold text-gray-900">
+                      {policy.policy_name}
+                    </h4>
+                    <div className="flex items-baseline gap-1">
+                      <p className="text-xs text-gray-600">Attack Success Rate:</p>
+                      <p className={`text-lg font-semibold ${avgAttackSuccessRate > 75 ? 'text-red-600' : avgAttackSuccessRate > 50 ? 'text-amber-600' : 'text-green-600'}`}>
+                        {Math.round(avgAttackSuccessRate)}%
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         <div className="space-y-2">
           <p className="text-sm font-[425] leading-5 text-gray-900 leading-relaxed">
             {displayInsights}
