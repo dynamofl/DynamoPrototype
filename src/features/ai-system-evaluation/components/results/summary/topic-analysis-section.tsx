@@ -161,7 +161,7 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policie
             <p className="text-sm font-550 leading-4 text-gray-900">
               {policies.length > 1
                 ? 'Attack Areas of Interest'
-                : 'Attack Area of Interest'
+                : `Attack Area of Interest: ${policies[0].policy_name}`
               }
             </p>
           </div>
@@ -221,7 +221,7 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policie
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50 border-0 hover:bg-gray-50">
-                  <TableHead className="font-450 pl-3">Topic</TableHead>
+                  <TableHead className="font-450 pl-3">Attack Area</TableHead>
                   <TableHead className="font-450 text-center w-[160px]">Attack Success Rate</TableHead>
                   <TableHead className="font-450 text-center w-[100px]">Confidence</TableHead>
                   <TableHead className="font-450 text-center w-[170px]">Response Time (in sec)</TableHead>
@@ -232,7 +232,7 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policie
                 {policies.map((policy) => (
                   <Fragment key={`policy-${policy.id}`}>
                     {/* Policy Header Row */}
-                    <TableRow className="bg-gray-0 hover:bg-gray-0">
+                    <TableRow className="bg-gray-100 hover:bg-gray-100 border-t border-gray-200">
                       <TableCell colSpan={5} className="h-8 pl-3 font-550 text-gray-900">
                         {policy.policy_name}
                       </TableCell>
@@ -285,7 +285,7 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policie
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50 border-0 hover:bg-gray-50">
-                  <TableHead className="pl-3 font-450">Topic</TableHead>
+                  <TableHead className="pl-3 font-450">Attack Area</TableHead>
                   <TableHead className="font-450 text-center w-[130px]">Std Dev (ASR)</TableHead>
                   <TableHead className="font-450 text-center w-[130px]">Variance (ASR)</TableHead>
                   <TableHead className="font-450 text-center w-[130px]">IQR (ASR)</TableHead>
@@ -296,7 +296,7 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policie
                 {policies.map((policy) => (
                   <Fragment key={`policy-stat-${policy.id}`}>
                     {/* Policy Header Row */}
-                    <TableRow className="bg-gray-0 hover:bg-gray-0">
+                    <TableRow className="bg-gray-100 hover:bg-gray-100 border-t border-gray-200">
                       <TableCell colSpan={5} className="h-8 pl-3 font-550 text-gray-900">
                         {policy.policy_name}
                       </TableCell>
@@ -342,7 +342,7 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policie
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50 border-0 hover:bg-gray-50">
-                  <TableHead className="pl-3 font-450">Topic</TableHead>
+                  <TableHead className="pl-3 font-450">Attack Area</TableHead>
                   <TableHead className="font-450 text-center w-[120px]">Odds Ratio</TableHead>
                   <TableHead className="font-450 text-center w-[120px]">P-Value</TableHead>
                   <TableHead className="font-450 text-center w-[120px]">Significance</TableHead>
@@ -352,7 +352,7 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policie
                 {policies.map((policy) => (
                   <Fragment key={`policy-reg-${policy.id}`}>
                     {/* Policy Header Row */}
-                    <TableRow className="bg-gray-0 hover:bg-gray-0">
+                    <TableRow className="bg-gray-100 hover:bg-gray-100 border-t border-gray-200">
                       <TableCell colSpan={4} className="h-8 pl-3 font-550  text-gray-900">
                         {policy.policy_name}
                       </TableCell>
