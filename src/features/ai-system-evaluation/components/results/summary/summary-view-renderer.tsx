@@ -101,10 +101,10 @@ export function SummaryViewRenderer({
   }
 
   // Get summary view configuration from strategy
-  const config = strategy.getSummaryViewConfig()
+  const viewConfig = strategy.getSummaryViewConfig()
 
   // Sort sections by order
-  const sortedSections = [...config].sort((a, b) => a.order - b.order)
+  const sortedSections = [...viewConfig].sort((a, b) => a.order - b.order)
 
   return (
     <>

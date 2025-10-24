@@ -27,6 +27,7 @@ interface EvaluationSummaryViewProps {
   tokenUtilization?: number;
   topicAnalysis?: any; // Topic analysis with AI insights
   evaluationResults?: BaseEvaluationResult[]; // Evaluation prompts for behavior extraction
+  config?: any; // Evaluation config with full policy definitions
 }
 
 export function EvaluationSummaryView({
@@ -43,6 +44,7 @@ export function EvaluationSummaryView({
   tokenUtilization,
   topicAnalysis,
   evaluationResults,
+  config,
 }: EvaluationSummaryViewProps) {
   // Format timestamp
   const formattedDate = new Date(timestamp).toLocaleDateString("en-US", {
@@ -124,6 +126,7 @@ export function EvaluationSummaryView({
           hasGuardrails={hasGuardrails}
           topicAnalysis={topicAnalysis}
           evaluationResults={evaluationResults}
+          config={config}
         />
       </div>
     </div>

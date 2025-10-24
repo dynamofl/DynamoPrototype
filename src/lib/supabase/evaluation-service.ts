@@ -311,6 +311,49 @@ export class EvaluationService {
       throw new Error(`Failed to fetch prompts: ${promptsError.message}`);
     }
 
+    // Fetch full policies from guardrails
+    let policies: any[] = [];
+    const policyIds = evaluation.config?.policyIds || evaluation.config?.policy_ids || [];
+
+    if (policyIds && policyIds.length > 0) {
+      const { data: guardrails, error: guardrailsError } = await supabase
+        .from('guardrails')
+        .select('id, name, type, category, policies, created_at, updated_at')
+        .in('id', policyIds);
+
+      if (!guardrailsError && guardrails) {
+        // Extract policies from guardrails (each guardrail has a policies array)
+        // The policies JSONB field stores allowedBehavior and disallowedBehavior as newline-separated strings
+        policies = guardrails.map(guardrail => {
+          const policyData = Array.isArray(guardrail.policies) && guardrail.policies.length > 0
+            ? guardrail.policies[0]
+            : {};
+
+          // Parse behaviors from newline-separated strings to arrays
+          const parseBehaviors = (text: string): string[] => {
+            if (!text || !text.trim()) return [];
+            return text
+              .split('\n')
+              .map(line => line.trim())
+              .filter(line => line.length > 0 && line.startsWith('•'))
+              .map(line => line.replace(/^•\s*/, '')); // Remove bullet point
+          };
+
+          return {
+            id: guardrail.id,
+            name: guardrail.name,
+            description: policyData.description || '',
+            allowed: parseBehaviors(policyData.allowedBehavior || ''),
+            disallowed: parseBehaviors(policyData.disallowedBehavior || ''),
+            type: guardrail.type || '',
+            category: guardrail.category || '',
+            createdAt: guardrail.created_at?.split('T')[0] || '',
+            updatedAt: guardrail.updated_at?.split('T')[0] || ''
+          };
+        });
+      }
+    }
+
     // Get strategy for this test type
     const strategy = getEvaluationStrategy(testType);
 
@@ -331,7 +374,8 @@ export class EvaluationService {
         ...evaluation.config,
         test_type: testType,
         policy_ids: evaluation.config?.policyIds || evaluation.config?.policy_ids,
-        guardrail_ids: evaluation.config?.guardrailIds || evaluation.config?.guardrail_ids
+        guardrail_ids: evaluation.config?.guardrailIds || evaluation.config?.guardrail_ids,
+        policies // Add the full policies array
       },
       topic_analysis: evaluation.topic_analysis
     };

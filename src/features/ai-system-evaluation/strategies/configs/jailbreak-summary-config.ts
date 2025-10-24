@@ -93,7 +93,8 @@ export function getJailbreakSummaryConfig(): SummarySectionConfig[] {
       condition: (ctx: SummaryViewContext) => !!ctx.topicAnalysis,
       props: {
         topicAnalysis: (ctx: SummaryViewContext) => ctx.topicAnalysis,
-        evaluationResults: (ctx: SummaryViewContext) => ctx.evaluationResults
+        evaluationResults: (ctx: SummaryViewContext) => ctx.evaluationResults,
+        policies: (ctx: SummaryViewContext) => ctx.config?.policies
       }
     }
   ]

@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { AlertTriangle, ExternalLink } from "lucide-react";
+import { useMemo, Fragment, useState } from "react";
+import { AlertTriangle, ArrowUpRight, ChevronRight } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Table,
@@ -9,18 +9,69 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { TopicAnalysis, JailbreakEvaluationResult } from "../../../types/jailbreak-evaluation";
+import type { TopicAnalysis, JailbreakEvaluationResult, Policy } from "../../../types/jailbreak-evaluation";
+import { PolicyViewSheet } from "./policy-view-sheet";
 
 interface TopicAnalysisSectionProps {
   topicAnalysis: TopicAnalysis;
   evaluationResults?: JailbreakEvaluationResult[];
+  policies?: Policy[]; // Full policy definitions from config
 }
 
-export function TopicAnalysisSection({ topicAnalysis, evaluationResults }: TopicAnalysisSectionProps) {
+export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policies: configPolicies }: TopicAnalysisSectionProps) {
+  const [viewPolicySheetOpen, setViewPolicySheetOpen] = useState(false);
+  const [selectedPolicyName, setSelectedPolicyName] = useState<string | null>(null);
 
   // Keep policies grouped for display
   const policies = topicAnalysis.source.policies;
   if (!policies || policies.length === 0) return null;
+
+  // Handler to preview policy
+  const handlePreviewPolicy = (policyName: string) => {
+    setSelectedPolicyName(policyName);
+    setViewPolicySheetOpen(true);
+  };
+
+  // Get policy data from config (full policy definition)
+  const selectedPolicy = useMemo(() => {
+    if (!selectedPolicyName) {
+      return null;
+    }
+
+    // First try to get full policy from config
+    if (configPolicies && configPolicies.length > 0) {
+      const configPolicy = configPolicies.find((p: any) => p.name === selectedPolicyName);
+      if (configPolicy) {
+        return {
+          id: configPolicy.id,
+          name: configPolicy.name,
+          description: configPolicy.description || '',
+          allowed: configPolicy.allowed || [],
+          disallowed: configPolicy.disallowed || [],
+          type: configPolicy.type || '',
+          category: configPolicy.category || '',
+          createdAt: configPolicy.createdAt || '',
+          updatedAt: configPolicy.updatedAt || ''
+        };
+      }
+    }
+
+    // Fallback: try to get from evaluation results (but this has limited data)
+    if (evaluationResults && evaluationResults.length > 0) {
+      const result = evaluationResults.find(r => r.policyName === selectedPolicyName);
+      if (result?.policyContext) {
+        return {
+          id: result.policyId,
+          name: result.policyName,
+          description: result.policyContext.description || '',
+          allowed: result.policyContext.allowedBehaviors || [],
+          disallowed: result.policyContext.disallowedBehaviors || []
+        };
+      }
+    }
+
+    return null;
+  }, [selectedPolicyName, configPolicies, evaluationResults]);
 
   // Flatten all topics for statistics calculations
   const allTopics = policies.flatMap(policy =>
@@ -47,54 +98,67 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults }: Topic
   const highlyViolatingTopics = allTopics.filter(topic => topic.attack_success_rate.mean > 75);
 
   // Extract and group behaviors from evaluation results
-  const violatingBehaviors = useMemo(() => {
+  const violatingBehaviorsByPolicy = useMemo(() => {
     if (!evaluationResults || evaluationResults.length === 0) {
-      return [];
+      return {};
     }
 
-    // Filter to only high-risk prompts and group behaviors
-    const behaviorMap = new Map<string, { behavior: string; count: number; policyName: string }>();
+    // Group behaviors by policy
+    const behaviorsByPolicy = new Map<string, Map<string, { behavior: string; count: number }>>();
 
-    evaluationResults.forEach(result => {
+    evaluationResults.forEach((result) => {
       // Check if this result is for a high-violating topic
       const isHighViolating = highlyViolatingTopics.some(topic => topic.topic_name === result.topic);
 
       if (isHighViolating && result.policyContext) {
         // Extract disallowed behaviors from policy_context
-        // Try different possible structures
+        // The correct property is 'disallowedBehaviors' (camelCase)
         const disallowedBehaviors =
+          result.policyContext?.disallowedBehaviors ||
           result.policyContext?.disallowed ||
           result.policyContext?.behaviors?.disallowed ||
           [];
 
         disallowedBehaviors.forEach((behavior: string) => {
-          if (behaviorMap.has(behavior)) {
-            const existing = behaviorMap.get(behavior)!;
-            behaviorMap.set(behavior, { ...existing, count: existing.count + 1 });
+          if (!behaviorsByPolicy.has(result.policyName)) {
+            behaviorsByPolicy.set(result.policyName, new Map());
+          }
+
+          const policyBehaviors = behaviorsByPolicy.get(result.policyName)!;
+
+          if (policyBehaviors.has(behavior)) {
+            const existing = policyBehaviors.get(behavior)!;
+            policyBehaviors.set(behavior, { ...existing, count: existing.count + 1 });
           } else {
-            behaviorMap.set(behavior, {
-              behavior,
-              count: 1,
-              policyName: result.policyName
-            });
+            policyBehaviors.set(behavior, { behavior, count: 1 });
           }
         });
       }
     });
 
-    const behaviors = Array.from(behaviorMap.values()).sort((a, b) => b.count - a.count);
+    // Convert to object, filter behaviors with count > 3, and sort
+    const result: Record<string, Array<{ behavior: string; count: number }>> = {};
 
-    // Convert to array and sort by count (descending)
-    return behaviors;
+    behaviorsByPolicy.forEach((behaviors, policyName) => {
+      const filteredBehaviors = Array.from(behaviors.values())
+        .filter(b => b.count > 3)  // Only show behaviors with more than 3 prompts
+        .sort((a, b) => b.count - a.count);  // Sort by count descending
+
+      if (filteredBehaviors.length > 0) {
+        result[policyName] = filteredBehaviors;
+      }
+    });
+
+    return result;
   }, [evaluationResults, highlyViolatingTopics]);
 
   return (
     <div className="max-w-4xl mx-auto space-y-2">
       {/* Header and Insights */}
-      <div className="space-y-3 px-3 pt-4 rounded-xl">
+      <div className="space-y-3 pt-4 rounded-xl">
         <div className="space-y-2">
-          <div className="flex items-center gap-2.5">
-            <p className="text-sm font-semibold leading-4 text-gray-900">
+          <div className="flex items-center gap-2.5  px-3">
+            <p className="text-sm font-550 leading-4 text-gray-900">
               {policies.length > 1
                 ? 'Attack Areas of Interest'
                 : 'Attack Area of Interest'
@@ -118,13 +182,13 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults }: Topic
                   key={policy.id}
                   className="bg-gray-0 border border-gray-200 rounded-lg p-3"
                 >
-                  <div className="flex flex-col gap-2">
-                    <h4 className="text-sm font-semibold text-gray-900">
+                  <div className="flex flex-col gap-4">
+                    <h4 className="text-sm font-450 text-gray-900">
                       {policy.policy_name}
                     </h4>
-                    <div className="flex items-baseline gap-1">
-                      <p className="text-xs text-gray-600">Attack Success Rate:</p>
-                      <p className={`text-lg font-semibold ${avgAttackSuccessRate > 75 ? 'text-red-600' : avgAttackSuccessRate > 50 ? 'text-amber-600' : 'text-green-600'}`}>
+                    <div className="flex flex-col items-baseline gap-1">
+                      <p className="text-xs text-gray-600">Attack Success Rate</p>
+                      <p className={`text-lg font-450 ${avgAttackSuccessRate > 75 ? 'text-red-600' : 'text-gray-600'}`}>
                         {Math.round(avgAttackSuccessRate)}%
                       </p>
                     </div>
@@ -135,7 +199,7 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults }: Topic
           </div>
         )}
 
-        <div className="space-y-2">
+        <div className="space-y-2 py-2 px-3">
           <p className="text-sm font-[425] leading-5 text-gray-900 leading-relaxed">
             {displayInsights}
           </p>
@@ -166,10 +230,10 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults }: Topic
               </TableHeader>
               <TableBody>
                 {policies.map((policy) => (
-                  <>
+                  <Fragment key={`policy-${policy.id}`}>
                     {/* Policy Header Row */}
-                    <TableRow key={`policy-${policy.id}`} className="bg-gray-100 hover:bg-gray-100">
-                      <TableCell colSpan={5} className="font-semibold text-gray-900">
+                    <TableRow className="bg-gray-0 hover:bg-gray-0">
+                      <TableCell colSpan={5} className="h-8 pl-3 font-550 text-gray-900">
                         {policy.policy_name}
                       </TableCell>
                     </TableRow>
@@ -182,7 +246,7 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults }: Topic
 
                       return (
                         <TableRow key={`${policy.id}-${topicIndex}`}>
-                          <TableCell className="text-gray-900 pl-8">
+                          <TableCell className="text-gray-900 pl-6">
                             {topic.topic_name}
                           </TableCell>
                           <TableCell className="text-center">
@@ -208,7 +272,7 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults }: Topic
                         </TableRow>
                       );
                     })}
-                  </>
+                  </Fragment>
                 ))}
               </TableBody>
             </Table>
@@ -230,10 +294,10 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults }: Topic
               </TableHeader>
               <TableBody>
                 {policies.map((policy) => (
-                  <>
+                  <Fragment key={`policy-stat-${policy.id}`}>
                     {/* Policy Header Row */}
-                    <TableRow key={`policy-stat-${policy.id}`} className="bg-gray-100 hover:bg-gray-100">
-                      <TableCell colSpan={5} className="font-semibold text-gray-900">
+                    <TableRow className="bg-gray-0 hover:bg-gray-0">
+                      <TableCell colSpan={5} className="h-8 pl-3 font-550 text-gray-900">
                         {policy.policy_name}
                       </TableCell>
                     </TableRow>
@@ -247,7 +311,7 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults }: Topic
 
                       return (
                         <TableRow key={`${policy.id}-stat-${topicIndex}`}>
-                          <TableCell className="pl-8 text-gray-900">
+                          <TableCell className="pl-6 text-gray-900">
                             {topic.topic_name}
                           </TableCell>
                           <TableCell className="text-center">
@@ -265,7 +329,7 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults }: Topic
                         </TableRow>
                       );
                     })}
-                  </>
+                  </Fragment>
                 ))}
               </TableBody>
             </Table>
@@ -286,10 +350,10 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults }: Topic
               </TableHeader>
               <TableBody>
                 {policies.map((policy) => (
-                  <>
+                  <Fragment key={`policy-reg-${policy.id}`}>
                     {/* Policy Header Row */}
-                    <TableRow key={`policy-reg-${policy.id}`} className="bg-gray-100 hover:bg-gray-100">
-                      <TableCell colSpan={4} className="font-semibold text-gray-900">
+                    <TableRow className="bg-gray-0 hover:bg-gray-0">
+                      <TableCell colSpan={4} className="h-8 pl-3 font-550  text-gray-900">
                         {policy.policy_name}
                       </TableCell>
                     </TableRow>
@@ -301,7 +365,7 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults }: Topic
 
                       return (
                         <TableRow key={`${policy.id}-reg-${topicIndex}`}>
-                          <TableCell className="pl-8 text-gray-900">
+                          <TableCell className="pl-6 text-gray-900">
                             {topic.topic_name}
                           </TableCell>
                           <TableCell className="text-center">
@@ -316,7 +380,7 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults }: Topic
                         </TableRow>
                       );
                     })}
-                  </>
+                  </Fragment>
                 ))}
               </TableBody>
             </Table>
@@ -326,57 +390,57 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults }: Topic
       </Tabs>
 
       {/* Highly Violating Behaviors Section */}
-      {violatingBehaviors.length > 0 && (
-        <div className="border border-gray-200 flex flex-col items-start rounded-lg w-full">
-          <div className="flex-1 flex flex-col items-start justify-center p-2.5 w-full">
-            <div className="flex flex-col gap-2.5 items-start">
-              <p className="text-[0.8125rem] font-[425] leading-5 text-gray-600">
-                Highly Violating Behaviors:
-              </p>
-            </div>
-            <div className="flex flex-col items-start w-full">
-              {violatingBehaviors.map((item, index) => (
-                <div
-                  key={`violating-${index}`}
-                  className={`flex flex-col gap-2.5 items-start px-0 py-3 w-full ${
-                    index < violatingBehaviors.length - 1 ? 'border-b border-gray-200' : ''
-                  }`}
-                >
-                  <div className="flex flex-col gap-2.5 items-start">
-                    <div className="flex gap-1.5 items-start">
-                      <ul className="list-disc ml-5 text-[0.8125rem] font-[425] leading-5 text-gray-900">
-                        <li>
-                          {item.behavior}
-                        </li>
-                      </ul>
-                      <div className="bg-gray-100 border border-gray-300 flex gap-2.5 items-center justify-center px-1 py-0.5 rounded-[20px]">
-                        <p className="text-xs font-[425] leading-4 text-gray-700">
+      {Object.keys(violatingBehaviorsByPolicy).length > 0 && (
+        <div className="space-y-4 p-3 border border-gray-200 rounded-lg">
+          <h3 className="text-sm font-450 text-gray-600">
+            Highly Violating Behaviors:
+          </h3>
+          <div className="flex flex-col">
+            {Object.entries(violatingBehaviorsByPolicy).map(([policyName, behaviors], policyIndex) => (
+              <div key={policyName}>
+                {/* Behaviors List */}
+                <div className="flex flex-col gap-3 pb-4">
+                  {behaviors.map((item) => (
+                    <div key={item.behavior} className="flex gap-2 items-start">
+                      <span className="text-gray-400 text-sm leading-6">•</span>
+                      <span className="text-sm text-gray-900 flex-1 leading-6">{item.behavior}</span>
+                      <div className="bg-gray-0 flex items-center justify-center px-3 py-1 rounded-full">
+                        <span className="text-xs font-450 text-gray-600">
                           {item.count} Prompts
-                        </p>
+                        </span>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex flex-col gap-2.5 items-start px-5">
-                    <div className="flex gap-1.5 items-start">
-                      <p className="text-xs font-[425] leading-4 text-gray-700">
-                        Source:
-                      </p>
-                      <div className="flex gap-0.5 items-center cursor-pointer hover:underline">
-                        <p className="text-xs font-[550] leading-4 text-gray-700">
-                          {item.policyName}
-                        </p>
-                        <div className="w-4 h-4">
-                          <ExternalLink className="w-full h-full text-gray-700" strokeWidth={2} />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+
+                {/* Source / Preview Policy */}
+                <div className="flex items-center gap-1 pl-4 pb-4">
+                  <span className="text-sm text-gray-600">Source:</span>
+                  <button
+                    onClick={() => handlePreviewPolicy(policyName)}
+                    className="flex items-center gap-1 text-sm font-450 text-gray-600 hover:text-gray-900 transition-colors"
+                  >
+                    {policyName}
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Horizontal separator (not for last item) */}
+                {policyIndex < Object.keys(violatingBehaviorsByPolicy).length - 1 && (
+                  <div className="border-t border-gray-200 mb-4" />
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}
+
+      {/* Policy View Sheet */}
+      <PolicyViewSheet
+        open={viewPolicySheetOpen}
+        onOpenChange={setViewPolicySheetOpen}
+        policy={selectedPolicy}
+      />
     </div>
   );
 }

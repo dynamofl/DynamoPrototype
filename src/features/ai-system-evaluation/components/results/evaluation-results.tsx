@@ -288,6 +288,7 @@ export function EvaluationResults({
                 tokenUtilization={totalTokenUtilization}
                 topicAnalysis={results.topic_analysis}
                 evaluationResults={results.results}
+                config={results.config}
               />
             </motion.div>
           )}

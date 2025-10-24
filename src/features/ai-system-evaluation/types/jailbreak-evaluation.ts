@@ -46,6 +46,11 @@ export interface Policy {
   name: string;
   allowed: string[];    // examples of allowed behaviors
   disallowed: string[]; // examples of disallowed behaviors
+  description?: string; // policy description
+  type?: string;        // policy type (e.g., "Input Policy")
+  category?: string;    // policy category (e.g., "Safety", "Content")
+  createdAt?: string;   // creation date
+  updatedAt?: string;   // last updated date
 }
 
 export interface BasePrompt {
