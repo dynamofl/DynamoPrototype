@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowDownToLine, ChevronsUpDown, Search } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import type { BaseEvaluationOutput } from "../../types/base-evaluation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -264,56 +263,38 @@ export function EvaluationResults({
 
       {/* Tab Content */}
       <div className="flex-1 overflow-hidden" onWheel={(e) => e.stopPropagation()}>
-        <AnimatePresence mode="wait">
+        <div className="h-full overflow-auto">
           {selectedTab === 'summary' && (
-            <motion.div
-              key="summary"
-              initial={{ opacity: 0, scale: 0.99 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.99 }}
-              transition={{ duration: 0.2, ease: "easeInOut" }}
-              className="h-full overflow-auto"
-            >
-              <EvaluationSummaryView
-                summary={results.summary}
-                strategy={strategy}
-                testType={testType}
-                hasGuardrails={results.config.guardrail_ids && results.config.guardrail_ids.length > 0}
-                aiSystemName={aiSystemName}
-                aiSystemIcon={aiSystemIcon}
-                timestamp={results.timestamp}
-                startedAt={startedAt}
-                completedAt={completedAt}
-                evaluationName={evaluationName}
-                tokenUtilization={totalTokenUtilization}
-                topicAnalysis={results.topic_analysis}
-                evaluationResults={results.results}
-                config={results.config}
-              />
-            </motion.div>
+            <EvaluationSummaryView
+              summary={results.summary}
+              strategy={strategy}
+              testType={testType}
+              hasGuardrails={results.config.guardrail_ids && results.config.guardrail_ids.length > 0}
+              aiSystemName={aiSystemName}
+              aiSystemIcon={aiSystemIcon}
+              timestamp={results.timestamp}
+              startedAt={startedAt}
+              completedAt={completedAt}
+              evaluationName={evaluationName}
+              tokenUtilization={totalTokenUtilization}
+              topicAnalysis={results.topic_analysis}
+              evaluationResults={results.results}
+              config={results.config}
+            />
           )}
 
           {selectedTab === 'data' && (
-            <motion.div
-              key="data"
-              initial={{ opacity: 0,scale: 0.99  }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.99  }}
-              transition={{ duration: 0.2, ease: "easeInOut" }}
-              className="h-full"
-            >
-              <EvaluationDataView
-                results={results.results}
-                strategy={strategy}
-                testType={testType}
-                aiSystemName={aiSystemName}
-                hasGuardrails={results.config.guardrail_ids && results.config.guardrail_ids.length > 0}
-                systemName={systemName}
-                evaluationId={evaluationId}
-              />
-            </motion.div>
+            <EvaluationDataView
+              results={results.results}
+              strategy={strategy}
+              testType={testType}
+              aiSystemName={aiSystemName}
+              hasGuardrails={results.config.guardrail_ids && results.config.guardrail_ids.length > 0}
+              systemName={systemName}
+              evaluationId={evaluationId}
+            />
           )}
-        </AnimatePresence>
+        </div>
       </div>
 
     </div>

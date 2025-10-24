@@ -1,7 +1,10 @@
+import { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 import type { BaseEvaluationSummary, BaseEvaluationResult } from "../../types/base-evaluation";
 import type { EvaluationStrategy } from "../../strategies/base-strategy";
 import { AISystemIcon } from "@/components/patterns/ui-patterns/ai-system-icon";
 import { SummaryViewRenderer } from "./summary/summary-view-renderer";
+import { SummaryNavigation, type NavigationSection } from "./summary/summary-navigation";
 
 interface EvaluationSummaryViewProps {
   summary: BaseEvaluationSummary;
@@ -46,6 +49,9 @@ export function EvaluationSummaryView({
   evaluationResults,
   config,
 }: EvaluationSummaryViewProps) {
+  const [activeSection, setActiveSection] = useState<string>('overview');
+  const isScrollingProgrammatically = useRef(false);
+
   // Format timestamp
   const formattedDate = new Date(timestamp).toLocaleDateString("en-US", {
     month: "short",
@@ -71,11 +77,108 @@ export function EvaluationSummaryView({
     ).padStart(2, "0")}`;
   }
 
+  // Build navigation sections from strategy config
+  const viewConfig = strategy.getSummaryViewConfig();
+  const context = { summary, testType, hasGuardrails, topicAnalysis, evaluationResults, config };
+
+  const navigationSections: NavigationSection[] = viewConfig
+    .filter(section => section.label) // Only show sections with labels
+    .map(section => ({
+      key: section.key,
+      label: section.label!,
+      visible: section.condition ? section.condition(context) : true
+    }));
+
+  // Handle section navigation
+  const handleSectionClick = (sectionKey: string) => {
+    setActiveSection(sectionKey);
+
+    // Set flag to prevent scroll listener from interfering
+    isScrollingProgrammatically.current = true;
+
+    const element = document.getElementById(`section-${sectionKey}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      // Reset flag after scroll animation completes (smooth scroll takes ~500-1000ms)
+      setTimeout(() => {
+        isScrollingProgrammatically.current = false;
+      }, 1000);
+    }
+  };
+
+  // Track active section on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      // Don't update active section during programmatic scrolling
+      if (isScrollingProgrammatically.current) {
+        return;
+      }
+
+      const sections = navigationSections.filter(s => s.visible);
+
+      // Check each section and find which one is currently in view
+      let foundActive = false;
+
+      for (let i = 0; i < sections.length; i++) {
+        const section = sections[i];
+        const element = document.getElementById(`section-${section.key}`);
+
+        if (element) {
+          const rect = element.getBoundingClientRect();
+
+          // Check if this section is in the viewport (considering some offset from top)
+          // A section is active if its top is above or at the middle of viewport
+          // and its bottom is below the middle
+          if (rect.top <= 200 && rect.bottom > 200) {
+            setActiveSection(section.key);
+            foundActive = true;
+            break;
+          }
+        }
+      }
+
+      // If no section is found (e.g., at the very top or bottom),
+      // default to the first visible section
+      if (!foundActive && sections.length > 0) {
+        setActiveSection(sections[0].key);
+      }
+    };
+
+    // Call once on mount to set initial active section
+    handleScroll();
+
+    // Listen to scroll on both window and potential scroll containers
+    window.addEventListener('scroll', handleScroll, true);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll, true);
+    };
+  }, [navigationSections]);
+
   return (
-    <div className="flex justify-center w-full py-6">
-      <div className="max-w-4xl mx-auto w-full space-y-4">
+    <div
+     
+      className="relative w-full py-6"
+    >
+      {/* Left Sidebar Navigation - Fixed Position */}
+      <motion.div  initial={{ opacity: 0,scale: 0.95 }}
+      animate={{ opacity: 1,scale: 1 }}
+      exit={{ opacity: 0,scale: 0.95 }} className="fixed left-16 top-32 z-10">
+        <SummaryNavigation
+          sections={navigationSections}
+          activeSection={activeSection}
+          onSectionClick={handleSectionClick}
+        />
+      </motion.div>
+
+      {/* Main Content - Centered */}
+      <motion.div  initial={{ opacity: 0,scale: 0.99 }}
+      animate={{ opacity: 1,scale: 1 }}
+      exit={{ opacity: 0,scale: 0.99 }}
+      transition={{ duration: 0.2, ease: "easeInOut" }} className="max-w-3xl mx-auto space-y-4 items-start">
         {/* AI System Header */}
-        <div className="space-y-2 mx-3">
+        <div id="section-overview" className="space-y-2 mx-3">
           <div className="flex items-center gap-1">
             {aiSystemIcon && (
               <AISystemIcon type={aiSystemIcon} className="w-6 h-6" />
@@ -92,7 +195,7 @@ export function EvaluationSummaryView({
         </div>
 
         {/* Metadata Section */}
-        <div className="grid grid-cols-4 gap-6 mx-3 py-3 border-t border-dashed border-gray-200">
+        <motion.div className="grid grid-cols-4 gap-6 mx-3 py-3 border-t border-dashed border-gray-200">
           <div className="flex flex-col gap-1">
             <p className="text-sm  text-gray-600">Evaluation Category</p>
             <p className="text-sm text-gray-900">{strategy.displayName}</p>
@@ -116,7 +219,7 @@ export function EvaluationSummaryView({
               {formattedDate} • {formattedTime}
             </p>
           </div>
-        </div>
+        </motion.div>
 
         {/* Config-driven summary view rendering */}
         <SummaryViewRenderer
@@ -128,7 +231,7 @@ export function EvaluationSummaryView({
           evaluationResults={evaluationResults}
           config={config}
         />
-      </div>
+      </motion.div>
     </div>
-  );
+  )
 }

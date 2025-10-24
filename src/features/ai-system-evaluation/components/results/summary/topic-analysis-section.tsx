@@ -153,12 +153,12 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policie
   }, [evaluationResults, highlyViolatingTopics]);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-2">
+    <div className="max-w-4xl mx-auto space-y-2 my-2">
       {/* Header and Insights */}
       <div className="space-y-3 pt-4 rounded-xl">
         <div className="space-y-2">
           <div className="flex items-center gap-2.5  px-3">
-            <p className="text-sm font-550 leading-4 text-gray-900">
+            <p className="text-[0.9375rem] font-550 leading-4 text-gray-900">
               {policies.length > 1
                 ? 'Attack Areas of Interest'
                 : `Attack Area of Interest: ${policies[0].policy_name}`
@@ -169,7 +169,7 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policie
 
         {/* Policy Cards - Show when multiple policies */}
         {policies.length > 1 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
             {policies.map((policy) => {
               // Calculate average attack success rate for this policy
               const avgAttackSuccessRate = policy.topics.reduce(
@@ -183,7 +183,7 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policie
                   className="bg-gray-0 border border-gray-200 rounded-lg p-3"
                 >
                   <div className="flex flex-col gap-4">
-                    <h4 className="text-sm font-450 text-gray-900">
+                    <h4 className="text-[0.9375rem] font-450 text-gray-900">
                       {policy.policy_name}
                     </h4>
                     <div className="flex flex-col items-baseline gap-1">
@@ -200,7 +200,7 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policie
         )}
 
         <div className="space-y-2 py-2 px-3">
-          <p className="text-sm font-[425] leading-5 text-gray-900 leading-relaxed">
+          <p className="text-[0.9375rem] font-[425] leading-5 text-gray-900 leading-relaxed">
             {displayInsights}
           </p>
         </div>
@@ -222,10 +222,10 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policie
               <TableHeader>
                 <TableRow className="bg-gray-50 border-0 hover:bg-gray-50">
                   <TableHead className="font-450 pl-3">Attack Area</TableHead>
-                  <TableHead className="font-450 text-center w-[160px]">Attack Success Rate</TableHead>
-                  <TableHead className="font-450 text-center w-[100px]">Confidence</TableHead>
-                  <TableHead className="font-450 text-center w-[170px]">Response Time (in sec)</TableHead>
-                  <TableHead className="font-450 text-center w-[100px]">Occurence</TableHead>
+                  <TableHead className="font-450 text-right w-[160px]">Attack Success Rate</TableHead>
+                  <TableHead className="font-450 text-right w-[100px]">Confidence</TableHead>
+                  <TableHead className="font-450 text-right w-[170px]">Response Time (in sec)</TableHead>
+                  <TableHead className="font-450 text-right w-[100px]">Occurence</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -249,24 +249,24 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policie
                           <TableCell className="text-gray-900 pl-6">
                             {topic.topic_name}
                           </TableCell>
-                          <TableCell className="text-center">
+                          <TableCell className="text-right">
+                            {isHighRiskASR && (
+                              <AlertTriangle className="inline-block mr-1 w-3 h-3 mb-0.5 text-red-600" strokeWidth={2} />
+                            )}
                             <span className={isHighRiskASR ? 'text-gray-900' : 'text-gray-600'}>
                               {Math.round(topic.attack_success_rate.mean)}%
                             </span>
-                            {isHighRiskASR && (
-                              <AlertTriangle className="inline-block ml-2 w-5 h-5 text-red-600" strokeWidth={2} />
-                            )}
                           </TableCell>
-                          <TableCell className="text-center">
-                            {topic.confidence.mean.toFixed(2)}
+                          <TableCell className="text-right">
                             {isLowConfidence && (
-                              <AlertTriangle className="inline-block ml-2 w-5 h-5 text-red-600" strokeWidth={2} />
+                              <AlertTriangle className="inline-block mr-1 w-3 h-3 mb-0.5 text-red-600" strokeWidth={2} />
                             )}
+                            {topic.confidence.mean.toFixed(2)}
                           </TableCell>
-                          <TableCell className="text-center">
+                          <TableCell className="text-right">
                             {topic.runtime_seconds.mean.toFixed(1)}
                           </TableCell>
-                          <TableCell className="text-center">
+                          <TableCell className="text-right">
                             {topic.occurrence}
                           </TableCell>
                         </TableRow>
@@ -286,10 +286,10 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policie
               <TableHeader>
                 <TableRow className="bg-gray-50 border-0 hover:bg-gray-50">
                   <TableHead className="pl-3 font-450">Attack Area</TableHead>
-                  <TableHead className="font-450 text-center w-[130px]">Std Dev (ASR)</TableHead>
-                  <TableHead className="font-450 text-center w-[130px]">Variance (ASR)</TableHead>
-                  <TableHead className="font-450 text-center w-[130px]">IQR (ASR)</TableHead>
-                  <TableHead className="font-450 text-center w-[130px]">Range (ASR)</TableHead>
+                  <TableHead className="font-450 text-right w-[130px]">Std Dev (ASR)</TableHead>
+                  <TableHead className="font-450 text-right w-[130px]">Variance (ASR)</TableHead>
+                  <TableHead className="font-450 text-right w-[130px]">IQR (ASR)</TableHead>
+                  <TableHead className="font-450 text-right w-[130px]">Range (ASR)</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -314,16 +314,16 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policie
                           <TableCell className="pl-6 text-gray-900">
                             {topic.topic_name}
                           </TableCell>
-                          <TableCell className="text-center">
+                          <TableCell className="text-right">
                             {stdDev.toFixed(2)}
                           </TableCell>
-                          <TableCell className="text-center">
+                          <TableCell className="text-right">
                             {variance.toFixed(2)}
                           </TableCell>
-                          <TableCell className="text-center">
+                          <TableCell className="text-right">
                             {iqr.toFixed(2)}
                           </TableCell>
-                          <TableCell className="text-center">
+                          <TableCell className="text-right">
                             {rangeMin.toFixed(2)} - {rangeMax.toFixed(2)}
                           </TableCell>
                         </TableRow>
@@ -343,9 +343,9 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policie
               <TableHeader>
                 <TableRow className="bg-gray-50 border-0 hover:bg-gray-50">
                   <TableHead className="pl-3 font-450">Attack Area</TableHead>
-                  <TableHead className="font-450 text-center w-[120px]">Odds Ratio</TableHead>
-                  <TableHead className="font-450 text-center w-[120px]">P-Value</TableHead>
-                  <TableHead className="font-450 text-center w-[120px]">Significance</TableHead>
+                  <TableHead className="font-450 text-right w-[120px]">Odds Ratio</TableHead>
+                  <TableHead className="font-450 text-right w-[120px]">P-Value</TableHead>
+                  <TableHead className="font-450 text-right w-[120px]">Significance</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -368,13 +368,13 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policie
                           <TableCell className="pl-6 text-gray-900">
                             {topic.topic_name}
                           </TableCell>
-                          <TableCell className="text-center">
+                          <TableCell className="text-right">
                             {oddsRatio.toFixed(2)}
                           </TableCell>
-                          <TableCell className="text-center">
+                          <TableCell className="text-right">
                             {pValue.toFixed(4)}
                           </TableCell>
-                          <TableCell className={`text-center ${significance ? 'text-green-600' : ''}`}>
+                          <TableCell className={`text-right ${significance ? 'text-green-600' : ''}`}>
                             {significance ? 'Yes' : 'No'}
                           </TableCell>
                         </TableRow>
@@ -392,7 +392,7 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policie
       {/* Highly Violating Behaviors Section */}
       {Object.keys(violatingBehaviorsByPolicy).length > 0 && (
         <div className="space-y-4 p-3 border border-gray-200 rounded-lg">
-          <h3 className="text-sm font-450 text-gray-600">
+          <h3 className="text-[0.9375rem] font-450 text-gray-600">
             Highly Violating Behaviors:
           </h3>
           <div className="flex flex-col">
@@ -402,8 +402,8 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policie
                 <div className="flex flex-col gap-3 pb-4">
                   {behaviors.map((item) => (
                     <div key={item.behavior} className="flex gap-2 items-start">
-                      <span className="text-gray-400 text-sm leading-6">•</span>
-                      <span className="text-sm text-gray-900 flex-1 leading-6">{item.behavior}</span>
+                      <span className="text-gray-400 text-[0.9375rem] leading-6">•</span>
+                      <span className="text-[0.9375rem] text-gray-900 flex-1 leading-6">{item.behavior}</span>
                       <div className="bg-gray-0 flex items-center justify-center px-3 py-1 rounded-full">
                         <span className="text-xs font-450 text-gray-600">
                           {item.count} Prompts
@@ -415,10 +415,10 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults, policie
 
                 {/* Source / Preview Policy */}
                 <div className="flex items-center gap-1 pl-4 pb-4">
-                  <span className="text-sm text-gray-600">Source:</span>
+                  <span className="text-[0.9375rem] text-gray-600">Source:</span>
                   <button
                     onClick={() => handlePreviewPolicy(policyName)}
-                    className="flex items-center gap-1 text-sm font-450 text-gray-600 hover:text-gray-900 transition-colors"
+                    className="flex items-center gap-1 text-[0.9375rem] font-450 text-gray-600 hover:text-gray-900 transition-colors"
                   >
                     {policyName}
                     <ChevronRight className="w-4 h-4" />

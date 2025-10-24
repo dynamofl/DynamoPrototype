@@ -74,6 +74,8 @@ export interface SummarySectionConfig {
   key: string
   /** Display order (lower numbers render first) */
   order: number
+  /** Label to show in navigation */
+  label?: string
   /** Component identifier or type (resolved via component registry) */
   componentKey: string
   /** Props to pass to the component (can include data mappings) */

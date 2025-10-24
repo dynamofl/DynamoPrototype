@@ -14,8 +14,9 @@ export function getJailbreakSummaryConfig(): SummarySectionConfig[] {
   return [
     // Section 1: Hero section with Overview and Dual Attack Score Gauge
     {
-      key: 'hero',
+      key: 'overview',
       order: 1,
+      label: 'Overview',
       componentKey: 'HeroSection',
       layout: {
         container: 'constrained',
@@ -83,12 +84,13 @@ export function getJailbreakSummaryConfig(): SummarySectionConfig[] {
 
     // Section 6: Topic Analysis (conditional)
     {
-      key: 'topicAnalysis',
+      key: 'attackAreaOfInterest',
       order: 6,
+      label: 'Attack Area of Interest',
       componentKey: 'TopicAnalysisSection',
       layout: {
         container: 'constrained',
-        className: 'max-w-4xl mx-auto'
+        className: 'max-w-4xl mx-auto pb-2'
       },
       condition: (ctx: SummaryViewContext) => !!ctx.topicAnalysis,
       props: {

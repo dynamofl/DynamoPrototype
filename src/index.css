@@ -5,6 +5,7 @@
 
 @layer base {
   :root {
+
     /* Semantic colors */
     --foreground: 222.2 84% 4.9%;
     --card: var(--gray-0);

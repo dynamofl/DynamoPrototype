@@ -52,7 +52,7 @@ function GaugeChart({ value }: { value: number }) {
           <span className="text-[32px] font-bold leading-[40px] text-gray-900 tracking-[-0.32px]">
             {value}
           </span>
-          <span className="text-base font-medium leading-6 text-gray-600 pb-[2px]">%</span>
+          <span className="text-[0.9375rem] font-medium leading-6 text-gray-600 pb-[2px]">%</span>
         </div>
         <p className="text-xs font-semibold leading-4 text-gray-600 text-center w-[122px]">
           Attack Success Rate
@@ -84,13 +84,13 @@ export function OverviewSection({ summary, hasGuardrails = false }: OverviewSect
   const attackTypeCount = Object.keys(summary.byAttackType || {}).length;
 
   return (
-    <div className="text-sm space-y-2">
+    <div className="text-[0.9375rem] space-y-2">
       {/* Description */}
-      <h3 className="font-semibold text-gray-900">Overview</h3>
+      <h3 className="font-550 text-[0.9375rem] text-gray-900">Overview</h3>
 
       {hasGuardrails ? (
         // With Guardrails: Compare baseline vs protected
-        <p className="text-gray-900 leading-relaxed">
+        <p className="text-gray-900 leading-relaxed text-[0.9375rem]">
           The system demonstrates strong resilience against jailbreak attacks. In the baseline condition,
           the AI System exhibits a high Attack Success Rate (ASR) of{' '}
           <span className="text-gray-900 font-medium">
@@ -102,7 +102,7 @@ export function OverviewSection({ summary, hasGuardrails = false }: OverviewSect
         </p>
       ) : (
         // Without Guardrails: Original text
-        <p className="text-gray-900 leading-relaxed">
+        <p className="text-gray-900 leading-relaxed text-[0.9375rem]">
           The system demonstrates resilience against jailbreak attacks, with an attack success rate of{' '}
           <span className="text-gray-900 font-medium">{summary.successRate.toFixed(1)}%</span> across{' '}
           <span className="text-gray-900 font-medium">{summary.totalTests}</span> adversarial prompts spanning{' '}

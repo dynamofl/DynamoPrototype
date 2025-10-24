@@ -370,7 +370,11 @@ export function EvaluationDataView({
   };
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2, ease: "easeInOut" }}
       className="flex flex-col h-full py-2"
       onWheel={(e) => e.stopPropagation()}
     >
@@ -498,6 +502,6 @@ export function EvaluationDataView({
         onExpand={handleSideSheetExpand}
         hasGuardrails={hasGuardrails}
       />
-    </div>
+    </motion.div>
   );
 }

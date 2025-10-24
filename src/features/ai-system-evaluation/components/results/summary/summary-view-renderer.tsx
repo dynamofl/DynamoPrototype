@@ -72,7 +72,7 @@ function renderSection(
   ].filter(Boolean).join(' ')
 
   return (
-    <div key={config.key} className={containerClasses}>
+    <div key={config.key} id={`section-${config.key}`} className={containerClasses}>
       <Component {...resolvedProps} />
     </div>
   )
