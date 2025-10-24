@@ -93,7 +93,7 @@ export function TopicAnalysisSection({ topicAnalysis, policies: configPolicies }
 
         {/* Policy Cards - Show when multiple policies */}
         {policies.length > 1 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-2 px-3">
+          <div className="grid gap-3 pt-2 px-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(max(250px, calc((100% - 2 * 0.75rem) / 3)), 1fr))' }}>
             {policies.map((policy) => {
               // Calculate average attack success rate for this policy
               const avgAttackSuccessRate = policy.topics.reduce(
@@ -158,8 +158,10 @@ export function TopicAnalysisSection({ topicAnalysis, policies: configPolicies }
                   <Fragment key={`policy-${policy.id}`}>
                     {/* Policy Header Row */}
                     <TableRow className="bg-gray-100 hover:bg-gray-100 border-t border-gray-200">
-                      <TableCell colSpan={5} className="h-8 pl-3 font-550 text-gray-900">
-                        {policy.policy_name}
+                      <TableCell colSpan={5} className="h-8 pl-3 font-550 text-gray-900 overflow-hidden">
+                        <div className="truncate max-w-full">
+                          {policy.policy_name}
+                        </div>
                       </TableCell>
                     </TableRow>
                     {/* Topics for this policy */}
@@ -168,6 +170,9 @@ export function TopicAnalysisSection({ topicAnalysis, policies: configPolicies }
                       // Show warning icon only if ASR > 75%
                       const isHighRiskASR = topic.attack_success_rate.mean > 75;
                       const isLowConfidence = topic.confidence.mean < 0.5;
+
+                      // Calculate attack success count
+                      const attackSuccessCount = Math.round((topic.attack_success_rate.mean / 100) * topic.occurrence);
 
                       return (
                         <TableRow key={`${policy.id}-${topicIndex}`}>
@@ -192,7 +197,7 @@ export function TopicAnalysisSection({ topicAnalysis, policies: configPolicies }
                             {topic.runtime_seconds.mean.toFixed(1)}
                           </TableCell>
                           <TableCell className="text-right">
-                            {topic.occurrence}
+                            {attackSuccessCount}
                           </TableCell>
                         </TableRow>
                       );
@@ -222,8 +227,10 @@ export function TopicAnalysisSection({ topicAnalysis, policies: configPolicies }
                   <Fragment key={`policy-stat-${policy.id}`}>
                     {/* Policy Header Row */}
                     <TableRow className="bg-gray-100 hover:bg-gray-100 border-t border-gray-200">
-                      <TableCell colSpan={5} className="h-8 pl-3 font-550 text-gray-900">
-                        {policy.policy_name}
+                      <TableCell colSpan={5} className="h-8 pl-3 font-550 text-gray-900 overflow-hidden">
+                        <div className="truncate max-w-full">
+                          {policy.policy_name}
+                        </div>
                       </TableCell>
                     </TableRow>
                     {/* Topics for this policy */}

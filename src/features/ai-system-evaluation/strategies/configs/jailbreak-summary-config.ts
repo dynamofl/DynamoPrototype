@@ -128,7 +128,8 @@ export function getJailbreakSummaryConfig(): SummarySectionConfig[] {
         className: 'max-w-4xl mx-auto pb-2'
       },
       props: {
-        summary: (ctx: SummaryViewContext) => ctx.summary
+        summary: (ctx: SummaryViewContext) => ctx.summary,
+        hasGuardrails: (ctx: SummaryViewContext) => ctx.hasGuardrails
       }
     }
   ]

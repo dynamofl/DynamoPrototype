@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { AlertTriangle } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, XAxis, LabelList } from "recharts";
 import {
@@ -8,9 +8,17 @@ import {
 } from "@/components/ui/chart";
 import type { ChartConfig } from "@/components/ui/chart";
 import type { JailbreakEvaluationSummary, AttackType } from "../../../types/jailbreak-evaluation";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface AttackTypePerformanceSectionProps {
   summary: JailbreakEvaluationSummary;
+  hasGuardrails?: boolean;
 }
 
 // Attack level categorization
@@ -32,9 +40,21 @@ const ATTACK_LEVELS = {
   },
 };
 
-export function AttackTypePerformanceSection({ summary }: AttackTypePerformanceSectionProps) {
-  // Extract byAttackType data from summary
-  const byAttackType = summary.byAttackType || summary.aiSystem?.byAttackType || {};
+export function AttackTypePerformanceSection({ summary, hasGuardrails = false }: AttackTypePerformanceSectionProps) {
+  // State for view selection
+  const [view, setView] = useState<"aiSystemOnly" | "withGuardrails">(
+    hasGuardrails ? "withGuardrails" : "aiSystemOnly"
+  );
+
+  // Extract byAttackType data from summary based on selected view
+  const byAttackType = useMemo(() => {
+    if (hasGuardrails && view === "aiSystemOnly") {
+      // Show AI system only data
+      return summary.aiSystem?.byAttackType || {};
+    }
+    // Show combined data (AI system + guardrails) or regular data
+    return summary.byAttackType || summary.aiSystem?.byAttackType || {};
+  }, [summary, hasGuardrails, view]);
 
   // Check if we have data
   if (!byAttackType || Object.keys(byAttackType).length === 0) {
@@ -213,10 +233,27 @@ export function AttackTypePerformanceSection({ summary }: AttackTypePerformanceS
 
       {/* Bar Chart */}
       <div className="px-3">
-        <div className="border border-gray-200 rounded-lg p-6 ">
-          <h4 className="text-sm font-450 text-gray-600 mb-4">
-            Attack Success Rate
-          </h4>
+        <div className="border border-gray-200 rounded-lg p-6 bg-gray-50">
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-sm font-450 text-gray-900">
+              Attack Success Rate
+            </h4>
+            {hasGuardrails && (
+              <Select value={view} onValueChange={(value) => setView(value as "aiSystemOnly" | "withGuardrails")}>
+                <SelectTrigger className="w-[200px] h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="withGuardrails" className="text-xs">
+                    AI System + Guardrails
+                  </SelectItem>
+                  <SelectItem value="aiSystemOnly" className="text-xs">
+                    AI System Only
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          </div>
           <ChartContainer config={chartConfig} className="h-[240px] w-full">
             <BarChart
               data={chartData}
@@ -244,7 +281,7 @@ export function AttackTypePerformanceSection({ summary }: AttackTypePerformanceS
                     indicator="line"
                     labelFormatter={(value) => `Attack Type: ${value}`}
                     formatter={(value, name, item) => [
-                      `${Number(value).toFixed(1)}% (${item.payload.successes}/${item.payload.total})`,
+                      `${Number(value).toFixed(1)}% (${item.payload.successes}/${item.payload.total}) Prompts`,
                     ]}
                   />
                 }
@@ -264,8 +301,8 @@ export function AttackTypePerformanceSection({ summary }: AttackTypePerformanceS
           </ChartContainer>
 
           {/* Level Grouping Indicator */}
-          <div className="pb-4">
-            <div className="flex items-start gap-4 relative">
+          <div className="px-1 pb-4">
+            <div className="flex items-start gap-3 relative">
               {/* Level 3 - Expert */}
               {overallStats.level3Count > 0 && (
                 <div className="flex-1" style={{ flexBasis: `${(overallStats.level3Count / overallStats.attackTypeCount) * 100}%` }}>
