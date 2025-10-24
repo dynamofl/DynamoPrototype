@@ -77,12 +77,12 @@ export function TopicAnalysisSection({ topicAnalysis, policies: configPolicies }
   const displayInsights = topicAnalysis.topic_insight || `The topic-level view covers ${totalPrompts} adversarial prompts across ${uniqueTopics} topic${uniqueTopics > 1 ? 's' : ''} spanning ${policies.length} ${policies.length > 1 ? 'policies' : 'policy'}. Attack success varied widely, ranging from ${Math.round(attackSuccessRateRange.min)}% to ${Math.round(attackSuccessRateRange.max)}% per topic, with an average judge confidence of ${avgConfidence.toFixed(2)}. This breakdown highlights where failures are most concentrated and where defenses are holding.`;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-2 my-4">
+    <div className="max-w-4xl mx-auto space-y-4 my-8">
       {/* Header and Insights */}
       <div className="space-y-3 pt-4 rounded-xl">
         <div className="space-y-2">
           <div className="flex items-center gap-2.5  px-3">
-            <p className="text-[0.9375rem] font-550 leading-4 text-gray-900">
+            <p className="text-lg font-450 leading-4 text-gray-900">
               {policies.length > 1
                 ? 'Attack Areas of Interest'
                 : `Attack Area of Interest: ${policies[0].policy_name}`
@@ -93,7 +93,7 @@ export function TopicAnalysisSection({ topicAnalysis, policies: configPolicies }
 
         {/* Policy Cards - Show when multiple policies */}
         {policies.length > 1 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-1 px-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-2 px-3">
             {policies.map((policy) => {
               // Calculate average attack success rate for this policy
               const avgAttackSuccessRate = policy.topics.reduce(
@@ -132,7 +132,7 @@ export function TopicAnalysisSection({ topicAnalysis, policies: configPolicies }
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="breakdown" className="px-3 px-0.5 pt-1 space-y-4 ">
+      <Tabs defaultValue="breakdown" className="px-3 px-0.5 space-y-4 ">
         <TabsList>
           <TabsTrigger value="breakdown">Topic Breakdown</TabsTrigger>
           <TabsTrigger value="statistical">Statistical Summary</TabsTrigger>

@@ -140,8 +140,8 @@ export function ViolatingBehaviorsSection({
 
   return (
     <>
-      <div className="space-y-4 p-3 my-4">
-        <h3 className="text-[0.9375rem] font-550 text-gray-900">
+      <div className="space-y-4 p-3 my-8">
+        <h3 className="text-lg font-450 text-gray-900">
           Highly Violating Behaviors
         </h3>
         <div className="flex flex-col p-3 border border-gray-200 rounded-lg">

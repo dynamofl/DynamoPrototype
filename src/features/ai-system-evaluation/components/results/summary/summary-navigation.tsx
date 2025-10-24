@@ -28,7 +28,7 @@ export function SummaryNavigation({
   if (visibleSections.length === 0) return null
 
   return (
-    <nav className="min-w-[200px] space-y-1">
+    <nav className="min-w-[200px] space-y-0.5">
       {visibleSections.map((section) => (
         <button
           key={section.key}
@@ -44,7 +44,7 @@ export function SummaryNavigation({
           {/* Dash indicator */}
           <div className={cn(
             "h-0.5  transition-all duration-200 rounded-full flex-shrink-0",
-            activeSection === section.key ? "w-5 bg-gray-900" : "w-3 bg-gray-300"
+            activeSection === section.key ? "w-3 bg-gray-900" : "w-2 bg-gray-300"
           )} />
           <span>{section.label}</span>
         </button>
