@@ -28,20 +28,25 @@ export function SummaryNavigation({
   if (visibleSections.length === 0) return null
 
   return (
-    <nav className="max-w-[200px] space-y-2">
+    <nav className="min-w-[200px] space-y-1">
       {visibleSections.map((section) => (
         <button
           key={section.key}
           onClick={() => onSectionClick(section.key)}
           className={cn(
-            "w-full text-left px-5 py-0.5 text-sm transition-all duration-200 relative rounded-lg",
-            "hover:bg-gray-50",
+            "w-full text-left py-1 text-sm transition-all duration-300 relative flex items-center gap-3",
+            "hover:text-gray-900",
             activeSection === section.key
-              ? "text-gray-900 font-500 bg-gray-50 before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[100%] before:w-0.5 before:bg-gray-900 before:rounded-full"
-              : "text-gray-600 font-400"
+              ? "text-gray-900 font-500"
+              : "text-gray-400 font-400"
           )}
         >
-          {section.label}
+          {/* Dash indicator */}
+          <div className={cn(
+            "h-0.5  transition-all duration-200 rounded-full flex-shrink-0",
+            activeSection === section.key ? "w-5 bg-gray-900" : "w-3 bg-gray-300"
+          )} />
+          <span>{section.label}</span>
         </button>
       ))}
     </nav>
