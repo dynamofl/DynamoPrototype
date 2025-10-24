@@ -1,5 +1,14 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { AlertTriangle, ExternalLink } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import type { TopicAnalysis, JailbreakEvaluationResult } from "../../../types/jailbreak-evaluation";
 
 interface TopicAnalysisSectionProps {
@@ -7,17 +16,16 @@ interface TopicAnalysisSectionProps {
   evaluationResults?: JailbreakEvaluationResult[];
 }
 
-type TabView = "breakdown" | "statistical" | "regression";
-
 export function TopicAnalysisSection({ topicAnalysis, evaluationResults }: TopicAnalysisSectionProps) {
-  const [activeTab, setActiveTab] = useState<TabView>("breakdown");
 
-  // Get the first policy for the header (assuming single policy group)
-  const firstPolicy = topicAnalysis.source.policies[0];
-  if (!firstPolicy) return null;
+  // Keep policies grouped for display
+  const policies = topicAnalysis.source.policies;
+  if (!policies || policies.length === 0) return null;
 
-  // Flatten all topics across policies for display
-  const allTopics = topicAnalysis.source.policies.flatMap(policy =>
+  const firstPolicy = policies[0];
+
+  // Flatten all topics for statistics calculations
+  const allTopics = policies.flatMap(policy =>
     policy.topics.map(topic => ({
       ...topic,
       policyId: policy.id,
@@ -35,7 +43,7 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults }: Topic
   };
 
   // Generate dynamic insights if not provided by AI
-  const displayInsights = topicAnalysis.topic_insight || `The topic-level view covers ${totalPrompts} adversarial prompts across ${uniqueTopics} ${firstPolicy.policy_name.toLowerCase()}-related areas. Attack success varied widely, ranging from ${Math.round(attackSuccessRateRange.min)}% to ${Math.round(attackSuccessRateRange.max)}% per topic, with an average judge confidence of ${avgConfidence.toFixed(2)}. This breakdown highlights where failures are most concentrated and where defenses are holding.`;
+  const displayInsights = topicAnalysis.topic_insight || `The topic-level view covers ${totalPrompts} adversarial prompts across ${uniqueTopics} topic${uniqueTopics > 1 ? 's' : ''} spanning ${policies.length} ${policies.length > 1 ? 'policies' : 'policy'}. Attack success varied widely, ranging from ${Math.round(attackSuccessRateRange.min)}% to ${Math.round(attackSuccessRateRange.max)}% per topic, with an average judge confidence of ${avgConfidence.toFixed(2)}. This breakdown highlights where failures are most concentrated and where defenses are holding.`;
 
   // Get highly violating topics (ASR > 75%) - assuming ASR is already in percentage (0-100)
   const highlyViolatingTopics = allTopics.filter(topic => topic.attack_success_rate.mean > 75);
@@ -83,248 +91,208 @@ export function TopicAnalysisSection({ topicAnalysis, evaluationResults }: Topic
   }, [evaluationResults, highlyViolatingTopics]);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4">
+    <div className="max-w-4xl mx-auto space-y-2">
       {/* Header and Insights */}
-      <div className="space-y-2 px-3 py-4 rounded-xl">
+      <div className="space-y-3 px-3 pt-4 rounded-xl">
         <div className="space-y-2">
           <div className="flex items-center gap-2.5">
-            <p className="text-xs font-semibold leading-4 text-gray-900">
-              Attack Area of Interest: {firstPolicy.policy_name}
+            <p className="text-sm font-semibold leading-4 text-gray-900">
+              {policies.length > 1
+                ? `Attack Areas of Interest: ${policies.map(p => p.policy_name).join(', ')}`
+                : `Attack Area of Interest: ${firstPolicy.policy_name}`
+              }
             </p>
           </div>
         </div>
         <div className="space-y-2">
-          <p className="text-[0.8125rem] font-[425] leading-5 text-gray-900">
+          <p className="text-sm font-[425] leading-5 text-gray-900 leading-relaxed">
             {displayInsights}
           </p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="px-0.5 pt-2">
-        <div className="bg-gray-100 flex gap-0.5 items-center p-0.5 rounded-[46px]">
-          <button
-            onClick={() => setActiveTab("breakdown")}
-            className={`flex gap-2.5 items-center justify-center px-2 py-1 rounded-[34px] text-xs font-[550] leading-4 transition-colors ${
-              activeTab === "breakdown"
-                ? "bg-gray-200 text-gray-900"
-                : "bg-transparent text-gray-900 hover:bg-gray-50"
-            }`}
-          >
-            Topic Breakdown
-          </button>
-          <button
-            onClick={() => setActiveTab("statistical")}
-            className={`flex gap-2.5 items-center justify-center px-2 py-1 rounded-[34px] text-xs font-[550] leading-4 transition-colors ${
-              activeTab === "statistical"
-                ? "bg-gray-200 text-gray-900"
-                : "bg-transparent text-gray-900 hover:bg-gray-50"
-            }`}
-          >
-            Statistical Summary
-          </button>
-          <button
-            onClick={() => setActiveTab("regression")}
-            className={`flex gap-2.5 items-center justify-center px-2 py-1 rounded-[34px] text-xs font-[550] leading-4 transition-colors ${
-              activeTab === "regression"
-                ? "bg-gray-200 text-gray-900"
-                : "bg-transparent text-gray-900 hover:bg-gray-50"
-            }`}
-          >
-            Regression Analysis
-          </button>
-        </div>
-      </div>
+      <Tabs defaultValue="breakdown" className="px-0.5 pt-2 space-y-4">
+        <TabsList>
+          <TabsTrigger value="breakdown">Topic Breakdown</TabsTrigger>
+          <TabsTrigger value="statistical">Statistical Summary</TabsTrigger>
+          <TabsTrigger value="regression">Regression Analysis</TabsTrigger>
+        </TabsList>
 
-      {/* Topic Breakdown Table */}
-      {activeTab === "breakdown" && (
-        <div className="border border-gray-200 rounded-lg overflow-hidden">
-          <div className="overflow-clip rounded-[inherit]">
-            {/* Table Header */}
-            <div className="flex items-start border-b border-gray-300">
-              <div className="flex-1 bg-gray-100 flex gap-2.5 items-center px-3 py-2 min-w-0">
-                <p className="text-[0.8125rem] font-[425] leading-5 text-gray-600">Topic</p>
-              </div>
-              <div className="flex-1 max-w-[160px] bg-gray-100 flex gap-2.5 items-center justify-center px-3 py-2">
-                <p className="text-[0.8125rem] font-[425] leading-5 text-gray-600">Attack Success Rate</p>
-              </div>
-              <div className="flex-1 max-w-[120px] bg-gray-100 flex gap-2.5 items-center justify-center px-3 py-2">
-                <p className="text-[0.8125rem] font-[425] leading-5 text-gray-600">Confidence</p>
-              </div>
-              <div className="flex-1 max-w-[120px] bg-gray-100 flex gap-2.5 items-center justify-center px-3 py-2">
-                <p className="text-[0.8125rem] font-[425] leading-5 text-gray-600">Response Time (in sec)</p>
-              </div>
-              <div className="w-[119px] bg-gray-100 flex gap-2.5 items-start justify-center px-3 py-2">
-                <p className="text-[0.8125rem] font-[425] leading-5 text-gray-600">Occurence</p>
-              </div>
-            </div>
+        
+        {/* Topic Breakdown Table */}
+        <TabsContent value="breakdown" className="mt-0">
+          <div className="border border-gray-200 rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50 border-0 hover:bg-gray-50">
+                  <TableHead className="font-450 pl-3">Topic</TableHead>
+                  <TableHead className="font-450 text-center w-[160px]">Attack Success Rate</TableHead>
+                  <TableHead className="font-450 text-center w-[100px]">Confidence</TableHead>
+                  <TableHead className="font-450 text-center w-[170px]">Response Time (in sec)</TableHead>
+                  <TableHead className="font-450 text-center w-[100px]">Occurence</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {policies.map((policy) => (
+                  <>
+                    {/* Policy Header Row */}
+                    <TableRow key={`policy-${policy.id}`} className="bg-gray-100 hover:bg-gray-100">
+                      <TableCell colSpan={5} className="font-semibold text-gray-900">
+                        {policy.policy_name}
+                      </TableCell>
+                    </TableRow>
+                    {/* Topics for this policy */}
+                    {policy.topics.map((topic, topicIndex) => {
+                      // ASR is already a percentage (0-100), not a decimal (0-1)
+                      // Show warning icon only if ASR > 75%
+                      const isHighRiskASR = topic.attack_success_rate.mean > 75;
+                      const isLowConfidence = topic.confidence.mean < 0.5;
 
-            {/* Table Rows */}
-            {allTopics.map((topic, index) => {
-              // ASR is already a percentage (0-100), not a decimal (0-1)
-              // Show warning icon only if ASR > 75%
-              const isHighRiskASR = topic.attack_success_rate.mean > 75;
-              const isLowConfidence = topic.confidence.mean < 0.5;
-
-              return (
-                <div key={`${topic.policyId}-${index}`} className="flex items-start">
-                  <div className="flex-1 flex gap-2.5 items-center p-3 min-w-0">
-                    <p className="text-[0.8125rem] font-[425] leading-5 text-gray-900">
-                      {topic.topic_name}
-                    </p>
-                  </div>
-                  <div className="flex-1 max-w-[160px] flex gap-2.5 items-center justify-center p-3 relative">
-                    <p className={`text-[0.8125rem] font-[425] leading-5 ${isHighRiskASR ? 'text-gray-900' : 'text-gray-600'}`}>
-                      {Math.round(topic.attack_success_rate.mean)}%
-                    </p>
-                    {isHighRiskASR && (
-                      <AlertTriangle className="absolute left-24 w-5 h-5 text-red-600" strokeWidth={2} />
-                    )}
-                  </div>
-                  <div className="flex-1 max-w-[120px] flex gap-2.5 items-center justify-center px-3 py-3.5 relative">
-                    <p className="text-xs font-[425] leading-4 text-gray-700">
-                      {topic.confidence.mean.toFixed(2)}
-                    </p>
-                    {isLowConfidence && (
-                      <AlertTriangle className="absolute left-[76px] w-5 h-5 text-red-600" strokeWidth={2} />
-                    )}
-                  </div>
-                  <div className="flex-1 max-w-[120px] flex gap-2.5 items-center justify-center px-3 py-3.5">
-                    <p className="text-xs font-[425] leading-4 text-gray-700">
-                      {topic.runtime_seconds.mean.toFixed(1)}
-                    </p>
-                  </div>
-                  <div className="w-[119px] flex gap-2.5 items-start justify-center px-3 py-3.5">
-                    <p className="text-xs font-[425] leading-4 text-gray-700">
-                      {topic.occurrence}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
+                      return (
+                        <TableRow key={`${policy.id}-${topicIndex}`}>
+                          <TableCell className="text-gray-900 pl-8">
+                            {topic.topic_name}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className={isHighRiskASR ? 'text-gray-900' : 'text-gray-600'}>
+                              {Math.round(topic.attack_success_rate.mean)}%
+                            </span>
+                            {isHighRiskASR && (
+                              <AlertTriangle className="inline-block ml-2 w-5 h-5 text-red-600" strokeWidth={2} />
+                            )}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {topic.confidence.mean.toFixed(2)}
+                            {isLowConfidence && (
+                              <AlertTriangle className="inline-block ml-2 w-5 h-5 text-red-600" strokeWidth={2} />
+                            )}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {topic.runtime_seconds.mean.toFixed(1)}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {topic.occurrence}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </>
+                ))}
+              </TableBody>
+            </Table>
           </div>
-        </div>
-      )}
+        </TabsContent>
 
-      {/* Statistical Summary Table */}
-      {activeTab === "statistical" && (
-        <div className="border border-gray-200 rounded-lg overflow-hidden">
-          <div className="overflow-clip rounded-[inherit]">
-            {/* Table Header */}
-            <div className="flex items-start border-b border-gray-300">
-              <div className="flex-1 bg-gray-100 flex gap-2.5 items-center px-3 py-2">
-                <p className="text-[0.8125rem] font-[425] leading-5 text-gray-600">Topic</p>
-              </div>
-              <div className="flex-1 bg-gray-100 flex gap-2.5 items-center justify-center px-3 py-2">
-                <p className="text-[0.8125rem] font-[425] leading-5 text-gray-600">Std Dev (ASR)</p>
-              </div>
-              <div className="flex-1 bg-gray-100 flex gap-2.5 items-center justify-center px-3 py-2">
-                <p className="text-[0.8125rem] font-[425] leading-5 text-gray-600">Variance (ASR)</p>
-              </div>
-              <div className="flex-1 bg-gray-100 flex gap-2.5 items-center justify-center px-3 py-2">
-                <p className="text-[0.8125rem] font-[425] leading-5 text-gray-600">IQR (ASR)</p>
-              </div>
-              <div className="flex-1 bg-gray-100 flex gap-2.5 items-center justify-center px-3 py-2">
-                <p className="text-[0.8125rem] font-[425] leading-5 text-gray-600">Range (ASR)</p>
-              </div>
-            </div>
+        {/* Statistical Summary Table */}
+        <TabsContent value="statistical" className="mt-0">
+          <div className="border border-gray-200 rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50 border-0 hover:bg-gray-50">
+                  <TableHead className="pl-3 font-450">Topic</TableHead>
+                  <TableHead className="font-450 text-center w-[130px]">Std Dev (ASR)</TableHead>
+                  <TableHead className="font-450 text-center w-[130px]">Variance (ASR)</TableHead>
+                  <TableHead className="font-450 text-center w-[130px]">IQR (ASR)</TableHead>
+                  <TableHead className="font-450 text-center w-[130px]">Range (ASR)</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {policies.map((policy) => (
+                  <>
+                    {/* Policy Header Row */}
+                    <TableRow key={`policy-stat-${policy.id}`} className="bg-gray-100 hover:bg-gray-100">
+                      <TableCell colSpan={5} className="font-semibold text-gray-900">
+                        {policy.policy_name}
+                      </TableCell>
+                    </TableRow>
+                    {/* Topics for this policy */}
+                    {policy.topics.map((topic, topicIndex) => {
+                      const stdDev = topic.attack_success_rate?.std_dev ?? 0;
+                      const variance = topic.attack_success_rate?.variance ?? 0;
+                      const iqr = topic.attack_success_rate?.iqr ?? 0;
+                      const rangeMin = topic.attack_success_rate?.range?.min ?? 0;
+                      const rangeMax = topic.attack_success_rate?.range?.max ?? 0;
 
-            {/* Table Rows */}
-            {allTopics.map((topic, index) => {
-              const stdDev = topic.attack_success_rate?.std_dev ?? 0;
-              const variance = topic.attack_success_rate?.variance ?? 0;
-              const iqr = topic.attack_success_rate?.iqr ?? 0;
-              const rangeMin = topic.attack_success_rate?.range?.min ?? 0;
-              const rangeMax = topic.attack_success_rate?.range?.max ?? 0;
-
-              return (
-                <div key={`${topic.policyId}-${index}`} className="flex items-start">
-                  <div className="flex-1 flex gap-2.5 items-center p-3">
-                    <p className="text-[0.8125rem] font-[425] leading-5 text-gray-900">
-                      {topic.topic_name}
-                    </p>
-                  </div>
-                  <div className="flex-1 flex gap-2.5 items-center justify-center p-3">
-                    <p className="text-xs font-[425] leading-4 text-gray-700">
-                      {stdDev.toFixed(2)}
-                    </p>
-                  </div>
-                  <div className="flex-1 flex gap-2.5 items-center justify-center p-3">
-                    <p className="text-xs font-[425] leading-4 text-gray-700">
-                      {variance.toFixed(2)}
-                    </p>
-                  </div>
-                  <div className="flex-1 flex gap-2.5 items-center justify-center p-3">
-                    <p className="text-xs font-[425] leading-4 text-gray-700">
-                      {iqr.toFixed(2)}
-                    </p>
-                  </div>
-                  <div className="flex-1 flex gap-2.5 items-center justify-center p-3">
-                    <p className="text-xs font-[425] leading-4 text-gray-700">
-                      {rangeMin.toFixed(2)} - {rangeMax.toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
+                      return (
+                        <TableRow key={`${policy.id}-stat-${topicIndex}`}>
+                          <TableCell className="pl-8 text-gray-900">
+                            {topic.topic_name}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {stdDev.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {variance.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {iqr.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {rangeMin.toFixed(2)} - {rangeMax.toFixed(2)}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </>
+                ))}
+              </TableBody>
+            </Table>
           </div>
-        </div>
-      )}
+        </TabsContent>
 
-      {/* Regression Analysis Table */}
-      {activeTab === "regression" && (
-        <div className="border border-gray-200 rounded-lg overflow-hidden">
-          <div className="overflow-clip rounded-[inherit]">
-            {/* Table Header */}
-            <div className="flex items-start border-b border-gray-300">
-              <div className="flex-1 bg-gray-100 flex gap-2.5 items-center px-3 py-2">
-                <p className="text-[0.8125rem] font-[425] leading-5 text-gray-600">Topic</p>
-              </div>
-              <div className="flex-1 bg-gray-100 flex gap-2.5 items-center justify-center px-3 py-2">
-                <p className="text-[0.8125rem] font-[425] leading-5 text-gray-600">Odds Ratio</p>
-              </div>
-              <div className="flex-1 bg-gray-100 flex gap-2.5 items-center justify-center px-3 py-2">
-                <p className="text-[0.8125rem] font-[425] leading-5 text-gray-600">P-Value</p>
-              </div>
-              <div className="flex-1 bg-gray-100 flex gap-2.5 items-center justify-center px-3 py-2">
-                <p className="text-[0.8125rem] font-[425] leading-5 text-gray-600">Significance</p>
-              </div>
-            </div>
+        {/* Regression Analysis Table */}
+        <TabsContent value="regression" className="mt-0">
+          <div className="border border-gray-200 rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50 border-0 hover:bg-gray-50">
+                  <TableHead className="pl-3 font-450">Topic</TableHead>
+                  <TableHead className="font-450 text-center w-[120px]">Odds Ratio</TableHead>
+                  <TableHead className="font-450 text-center w-[120px]">P-Value</TableHead>
+                  <TableHead className="font-450 text-center w-[120px]">Significance</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {policies.map((policy) => (
+                  <>
+                    {/* Policy Header Row */}
+                    <TableRow key={`policy-reg-${policy.id}`} className="bg-gray-100 hover:bg-gray-100">
+                      <TableCell colSpan={4} className="font-semibold text-gray-900">
+                        {policy.policy_name}
+                      </TableCell>
+                    </TableRow>
+                    {/* Topics for this policy */}
+                    {policy.topics.map((topic, topicIndex) => {
+                      const oddsRatio = topic.logistic_regression?.odds_ratio ?? 0;
+                      const pValue = topic.logistic_regression?.p_value ?? 0;
+                      const significance = topic.logistic_regression?.significance ?? false;
 
-            {/* Table Rows */}
-            {allTopics.map((topic, index) => {
-              const oddsRatio = topic.logistic_regression?.odds_ratio ?? 0;
-              const pValue = topic.logistic_regression?.p_value ?? 0;
-              const significance = topic.logistic_regression?.significance ?? false;
-
-              return (
-                <div key={`${topic.policyId}-${index}`} className="flex items-start">
-                  <div className="flex-1 flex gap-2.5 items-center p-3">
-                    <p className="text-[0.8125rem] font-[425] leading-5 text-gray-900">
-                      {topic.topic_name}
-                    </p>
-                  </div>
-                  <div className="flex-1 flex gap-2.5 items-center justify-center p-3">
-                    <p className="text-xs font-[425] leading-4 text-gray-700">
-                      {oddsRatio.toFixed(2)}
-                    </p>
-                  </div>
-                  <div className="flex-1 flex gap-2.5 items-center justify-center p-3">
-                    <p className="text-xs font-[425] leading-4 text-gray-700">
-                      {pValue.toFixed(4)}
-                    </p>
-                  </div>
-                  <div className="flex-1 flex gap-2.5 items-center justify-center p-3">
-                    <p className={`text-xs font-[425] leading-4 ${significance ? 'text-green-600' : 'text-gray-700'}`}>
-                      {significance ? 'Yes' : 'No'}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
+                      return (
+                        <TableRow key={`${policy.id}-reg-${topicIndex}`}>
+                          <TableCell className="pl-8 text-gray-900">
+                            {topic.topic_name}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {oddsRatio.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {pValue.toFixed(4)}
+                          </TableCell>
+                          <TableCell className={`text-center ${significance ? 'text-green-600' : ''}`}>
+                            {significance ? 'Yes' : 'No'}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </>
+                ))}
+              </TableBody>
+            </Table>
           </div>
-        </div>
-      )}
+        </TabsContent>
+   
+      </Tabs>
 
       {/* Highly Violating Behaviors Section */}
       {violatingBehaviors.length > 0 && (

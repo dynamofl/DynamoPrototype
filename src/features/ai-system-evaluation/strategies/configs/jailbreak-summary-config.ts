@@ -20,7 +20,7 @@ export function getJailbreakSummaryConfig(): SummarySectionConfig[] {
       layout: {
         container: 'constrained',
         className: 'max-w-4xl mx-auto',
-        padding: 'px-3 py-2'
+        padding: 'py-2'
       },
       props: {
         // Props will be dynamically resolved by renderer
