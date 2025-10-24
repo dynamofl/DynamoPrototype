@@ -115,6 +115,21 @@ export function getJailbreakSummaryConfig(): SummarySectionConfig[] {
         evaluationResults: (ctx: SummaryViewContext) => ctx.evaluationResults,
         policies: (ctx: SummaryViewContext) => ctx.config?.policies
       }
+    },
+
+    // Section 8: Attack Type Performance
+    {
+      key: 'attackTypePerformance',
+      order: 8,
+      label: 'Attack Type Performance',
+      componentKey: 'AttackTypePerformanceSection',
+      layout: {
+        container: 'constrained',
+        className: 'max-w-4xl mx-auto pb-2'
+      },
+      props: {
+        summary: (ctx: SummaryViewContext) => ctx.summary
+      }
     }
   ]
 }

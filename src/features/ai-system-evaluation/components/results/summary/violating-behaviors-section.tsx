@@ -140,7 +140,7 @@ export function ViolatingBehaviorsSection({
 
   return (
     <>
-      <div className="space-y-4 p-3 my-8">
+      <div className="space-y-4 p-3 my-4">
         <h3 className="text-lg font-450 text-gray-900">
           Highly Violating Behaviors
         </h3>

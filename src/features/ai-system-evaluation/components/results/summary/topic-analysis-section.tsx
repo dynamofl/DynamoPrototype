@@ -77,7 +77,7 @@ export function TopicAnalysisSection({ topicAnalysis, policies: configPolicies }
   const displayInsights = topicAnalysis.topic_insight || `The topic-level view covers ${totalPrompts} adversarial prompts across ${uniqueTopics} topic${uniqueTopics > 1 ? 's' : ''} spanning ${policies.length} ${policies.length > 1 ? 'policies' : 'policy'}. Attack success varied widely, ranging from ${Math.round(attackSuccessRateRange.min)}% to ${Math.round(attackSuccessRateRange.max)}% per topic, with an average judge confidence of ${avgConfidence.toFixed(2)}. This breakdown highlights where failures are most concentrated and where defenses are holding.`;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4 my-8">
+    <div className="max-w-4xl mx-auto space-y-4 my-4">
       {/* Header and Insights */}
       <div className="space-y-3 pt-4 rounded-xl">
         <div className="space-y-2">
