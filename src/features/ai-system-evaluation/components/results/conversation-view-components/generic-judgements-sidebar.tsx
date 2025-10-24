@@ -2,11 +2,12 @@
 // Uses strategy pattern to render different test types (jailbreak, compliance, etc.)
 
 import { useState, useEffect } from 'react'
-import { ChevronsUpDown, ChevronsDownUp, Circle, ArrowUpRight, ShieldBan, ShieldCheck, MessageCircleOff, CircleCheckBig } from 'lucide-react'
+import { ChevronsUpDown, ChevronsDownUp, Circle, ArrowUpRight, ShieldBan, ShieldCheck, MessageCircleOff, CircleCheckBig, CheckCircle2, XCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { BaseEvaluationResult } from '../../../types/base-evaluation'
 import type { EvaluationStrategy } from '../../../strategies/base-strategy'
 import type { GuardrailEvaluationDetail } from '../../../types/jailbreak-evaluation'
+import type { ComplianceEvaluationResult } from '../../../types/compliance-evaluation'
 import type { HoveredBehaviorContext } from '@/components/patterns/ui-patterns/phrase-highlighter'
 import { GuardrailViewSheet } from '@/features/guardrails/components'
 import { useGuardrailsSupabase } from '@/features/guardrails/lib/useGuardrailsSupabase'
@@ -61,6 +62,9 @@ interface ResponseJudgementCardProps {
 function ResponseJudgementCard({ record, aiSystemName, isExpanded, onToggle, hoveredBehavior, onBehaviorHover, selectedBehaviors }: ResponseJudgementCardProps) {
   const hasAnswerPhrases = record.judgeModelAnswerPhrases && record.judgeModelAnswerPhrases.length > 0
 
+  // Get judgement - works for both jailbreak and compliance
+  const judgement = record.judgeModelJudgement || record.modelJudgement || (record as ComplianceEvaluationResult).complianceJudgement || 'Answered'
+
   const handleClick = () => {
     if (!hasAnswerPhrases) return
     onToggle('judge-model')
@@ -72,14 +76,14 @@ function ResponseJudgementCard({ record, aiSystemName, isExpanded, onToggle, hov
         className={`flex gap-2 items-start px-1 ${hasAnswerPhrases ? 'cursor-pointer' : ''}`}
         onClick={handleClick}
       >
-        {getModelStatusIcon(record.judgeModelJudgement || record.modelJudgement)}
+        {getModelStatusIcon(judgement)}
         <div className="flex-1 flex flex-col gap-1 items-start justify-center min-w-0">
           <div className="flex flex-col gap-0.5 items-start justify-center w-full">
             <div className="flex gap-0.5 items-start text-[0.875rem] leading-5 text-gray-900">
               <span className="text-[0.8125rem] font-450">{aiSystemName}</span>
             </div>
             <div className="flex gap-1 items-center text-xs leading-4 text-gray-600">
-              <span className="font-400">{record.judgeModelJudgement || record.modelJudgement}</span>
+              <span className="font-400">{judgement}</span>
               {record.judgeModelConfidence !== undefined && record.judgeModelConfidence !== null && (
                 <>
                   <span className="font-400">•</span>
@@ -377,8 +381,9 @@ export function GenericJudgementsSidebar({
 
           {/* Summary Cards */}
           <div className="flex gap-2 items-center w-full">
-            {/* Attack Type Card (Jailbreak only) */}
-            {hasAttackType && (
+            {/* First Card: Attack Type (Jailbreak) or Base Prompt (Compliance) */}
+            {hasAttackType ? (
+              // Jailbreak: Attack Type Card
               <div className="flex-1 min-w-36 bg-gray-100 rounded-lg p-2 flex flex-col gap-1">
                 <div className="flex gap-0.5 items-start">
                   <span className="text-xs font-400 leading-4 text-gray-900">Attack</span>
@@ -390,6 +395,31 @@ export function GenericJudgementsSidebar({
                   </span>
                 </div>
               </div>
+            ) : (
+              // Compliance: Base Prompt Card (Ground Truth)
+              (() => {
+                const complianceRecord = record as ComplianceEvaluationResult
+                const groundTruth = complianceRecord.groundTruth
+                const isCompliant = groundTruth === 'Compliant'
+
+                return (
+                  <div className="flex-1 min-w-36 bg-gray-100 rounded-lg p-2 flex flex-col gap-1">
+                    <div className="flex gap-0.5 items-start">
+                      <span className="text-xs font-400 leading-4 text-gray-900">Base Prompt</span>
+                    </div>
+                    <div className="flex gap-1 items-center">
+                      {isCompliant ? (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
+                      ) : (
+                        <XCircle className="w-3.5 h-3.5 text-red-600" />
+                      )}
+                      <span className="text-[0.8125rem] font-450 text-gray-900">
+                        {groundTruth}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })()
             )}
 
             {/* Guardrails Card (if present) */}
@@ -412,46 +442,34 @@ export function GenericJudgementsSidebar({
               </div>
             )}
 
-            {/* AI System Card (Jailbreak) / Outcome Card (Compliance) */}
-            {hasAttackType ? (
-              // Jailbreak evaluation - show AI System judgement (ALWAYS)
-              <div className="flex-1 bg-gray-100 rounded-lg p-2 flex flex-col gap-1">
-                <div className="flex gap-0.5 items-start">
-                  <span className="text-xs font-400 leading-4 text-gray-900">AI System</span>
-                </div>
-                <div className="flex gap-1 items-center">
-                  {((jbRecord.judgeModelJudgement || jbRecord.modelJudgement) === 'Blocked' ||
-                    (jbRecord.judgeModelJudgement || jbRecord.modelJudgement) === 'Refused') ? (
-                    <MessageCircleOff className="w-3.5 h-3.5 text-red-600" />
-                  ) : (
-                    <CircleCheckBig className="w-3.5 h-3.5 text-green-600" />
-                  )}
-                  <span className="text-[0.8125rem] font-450 leading-5 text-gray-900">
-                    {jbRecord.judgeModelJudgement || jbRecord.modelJudgement}
-                  </span>
-                </div>
+            {/* AI System Card (ALWAYS shown for both test types) */}
+            <div className="flex-1 bg-gray-100 rounded-lg p-2 flex flex-col gap-1">
+              <div className="flex gap-0.5 items-start">
+                <span className="text-xs font-400 leading-4 text-gray-900">AI System</span>
               </div>
-            ) : (
-              // Compliance evaluation - show outcome
-              (() => {
-                const badge = strategy.getConversationBadge(record)
-                if (badge) {
+              <div className="flex gap-1 items-center">
+                {(() => {
+                  const judgement = hasAttackType
+                    ? (jbRecord.judgeModelJudgement || jbRecord.modelJudgement)
+                    : ((record as ComplianceEvaluationResult).complianceJudgement || 'Answered')
+
+                  const isRefused = judgement === 'Blocked' || judgement === 'Refused'
+
                   return (
-                    <div className="flex-1 bg-gray-100 rounded-lg p-2 flex flex-col gap-1">
-                      <div className="flex gap-0.5 items-start">
-                        <span className="text-xs font-400 leading-4 text-gray-900">Outcome</span>
-                      </div>
-                      <div className="flex gap-1 items-center">
-                        <span className="text-[0.8125rem] font-450 text-gray-900">
-                          {badge.text}
-                        </span>
-                      </div>
-                    </div>
+                    <>
+                      {isRefused ? (
+                        <MessageCircleOff className="w-3.5 h-3.5 text-red-600" />
+                      ) : (
+                        <CircleCheckBig className="w-3.5 h-3.5 text-green-600" />
+                      )}
+                      <span className="text-[0.8125rem] font-450 leading-5 text-gray-900">
+                        {judgement}
+                      </span>
+                    </>
                   )
-                }
-                return null
-              })()
-            )}
+                })()}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -507,23 +525,31 @@ export function GenericJudgementsSidebar({
           </div>
         )}
 
-        {/* Response Judgement Section */}
-        {(jbRecord.judgeModelJudgement || jbRecord.modelJudgement) && (
-          <div className="flex flex-col gap-2 items-start w-full">
-            <h3 className="text-xs font-450 leading-4 text-gray-600">
-              Response Judgement
-            </h3>
-            <ResponseJudgementCard
-              record={jbRecord}
-              aiSystemName={aiSystemName || 'AI System'}
-              isExpanded={expandedKeys.has('judge-model')}
-              onToggle={handleToggle}
-              hoveredBehavior={hoveredBehavior}
-              onBehaviorHover={onBehaviorHover}
-              selectedBehaviors={selectedBehaviors}
-            />
-          </div>
-        )}
+        {/* Response Judgement Section - For both Jailbreak and Compliance */}
+        {(() => {
+          const hasResponseJudgement = hasAttackType
+            ? (jbRecord.judgeModelJudgement || jbRecord.modelJudgement)
+            : ((record as ComplianceEvaluationResult).complianceJudgement)
+
+          if (!hasResponseJudgement) return null
+
+          return (
+            <div className="flex flex-col gap-2 items-start w-full">
+              <h3 className="text-xs font-450 leading-4 text-gray-600">
+                AI System Response Judgement
+              </h3>
+              <ResponseJudgementCard
+                record={record}
+                aiSystemName={aiSystemName || 'AI System'}
+                isExpanded={expandedKeys.has('judge-model')}
+                onToggle={handleToggle}
+                hoveredBehavior={hoveredBehavior}
+                onBehaviorHover={onBehaviorHover}
+                selectedBehaviors={selectedBehaviors}
+              />
+            </div>
+          )
+        })()}
       </div>
 
       {/* Guardrail View Sheet */}

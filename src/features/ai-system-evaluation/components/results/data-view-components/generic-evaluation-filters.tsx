@@ -27,10 +27,24 @@ export function GenericEvaluationFilters({
   hasGuardrails = true,
   data = []
 }: GenericEvaluationFiltersProps) {
+  // Check if any records have input/output guardrail judgements
+  const hasInputGuardrails = useMemo(() =>
+    data.some(record =>
+      (record as any).inputGuardrailJudgement !== null && (record as any).inputGuardrailJudgement !== undefined
+    ),
+    [data]
+  )
+  const hasOutputGuardrails = useMemo(() =>
+    data.some(record =>
+      (record as any).outputGuardrailJudgement !== null && (record as any).outputGuardrailJudgement !== undefined
+    ),
+    [data]
+  )
+
   // Memoize UI filters to prevent infinite loops
   // Only depend on data.length to avoid re-creating when array reference changes
   const uiFilters = useMemo(() => {
-    const strategyFilters = strategy.getFilters(hasGuardrails)
+    const strategyFilters = strategy.getFilters({ hasInputGuardrails, hasOutputGuardrails })
 
     return strategyFilters.map(filter => {
       // If options not provided in strategy, derive from data
@@ -133,12 +147,13 @@ export function GenericEvaluationFilters({
   const rightContent = (
     <Tabs value={currentView} onValueChange={(value) => onViewChange(value as 'table' | 'conversation')}>
       <TabsList className="px-0.5 rounded-full">
+         <TabsTrigger value="conversation" className="text-[0.8125rem] px-3 rounded-full">
+          Conversation View
+        </TabsTrigger>
         <TabsTrigger value="table" className="text-[0.8125rem] px-3 rounded-full">
           Table View
         </TabsTrigger>
-        <TabsTrigger value="conversation" className="text-[0.8125rem] px-3 rounded-full">
-          Conversation View
-        </TabsTrigger>
+       
       </TabsList>
     </Tabs>
   )

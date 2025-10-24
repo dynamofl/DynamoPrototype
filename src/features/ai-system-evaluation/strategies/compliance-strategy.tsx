@@ -1,7 +1,7 @@
 // Compliance Strategy Implementation
 // Implements EvaluationStrategy interface for compliance test type
 
-import { MessagesSquare, ShieldBan, ShieldCheck, CheckCircle2, XCircle, AlertCircle } from 'lucide-react'
+import { ShieldBan, ShieldCheck, MessageCircleOff, CircleCheckBig } from 'lucide-react'
 import type {
   EvaluationStrategy,
   ColumnConfig,
@@ -22,6 +22,8 @@ import type {
   PerturbationMetrics
 } from '../types/compliance-evaluation'
 import { Badge } from '@/components/ui/badge'
+import { HighlightedText } from '@/components/patterns/ui-patterns/phrase-highlighter'
+import { HighlightedMarkdownRenderer } from '../components/results/conversation-view-components/shared-components'
 
 export class ComplianceStrategy implements EvaluationStrategy {
   readonly testType = 'compliance'
@@ -31,66 +33,77 @@ export class ComplianceStrategy implements EvaluationStrategy {
    * Transform database records to frontend result format
    */
   transformPrompts(dbRecords: any[]): ComplianceEvaluationResult[] {
-    return dbRecords.map(record => ({
-      // Base fields
-      policyId: record.policy_id,
-      policyName: record.policy_name,
-      topic: record.topic,
-      promptTitle: record.prompt_title,
-      policyContext: record.policy_context,
-      behaviorType: record.behavior_type,
-      basePrompt: record.base_prompt,
-      base_prompt: record.base_prompt,
-      behavior_type: record.behavior_type,
+    return dbRecords.map((record) => {
+      const result = {
+        // Base fields (both camelCase and snake_case for compatibility)
+        policyId: record.policy_id,
+        policy_id: record.policy_id,
+        policyName: record.policy_name,
+        policy_name: record.policy_name,
+        topic: record.topic,
+        promptTitle: record.prompt_title,
+        prompt_title: record.prompt_title,
+        promptIndex: record.prompt_index,
+        prompt_index: record.prompt_index,
+        policyContext: record.policy_context,
+        policy_context: record.policy_context,
+        behaviorType: record.behavior_type,
+        behavior_type: record.behavior_type,
+        basePrompt: record.base_prompt,
+        base_prompt: record.base_prompt,
 
-      // Compliance-specific fields
-      actualPrompt: record.actual_prompt,
-      actual_prompt: record.actual_prompt,
-      perturbationType: record.perturbation_type || null,
-      perturbation_type: record.perturbation_type || null,
-      groundTruth: record.ground_truth as GroundTruth,
-      ground_truth: record.ground_truth as GroundTruth,
-      behaviorUsed: record.behavior_used,
-      behavior_used: record.behavior_used,
-      behaviorPhrases: record.behavior_phrases ? {
-        phrases: record.behavior_phrases.phrases || [],
-        positions: record.behavior_phrases.positions
-      } : undefined,
-      behavior_phrases: record.behavior_phrases,
+        // Compliance-specific fields
+        actualPrompt: record.actual_prompt,
+        actual_prompt: record.actual_prompt,
+        perturbationType: record.perturbation_type || null,
+        perturbation_type: record.perturbation_type || null,
+        groundTruth: record.ground_truth as GroundTruth,
+        ground_truth: record.ground_truth as GroundTruth,
+        behaviorUsed: record.behavior_used,
+        behavior_used: record.behavior_used,
+        behaviorPhrases: record.behavior_phrases ? {
+          phrases: record.behavior_phrases.phrases || [],
+          positions: record.behavior_phrases.positions
+        } : undefined,
+        behavior_phrases: record.behavior_phrases,
 
-      // System response (from ai_system_response)
-      systemResponse: record.ai_system_response?.content || '',
-      system_response: record.ai_system_response?.content || '',
+        // System response (from ai_system_response)
+        systemResponse: record.ai_system_response?.content || '',
+        system_response: record.ai_system_response?.content || '',
 
-      // Judgement and outcome
-      complianceJudgement: record.ai_system_response?.judgement || record.compliance_judgement || null,
-      compliance_judgement: record.ai_system_response?.judgement || record.compliance_judgement || null,
-      finalOutcome: record.final_outcome as FinalOutcome,
-      final_outcome: record.final_outcome as FinalOutcome,
+        // Judgement and outcome
+        complianceJudgement: record.ai_system_response?.judgement || record.compliance_judgement || null,
+        compliance_judgement: record.ai_system_response?.judgement || record.compliance_judgement || null,
+        judgeModelConfidence: record.ai_system_response?.confidenceScore || null,
+        judgeModelAnswerPhrases: record.ai_system_response?.answerPhrases || null,
+        finalOutcome: record.final_outcome as FinalOutcome,
+        final_outcome: record.final_outcome as FinalOutcome,
 
-      // Guardrails
-      inputGuardrailJudgement: record.input_guardrail?.judgement || null,
-      input_guardrail_judgement: record.input_guardrail?.judgement || null,
-      inputGuardrailReason: record.input_guardrail?.reason || null,
-      inputGuardrailDetails: record.input_guardrail?.details || null,
+        // Guardrails
+        inputGuardrailJudgement: record.input_guardrail?.judgement || null,
+        input_guardrail_judgement: record.input_guardrail?.judgement || null,
+        inputGuardrailReason: record.input_guardrail?.reason || null,
+        inputGuardrailDetails: record.input_guardrail?.details || null,
 
-      outputGuardrailJudgement: record.output_guardrail?.judgement || null,
-      output_guardrail_judgement: record.output_guardrail?.judgement || null,
-      outputGuardrailReason: record.output_guardrail?.reason || null,
-      outputGuardrailDetails: record.output_guardrail?.details || null,
+        outputGuardrailJudgement: record.output_guardrail?.judgement || null,
+        output_guardrail_judgement: record.output_guardrail?.judgement || null,
+        outputGuardrailReason: record.output_guardrail?.reason || null,
+        outputGuardrailDetails: record.output_guardrail?.details || null,
 
-      // Metrics (from ai_system_response)
-      runtimeMs: record.runtime_ms,
-      runtime_ms: record.runtime_ms,
-      inputTokens: record.ai_system_response?.inputTokens || record.input_tokens,
-      input_tokens: record.ai_system_response?.inputTokens || record.input_tokens,
-      outputTokens: record.ai_system_response?.outputTokens || record.output_tokens,
-      output_tokens: record.ai_system_response?.outputTokens || record.output_tokens,
-      totalTokens: (record.ai_system_response?.inputTokens || record.input_tokens || 0) +
-                   (record.ai_system_response?.outputTokens || record.output_tokens || 0),
-      total_tokens: (record.ai_system_response?.inputTokens || record.input_tokens || 0) +
-                    (record.ai_system_response?.outputTokens || record.output_tokens || 0)
-    }))
+        // Metrics (from ai_system_response)
+        runtimeMs: record.runtime_ms,
+        runtime_ms: record.runtime_ms,
+        inputTokens: record.ai_system_response?.inputTokens || record.input_tokens,
+        input_tokens: record.ai_system_response?.inputTokens || record.input_tokens,
+        outputTokens: record.ai_system_response?.outputTokens || record.output_tokens,
+        output_tokens: record.ai_system_response?.outputTokens || record.output_tokens,
+        totalTokens: (record.ai_system_response?.inputTokens || record.input_tokens || 0) +
+                     (record.ai_system_response?.outputTokens || record.output_tokens || 0),
+        total_tokens: (record.ai_system_response?.inputTokens || record.input_tokens || 0) +
+                      (record.ai_system_response?.outputTokens || record.output_tokens || 0)
+      }
+      return result
+    })
   }
 
   /**
@@ -238,18 +251,13 @@ export class ComplianceStrategy implements EvaluationStrategy {
   /**
    * Get table columns configuration
    */
-  getTableColumns(hasGuardrails = true): ColumnConfig[] {
+  getTableColumns(options?: { hasInputGuardrails?: boolean; hasOutputGuardrails?: boolean }): ColumnConfig[] {
+    const { hasInputGuardrails = false, hasOutputGuardrails = false } = options || {}
     const columns: ColumnConfig[] = [
       {
-        key: 'icon',
-        label: '',
-        width: 'w-8',
-        className: 'pr-[0px]',
-        render: () => <MessagesSquare className="h-4 w-4 text-gray-500" strokeWidth="2" />
-      },
-      {
         key: 'basePrompt',
-        label: 'Test Prompts',
+        label: 'Test Conversations',
+        className: 'font-450 text-gray-900',
         render: (record) => (
           <div className="truncate max-w-md group-hover:underline" title={record.base_prompt}>
             {record.base_prompt}
@@ -265,6 +273,7 @@ export class ComplianceStrategy implements EvaluationStrategy {
           </Badge>
         )
       },
+
       {
         key: 'groundTruth',
         label: 'Ground Truth',
@@ -280,69 +289,122 @@ export class ComplianceStrategy implements EvaluationStrategy {
             </Badge>
           )
         }
-      },
-      {
-        key: 'behaviorType',
-        label: 'Behavior Type',
-        render: (record) => (
-          <Badge variant="secondary">
-            {record.behavior_type}
-          </Badge>
-        )
-      },
-      {
-        key: 'perturbationType',
-        label: 'Perturbation',
-        render: (record) => {
-          const complianceRecord = record as ComplianceEvaluationResult
-          return (
-            <Badge variant="outline" className="text-xs">
-              {complianceRecord.perturbationType || 'None'}
-            </Badge>
-          )
-        }
       }
     ]
 
-    // Add guardrail columns if applicable
-    if (hasGuardrails) {
-      columns.push(
-        {
-          key: 'inputGuardrail',
-          label: 'Input Guardrail',
-          render: (record) => {
-            if (!record.input_guardrail_judgement) return <span className="text-gray-400">—</span>
-            const isBlocked = record.input_guardrail_judgement === 'Blocked'
+    // Add input guardrail column if applicable
+    if (hasInputGuardrails) {
+      columns.push({
+        key: 'inputGuardrail',
+        label: 'Input Guardrail',
+        render: (record) => {
+          const complianceRecord = record as any
+          if (!complianceRecord.input_guardrail_judgement && !complianceRecord.inputGuardrailJudgement) {
+            return <span className="text-gray-400">—</span>
+          }
+
+          // Handle multiple guardrails with details
+          const details = complianceRecord.inputGuardrailDetails || []
+          if (details.length > 1) {
+            const blockedCount = details.filter((d: any) => d.judgement === 'Blocked').length
+            const totalCount = details.length
+            const hasBlocked = blockedCount > 0
+
             return (
               <div className="flex items-center gap-2">
-                {isBlocked ?
+                {hasBlocked ?
                   <ShieldBan className="w-4 h-4 text-red-600" /> :
                   <ShieldCheck className="w-4 h-4 text-green-600" />
                 }
-                <span>{record.input_guardrail_judgement}</span>
+                <span className="text-xs">
+                  {blockedCount > 0 ? `${blockedCount}/${totalCount} Blocked` : `${totalCount}/${totalCount} Allowed`}
+                </span>
               </div>
             )
           }
-        },
-        {
-          key: 'outputGuardrail',
-          label: 'Output Guardrail',
-          render: (record) => {
-            if (!record.output_guardrail_judgement) return <span className="text-gray-400">—</span>
-            const isBlocked = record.output_guardrail_judgement === 'Blocked'
-            return (
-              <div className="flex items-center gap-2">
-                {isBlocked ?
-                  <ShieldBan className="w-4 h-4 text-red-600" /> :
-                  <ShieldCheck className="w-4 h-4 text-green-600" />
-                }
-                <span>{record.output_guardrail_judgement}</span>
-              </div>
-            )
-          }
+
+          // Single guardrail
+          const judgement = complianceRecord.input_guardrail_judgement || complianceRecord.inputGuardrailJudgement
+          const isBlocked = judgement === 'Blocked'
+          return (
+            <div className="flex items-center gap-2">
+              {isBlocked ?
+                <ShieldBan className="w-4 h-4 text-red-600" /> :
+                <ShieldCheck className="w-4 h-4 text-green-600" />
+              }
+              <span className="">{judgement}</span>
+            </div>
+          )
         }
-      )
+      })
     }
+
+    // Add output guardrail column if applicable
+    if (hasOutputGuardrails) {
+      columns.push({
+        key: 'outputGuardrail',
+        label: 'Output Guardrail',
+        render: (record) => {
+          const complianceRecord = record as any
+          if (!complianceRecord.output_guardrail_judgement && !complianceRecord.outputGuardrailJudgement) {
+            return <span className="text-gray-400">—</span>
+          }
+
+          // Handle multiple guardrails with details
+          const details = complianceRecord.outputGuardrailDetails || []
+          if (details.length > 1) {
+            const blockedCount = details.filter((d: any) => d.judgement === 'Blocked').length
+            const totalCount = details.length
+            const hasBlocked = blockedCount > 0
+
+            return (
+              <div className="flex items-center gap-2">
+                {hasBlocked ?
+                  <ShieldBan className="w-4 h-4 text-red-600" /> :
+                  <ShieldCheck className="w-4 h-4 text-green-600" />
+                }
+                <span className="text-xs">
+                  {blockedCount > 0 ? `${blockedCount}/${totalCount} Blocked` : `${totalCount}/${totalCount} Allowed`}
+                </span>
+              </div>
+            )
+          }
+
+          // Single guardrail
+          const judgement = complianceRecord.output_guardrail_judgement || complianceRecord.outputGuardrailJudgement
+          const isBlocked = judgement === 'Blocked'
+          return (
+            <div className="flex items-center gap-2">
+              {isBlocked ?
+                <ShieldBan className="w-4 h-4 text-red-600" /> :
+                <ShieldCheck className="w-4 h-4 text-green-600" />
+              }
+              <span className="">{judgement}</span>
+            </div>
+          )
+        }
+      })
+    }
+
+    // AI System Judgement column
+    columns.push({
+      key: 'aiSystemJudgement',
+      label: 'AI System Judgement',
+      render: (record) => {
+        const complianceRecord = record as ComplianceEvaluationResult
+        const judgement = complianceRecord.complianceJudgement || 'Answered'
+        const isRefused = judgement === 'Refused' || judgement === 'Blocked'
+        return (
+          <div className="flex items-center gap-2">
+            {isRefused ?
+              <MessageCircleOff className="w-4 h-4 text-red-600" /> :
+              <CircleCheckBig className="w-4 h-4 text-green-600" />
+            }
+            <span className="">{judgement}</span>
+          </div>
+        )
+      }
+    })
 
     // Final outcome column
     columns.push({
@@ -353,22 +415,21 @@ export class ComplianceStrategy implements EvaluationStrategy {
         const outcome = complianceRecord.finalOutcome
 
         const outcomeConfig = {
-          'TP': { label: 'True Positive', color: 'bg-green-50 text-green-800 border-green-200', icon: CheckCircle2 },
-          'TN': { label: 'True Negative', color: 'bg-green-50 text-green-800 border-green-200', icon: CheckCircle2 },
-          'FP': { label: 'False Positive', color: 'bg-red-50 text-red-800 border-red-200', icon: XCircle },
-          'FN': { label: 'False Negative', color: 'bg-red-50 text-red-800 border-red-200', icon: AlertCircle }
+          'TP': { label: 'True Positive', color: 'bg-green-50 text-green-800' },
+          'TN': { label: 'True Negative', color: 'bg-green-50 text-green-800' },
+          'FP': { label: 'False Positive', color: 'bg-red-50 text-red-800' },
+          'FN': { label: 'False Negative', color: 'bg-red-50 text-red-800' }
         }
 
         const config = outcomeConfig[outcome] || outcomeConfig['TP']
-        const Icon = config.icon
 
         return (
-          <div className="flex items-center gap-2">
-            <Icon className="w-4 h-4" />
-            <Badge variant="outline" className={`text-xs ${config.color}`}>
-              {outcome}
-            </Badge>
-          </div>
+          <Badge
+            variant="secondary"
+            className={`text-xs ${config.color}`}
+          >
+            {config.label}
+          </Badge>
         )
       }
     })
@@ -379,7 +440,8 @@ export class ComplianceStrategy implements EvaluationStrategy {
   /**
    * Get filter configurations
    */
-  getFilters(hasGuardrails = true): FilterConfig[] {
+  getFilters(options?: { hasInputGuardrails?: boolean; hasOutputGuardrails?: boolean }): FilterConfig[] {
+    const { hasInputGuardrails = false, hasOutputGuardrails = false } = options || {}
     const filters: FilterConfig[] = [
       {
         key: 'finalOutcome',
@@ -448,35 +510,38 @@ export class ComplianceStrategy implements EvaluationStrategy {
       }
     ]
 
-    if (hasGuardrails) {
-      filters.push(
-        {
-          key: 'inputGuardrailJudgment',
-          label: 'Input Guardrail',
-          type: 'multiselect',
-          options: [
-            { value: 'Allowed', label: 'Allowed' },
-            { value: 'Blocked', label: 'Blocked' }
-          ],
-          filterFn: (record, values) => {
-            if (!record.input_guardrail_judgement) return false
-            return values.includes(record.input_guardrail_judgement)
-          }
-        },
-        {
-          key: 'outputGuardrailJudgment',
-          label: 'Output Guardrail',
-          type: 'multiselect',
-          options: [
-            { value: 'Allowed', label: 'Allowed' },
-            { value: 'Blocked', label: 'Blocked' }
-          ],
-          filterFn: (record, values) => {
-            if (!record.output_guardrail_judgement) return false
-            return values.includes(record.output_guardrail_judgement)
-          }
+    // Add input guardrail filter if applicable
+    if (hasInputGuardrails) {
+      filters.push({
+        key: 'inputGuardrailJudgment',
+        label: 'Input Guardrail',
+        type: 'multiselect',
+        options: [
+          { value: 'Allowed', label: 'Allowed' },
+          { value: 'Blocked', label: 'Blocked' }
+        ],
+        filterFn: (record, values) => {
+          if (!record.input_guardrail_judgement) return false
+          return values.includes(record.input_guardrail_judgement)
         }
-      )
+      })
+    }
+
+    // Add output guardrail filter if applicable
+    if (hasOutputGuardrails) {
+      filters.push({
+        key: 'outputGuardrailJudgment',
+        label: 'Output Guardrail',
+        type: 'multiselect',
+        options: [
+          { value: 'Allowed', label: 'Allowed' },
+          { value: 'Blocked', label: 'Blocked' }
+        ],
+        filterFn: (record, values) => {
+          if (!record.output_guardrail_judgement) return false
+          return values.includes(record.output_guardrail_judgement)
+        }
+      })
     }
 
     return filters
@@ -703,12 +768,6 @@ export class ComplianceStrategy implements EvaluationStrategy {
         format: 'string'
       },
       {
-        key: 'perturbationType',
-        label: 'Perturbation Type',
-        getValue: (record) => (record as ComplianceEvaluationResult).perturbationType || 'None',
-        format: 'string'
-      },
-      {
         key: 'groundTruth',
         label: 'Ground Truth',
         getValue: (record) => (record as ComplianceEvaluationResult).groundTruth,
@@ -721,9 +780,24 @@ export class ComplianceStrategy implements EvaluationStrategy {
         format: 'string'
       },
       {
+        key: 'aiSystemJudgement',
+        label: 'AI System Judgement',
+        getValue: (record) => (record as ComplianceEvaluationResult).complianceJudgement || 'Answered',
+        format: 'string'
+      },
+      {
         key: 'finalOutcome',
         label: 'Final Outcome',
-        getValue: (record) => (record as ComplianceEvaluationResult).finalOutcome,
+        getValue: (record) => {
+          const outcome = (record as ComplianceEvaluationResult).finalOutcome
+          const labels: Record<string, string> = {
+            'TP': 'True Positive',
+            'TN': 'True Negative',
+            'FP': 'False Positive',
+            'FN': 'False Negative'
+          }
+          return labels[outcome] || outcome
+        },
         format: 'string'
       }
     ]
@@ -785,7 +859,21 @@ export class ComplianceStrategy implements EvaluationStrategy {
                 )}
               </h3>
               <div className="px-2 text-sm font-425 leading-5 text-gray-900">
-                {complianceRecord.actualPrompt}
+                {ctx ? (
+                  <HighlightedText
+                    highlightPhrases={ctx.shouldHighlightPrompt ? ctx.highlightPhrases : ctx.allInputPhrases}
+                    className="text-sm leading-5 text-gray-900"
+                    highlightColor={ctx.highlightColor}
+                    hoveredBehavior={ctx.hoveredBehavior}
+                    selectedBehaviors={ctx.selectedBehaviors}
+                    onPhraseClick={(idx) => ctx.handlePhraseClick(idx, 'input')}
+                    showHighlightByDefault={true}
+                  >
+                    {(complianceRecord as any).actualPrompt}
+                  </HighlightedText>
+                ) : (
+                  (complianceRecord as any).actualPrompt
+                )}
               </div>
               {complianceRecord.perturbationType && (
                 <div className="px-2 text-xs text-gray-500 italic">
@@ -808,52 +896,19 @@ export class ComplianceStrategy implements EvaluationStrategy {
                 AI System Response
               </h3>
               <div className="px-2">
-                <div className="text-sm font-425 leading-relaxed text-gray-900">
-                  {complianceRecord.systemResponse || 'No response'}
-                </div>
-              </div>
-            </>
-          )
-        }
-      },
-      {
-        key: 'metadata',
-        title: 'Ground Truth & Outcome',
-        order: 4,
-        render: (record: BaseEvaluationResult, ctx?: HighlightingContext) => {
-          const complianceRecord = record as ComplianceEvaluationResult
-          return (
-            <>
-              <h3 className="px-2 text-[0.8125rem] font-450 leading-4 text-gray-600">
-                Ground Truth & Outcome
-              </h3>
-              <div className="px-2 space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-450">Ground Truth:</span>
-                  <span className={`px-2 py-1 rounded text-xs font-450 ${
-                    complianceRecord.groundTruth === 'Compliant'
-                      ? 'bg-green-50 text-green-800'
-                      : 'bg-red-50 text-red-800'
-                  }`}>
-                    {complianceRecord.groundTruth}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-450">Final Outcome:</span>
-                  <span className={`px-2 py-1 rounded text-xs font-450 ${
-                    complianceRecord.finalOutcome === 'TP' || complianceRecord.finalOutcome === 'TN'
-                      ? 'bg-green-50 text-green-800'
-                      : 'bg-red-50 text-red-800'
-                  }`}>
-                    {complianceRecord.finalOutcome}
-                  </span>
-                </div>
-                {complianceRecord.behaviorUsed && (
-                  <div className="mt-2">
-                    <span className="text-sm font-450">Behavior Used:</span>
-                    <div className="mt-1 p-2 bg-gray-50 rounded text-xs text-gray-700">
-                      {complianceRecord.behaviorUsed}
-                    </div>
+                {ctx ? (
+                  <HighlightedMarkdownRenderer
+                    content={(complianceRecord as any).systemResponse || 'No response'}
+                    highlightPhrases={ctx.shouldHighlightResponse ? ctx.highlightPhrases : ctx.allOutputPhrases}
+                    highlightColor={ctx.highlightColor}
+                    hoveredBehavior={ctx.hoveredBehavior}
+                    selectedBehaviors={ctx.selectedBehaviors}
+                    onPhraseClick={(idx) => ctx.handlePhraseClick(idx, 'output')}
+                    showHighlightByDefault={true}
+                  />
+                ) : (
+                  <div className="text-sm font-425 leading-relaxed text-gray-900">
+                    {(complianceRecord as any).systemResponse || 'No response'}
                   </div>
                 )}
               </div>

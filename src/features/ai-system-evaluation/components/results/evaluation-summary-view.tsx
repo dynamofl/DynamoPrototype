@@ -189,15 +189,19 @@ export function EvaluationSummaryView({
               />
             </div>
 
-            {/* By Policy */}
-            <div className="max-w-4xl mx-auto">
-              <PolicyResultsSection byPolicy={summary.by_policy} />
-            </div>
+            {/* By Policy - Only show if by_policy exists */}
+            {(summary as any).by_policy && (
+              <div className="max-w-4xl mx-auto">
+                <PolicyResultsSection byPolicy={(summary as any).by_policy} />
+              </div>
+            )}
 
-            {/* By Behavior Type */}
-            <div className="max-w-4xl mx-auto">
-              <BehaviorTypeResultsSection byBehaviorType={summary.by_behavior_type} />
-            </div>
+            {/* By Behavior Type - Only show if by_behavior_type exists */}
+            {(summary as any).by_behavior_type && (
+              <div className="max-w-4xl mx-auto">
+                <BehaviorTypeResultsSection byBehaviorType={(summary as any).by_behavior_type} />
+              </div>
+            )}
           </>
         )}
       </div>

@@ -5,10 +5,11 @@ import { motion, AnimatePresence, easeInOut } from "framer-motion";
 // Components
 import { AppBar, OverlayHeader } from "@/components/patterns";
 import type { BreadcrumbItem, AppBarActionButton } from "@/components/patterns";
-import { Download, Trash2, ChevronsUpDown } from "lucide-react";
+import { Download, Trash2, ChevronsUpDown, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -106,6 +107,9 @@ export function AISystemEvaluationUnifiedPage() {
 
   // Selection state
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
+
+  // Search state for evaluation dropdown
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Initial load - wait for async data before deciding what to show
   useEffect(() => {
@@ -418,6 +422,11 @@ export function AISystemEvaluationUnifiedPage() {
     setEvaluationToDelete(test);
     setIsDeleteDialogOpen(true);
   }, []);
+
+  // Filter evaluation history based on search query
+  const filteredEvaluationHistory = evaluationHistory.filter((test) =>
+    test.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // Handle row selection
   const handleRowSelect = useCallback((id: string, selected: boolean) => {
@@ -848,40 +857,66 @@ export function AISystemEvaluationUnifiedPage() {
                       {/* Test/Evaluation Name with Badge and Dropdown */}
                       {selectedTest && (
                         <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-1">
+                         
+                          {evaluationHistory.length > 1 && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                 <div className="flex items-center gap-1">
                             <span className="max-w-[200px] truncate text-sm font-450 text-gray-900">
                               {selectedTest.name}
                             </span>
                             <Badge variant="secondary" className="text-xs ml-1">
                               {selectedTest.type === 'compliance' ? 'Compliance' : 'Jailbreak'}
                             </Badge>
-                          </div>
-                          {evaluationHistory.length > 1 && (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <button className="p-0.5 hover:bg-gray-100 rounded transition-colors">
+                            <button className="p-0.5 hover:bg-gray-100 rounded transition-colors">
                                   <ChevronsUpDown className="h-3.5 w-3.5 text-gray-500" />
                                 </button>
+                          </div>
+                                
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="start" className="w-[280px]">
-                                {evaluationHistory.map((test) => (
-                                  <DropdownMenuItem
-                                    key={test.id}
-                                    onClick={() => {
-                                      if (aiSystem) {
-                                        navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation/${test.id}/${view || 'summary'}`);
-                                      }
-                                    }}
-                                    className={selectedTest.id === test.id ? 'bg-gray-100 font-medium' : ''}
-                                  >
-                                    <div className="flex flex-col gap-0.5">
-                                      <span className="text-sm">{test.name}</span>
-                                      <span className="text-xs text-gray-500">
-                                        {test.status} • {new Date(test.createdAt).toLocaleDateString()}
-                                      </span>
+                              <DropdownMenuContent align="start" className="w-[320px] p-0">
+                                {/* Search Box */}
+                                <div className="p-2 border-b border-gray-200">
+                                  <div className="relative">
+                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+                                    <Input
+                                      type="text"
+                                      placeholder="Search evaluations..."
+                                      value={searchQuery}
+                                      onChange={(e) => setSearchQuery(e.target.value)}
+                                      className="pl-8 h-9 text-sm"
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Scrollable List */}
+                                <div className="max-h-[300px] overflow-y-auto">
+                                  {filteredEvaluationHistory.length > 0 ? (
+                                    filteredEvaluationHistory.map((test) => (
+                                      <DropdownMenuItem
+                                        key={test.id}
+                                        onClick={() => {
+                                          if (aiSystem) {
+                                            navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation/${test.id}/${view || 'summary'}`);
+                                          }
+                                          setSearchQuery("");
+                                        }}
+                                        className={`px-3 py-2.5 ${selectedTest.id === test.id ? 'bg-gray-100 font-medium' : ''}`}
+                                      >
+                                        <div className="flex flex-col gap-0.5 w-full">
+                                          <span className="text-sm font-450">{test.name}</span>
+                                          <span className="text-xs text-gray-500">
+                                            {test.type || 'jailbreak'} • {test.status} • {new Date(test.createdAt).toLocaleDateString()}
+                                          </span>
+                                        </div>
+                                      </DropdownMenuItem>
+                                    ))
+                                  ) : (
+                                    <div className="px-3 py-6 text-center text-sm text-gray-500">
+                                      No evaluations found
                                     </div>
-                                  </DropdownMenuItem>
-                                ))}
+                                  )}
+                                </div>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           )}

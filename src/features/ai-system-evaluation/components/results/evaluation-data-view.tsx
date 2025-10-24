@@ -50,7 +50,7 @@ export function EvaluationDataView({
   const modeFromUrl = searchParams.get('mode') as ViewType | null
   const itemFromUrl = searchParams.get('item')
 
-  const [currentView, setCurrentView] = useState<ViewType>(modeFromUrl || 'table')
+  const [currentView, setCurrentView] = useState<ViewType>(modeFromUrl || 'conversation')
   const [conversationDisplayCount, setConversationDisplayCount] = useState(25)
 
   // In conversation view, initialize selectedConversationId from URL
@@ -84,8 +84,8 @@ export function EvaluationDataView({
 
     const newParams = new URLSearchParams(searchParams)
 
-    // Handle mode parameter
-    if (currentView !== 'table') {
+    // Handle mode parameter - conversation is default, so only set mode for table
+    if (currentView !== 'conversation') {
       newParams.set('mode', currentView)
     } else {
       newParams.delete('mode')
@@ -119,8 +119,8 @@ export function EvaluationDataView({
     const mode = searchParams.get('mode') as ViewType | null
     const item = searchParams.get('item')
 
-    // Determine the target view (default to table if no mode param)
-    const targetView = mode === 'conversation' ? 'conversation' : 'table'
+    // Determine the target view (default to conversation if no mode param)
+    const targetView = mode === 'table' ? 'table' : 'conversation'
 
     // Only sync if view actually needs to change
     if (targetView !== currentView) {
@@ -158,23 +158,31 @@ export function EvaluationDataView({
 
   // Load initial data
   useEffect(() => {
-    // Transform database records to frontend format using strategy
-    const transformedResults = strategy.transformPrompts(results as any)
-
-    // Add unique IDs to results for tracking
-    const dataWithIds = transformedResults.map((result, index) => ({
+    // Results are already transformed by the service layer (evaluation-service.ts)
+    // Don't transform again - just add unique IDs for tracking
+    const dataWithIds = results.map((result, index) => ({
       ...result,
-      id: `${result.policyId || result.policy_id}-${index}`
+      id: `${(result as any).policyId || (result as any).policy_id}-${index}`
     }))
+
     setAllData(dataWithIds as any)
     setFilteredData(dataWithIds as any)
     setPagination(prev => ({ ...prev, total: dataWithIds.length }))
-  }, [results, strategy])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [results.length])
 
   // Apply filters when data or filters change
   useEffect(() => {
+    // Check if any records have input/output guardrail judgements
+    const hasInputGuardrails = allData.some(record =>
+      (record as any).inputGuardrailJudgement !== null && (record as any).inputGuardrailJudgement !== undefined
+    )
+    const hasOutputGuardrails = allData.some(record =>
+      (record as any).outputGuardrailJudgement !== null && (record as any).outputGuardrailJudgement !== undefined
+    )
+
     // Apply filters using strategy
-    const strategyFilters = strategy.getFilters(hasGuardrails)
+    const strategyFilters = strategy.getFilters({ hasInputGuardrails, hasOutputGuardrails })
 
     const filtered = allData.filter(record => {
       // Search term filter
@@ -204,7 +212,7 @@ export function EvaluationDataView({
       total: filtered.length,
       page: 1 // Reset to first page when filters change
     }))
-  }, [allData, filters, strategy, hasGuardrails])
+  }, [allData, filters, strategy])
 
   // Apply pagination when filtered data or pagination settings change
   useEffect(() => {
@@ -381,6 +389,7 @@ export function EvaluationDataView({
             ) : (
               <EvaluationDataConversationView
                 data={displayData}
+                strategy={strategy}
                 totalCount={filteredData.length}
                 hasMore={displayData.length < filteredData.length}
                 onLoadMore={handleLoadMore}

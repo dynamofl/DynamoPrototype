@@ -36,13 +36,22 @@ export function GenericEvaluationTable({
   const allSelected = data.length > 0 && selectedRows.length === data.length
   const someSelected = selectedRows.length > 0 && selectedRows.length < data.length
 
-  // Check if any records have input/output guardrail judgements
-  const hasInputGuardrails = data.some(record =>
-    (record as any).inputGuardrailJudgement !== null && (record as any).inputGuardrailJudgement !== undefined
-  )
-  const hasOutputGuardrails = data.some(record =>
-    (record as any).outputGuardrailJudgement !== null && (record as any).outputGuardrailJudgement !== undefined
-  )
+  // Check if any records have input/output guardrail judgements or details
+  const hasInputGuardrails = data.some(record => {
+    const r = record as any
+    const hasInput = (r.inputGuardrailJudgement !== null && r.inputGuardrailJudgement !== undefined) ||
+           (r.input_guardrail_judgement !== null && r.input_guardrail_judgement !== undefined) ||
+           (r.inputGuardrailDetails && r.inputGuardrailDetails.length > 0)
+    return hasInput
+  })
+  const hasOutputGuardrails = data.some(record => {
+    const r = record as any
+    const hasOutput = (r.outputGuardrailJudgement !== null && r.outputGuardrailJudgement !== undefined) ||
+           (r.output_guardrail_judgement !== null && r.output_guardrail_judgement !== undefined) ||
+           (r.outputGuardrailDetails && r.outputGuardrailDetails.length > 0)
+    return hasOutput
+  })
+
   // Get column configuration from strategy
   const columns = strategy.getTableColumns({ hasInputGuardrails, hasOutputGuardrails })
 

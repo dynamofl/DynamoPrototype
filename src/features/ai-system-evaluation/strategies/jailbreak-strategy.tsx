@@ -294,7 +294,8 @@ export class JailbreakStrategy implements EvaluationStrategy {
   /**
    * Get filter configurations
    */
-  getFilters(hasGuardrails = true): FilterConfig[] {
+  getFilters(options?: { hasInputGuardrails?: boolean; hasOutputGuardrails?: boolean }): FilterConfig[] {
+    const { hasInputGuardrails = false, hasOutputGuardrails = false } = options || {}
     const filters: FilterConfig[] = [
       {
         key: 'attackOutcome',
@@ -355,35 +356,38 @@ export class JailbreakStrategy implements EvaluationStrategy {
       }
     ]
 
-    if (hasGuardrails) {
-      filters.push(
-        {
-          key: 'inputGuardrailJudgment',
-          label: 'Input Guardrail',
-          type: 'multiselect',
-          options: [
-            { value: 'Allowed', label: 'Allowed' },
-            { value: 'Blocked', label: 'Blocked' }
-          ],
-          filterFn: (record, values) => {
-            if (!record.input_guardrail_judgement) return false
-            return values.includes(record.input_guardrail_judgement)
-          }
-        },
-        {
-          key: 'outputGuardrailJudgment',
-          label: 'Output Guardrail',
-          type: 'multiselect',
-          options: [
-            { value: 'Allowed', label: 'Allowed' },
-            { value: 'Blocked', label: 'Blocked' }
-          ],
-          filterFn: (record, values) => {
-            if (!record.output_guardrail_judgement) return false
-            return values.includes(record.output_guardrail_judgement)
-          }
+    // Add input guardrail filter if applicable
+    if (hasInputGuardrails) {
+      filters.push({
+        key: 'inputGuardrailJudgment',
+        label: 'Input Guardrail',
+        type: 'multiselect',
+        options: [
+          { value: 'Allowed', label: 'Allowed' },
+          { value: 'Blocked', label: 'Blocked' }
+        ],
+        filterFn: (record, values) => {
+          if (!record.input_guardrail_judgement) return false
+          return values.includes(record.input_guardrail_judgement)
         }
-      )
+      })
+    }
+
+    // Add output guardrail filter if applicable
+    if (hasOutputGuardrails) {
+      filters.push({
+        key: 'outputGuardrailJudgment',
+        label: 'Output Guardrail',
+        type: 'multiselect',
+        options: [
+          { value: 'Allowed', label: 'Allowed' },
+          { value: 'Blocked', label: 'Blocked' }
+        ],
+        filterFn: (record, values) => {
+          if (!record.output_guardrail_judgement) return false
+          return values.includes(record.output_guardrail_judgement)
+        }
+      })
     }
 
     filters.push({

@@ -3,7 +3,7 @@
 
 import type { EvaluationStrategy } from './base-strategy'
 import { JailbreakStrategy } from './jailbreak-strategy.tsx'
-import { ComplianceStrategy } from './compliance-strategy'
+import { ComplianceStrategy } from './compliance-strategy.tsx'
 import type { BaseEvaluationResult } from '../types/base-evaluation'
 import type { JailbreakEvaluationResult } from '../types/jailbreak-evaluation'
 import type { ComplianceEvaluationResult } from '../types/compliance-evaluation'

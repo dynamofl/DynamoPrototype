@@ -2,10 +2,12 @@ import React, { useEffect, useRef } from 'react'
 import { MessagesSquare, ChevronUp, ChevronDown } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import type { JailbreakEvaluationResult } from '../../../types/jailbreak-evaluation'
+import type { BaseEvaluationResult } from '../../../types/base-evaluation'
+import type { EvaluationStrategy } from '../../../strategies/base-strategy'
 
 interface EvaluationDataConversationViewProps {
-  data: JailbreakEvaluationResult[]
+  data: BaseEvaluationResult[]
+  strategy: EvaluationStrategy
   totalCount: number
   hasMore: boolean
   onLoadMore: () => void
@@ -15,6 +17,7 @@ interface EvaluationDataConversationViewProps {
 
 export function EvaluationDataConversationView({
   data,
+  strategy,
   totalCount,
   hasMore,
   onLoadMore,
@@ -74,18 +77,19 @@ export function EvaluationDataConversationView({
   const isUpDisabled = data.length === 0 || selectedIndex <= 0
   const isDownDisabled = data.length === 0 || selectedIndex >= data.length - 1
 
-  const renderAttackOutcome = (outcome: string) => (
-    <Badge
-      variant="secondary"
-      className={`text-xs ${
-        outcome === 'Attack Failure'
-         ? 'bg-green-50 text-green-800'
-          : 'bg-red-50 text-red-800'
-      }`}
-    >
-      {outcome}
-    </Badge>
-  )
+  const renderOutcomeBadge = (record: BaseEvaluationResult) => {
+    const badge = strategy.getConversationBadge(record)
+    if (!badge) return null
+
+    return (
+      <Badge
+        variant="secondary"
+        className={`text-xs ${badge.color}`}
+      >
+        {badge.text}
+      </Badge>
+    )
+  }
 
 
   return (
@@ -161,7 +165,7 @@ export function EvaluationDataConversationView({
 
                 {/* Status Badge */}
                 <div className="w-[120px] flex justify-end ">
-                  {renderAttackOutcome(record.attackOutcome)}
+                  {renderOutcomeBadge(record)}
                 </div>
               </div>
             )

@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowDownToLine, ChevronsUpDown } from "lucide-react";
+import { ArrowDownToLine, ChevronsUpDown, Search } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import type { BaseEvaluationOutput } from "../../types/base-evaluation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -63,6 +65,7 @@ export function EvaluationResults({
   const navigate = useNavigate();
   const { systemName, evaluationId, view } = useParams<{ systemName: string; evaluationId?: string; view?: string }>();
   const [selectedTab, setSelectedTab] = useState<'summary' | 'data'>((view as 'summary' | 'data') || (propTab as 'summary' | 'data') || 'summary');
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Get strategy based on test type
   const testType = results.test_type || 'jailbreak';
@@ -72,6 +75,11 @@ export function EvaluationResults({
   const totalTokenUtilization = results.results.reduce((total, result) => {
     return total + (result.total_tokens || 0);
   }, 0);
+
+  // Filter tests based on search query
+  const filteredTests = availableTests.filter((test) =>
+    test.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // Update selectedTab when view or propTab changes
   useEffect(() => {
@@ -140,35 +148,63 @@ export function EvaluationResults({
             {/* Test/Evaluation Selection Dropdown */}
             {availableTests.length > 0 && (
               <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1">
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <div className="flex items-center gap-1">
                   <span className="max-w-[200px] truncate text-sm font-450 text-gray-900">
                     {evaluationName || 'Select Test'}
                   </span>
                   <Badge variant="secondary" className="text-xs ml-1">
                     {evaluationType}
                   </Badge>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="p-0.5 hover:bg-gray-100 rounded transition-colors">
+                  <button className="p-0.5 hover:bg-gray-100 rounded transition-colors">
                       <ChevronsUpDown className="h-3.5 w-3.5 text-gray-500" />
                     </button>
+                </div>
+                    
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="center" className="w-[280px]">
-                    {availableTests.map((test) => (
-                      <DropdownMenuItem
-                        key={test.id}
-                        onClick={() => onTestChange?.(test.id)}
-                        className={`${currentTestId === test.id ? 'bg-gray-100 font-medium' : ''}`}
-                      >
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-sm">{test.name}</span>
-                          <span className="text-xs text-gray-500">
-                            {test.status} • {new Date(test.createdAt).toLocaleDateString()}
-                          </span>
+                  <DropdownMenuContent align="start" className="-ml-2 mt-1 w-[280px] p-0">
+                    {/* Search Box */}
+                    <div className="p-2 border-b border-gray-200">
+                      <div className="relative">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+                        <Input
+                          type="text"
+                          placeholder="Search evaluations..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="pl-8 h-9 text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Scrollable List */}
+                    <div className="max-h-[312px] overflow-y-auto">
+                      {filteredTests.length > 0 ? (
+                        filteredTests.map((test) => (
+                          <DropdownMenuItem
+                            key={test.id}
+                            onClick={() => {
+                              onTestChange?.(test.id);
+                              setSearchQuery("");
+                            }}
+                            className={`px-3 py-2.5 ${currentTestId === test.id ? 'bg-gray-100 font-medium' : ''}`}
+                          >
+                            <div className="flex flex-col gap-0.5 w-full">
+                              <span className="text-sm font-450">{test.name}</span>
+                              <span className="text-xs text-gray-500">
+                                {test.type || 'jailbreak'} • {test.status} • {new Date(test.createdAt).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </DropdownMenuItem>
+                        ))
+                      ) : (
+                        <div className="px-3 py-6 text-center text-sm text-gray-500">
+                          No evaluations found
                         </div>
-                      </DropdownMenuItem>
-                    ))}
+                      )}
+                    </div>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -228,35 +264,53 @@ export function EvaluationResults({
 
       {/* Tab Content */}
       <div className="flex-1 overflow-auto" onWheel={(e) => e.stopPropagation()}>
-        {selectedTab === 'summary' && (
-          <EvaluationSummaryView
-            summary={results.summary}
-            strategy={strategy}
-            testType={testType}
-            hasGuardrails={results.config.guardrail_ids && results.config.guardrail_ids.length > 0}
-            aiSystemName={aiSystemName}
-            aiSystemIcon={aiSystemIcon}
-            timestamp={results.timestamp}
-            startedAt={startedAt}
-            completedAt={completedAt}
-            evaluationName={evaluationName}
-            tokenUtilization={totalTokenUtilization}
-            topicAnalysis={results.topic_analysis}
-            evaluationResults={results.results}
-          />
-        )}
+        <AnimatePresence mode="wait">
+          {selectedTab === 'summary' && (
+            <motion.div
+              key="summary"
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 10 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+            >
+              <EvaluationSummaryView
+                summary={results.summary}
+                strategy={strategy}
+                testType={testType}
+                hasGuardrails={results.config.guardrail_ids && results.config.guardrail_ids.length > 0}
+                aiSystemName={aiSystemName}
+                aiSystemIcon={aiSystemIcon}
+                timestamp={results.timestamp}
+                startedAt={startedAt}
+                completedAt={completedAt}
+                evaluationName={evaluationName}
+                tokenUtilization={totalTokenUtilization}
+                topicAnalysis={results.topic_analysis}
+                evaluationResults={results.results}
+              />
+            </motion.div>
+          )}
 
-        {selectedTab === 'data' && (
-          <EvaluationDataView
-            results={results.results}
-            strategy={strategy}
-            testType={testType}
-            aiSystemName={aiSystemName}
-            hasGuardrails={results.config.guardrail_ids && results.config.guardrail_ids.length > 0}
-            systemName={systemName}
-            evaluationId={evaluationId}
-          />
-        )}
+          {selectedTab === 'data' && (
+            <motion.div
+              key="data"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+            >
+              <EvaluationDataView
+                results={results.results}
+                strategy={strategy}
+                testType={testType}
+                aiSystemName={aiSystemName}
+                hasGuardrails={results.config.guardrail_ids && results.config.guardrail_ids.length > 0}
+                systemName={systemName}
+                evaluationId={evaluationId}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
     </div>

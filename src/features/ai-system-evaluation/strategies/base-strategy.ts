@@ -135,7 +135,7 @@ export interface EvaluationStrategy {
    * UI Configuration - Filters
    * Define available filters for data
    */
-  getFilters(hasGuardrails?: boolean): FilterConfig[]
+  getFilters(options?: { hasInputGuardrails?: boolean; hasOutputGuardrails?: boolean }): FilterConfig[]
 
   /**
    * UI Configuration - Summary Cards

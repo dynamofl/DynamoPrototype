@@ -48,6 +48,8 @@ export interface ComplianceEvaluationResult extends BaseEvaluationResult {
   }
   ai_system_response?: any  // NEW: Primary field - JSONB format consistent with jailbreak_prompts
   compliance_judgement?: string
+  judgeModelConfidence?: number | null  // Judge model confidence (0-1)
+  judgeModelAnswerPhrases?: Array<{ phrase: string; reasoning: string }> | null  // Answer phrases for highlighting
   final_outcome: 'TP' | 'TN' | 'FP' | 'FN'
 }
 
