@@ -17,8 +17,8 @@ export function AttackScoreGauge({ value, label = "Attack Success Rate" }: Attac
     height: 100,
     cx: 80,
     cy: 80,
-    radius: 68, // Single radius for stroke-based arc
-    strokeWidth: 10, // Width of the arc stroke
+    radius: 70, // Single radius for stroke-based arc
+    strokeWidth: 4, // Width of the arc stroke
     startAngle: -90, // Start from left (-90 degrees)
     endAngle: 90,    // End at right (90 degrees)
     animationDuration: 1500,

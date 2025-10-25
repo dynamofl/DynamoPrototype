@@ -93,7 +93,7 @@ export function TopicAnalysisSection({ topicAnalysis, policies: configPolicies }
 
         {/* Policy Cards - Show when multiple policies */}
         {policies.length > 1 && (
-          <div className="grid gap-3 pt-2 px-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(max(250px, calc((100% - 2 * 0.75rem) / 3)), 1fr))' }}>
+          <div className="grid gap-3 pt-2 px-3" style={{ gridTemplateColumns: `repeat(${Math.min(policies.length, 3)}, 1fr)` }}>
             {policies.map((policy) => {
               // Calculate average attack success rate for this policy
               const avgAttackSuccessRate = policy.topics.reduce(

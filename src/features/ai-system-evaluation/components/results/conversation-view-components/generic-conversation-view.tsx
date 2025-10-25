@@ -216,7 +216,7 @@ export function GenericConversationView({
               {badge && (
                 <div className="flex items-center gap-2">
                   <span
-                    className={`px-2 py-1 rounded-md text-xs font-450 ${
+                    className={`px-2 py-1 rounded-full text-xs font-450 ${
                       badge.variant === 'destructive'
                         ? 'bg-red-50 text-red-700'
                         : badge.variant === 'default'

@@ -405,7 +405,7 @@ export function GenericJudgementsSidebar({
                 return (
                   <div className="flex-1 min-w-36 bg-gray-100 rounded-lg p-2 flex flex-col gap-1">
                     <div className="flex gap-0.5 items-start">
-                      <span className="text-xs font-400 leading-4 text-gray-900">Base Prompt</span>
+                      <span className="text-xs font-400 leading-4 text-gray-900">Prompt Ground Truth</span>
                     </div>
                     <div className="flex gap-1 items-center">
                       {isCompliant ? (

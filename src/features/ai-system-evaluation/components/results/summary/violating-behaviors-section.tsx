@@ -163,8 +163,8 @@ export function ViolatingBehaviorsSection({
               <div className="flex flex-col gap-3 pb-6">
                 {behaviors.map((item) => (
                   <div key={item.behavior} className="flex gap-2 items-start pl-2">
-                    <span className="text-gray-900 text-[0.9375rem] leading-6">•</span>
-                    <span className="text-[0.9375rem] text-gray-900 flex-1 leading-6">{item.behavior}</span>
+                    <span className="text-gray-900 text-sm leading-6">•</span>
+                    <span className="text-sm text-gray-900 flex-1 leading-6">{item.behavior}</span>
                     <div className="bg-gray-0 flex items-center justify-center px-3 py-1 rounded-full">
                       <span className="text-xs font-450 text-gray-600">
                         {item.count} Prompts

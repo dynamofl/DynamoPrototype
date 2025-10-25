@@ -91,6 +91,7 @@ export interface JailbreakEvaluationResult {
   basePrompt: string;
   attackType: AttackType;
   adversarialPrompt: AdversarialPrompt; // JSONB: {text: string} or ConversationTurn[]
+  jailbreakPrompt: string; // Computed field: extracted text from adversarialPrompt for display
   systemResponse: string;
 
   // Guardrail judgements - OVERALL results

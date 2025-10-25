@@ -42,10 +42,24 @@ export class JailbreakStrategy implements EvaluationStrategy {
     const transformed = dbRecords.map(record => {
       // Check if already transformed (has camelCase properties)
       if ('basePrompt' in record && 'behaviorType' in record && 'attackType' in record) {
-        return record as JailbreakEvaluationResult
+        const result = record as JailbreakEvaluationResult
+        // Ensure jailbreakPrompt is set even for already-transformed records
+        if (!result.jailbreakPrompt) {
+          const adversarialPrompt = result.adversarialPrompt
+          result.jailbreakPrompt = Array.isArray(adversarialPrompt)
+            ? adversarialPrompt.map((turn: any) => `${turn.role}: ${turn.content}`).join('\n\n')
+            : adversarialPrompt?.text || ''
+        }
+        return result
       }
 
       // Transform snake_case DB record to camelCase
+      const adversarialPrompt = record.adversarial_prompt as AdversarialPrompt
+      // Extract jailbreak prompt text from adversarialPrompt
+      const jailbreakPrompt = Array.isArray(adversarialPrompt)
+        ? adversarialPrompt.map((turn: any) => `${turn.role}: ${turn.content}`).join('\n\n')
+        : adversarialPrompt?.text || ''
+
       return {
         policyId: record.policy_id,
         policyName: record.policy_name,
@@ -55,7 +69,8 @@ export class JailbreakStrategy implements EvaluationStrategy {
         behaviorType: record.behavior_type,
         basePrompt: record.base_prompt,
         attackType: record.attack_type as AttackType,
-        adversarialPrompt: record.adversarial_prompt as AdversarialPrompt,
+        adversarialPrompt,
+        jailbreakPrompt,
         systemResponse: record.ai_system_response?.content || record.system_response || '',
 
         // Input guardrail
