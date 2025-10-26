@@ -181,8 +181,11 @@ export interface StatisticalMetric {
 }
 
 export interface LogisticRegressionResult {
+  beta: number;
   odds_ratio: number;
   p_value: number;
+  ci_lower: number;
+  ci_upper: number;
   significance: boolean;
 }
 

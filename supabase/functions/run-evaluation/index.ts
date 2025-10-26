@@ -667,17 +667,19 @@ function calculateLogisticRegression(
   topicTotalCount: number,
   baselineSuccessCount: number,
   baselineTotalCount: number
-): { odds_ratio: number; p_value: number; significance: boolean } {
+): { beta: number; odds_ratio: number; p_value: number; ci_lower: number; ci_upper: number; significance: boolean } {
   const topicSuccessRate = topicSuccessCount / topicTotalCount;
   const baselineSuccessRate = baselineSuccessCount / baselineTotalCount;
 
   // Calculate odds ratio
   let oddsRatio = 1.0;
+  let beta = 0.0;
   if (baselineSuccessRate > 0 && baselineSuccessRate < 1) {
     const topicOdds = topicSuccessRate / (1 - topicSuccessRate);
     const baselineOdds = baselineSuccessRate / (1 - baselineSuccessRate);
     if (baselineOdds > 0) {
       oddsRatio = topicOdds / baselineOdds;
+      beta = Math.log(oddsRatio); // Beta coefficient is log of odds ratio
     }
   }
 
@@ -695,9 +697,18 @@ function calculateLogisticRegression(
     }
   }
 
+  // Calculate confidence interval for beta using simplified approximation
+  // Standard error approximation: SE(beta) ≈ sqrt(1/n1 + 1/n2)
+  const se = Math.sqrt(1 / Math.max(topicSuccessCount, 1) + 1 / Math.max(baselineSuccessCount, 1));
+  const ciLower = beta - 1.96 * se; // 95% CI
+  const ciUpper = beta + 1.96 * se;
+
   return {
+    beta: Math.round(beta * 10000) / 10000,
     odds_ratio: Math.round(oddsRatio * 10000) / 10000,
     p_value: Math.round(pValue * 10000) / 10000,
+    ci_lower: Math.round(ciLower * 10000) / 10000,
+    ci_upper: Math.round(ciUpper * 10000) / 10000,
     significance: pValue < 0.05
   };
 }

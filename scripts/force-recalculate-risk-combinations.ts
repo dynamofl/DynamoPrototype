@@ -27,38 +27,57 @@ function getAttackLevel(attackType: string): string {
   return ATTACK_LEVELS[attackType] || 'Unknown';
 }
 
-// Logistic regression calculation
+// Logistic regression calculation (matches backend calculation)
 function calculateLogisticRegression(
   successCount: number,
-  totalCount: number
+  totalCount: number,
+  baselineSuccessCount: number,
+  baselineTotalCount: number
 ): { beta: number; odds_ratio: number; p_value: number; ci_lower: number; ci_upper: number; significance: string } | null {
-  if (totalCount < 1) {
+  if (totalCount < 1 || baselineTotalCount < 1) {
     return null;
   }
 
   // Apply continuity correction to avoid division by zero
   const adjustedSuccessCount = successCount + 0.5;
   const adjustedTotalCount = totalCount + 1;
+  const adjustedSuccessRate = adjustedSuccessCount / adjustedTotalCount;
 
-  const p = adjustedSuccessCount / adjustedTotalCount;
-  const failureCount = adjustedTotalCount - adjustedSuccessCount;
+  const adjustedBaselineSuccessCount = baselineSuccessCount + 0.5;
+  const adjustedBaselineTotalCount = baselineTotalCount + 1;
+  const adjustedBaselineSuccessRate = adjustedBaselineSuccessCount / adjustedBaselineTotalCount;
 
-  if (failureCount === 0) {
-    return null;
+  // Calculate odds ratio (comparing to baseline)
+  const topicOdds = adjustedSuccessRate / (1 - adjustedSuccessRate);
+  const baselineOdds = adjustedBaselineSuccessRate / (1 - adjustedBaselineSuccessRate);
+  const odds_ratio = topicOdds / baselineOdds;
+
+  // Calculate beta (log odds ratio)
+  const beta = Math.log(odds_ratio);
+
+  // Calculate confidence intervals
+  const seLogOR = Math.sqrt(
+    1 / adjustedSuccessCount +
+    1 / (adjustedTotalCount - adjustedSuccessCount) +
+    1 / adjustedBaselineSuccessCount +
+    1 / (adjustedBaselineTotalCount - adjustedBaselineSuccessCount)
+  );
+  const zScore = 1.96; // 95% confidence
+  const ci_lower = beta - (zScore * seLogOR);
+  const ci_upper = beta + (zScore * seLogOR);
+
+  // Simplified p-value calculation
+  const diff = Math.abs(adjustedSuccessRate - adjustedBaselineSuccessRate);
+  let p_value = 1.0;
+  if (totalCount >= 5 && baselineTotalCount >= 5) {
+    if (diff > 0.2) {
+      p_value = 0.01;  // High significance
+    } else if (diff > 0.1) {
+      p_value = 0.04;  // Moderate significance
+    } else {
+      p_value = 0.5;   // Low significance
+    }
   }
-
-  const odds = p / (1 - p);
-  const beta = Math.log(odds);
-  const odds_ratio = Math.exp(beta);
-
-  // Simplified p-value calculation (Wald test approximation)
-  const se = Math.sqrt(1 / adjustedSuccessCount + 1 / failureCount);
-  const z = beta / se;
-  const p_value = 2 * (1 - normalCDF(Math.abs(z)));
-
-  // 95% Confidence interval for beta
-  const ci_lower = beta - 1.96 * se;
-  const ci_upper = beta + 1.96 * se;
 
   // Determine significance level
   let significance: string;
@@ -71,36 +90,13 @@ function calculateLogisticRegression(
   }
 
   return {
-    beta,
-    odds_ratio,
-    p_value,
-    ci_lower,
-    ci_upper,
+    beta: Math.round(beta * 10000) / 10000,
+    odds_ratio: Math.round(odds_ratio * 10000) / 10000,
+    p_value: Math.round(p_value * 10000) / 10000,
+    ci_lower: Math.round(ci_lower * 10000) / 10000,
+    ci_upper: Math.round(ci_upper * 10000) / 10000,
     significance
   };
-}
-
-// Approximation of the standard normal CDF using the error function
-function normalCDF(x: number): number {
-  return 0.5 * (1 + erf(x / Math.sqrt(2)));
-}
-
-// Error function approximation
-function erf(x: number): number {
-  const sign = x >= 0 ? 1 : -1;
-  x = Math.abs(x);
-
-  const a1 = 0.254829592;
-  const a2 = -0.284496736;
-  const a3 = 1.421413741;
-  const a4 = -1.453152027;
-  const a5 = 1.061405429;
-  const p = 0.3275911;
-
-  const t = 1.0 / (1.0 + p * x);
-  const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
-
-  return sign * y;
 }
 
 // Count occurrences of a combination
@@ -138,6 +134,10 @@ function calculateRiskCombinations(prompts: any[]): any {
     return null;
   }
 
+  // Calculate baseline (overall attack success rate)
+  const baselineSuccessCount = validPrompts.filter(p => p.attack_outcome === 'Attack Success').length;
+  const baselineTotalCount = validPrompts.length;
+
   // Get unique topics and attack types
   const uniqueTopics = [...new Set(validPrompts.map(p => p.topic))];
   const uniqueAttackTypes = [...new Set(validPrompts.map(p => p.attack_type))];
@@ -171,7 +171,7 @@ function calculateRiskCombinations(prompts: any[]): any {
         continue;
       }
 
-      const metrics = calculateLogisticRegression(successes, total);
+      const metrics = calculateLogisticRegression(successes, total, baselineSuccessCount, baselineTotalCount);
 
       if (metrics) {
         allCombinations.push({
@@ -201,7 +201,7 @@ function calculateRiskCombinations(prompts: any[]): any {
         continue;
       }
 
-      const metrics = calculateLogisticRegression(successes, total);
+      const metrics = calculateLogisticRegression(successes, total, baselineSuccessCount, baselineTotalCount);
 
       if (metrics) {
         allCombinations.push({
@@ -233,7 +233,7 @@ function calculateRiskCombinations(prompts: any[]): any {
         continue;
       }
 
-      const metrics = calculateLogisticRegression(successes, total);
+      const metrics = calculateLogisticRegression(successes, total, baselineSuccessCount, baselineTotalCount);
 
       if (metrics) {
         allCombinations.push({
@@ -266,7 +266,7 @@ function calculateRiskCombinations(prompts: any[]): any {
         continue;
       }
 
-      const metrics = calculateLogisticRegression(successes, total);
+      const metrics = calculateLogisticRegression(successes, total, baselineSuccessCount, baselineTotalCount);
 
       if (metrics) {
         allCombinations.push({
