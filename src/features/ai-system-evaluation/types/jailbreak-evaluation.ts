@@ -211,6 +211,61 @@ export interface TopicAnalysis {
   topic_insight?: string; // AI-generated insights about topic analysis
 }
 
+// Risk combination regression result
+export interface RiskCombinationMetrics {
+  attack_area?: string;     // topic name (for topic-based combinations)
+  policy_id?: string;       // policy ID (for policy-based combinations)
+  policy_name?: string;     // policy name (for policy-based combinations)
+  attack_type?: string;     // specific attack type (e.g., "DAN", "TAP") - for granular combinations
+  attack_level?: string;    // attack level category (e.g., "Light Adversarial", "Expert Adversarial") - for level combinations
+  combination_type: 'granular' | 'level' | 'policy-granular' | 'policy-level';  // type of combination
+  beta: number;             // regression coefficient
+  odds_ratio: number;       // odds ratio
+  p_value: number;          // p-value
+  ci_lower: number;         // confidence interval lower bound
+  ci_upper: number;         // confidence interval upper bound
+  significance: 'high' | 'medium' | 'low';
+  attack_success_rate: number;  // success rate for this combination (0-100)
+  occurrence: number;       // number of samples
+}
+
+export interface RiskCombinationsAnalysis {
+  combinations: RiskCombinationMetrics[];
+  threshold: number;        // threshold used (e.g., 75)
+  total_combinations: number; // total combinations found above threshold
+  granular_count: number;   // count of granular (topic × attack_type) combinations
+  level_count: number;      // count of level (topic × attack_level) combinations
+  policy_granular_count: number; // count of policy-granular (policy × attack_type) combinations
+  policy_level_count: number;    // count of policy-level (policy × attack_level) combinations
+}
+
+// Individual risk prediction metric (for single entities, not combinations)
+export interface RiskPredictionMetric {
+  entity_name: string;      // e.g., "Financial Advice", "DAN", "Expert Adversarial", "Healthcare Policy"
+  entity_type: 'topic' | 'attack_type' | 'attack_level' | 'policy';
+  entity_id?: string;       // For policies (policy_id)
+  beta: number;             // regression coefficient
+  odds_ratio: number;       // odds ratio
+  p_value: number;          // p-value
+  ci_lower: number;         // confidence interval lower bound
+  ci_upper: number;         // confidence interval upper bound
+  significance: 'high' | 'medium' | 'low';
+  attack_success_rate: number;  // success rate (0-100)
+  occurrence: number;       // number of samples
+}
+
+// Risk predictions analysis container
+export interface RiskPredictionsAnalysis {
+  by_topic: RiskPredictionMetric[];
+  by_attack_type: RiskPredictionMetric[];
+  by_attack_level: RiskPredictionMetric[];
+  by_policy: RiskPredictionMetric[];
+  total_topics: number;
+  total_attack_types: number;
+  total_attack_levels: number;
+  total_policies: number;
+}
+
 export interface GuardrailSummaryMetrics {
   id: string;
   name: string;
@@ -254,6 +309,12 @@ export interface JailbreakEvaluationSummary {
 
   // NEW: Topic-level analysis
   topicAnalysis?: TopicAnalysis;
+
+  // NEW: Risk combinations analysis
+  riskCombinations?: RiskCombinationsAnalysis;
+
+  // NEW: Individual risk predictions analysis
+  riskPredictions?: RiskPredictionsAnalysis;
 
   // Legacy fields for backward compatibility
   totalTests?: number;

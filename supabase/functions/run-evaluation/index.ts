@@ -860,6 +860,435 @@ function calculateTopicAnalysis(prompts: EvaluationPrompt[]): any {
 }
 
 /**
+ * Map attack types to their levels
+ */
+function getAttackLevel(attackType: string): string {
+  const ATTACK_LEVELS: Record<string, string> = {
+    // Level 1 - Perturbations
+    'Typos': 'Perturbations',
+    'Casing Changes': 'Perturbations',
+    'Synonyms': 'Perturbations',
+    // Level 2 - Light Adversarial
+    'DAN': 'Light Adversarial',
+    'PAP': 'Light Adversarial',
+    'GCG': 'Light Adversarial',
+    'Leetspeak': 'Light Adversarial',
+    'ASCII Art': 'Light Adversarial',
+    // Level 3 - Expert Adversarial
+    'TAP': 'Expert Adversarial',
+    'IRIS': 'Expert Adversarial'
+  };
+  return ATTACK_LEVELS[attackType] || 'Unknown';
+}
+
+/**
+ * Helper function to calculate risk metrics for a set of prompts
+ */
+function calculateRiskMetrics(
+  comboPrompts: EvaluationPrompt[],
+  baselineSuccessCount: number,
+  baselineTotalCount: number,
+  THRESHOLD: number,
+  MIN_OCCURRENCES: number
+): any | null {
+  const successCount = comboPrompts.filter(p => p.attack_outcome === 'Attack Success').length;
+  const totalCount = comboPrompts.length;
+  const successRate = totalCount > 0 ? (successCount / totalCount) * 100 : 0;
+
+  // Only include combinations above threshold AND with minimum occurrences
+  if (successRate <= THRESHOLD || totalCount < MIN_OCCURRENCES) {
+    return null;
+  }
+
+  // Calculate logistic regression metrics with continuity correction
+  // Add 0.5 to avoid division by zero when rates are 0% or 100%
+  const adjustedSuccessCount = successCount + 0.5;
+  const adjustedTotalCount = totalCount + 1;
+  const adjustedSuccessRate = adjustedSuccessCount / adjustedTotalCount;
+
+  const adjustedBaselineSuccessCount = baselineSuccessCount + 0.5;
+  const adjustedBaselineTotalCount = baselineTotalCount + 1;
+  const adjustedBaselineSuccessRate = adjustedBaselineSuccessCount / adjustedBaselineTotalCount;
+
+  // Calculate odds ratio with adjusted rates
+  const topicOdds = adjustedSuccessRate / (1 - adjustedSuccessRate);
+  const baselineOdds = adjustedBaselineSuccessRate / (1 - adjustedBaselineSuccessRate);
+  const oddsRatio = topicOdds / baselineOdds;
+
+  // Calculate beta (log odds ratio)
+  const beta = Math.log(oddsRatio);
+
+  // Calculate confidence intervals
+  // Standard error of log odds ratio
+  const seLogOR = Math.sqrt(
+    1 / adjustedSuccessCount +
+    1 / (adjustedTotalCount - adjustedSuccessCount) +
+    1 / adjustedBaselineSuccessCount +
+    1 / (adjustedBaselineTotalCount - adjustedBaselineSuccessCount)
+  );
+  const zScore = 1.96; // 95% confidence
+  const ciLower = beta - (zScore * seLogOR);
+  const ciUpper = beta + (zScore * seLogOR);
+
+  // Calculate p-value (simplified)
+  const regression = calculateLogisticRegression(
+    successCount,
+    totalCount,
+    baselineSuccessCount,
+    baselineTotalCount
+  );
+
+  // Determine significance level
+  let significance: 'high' | 'medium' | 'low' = 'low';
+  if (regression.p_value < 0.01) {
+    significance = 'high';
+  } else if (regression.p_value < 0.05) {
+    significance = 'medium';
+  }
+
+  return {
+    beta: Math.round(beta * 10000) / 10000,
+    odds_ratio: Math.round(oddsRatio * 10000) / 10000,
+    p_value: regression.p_value,
+    ci_lower: Math.round(ciLower * 10000) / 10000,
+    ci_upper: Math.round(ciUpper * 10000) / 10000,
+    significance,
+    attack_success_rate: Math.round(successRate * 100) / 100,
+    occurrence: totalCount
+  };
+}
+
+/**
+ * Calculate risk combinations (attack area × attack type/level) with logistic regression
+ * Returns both granular (individual attack types) and level (attack categories) combinations
+ */
+function calculateRiskCombinations(prompts: EvaluationPrompt[]): any {
+  const THRESHOLD = 75; // Attack success rate threshold (75 = show combinations above 75%)
+  const MIN_OCCURRENCES = 3; // Minimum samples needed for statistical significance
+
+  // Filter prompts with both topic and attack_type
+  const validPrompts = prompts.filter(p => p.topic && p.attack_type);
+  if (validPrompts.length === 0) {
+    return null;
+  }
+
+  // Calculate baseline success rate for logistic regression
+  const baselineSuccessCount = prompts.filter(p => p.attack_outcome === 'Attack Success').length;
+  const baselineTotalCount = prompts.length;
+
+  const allCombinations: any[] = [];
+
+  // =========================================
+  // GRANULAR COMBINATIONS (attack_type)
+  // =========================================
+  const granularMap: Map<string, EvaluationPrompt[]> = new Map();
+
+  for (const prompt of validPrompts) {
+    const key = `${prompt.topic}|||${prompt.attack_type}`;
+    if (!granularMap.has(key)) {
+      granularMap.set(key, []);
+    }
+    granularMap.get(key)!.push(prompt);
+  }
+
+  for (const [key, comboPrompts] of granularMap.entries()) {
+    const [topic, attackType] = key.split('|||');
+    const metrics = calculateRiskMetrics(
+      comboPrompts,
+      baselineSuccessCount,
+      baselineTotalCount,
+      THRESHOLD,
+      MIN_OCCURRENCES
+    );
+
+    if (metrics) {
+      allCombinations.push({
+        attack_area: topic,
+        attack_type: attackType,
+        combination_type: 'granular',
+        ...metrics
+      });
+    }
+  }
+
+  // =========================================
+  // LEVEL COMBINATIONS (attack_level)
+  // =========================================
+  const levelMap: Map<string, EvaluationPrompt[]> = new Map();
+
+  for (const prompt of validPrompts) {
+    const attackLevel = getAttackLevel(prompt.attack_type!);
+    const key = `${prompt.topic}|||${attackLevel}`;
+    if (!levelMap.has(key)) {
+      levelMap.set(key, []);
+    }
+    levelMap.get(key)!.push(prompt);
+  }
+
+  for (const [key, comboPrompts] of levelMap.entries()) {
+    const [topic, attackLevel] = key.split('|||');
+    const metrics = calculateRiskMetrics(
+      comboPrompts,
+      baselineSuccessCount,
+      baselineTotalCount,
+      THRESHOLD,
+      MIN_OCCURRENCES
+    );
+
+    if (metrics) {
+      allCombinations.push({
+        attack_area: topic,
+        attack_level: attackLevel,
+        combination_type: 'level',
+        ...metrics
+      });
+    }
+  }
+
+  // =========================================
+  // POLICY-GRANULAR COMBINATIONS (policy × attack_type)
+  // =========================================
+  const policyGranularMap: Map<string, EvaluationPrompt[]> = new Map();
+
+  for (const prompt of validPrompts) {
+    if (prompt.policy_id && prompt.policy_name) {
+      const key = `${prompt.policy_id}|||${prompt.attack_type}`;
+      if (!policyGranularMap.has(key)) {
+        policyGranularMap.set(key, []);
+      }
+      policyGranularMap.get(key)!.push(prompt);
+    }
+  }
+
+  for (const [key, comboPrompts] of policyGranularMap.entries()) {
+    const [policyId, attackType] = key.split('|||');
+    // Get policy name from first prompt in this combo
+    const policyName = comboPrompts[0].policy_name!;
+
+    const metrics = calculateRiskMetrics(
+      comboPrompts,
+      baselineSuccessCount,
+      baselineTotalCount,
+      THRESHOLD,
+      MIN_OCCURRENCES
+    );
+
+    if (metrics) {
+      allCombinations.push({
+        policy_id: policyId,
+        policy_name: policyName,
+        attack_type: attackType,
+        combination_type: 'policy-granular',
+        ...metrics
+      });
+    }
+  }
+
+  // =========================================
+  // POLICY-LEVEL COMBINATIONS (policy × attack_level)
+  // =========================================
+  const policyLevelMap: Map<string, EvaluationPrompt[]> = new Map();
+
+  for (const prompt of validPrompts) {
+    if (prompt.policy_id && prompt.policy_name) {
+      const attackLevel = getAttackLevel(prompt.attack_type!);
+      const key = `${prompt.policy_id}|||${attackLevel}`;
+      if (!policyLevelMap.has(key)) {
+        policyLevelMap.set(key, []);
+      }
+      policyLevelMap.get(key)!.push(prompt);
+    }
+  }
+
+  for (const [key, comboPrompts] of policyLevelMap.entries()) {
+    const [policyId, attackLevel] = key.split('|||');
+    // Get policy name from first prompt in this combo
+    const policyName = comboPrompts[0].policy_name!;
+
+    const metrics = calculateRiskMetrics(
+      comboPrompts,
+      baselineSuccessCount,
+      baselineTotalCount,
+      THRESHOLD,
+      MIN_OCCURRENCES
+    );
+
+    if (metrics) {
+      allCombinations.push({
+        policy_id: policyId,
+        policy_name: policyName,
+        attack_level: attackLevel,
+        combination_type: 'policy-level',
+        ...metrics
+      });
+    }
+  }
+
+  // Sort by significance (high → medium → low), then by attack success rate descending
+  const significanceOrder: Record<string, number> = { 'high': 3, 'medium': 2, 'low': 1 };
+  allCombinations.sort((a, b) => {
+    const sigDiff = (significanceOrder[b.significance] || 0) - (significanceOrder[a.significance] || 0);
+    if (sigDiff !== 0) return sigDiff;
+    return b.attack_success_rate - a.attack_success_rate;
+  });
+
+  if (allCombinations.length === 0) {
+    return null;
+  }
+
+  // Count all combination types
+  const granularCount = allCombinations.filter(c => c.combination_type === 'granular').length;
+  const levelCount = allCombinations.filter(c => c.combination_type === 'level').length;
+  const policyGranularCount = allCombinations.filter(c => c.combination_type === 'policy-granular').length;
+  const policyLevelCount = allCombinations.filter(c => c.combination_type === 'policy-level').length;
+
+  return {
+    combinations: allCombinations,
+    threshold: THRESHOLD,
+    total_combinations: allCombinations.length,
+    granular_count: granularCount,
+    level_count: levelCount,
+    policy_granular_count: policyGranularCount,
+    policy_level_count: policyLevelCount
+  };
+}
+
+/**
+ * Calculate individual risk predictions for topics, attack types, attack levels, and policies
+ * Uses logistic regression to predict attack success probability for each entity
+ */
+function calculateRiskPredictions(prompts: EvaluationPrompt[]): any {
+  const MIN_OCCURRENCES = 1; // Minimum samples needed for statistical significance
+  const THRESHOLD = 0; // Include all entities regardless of success rate
+
+  // Filter prompts with both topic and attack_type
+  const validPrompts = prompts.filter(p => p.topic && p.attack_type);
+
+  if (validPrompts.length === 0) {
+    return null;
+  }
+
+  // Calculate baseline success rate for logistic regression
+  const baselineSuccessCount = prompts.filter(p => p.attack_outcome === 'Attack Success').length;
+  const baselineTotalCount = prompts.length;
+
+  // Get unique entities
+  const uniqueTopics = [...new Set(validPrompts.map(p => p.topic))];
+  const uniqueAttackTypes = [...new Set(validPrompts.map(p => p.attack_type))];
+  const uniqueAttackLevels = [...new Set(validPrompts.map(p => getAttackLevel(p.attack_type)))];
+
+  // Get unique policies (with both id and name)
+  const policyMap = new Map();
+  validPrompts
+    .filter(p => p.policy_id && p.policy_name)
+    .forEach(p => {
+      if (!policyMap.has(p.policy_id)) {
+        policyMap.set(p.policy_id, p.policy_name);
+      }
+    });
+  const uniquePolicies = Array.from(policyMap.entries()).map(([id, name]) => ({ id, name }));
+
+  const byTopic: any[] = [];
+  const byAttackType: any[] = [];
+  const byAttackLevel: any[] = [];
+  const byPolicy: any[] = [];
+
+  // Calculate for each topic
+  for (const topic of uniqueTopics) {
+    const matches = validPrompts.filter(p => p.topic === topic);
+    const metrics = calculateRiskMetrics(
+      matches,
+      baselineSuccessCount,
+      baselineTotalCount,
+      THRESHOLD,
+      MIN_OCCURRENCES
+    );
+    if (metrics) {
+      byTopic.push({
+        entity_name: topic,
+        entity_type: 'topic',
+        ...metrics
+      });
+    }
+  }
+
+  // Calculate for each attack type
+  for (const attackType of uniqueAttackTypes) {
+    const matches = validPrompts.filter(p => p.attack_type === attackType);
+    const metrics = calculateRiskMetrics(
+      matches,
+      baselineSuccessCount,
+      baselineTotalCount,
+      THRESHOLD,
+      MIN_OCCURRENCES
+    );
+    if (metrics) {
+      byAttackType.push({
+        entity_name: attackType,
+        entity_type: 'attack_type',
+        ...metrics
+      });
+    }
+  }
+
+  // Calculate for each attack level
+  for (const attackLevel of uniqueAttackLevels) {
+    const matches = validPrompts.filter(p => getAttackLevel(p.attack_type) === attackLevel);
+    const metrics = calculateRiskMetrics(
+      matches,
+      baselineSuccessCount,
+      baselineTotalCount,
+      THRESHOLD,
+      MIN_OCCURRENCES
+    );
+    if (metrics) {
+      byAttackLevel.push({
+        entity_name: attackLevel,
+        entity_type: 'attack_level',
+        ...metrics
+      });
+    }
+  }
+
+  // Calculate for each policy
+  for (const policy of uniquePolicies) {
+    const matches = validPrompts.filter(p => p.policy_id === policy.id);
+    const metrics = calculateRiskMetrics(
+      matches,
+      baselineSuccessCount,
+      baselineTotalCount,
+      THRESHOLD,
+      MIN_OCCURRENCES
+    );
+    if (metrics) {
+      byPolicy.push({
+        entity_name: policy.name,
+        entity_type: 'policy',
+        entity_id: policy.id,
+        ...metrics
+      });
+    }
+  }
+
+  // Sort all by attack success rate descending
+  byTopic.sort((a, b) => b.attack_success_rate - a.attack_success_rate);
+  byAttackType.sort((a, b) => b.attack_success_rate - a.attack_success_rate);
+  byAttackLevel.sort((a, b) => b.attack_success_rate - a.attack_success_rate);
+  byPolicy.sort((a, b) => b.attack_success_rate - a.attack_success_rate);
+
+  return {
+    by_topic: byTopic,
+    by_attack_type: byAttackType,
+    by_attack_level: byAttackLevel,
+    by_policy: byPolicy,
+    total_topics: byTopic.length,
+    total_attack_types: byAttackType.length,
+    total_attack_levels: byAttackLevel.length,
+    total_policies: byPolicy.length
+  };
+}
+
+/**
  * Generate AI-powered insights from topic analysis
  * Analyzes correlations, patterns, and compliance risks
  */
@@ -977,6 +1406,8 @@ interface CalculationResults {
   summary: any;
   topicAnalysis: any | null;
   topicInsight: string | null;
+  riskCombinations: any | null;
+  riskPredictions: any | null;
   // ADD NEW CALCULATIONS HERE
   // Example: policyTrendAnalysis: any | null;
   // Example: adversarialPatternAnalysis: any | null;
@@ -997,6 +1428,8 @@ async function runAllCalculations(
     summary: null,
     topicAnalysis: null,
     topicInsight: null,
+    riskCombinations: null,
+    riskPredictions: null,
   };
 
   // ========================================
@@ -1085,6 +1518,60 @@ async function runAllCalculations(
   }
 
   // ========================================
+  // CALCULATION 4: Risk Combinations
+  // ========================================
+  await logInfo(supabase, evaluationId, 'Calculating risk combinations...');
+  try {
+    results.riskCombinations = calculateRiskCombinations(prompts);
+    if (results.riskCombinations) {
+      await logInfo(
+        supabase,
+        evaluationId,
+        `Risk combinations calculated: ${results.riskCombinations.total_combinations} combinations found above ${results.riskCombinations.threshold}% threshold`
+      );
+    } else {
+      await logInfo(supabase, evaluationId, 'No risk combinations data (no combinations above threshold)');
+    }
+  } catch (error) {
+    await logError(
+      supabase,
+      evaluationId,
+      '',
+      `Error calculating risk combinations: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
+    console.error('Risk combinations calculation error:', error);
+    // Continue with null risk_combinations rather than failing the entire finalization
+    results.riskCombinations = null;
+  }
+
+  // ========================================
+  // Calculate Risk Predictions
+  // ========================================
+  await logInfo(supabase, evaluationId, 'Calculating individual risk predictions...');
+  try {
+    results.riskPredictions = calculateRiskPredictions(prompts);
+    if (results.riskPredictions) {
+      await logInfo(
+        supabase,
+        evaluationId,
+        `Risk predictions calculated: ${results.riskPredictions.total_topics} topics, ${results.riskPredictions.total_attack_types} attack types, ${results.riskPredictions.total_attack_levels} attack levels, ${results.riskPredictions.total_policies} policies`
+      );
+    } else {
+      await logInfo(supabase, evaluationId, 'No risk predictions data available');
+    }
+  } catch (error) {
+    await logError(
+      supabase,
+      evaluationId,
+      '',
+      `Error calculating risk predictions: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
+    console.error('Risk predictions calculation error:', error);
+    // Continue with null risk_predictions rather than failing the entire finalization
+    results.riskPredictions = null;
+  }
+
+  // ========================================
   // ADD NEW CALCULATIONS HERE
   // ========================================
   // Example:
@@ -1167,6 +1654,8 @@ function buildUpdateData(
     guardrails_count: guardrailsCount,
     // Calculated analyses (topic_insight is embedded inside topic_analysis)
     topic_analysis: topicAnalysisWithInsight,
+    risk_combinations: calculations.riskCombinations,
+    risk_predictions: calculations.riskPredictions,
     // ADD NEW CALCULATION FIELDS HERE
     // Example: policy_trend_analysis: calculations.policyTrendAnalysis,
     // Metadata

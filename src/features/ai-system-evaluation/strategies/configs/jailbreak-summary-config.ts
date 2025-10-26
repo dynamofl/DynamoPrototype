@@ -131,6 +131,38 @@ export function getJailbreakSummaryConfig(): SummarySectionConfig[] {
         summary: (ctx: SummaryViewContext) => ctx.summary,
         hasGuardrails: (ctx: SummaryViewContext) => ctx.hasGuardrails
       }
+    },
+
+    // Section 9: Risk Combinations
+    {
+      key: 'riskCombinations',
+      order: 9,
+      label: 'Risk Combinations',
+      componentKey: 'RiskCombinationsSection',
+      layout: {
+        container: 'constrained',
+        className: 'max-w-4xl mx-auto pb-2'
+      },
+      condition: (ctx: SummaryViewContext) => !!(ctx.summary as JailbreakEvaluationSummary).riskCombinations,
+      props: {
+        riskCombinations: (ctx: SummaryViewContext) => (ctx.summary as JailbreakEvaluationSummary).riskCombinations
+      }
+    },
+
+    // Section 10: Risk Predictions
+    {
+      key: 'riskPredictions',
+      order: 10,
+      label: 'Risk Predictions',
+      componentKey: 'RiskPredictionsSection',
+      layout: {
+        container: 'constrained',
+        className: 'max-w-4xl mx-auto pb-2'
+      },
+      condition: (ctx: SummaryViewContext) => !!(ctx.summary as JailbreakEvaluationSummary).riskPredictions,
+      props: {
+        riskPredictions: (ctx: SummaryViewContext) => (ctx.summary as JailbreakEvaluationSummary).riskPredictions
+      }
     }
   ]
 }

@@ -14,6 +14,8 @@ import { BehaviorTypeResultsSection } from './behavior-type-results-section'
 import { TopicAnalysisSection } from './topic-analysis-section'
 import { ViolatingBehaviorsSection } from './violating-behaviors-section'
 import { AttackTypePerformanceSection } from './attack-type-performance-section'
+import { RiskCombinationsSection } from './risk-combinations-section'
+import { RiskPredictionsSection } from './risk-predictions-section'
 
 /**
  * Component registry mapping component keys to React components
@@ -46,6 +48,8 @@ export const componentRegistry: Record<string, ComponentType<any>> = {
   TopicAnalysisSection,
   ViolatingBehaviorsSection,
   AttackTypePerformanceSection,
+  RiskCombinationsSection,
+  RiskPredictionsSection,
 }
 
 /**

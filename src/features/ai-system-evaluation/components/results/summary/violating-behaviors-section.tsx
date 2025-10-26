@@ -144,9 +144,9 @@ export function ViolatingBehaviorsSection({
         <h3 className="text-lg font-450 text-gray-900">
           Highly Violating Behaviors
         </h3>
-        <div className="flex flex-col p-3 border border-gray-200 rounded-lg">
+        <div className="flex flex-col p-3 border border-gray-200 rounded-lg gap-6">
           {Object.entries(violatingBehaviorsByPolicy).map(([policyName, behaviors], policyIndex) => (
-            <div key={policyName}>
+            <div key={policyName} className="">
 
               {/* Source / Preview Policy */}
               <div className="flex items-center gap-1 pb-2">
@@ -160,7 +160,7 @@ export function ViolatingBehaviorsSection({
               </div>
 
               {/* Behaviors List */}
-              <div className="flex flex-col gap-3 pb-6">
+              <div className="flex flex-col gap-1">
                 {behaviors.map((item) => (
                   <div key={item.behavior} className="flex gap-2 items-start pl-2">
                     <span className="text-gray-900 text-sm leading-6">•</span>

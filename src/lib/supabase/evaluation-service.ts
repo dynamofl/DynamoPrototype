@@ -363,13 +363,25 @@ export class EvaluationService {
     // Calculate summary using strategy
     const summary = strategy.calculateSummary(results);
 
+    // Merge database-stored analytics into summary
+    // For jailbreak evaluations, include risk_combinations and risk_predictions if present
+    const enrichedSummary = {
+      ...summary,
+      ...(testType === 'jailbreak' && evaluation.risk_combinations && {
+        riskCombinations: evaluation.risk_combinations
+      }),
+      ...(testType === 'jailbreak' && evaluation.risk_predictions && {
+        riskPredictions: evaluation.risk_predictions
+      })
+    };
+
     // Return standardized BaseEvaluationOutput
     return {
       evaluation_id: evaluationId,
       test_type: testType,
       timestamp: evaluation.created_at,
       results,
-      summary,
+      summary: enrichedSummary,
       config: {
         ...evaluation.config,
         test_type: testType,
