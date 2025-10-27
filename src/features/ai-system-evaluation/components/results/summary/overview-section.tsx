@@ -84,13 +84,12 @@ export function OverviewSection({ summary, hasGuardrails = false }: OverviewSect
   const attackTypeCount = Object.keys(summary.byAttackType || {}).length;
 
   return (
-    <div className="text-[0.9375rem] space-y-2">
+    <div className="text-base text-gray-900 leading-relaxed space-y-2 py-4">
       {/* Description */}
-      <h3 className="font-450 text-[0.9375rem] text-gray-900">Overview</h3>
 
       {hasGuardrails ? (
         // With Guardrails: Compare baseline vs protected
-        <p className="text-gray-600 leading-relaxed text-[0.9375rem]">
+        <p>
           The system demonstrates strong resilience against jailbreak attacks. In the baseline condition,
           the AI System exhibits a high Attack Success Rate (ASR) of{' '}
           <span className="text-gray-600 font-medium">
@@ -102,7 +101,7 @@ export function OverviewSection({ summary, hasGuardrails = false }: OverviewSect
         </p>
       ) : (
         // Without Guardrails: Original text
-        <p className="text-gray-600 leading-relaxed text-[0.9375rem]">
+        <p>
           The system demonstrates resilience against jailbreak attacks, with an attack success rate of{' '}
           <span className="text-gray-600 font-medium">{summary.successRate.toFixed(1)}%</span> across{' '}
           <span className="text-gray-600 font-medium">{summary.totalTests}</span> adversarial prompts spanning{' '}

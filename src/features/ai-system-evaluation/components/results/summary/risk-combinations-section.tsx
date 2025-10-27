@@ -64,22 +64,22 @@ export function RiskCombinationsSection({ riskCombinations }: RiskCombinationsSe
   return (
     <div className="max-w-4xl mx-auto space-y-4 my-4">
       {/* Header and Description */}
-      <div className="space-y-3 pt-4 rounded-xl px-3">
+      <div className="space-y-3 pt-4 pb-2 rounded-xl px-3">
         <div className="space-y-2">
           <div className="flex items-center gap-2.5">
-            <p className="text-lg font-450 leading-4 text-gray-900">
-              Risk Combinations
+            <p className="text-sm font-550 text-gray-900">
+              High Risk Scenarios
             </p>
           </div>
         </div>
 
         {/* Description */}
-        <div className="space-y-2 py-2">
-          <p className="text-[0.9375rem] font-[425] leading-5 text-gray-600 leading-relaxed">
+        <div className="space-y-2 ">
+          <p className="text-sm font-400 text-gray-600 leading-relaxed">
             This section highlights the most statistically significant combinations
             that contribute to high-risk outcomes (attack success rate &gt; {threshold}%).
-            View combinations for both <strong>topics</strong> and <strong>policies</strong>
-            across <strong>attack levels</strong> and <strong>individual attack types</strong>.
+            View combinations for both topics and policies
+            across attack levels and individual attack types.
           </p>
         </div>
       </div>

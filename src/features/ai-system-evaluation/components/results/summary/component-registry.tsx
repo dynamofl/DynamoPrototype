@@ -27,7 +27,7 @@ export const componentRegistry: Record<string, ComponentType<any>> = {
   DualAttackScoreGauge,
   SummaryStatsCards,
   HeroSection: ({ summary, hasGuardrails }: any) => (
-    <div className={`grid ${hasGuardrails ? 'grid-cols-6' : 'grid-cols-4'} -mt-4 mx-3 px-3 py-3 align-center items-center rounded-lg border border-gray-200`}>
+    <div className={`grid ${hasGuardrails ? 'grid-cols-6' : 'grid-cols-4'} mx-3 align-center items-center py-2 border-t border-b border-dashed border-gray-200`}>
       {/* Left: Overview Description */}
       <div className={hasGuardrails ? 'col-span-3' : 'col-span-3'}>
         <OverviewSection summary={summary} hasGuardrails={hasGuardrails} />

@@ -115,7 +115,7 @@ export function ConversationsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent size="xxl">
+      <DialogContent size="xxl" className='h-[80vh]'>
         <DialogHeader>
           <div className="flex items-center justify-between w-full">
             {/* Left: Navigation Controls */}
@@ -146,13 +146,13 @@ export function ConversationsDialog({
             </div>
 
             {/* Center: Title */}
-            <DialogTitle className="flex-1 text-center">{title}</DialogTitle>
+            <DialogTitle className="pl-1 flex-1 text-center">{title}</DialogTitle>
 
             {/* Right: Spacer for balance */}
             <div className="w-[90px]" />
           </div>
         </DialogHeader>
-        <DialogBody scrollable={false} size="xxl" className="p-0 flex flex-col ">
+        <DialogBody scrollable={false} size="xxl" className="p-0 flex flex-col">
           {/* Conversation Detail (Full Width) */}
           {selectedConversation ? (
             <div

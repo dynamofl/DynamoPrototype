@@ -18,7 +18,7 @@ export function AttackScoreGauge({ value, label = "Attack Success Rate" }: Attac
     cx: 80,
     cy: 80,
     radius: 70, // Single radius for stroke-based arc
-    strokeWidth: 4, // Width of the arc stroke
+    strokeWidth: 6, // Width of the arc stroke
     startAngle: -90, // Start from left (-90 degrees)
     endAngle: 90,    // End at right (90 degrees)
     animationDuration: 1500,
@@ -134,7 +134,7 @@ export function AttackScoreGauge({ value, label = "Attack Success Rate" }: Attac
           )}>
             {animatedValue.toFixed(1)}%
           </p>
-          <p className="text-[0.6875rem] text-gray-600 ">
+          <p className="text-[0.75rem] text-gray-600 ">
             {successRate < 30 ? "Well Protected" :
              successRate < 60 ? "Moderate Risk" : "High Vulnerability"}
           </p>

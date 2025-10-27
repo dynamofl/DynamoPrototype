@@ -21,7 +21,7 @@ export function getJailbreakSummaryConfig(): SummarySectionConfig[] {
       layout: {
         container: 'constrained',
         className: 'max-w-4xl mx-auto',
-        padding: 'py-2'
+        padding: ''
       },
       props: {
         // Props will be dynamically resolved by renderer
@@ -105,7 +105,7 @@ export function getJailbreakSummaryConfig(): SummarySectionConfig[] {
     {
       key: 'violatingBehaviors',
       order: 7,
-      label: 'Violating Behaviors',
+      label: 'High Violating Behaviors',
       componentKey: 'ViolatingBehaviorsSection',
       layout: {
         container: 'constrained',
@@ -132,7 +132,8 @@ export function getJailbreakSummaryConfig(): SummarySectionConfig[] {
       props: {
         summary: (ctx: SummaryViewContext) => ctx.summary,
         hasGuardrails: (ctx: SummaryViewContext) => ctx.hasGuardrails,
-        riskPredictions: (ctx: SummaryViewContext) => (ctx.summary as any).riskPredictions
+        riskPredictions: (ctx: SummaryViewContext) => (ctx.summary as any).riskPredictions,
+        evaluationResults: (ctx: SummaryViewContext) => ctx.evaluationResults
       }
     },
 
@@ -140,7 +141,7 @@ export function getJailbreakSummaryConfig(): SummarySectionConfig[] {
     {
       key: 'riskCombinations',
       order: 9,
-      label: 'Risk Combinations',
+      label: 'High Risk Scenarios',
       componentKey: 'RiskCombinationsSection',
       layout: {
         container: 'constrained',
@@ -153,19 +154,6 @@ export function getJailbreakSummaryConfig(): SummarySectionConfig[] {
     },
 
     // Section 10: Risk Predictions
-    {
-      key: 'riskPredictions',
-      order: 10,
-      label: 'Risk Predictions',
-      componentKey: 'RiskPredictionsSection',
-      layout: {
-        container: 'constrained',
-        className: 'max-w-4xl mx-auto pb-2'
-      },
-      condition: (ctx: SummaryViewContext) => !!(ctx.summary as JailbreakEvaluationSummary).riskPredictions,
-      props: {
-        riskPredictions: (ctx: SummaryViewContext) => (ctx.summary as JailbreakEvaluationSummary).riskPredictions
-      }
-    }
+   
   ]
 }

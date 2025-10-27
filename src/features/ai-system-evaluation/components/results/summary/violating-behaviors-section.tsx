@@ -188,8 +188,8 @@ export function ViolatingBehaviorsSection({
 
   return (
     <>
-      <div className="space-y-4 p-3 my-4">
-        <h3 className="text-lg font-450 text-gray-900">
+      <div className="space-y-4 p-3 mb-4">
+        <h3 className="text-sm font-550 text-gray-900">
           Highly Violating Behaviors
         </h3>
         <div className="flex flex-col rounded-lg gap-6">
@@ -201,7 +201,7 @@ export function ViolatingBehaviorsSection({
               <div className="flex items-center gap-1 pb-2">
                 <button
                   onClick={() => handlePreviewPolicy(policyName)}
-                  className="group flex items-center gap-1 text-[0.9375rem] font-450 text-gray-600 hover:text-gray-900 transition-colors"
+                  className="group flex items-center gap-1 text-sm font-450 text-gray-600 hover:text-gray-900 transition-colors"
                 >
                   {policyName}
                   <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />

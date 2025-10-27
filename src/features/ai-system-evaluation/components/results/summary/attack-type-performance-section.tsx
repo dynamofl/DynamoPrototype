@@ -9,7 +9,9 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import type { ChartConfig } from "@/components/ui/chart";
-import type { JailbreakEvaluationSummary, AttackType } from "../../../types/jailbreak-evaluation";
+import type { JailbreakEvaluationSummary, AttackType, JailbreakEvaluationResult } from "../../../types/jailbreak-evaluation";
+import { ConversationsDialog } from "./conversations-dialog";
+import { JailbreakStrategy } from "../../../strategies/jailbreak-strategy";
 import {
   Select,
   SelectContent,
@@ -31,6 +33,7 @@ interface AttackTypePerformanceSectionProps {
   summary: JailbreakEvaluationSummary;
   hasGuardrails?: boolean;
   riskPredictions?: any; // Risk predictions analysis
+  evaluationResults?: JailbreakEvaluationResult[]; // Evaluation results for filtering
 }
 
 // Attack level categorization
@@ -52,12 +55,42 @@ const ATTACK_LEVELS = {
   },
 };
 
-export function AttackTypePerformanceSection({ summary, hasGuardrails = false, riskPredictions }: AttackTypePerformanceSectionProps) {
+export function AttackTypePerformanceSection({ summary, hasGuardrails = false, riskPredictions, evaluationResults }: AttackTypePerformanceSectionProps) {
   // State for view selection
   const [view, setView] = useState<"aiSystemOnly" | "withGuardrails">(
     hasGuardrails ? "withGuardrails" : "aiSystemOnly"
   );
   const [expandedRegressionRow, setExpandedRegressionRow] = useState<string | null>(null);
+
+  // Dialog state for showing conversations
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [filteredConversations, setFilteredConversations] = useState<JailbreakEvaluationResult[]>([]);
+  const [selectedAttackType, setSelectedAttackType] = useState<string>('');
+
+  // Strategy instance for dialog
+  const strategy = useMemo(() => new JailbreakStrategy(), []);
+
+  // Handler to show conversations for a specific attack type
+  const handleAttackTypeClick = (attackType: string) => {
+    if (!evaluationResults || evaluationResults.length === 0) return;
+
+    // Filter conversations by attack type and only show Attack Success cases
+    const filtered = evaluationResults.filter(result =>
+      result.attackType === attackType &&
+      result.attackOutcome === 'Attack Success'
+    );
+
+    // Add IDs to filtered results if they don't have them
+    const filteredWithIds = filtered.map((result, index) => ({
+      ...result,
+      id: (result as any).id || `${attackType}-${index}`
+    }));
+
+    // Set dialog state
+    setFilteredConversations(filteredWithIds as JailbreakEvaluationResult[]);
+    setSelectedAttackType(attackType);
+    setDialogOpen(true);
+  };
 
   // Extract byAttackType data from summary based on selected view
   const byAttackType = useMemo(() => {
@@ -227,15 +260,15 @@ export function AttackTypePerformanceSection({ summary, hasGuardrails = false, r
       <div className="space-y-3 pt-4 rounded-xl px-3">
         <div className="space-y-2">
           <div className="flex items-center gap-2.5">
-            <p className="text-lg font-450 leading-4 text-gray-900">
+            <p className="text-sm font-550 text-gray-900">
               Attack Type Performance
             </p>
           </div>
         </div>
 
         {/* Description */}
-        <div className="space-y-2 py-2">
-          <p className="text-[0.9375rem] font-[425] leading-5 text-gray-600 leading-relaxed">
+        <div className="space-y-2">
+          <p className="text-sm font-400  text-gray-600 leading-relaxed">
              The attacks are categorized into three levels:
             Level 1 - Perturbations ({overallStats.level1Percentage}%) includes {ATTACK_LEVELS.level1.types.join(", ")}, which are simple text modifications;
             Level 2 - Light Adversarial ({overallStats.level2Percentage}%) includes {ATTACK_LEVELS.level2.types.join(", ")}, which are prompt-based manipulation techniques;
@@ -309,6 +342,12 @@ export function AttackTypePerformanceSection({ summary, hasGuardrails = false, r
                   fill="var(--color-successRate)"
                   radius={[4, 4, 0, 0]}
                   barSize={32}
+                  onClick={(data) => {
+                    if (data && data.attackType) {
+                      handleAttackTypeClick(data.attackType);
+                    }
+                  }}
+                  className="cursor-pointer"
                 >
                   <LabelList
                     dataKey="successRate"
@@ -417,6 +456,15 @@ export function AttackTypePerformanceSection({ summary, hasGuardrails = false, r
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Conversations Dialog */}
+      <ConversationsDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        conversations={filteredConversations}
+        title={selectedAttackType ? `${selectedAttackType} Attack Conversations` : ''}
+        strategy={strategy as any}
+      />
     </div>
   );
 }
