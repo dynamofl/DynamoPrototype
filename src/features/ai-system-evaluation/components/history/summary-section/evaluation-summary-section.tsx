@@ -82,8 +82,10 @@ export function EvaluationSummarySection({
           <SummaryMetricCardDetailed
             title="Jailbreak"
             stats={jailbreakStats}
-            aiSystemAvg={`${data.jailbreak.avgAISystemOnlySuccessRate.toFixed(0)}%`}
-            aiSystemGuardrailAvg={`${data.jailbreak.avgWithGuardrailsSuccessRate.toFixed(0)}%`}
+            aiSystemAvg={`${data.jailbreak.avgAISystemOnlySuccessRate?.toFixed(0) ?? 0}%`}
+            aiSystemGuardrailAvg={data.jailbreak.avgWithGuardrailsSuccessRate !== undefined
+              ? `${data.jailbreak.avgWithGuardrailsSuccessRate.toFixed(0)}%`
+              : undefined}
             chartData={jailbreakChartData}
           />
         ) : (
@@ -99,7 +101,7 @@ export function EvaluationSummarySection({
           <SummaryMetricCardDetailed
             title="System Compliance"
             stats={complianceStats}
-            aiSystemAvg={`${data.compliance.avgAISystemOnlySuccessRate.toFixed(0)}%`}
+            aiSystemAvg={`${data.compliance.avgAISystemOnlySuccessRate?.toFixed(0) ?? 0}%`}
             aiSystemGuardrailAvg={data.compliance.avgWithGuardrailsSuccessRate !== undefined
               ? `${data.compliance.avgWithGuardrailsSuccessRate.toFixed(0)}%`
               : undefined}

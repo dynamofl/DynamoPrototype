@@ -145,7 +145,7 @@ export function TopicAnalysisSection({ topicAnalysis, policies: configPolicies, 
         <TabsList>
           <TabsTrigger value="breakdown">Topic Breakdown</TabsTrigger>
           <TabsTrigger value="statistical">Statistical Summary</TabsTrigger>
-          <TabsTrigger value="regression">Regression Analysis</TabsTrigger>
+          <TabsTrigger value="regression">Risk Analysis</TabsTrigger>
         </TabsList>
 
         

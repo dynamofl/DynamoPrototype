@@ -37,6 +37,7 @@ const dialogContentVariants = cva(
         md: "w-[600px]",
         lg: "w-[752px]",
         xl: "w-[968px]",
+        xxl: "w-[80vw]"
       },
     },
     defaultVariants: {
@@ -117,24 +118,25 @@ interface DialogBodyPropsBase extends React.HTMLAttributes<HTMLDivElement> {
   /** Enable scrolling for long content */
   scrollable?: boolean
   /** Dialog size to determine max height */
-  size?: "sm" | "md" | "lg" | "xl"
+  size?: "sm" | "md" | "lg" | "xl" | "xxl"
 }
 
 export interface DialogBodyProps extends DialogBodyPropsBase {}
 
 const dialogBodyVariants = cva(
-  "flex-1 px-4 py-4 bg-white",
+  "flex-1 px-4 py-4 bg-gray-0",
   {
     variants: {
       scrollable: {
         true: "overflow-y-auto",
-        false: "flex items-center justify-center",
+        false: "flex ",
       },
       size: {
         sm: "min-h-[120px] max-h-[180px]",
         md: "min-h-[200px] max-h-[300px]",
         lg: "min-h-[200px] max-h-[400px]",
         xl: "min-h-[200px] max-h-[500px]",
+        xxl: "min-h-[200px] max-h-[80vh]"
       },
     },
     compoundVariants: [

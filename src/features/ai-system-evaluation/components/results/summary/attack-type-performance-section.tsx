@@ -246,7 +246,7 @@ export function AttackTypePerformanceSection({ summary, hasGuardrails = false, r
       <Tabs defaultValue="chart" className="px-3 space-y-4">
         <TabsList>
           <TabsTrigger value="chart">Attack Breakdown</TabsTrigger>
-          <TabsTrigger value="regression">Regression Analysis</TabsTrigger>
+          <TabsTrigger value="regression">Risk Analysis</TabsTrigger>
         </TabsList>
 
         {/* Chart View */}

@@ -2,6 +2,10 @@ import { useMemo, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import type { JailbreakEvaluationResult, TopicAnalysis, Policy } from "../../../types/jailbreak-evaluation";
 import { PolicyViewSheet } from "./policy-view-sheet";
+import { ConversationsDialog } from "./conversations-dialog";
+import { buildBehaviorViolationFilter } from "../../../lib/conversation-filter-builders";
+import { filterConversations } from "../../../lib/conversation-filters";
+import { JailbreakStrategy } from "../../../strategies/jailbreak-strategy";
 
 interface ViolatingBehaviorsSectionProps {
   evaluationResults?: JailbreakEvaluationResult[];
@@ -16,6 +20,14 @@ export function ViolatingBehaviorsSection({
 }: ViolatingBehaviorsSectionProps) {
   const [viewPolicySheetOpen, setViewPolicySheetOpen] = useState(false);
   const [selectedPolicyName, setSelectedPolicyName] = useState<string | null>(null);
+
+  // Dialog state for showing conversations
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogTitle, setDialogTitle] = useState('');
+  const [filteredConversations, setFilteredConversations] = useState<JailbreakEvaluationResult[]>([]);
+
+  // Strategy instance for dialog
+  const strategy = useMemo(() => new JailbreakStrategy(), []);
 
   // Calculate highly violating topics from topic analysis
   const highlyViolatingTopics = useMemo(() => {
@@ -36,6 +48,41 @@ export function ViolatingBehaviorsSection({
   const handlePreviewPolicy = (policyName: string) => {
     setSelectedPolicyName(policyName);
     setViewPolicySheetOpen(true);
+  };
+
+  // Handler to show conversations for a specific behavior
+  const handleBehaviorClick = (policyName: string, behavior: string) => {
+    if (!evaluationResults || evaluationResults.length === 0) return;
+
+    // Build filter for this behavior
+    const filter = buildBehaviorViolationFilter(policyName, behavior);
+
+    // Filter conversations
+    let filtered = filterConversations(evaluationResults, filter);
+
+    // Further filter to only include high-violating topics (matching the count logic)
+    const highViolatingTopicNames = highlyViolatingTopics
+      .filter(t => t.policyName === policyName)
+      .map(t => t.topic_name);
+
+    if (highViolatingTopicNames.length > 0) {
+      filtered = filtered.filter(result =>
+        result.topic && highViolatingTopicNames.includes(result.topic)
+      );
+    }
+
+    // Only show Attack Success cases for violating behaviors
+    filtered = filtered.filter(result => result.attackOutcome === 'Attack Success');
+
+    // Add IDs to filtered results if they don't have them
+    const filteredWithIds = filtered.map((result, index) => ({
+      ...result,
+      id: (result as any).id || `${result.policyId}-${index}`
+    }));
+
+    // Set dialog state
+    setFilteredConversations(filteredWithIds as JailbreakEvaluationResult[]);
+    setDialogOpen(true);
   };
 
   // Get policy data from config (full policy definition)
@@ -165,7 +212,10 @@ export function ViolatingBehaviorsSection({
                   <div key={item.behavior} className="flex gap-1 items-start pl-1">
                     <span className="text-gray-900 text-sm leading-6">•</span>
                     <span className="text-sm text-gray-900 flex-1 leading-6">{item.behavior}</span>
-                    <div className="bg-gray-0 flex items-center justify-center px-3 py-1 rounded-full">
+                    <div
+                      onClick={() => handleBehaviorClick(policyName, item.behavior)}
+                      className="bg-gray-0 flex items-center justify-center px-3 py-1 rounded-full cursor-pointer hover:bg-gray-100 transition-colors"
+                    >
                       <span className="text-xs font-450 text-gray-600">
                         {item.count} Prompts
                       </span>
@@ -190,6 +240,15 @@ export function ViolatingBehaviorsSection({
         open={viewPolicySheetOpen}
         onOpenChange={setViewPolicySheetOpen}
         policy={selectedPolicy}
+      />
+
+      {/* Conversations Dialog */}
+      <ConversationsDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        conversations={filteredConversations}
+        title={dialogTitle}
+        strategy={strategy as any}
       />
     </>
   );
