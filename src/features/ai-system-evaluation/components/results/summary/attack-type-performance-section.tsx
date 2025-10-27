@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
-import { AlertTriangle } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, XAxis, LabelList } from "recharts";
+import { useMemo, useState, Fragment } from "react";
+import { AlertTriangle, ChevronRight } from "lucide-react";
+import { Bar, BarChart, CartesianGrid, XAxis, LabelList, Line, LineChart, YAxis } from "recharts";
 import {
   ChartContainer,
   ChartTooltip,
@@ -15,10 +15,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface AttackTypePerformanceSectionProps {
   summary: JailbreakEvaluationSummary;
   hasGuardrails?: boolean;
+  riskPredictions?: any; // Risk predictions analysis
 }
 
 // Attack level categorization
@@ -40,11 +50,12 @@ const ATTACK_LEVELS = {
   },
 };
 
-export function AttackTypePerformanceSection({ summary, hasGuardrails = false }: AttackTypePerformanceSectionProps) {
+export function AttackTypePerformanceSection({ summary, hasGuardrails = false, riskPredictions }: AttackTypePerformanceSectionProps) {
   // State for view selection
   const [view, setView] = useState<"aiSystemOnly" | "withGuardrails">(
     hasGuardrails ? "withGuardrails" : "aiSystemOnly"
   );
+  const [expandedRegressionRow, setExpandedRegressionRow] = useState<string | null>(null);
 
   // Extract byAttackType data from summary based on selected view
   const byAttackType = useMemo(() => {
@@ -231,122 +242,365 @@ export function AttackTypePerformanceSection({ summary, hasGuardrails = false }:
         </div>
       </div>
 
-      {/* Bar Chart */}
-      <div className="px-3">
-        <div className="border border-gray-200 rounded-lg p-6 bg-gray-50">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="text-sm font-450 text-gray-900">
-              Attack Success Rate
-            </h4>
-            {hasGuardrails && (
-              <Select value={view} onValueChange={(value) => setView(value as "aiSystemOnly" | "withGuardrails")}>
-                <SelectTrigger className="w-[200px] h-8 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="withGuardrails" className="text-xs">
-                    AI System + Guardrails
-                  </SelectItem>
-                  <SelectItem value="aiSystemOnly" className="text-xs">
-                    AI System Only
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-          <ChartContainer config={chartConfig} className="h-[240px] w-full">
-            <BarChart
-              data={chartData}
-              margin={{
-                top: 30,
-                right: 0,
-                left: 0,
-                bottom: 0,
-              }}
-            >
-              <CartesianGrid vertical={false} className="stroke-gray-200" />
-              <XAxis
-                dataKey="attackType"
-                tickLine={false}
-                axisLine={false}
-                tickMargin={8}
-                tick={<CustomXAxisTick />}
-                height={60}
-                interval={0}
-              />
-              <ChartTooltip
-                cursor={false}
-                content={
-                  <ChartTooltipContent
-                    indicator="line"
-                    labelFormatter={(value) => `Attack Type: ${value}`}
-                    formatter={(value, name, item) => [
-                      `${Number(value).toFixed(1)}% (${item.payload.successes}/${item.payload.total}) Prompts`,
-                    ]}
-                  />
-                }
-              />
-              <Bar
-                dataKey="successRate"
-                fill="var(--color-successRate)"
-                radius={[4, 4, 0, 0]}
-              >
-                <LabelList
-                  dataKey="successRate"
-                  position="top"
-                  content={<CustomLabel />}
-                />
-              </Bar>
-            </BarChart>
-          </ChartContainer>
+      {/* Tabs */}
+      <Tabs defaultValue="chart" className="px-3 space-y-4">
+        <TabsList>
+          <TabsTrigger value="chart">Attack Breakdown</TabsTrigger>
+          <TabsTrigger value="regression">Regression Analysis</TabsTrigger>
+        </TabsList>
 
-          {/* Level Grouping Indicator */}
-          <div className="px-1 pb-4">
-            <div className="flex items-start gap-3 relative">
-              {/* Level 3 - Expert */}
-              {overallStats.level3Count > 0 && (
-                <div className="flex-1" style={{ flexBasis: `${(overallStats.level3Count / overallStats.attackTypeCount) * 100}%` }}>
-                  <div className="flex flex-col items-center">
-                    <div className="w-full relative flex items-center justify-center">
-                      <div className="w-0.5 h-2 bg-gray-300 absolute left-0 -translate-x-1/2"></div>
-                      <div className="w-full border-t border-dashed border-gray-300"></div>
-                      <div className="w-0.5 h-2 bg-gray-300 absolute right-0 translate-x-1/2"></div>
-                      <span className="absolute text-xs text-gray-600 bg-gray-50 px-2">Expert</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Level 2 - Light */}
-              {overallStats.level2Count > 0 && (
-                <div className="flex-1" style={{ flexBasis: `${(overallStats.level2Count / overallStats.attackTypeCount) * 100}%` }}>
-                  <div className="flex flex-col items-center">
-                    <div className="w-full relative flex items-center justify-center">
-                      <div className="w-0.5 h-2 bg-gray-300 absolute left-0 -translate-x-1/2"></div>
-                      <div className="w-full border-t border-dashed border-gray-300"></div>
-                      <div className="w-0.5 h-2 bg-gray-300 absolute right-0 translate-x-1/2"></div>
-                      <span className="absolute text-xs text-gray-600 bg-gray-50 px-2">Light</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Level 1 - Perturbation */}
-              {overallStats.level1Count > 0 && (
-                <div className="flex-1" style={{ flexBasis: `${(overallStats.level1Count / overallStats.attackTypeCount) * 100}%` }}>
-                  <div className="flex flex-col items-center">
-                    <div className="w-full relative flex items-center justify-center">
-                      <div className="w-0.5 h-2 bg-gray-300 absolute left-0 -translate-x-1/2"></div>
-                      <div className="w-full border-t border-dashed border-gray-300"></div>
-                      <div className="w-0.5 h-2  bg-gray-300 absolute right-0 translate-x-1/2"></div>
-                      <span className="absolute text-xs text-gray-600 bg-gray-50 px-2">Perturbation</span>
-                    </div>
-                  </div>
-                </div>
+        {/* Chart View */}
+        <TabsContent value="chart" className="mt-0">
+          <div className="border border-gray-200 rounded-lg p-3 ">
+            <div className="flex items-center justify-between mb-4">
+            
+              {hasGuardrails && (
+                <Select value={view} onValueChange={(value) => setView(value as "aiSystemOnly" | "withGuardrails")}>
+                  <SelectTrigger className="w-[200px] h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="withGuardrails" className="text-xs">
+                      AI System + Guardrails
+                    </SelectItem>
+                    <SelectItem value="aiSystemOnly" className="text-xs">
+                      AI System Only
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               )}
             </div>
+            <ChartContainer config={chartConfig} className="h-[240px] w-full">
+              <BarChart
+                data={chartData}
+                margin={{
+                  top: 30,
+                  right: 0,
+                  left: 0,
+                  bottom: 0,
+                }}
+              >
+                <CartesianGrid vertical={false} className="stroke-gray-200" />
+                <XAxis
+                  dataKey="attackType"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  tick={<CustomXAxisTick />}
+                  height={60}
+                  interval={0}
+                />
+                <ChartTooltip
+                  cursor={false}
+                  content={
+                    <ChartTooltipContent
+                      indicator="line"
+                      labelFormatter={(value) => `Attack Type: ${value}`}
+                      formatter={(value, name, item) => [
+                        `${Number(value).toFixed(1)}% (${item.payload.successes}/${item.payload.total}) Prompts`,
+                      ]}
+                    />
+                  }
+                />
+                <Bar
+                  dataKey="successRate"
+                  fill="var(--color-successRate)"
+                  radius={[4, 4, 0, 0]}
+                  barSize={32}
+                >
+                  <LabelList
+                    dataKey="successRate"
+                    position="top"
+                    content={<CustomLabel />}
+                  />
+                </Bar>
+              </BarChart>
+            </ChartContainer>
+
+            {/* Level Grouping Indicator */}
+            <div className="px-1 pb-4">
+              <div className="flex items-start gap-3 relative">
+                {/* Level 3 - Expert */}
+                {overallStats.level3Count > 0 && (
+                  <div className="flex-1" style={{ flexBasis: `${(overallStats.level3Count / overallStats.attackTypeCount) * 100}%` }}>
+                    <div className="flex flex-col items-center">
+                      <div className="w-full relative flex items-center justify-center">
+                        <div className="w-0.5 h-2 bg-gray-300 absolute left-0 -translate-x-1/2"></div>
+                        <div className="w-full border-t border-dashed border-gray-300"></div>
+                        <div className="w-0.5 h-2 bg-gray-300 absolute right-0 translate-x-1/2"></div>
+                        <span className="absolute text-xs text-gray-600 bg-gray-50 px-2">Expert</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Level 2 - Light */}
+                {overallStats.level2Count > 0 && (
+                  <div className="flex-1" style={{ flexBasis: `${(overallStats.level2Count / overallStats.attackTypeCount) * 100}%` }}>
+                    <div className="flex flex-col items-center">
+                      <div className="w-full relative flex items-center justify-center">
+                        <div className="w-0.5 h-2 bg-gray-300 absolute left-0 -translate-x-1/2"></div>
+                        <div className="w-full border-t border-dashed border-gray-300"></div>
+                        <div className="w-0.5 h-2 bg-gray-300 absolute right-0 translate-x-1/2"></div>
+                        <span className="absolute text-xs text-gray-600 bg-gray-50 px-2">Light</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Level 1 - Perturbation */}
+                {overallStats.level1Count > 0 && (
+                  <div className="flex-1" style={{ flexBasis: `${(overallStats.level1Count / overallStats.attackTypeCount) * 100}%` }}>
+                    <div className="flex flex-col items-center">
+                      <div className="w-full relative flex items-center justify-center">
+                        <div className="w-0.5 h-2 bg-gray-300 absolute left-0 -translate-x-1/2"></div>
+                        <div className="w-full border-t border-dashed border-gray-300"></div>
+                        <div className="w-0.5 h-2  bg-gray-300 absolute right-0 translate-x-1/2"></div>
+                        <span className="absolute text-xs text-gray-600 bg-gray-50 px-2">Perturbation</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
+        </TabsContent>
+
+        {/* Regression Analysis Table View */}
+        <TabsContent value="regression" className="mt-0">
+          <div className="border border-gray-200 rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50 border-0 hover:bg-gray-50">
+                  <TableHead className="pl-3 font-450">Attack Level</TableHead>
+                  <TableHead className="font-450 text-right w-[120px]">Odds Ratio</TableHead>
+                  <TableHead className="font-450 text-right w-[120px]">P-Value</TableHead>
+                  <TableHead className="font-450 text-right w-[120px]">Significance</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {riskPredictions?.by_attack_level && riskPredictions.by_attack_level
+                  .sort((a: any, b: any) => {
+                    // Sort by level: Expert (3) > Light (2) > Perturbation (1)
+                    const getLevelOrder = (name: string) => {
+                      if (name.includes('Expert')) return 3;
+                      if (name.includes('Light')) return 2;
+                      if (name.includes('Perturbation')) return 1;
+                      return 0;
+                    };
+                    return getLevelOrder(b.entity_name) - getLevelOrder(a.entity_name);
+                  })
+                  .map((level: any, index: number) => {
+                    const rowKey = `level-${index}`;
+                    const isExpanded = expandedRegressionRow === rowKey;
+
+                    // Calculate overall success rate for comparison
+                    const overallSuccessRate = riskPredictions.by_attack_level.reduce(
+                      (sum: number, l: any) => sum + l.attack_success_rate,
+                      0
+                    ) / riskPredictions.by_attack_level.length;
+
+                    return (
+                      <Fragment key={rowKey}>
+                        <TableRow
+                          className={`cursor-pointer ${isExpanded ? 'bg-blue-50 hover:bg-blue-50' : 'hover:bg-gray-50'}`}
+                          onClick={() => setExpandedRegressionRow(isExpanded ? null : rowKey)}
+                        >
+                          <TableCell className="pl-2 text-gray-900">
+                            <div className="flex items-center gap-1">
+                              <ChevronRight className={`w-3 h-3 text-gray-600 flex-shrink-0 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} />
+                              <span>{level.entity_name}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {level.odds_ratio.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {level.p_value.toFixed(4)}
+                          </TableCell>
+                          <TableCell className={`text-right ${(level.significance === 'high' || level.significance === 'medium') ? 'text-green-600' : ''}`}>
+                            {(level.significance === 'high' || level.significance === 'medium') ? 'Yes' : 'No'}
+                          </TableCell>
+                        </TableRow>
+
+                        {/* Expanded Row */}
+                        {isExpanded && (
+                          <TableRow>
+                            <TableCell colSpan={4} className="bg-gray-0 p-4">
+                              <div className="grid grid-cols-2 gap-6">
+                                {/* Left: Logistic Regression S-Curve */}
+                                <div className="space-y-3">
+                                  <div className="bg-gray-0 border border-gray-200 rounded-lg p-4">
+                                    <AttackLevelRegressionChart
+                                      beta={level.beta}
+                                      ciLower={level.ci_lower}
+                                      ciUpper={level.ci_upper}
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Right: Comparison Chart */}
+                                <div className="space-y-3">
+                                  <div className="bg-gray-0 border border-gray-200 rounded-lg p-4">
+                                    <AttackLevelComparisonChart
+                                      levelRate={level.attack_success_rate}
+                                      overallAverage={overallSuccessRate}
+                                      levelName={level.entity_name}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </Fragment>
+                    );
+                  })}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+// Logistic Regression S-Curve Component for Attack Levels
+function AttackLevelRegressionChart({
+  beta,
+  ciLower,
+  ciUpper
+}: {
+  beta: number;
+  ciLower: number;
+  ciUpper: number;
+}) {
+  // Generate S-curve data points based on logistic function
+  const dataPoints = [];
+  for (let i = 0; i <= 100; i += 5) {
+    const x = (i - 50) / 25; // Normalize x to range around 0
+    const y = 100 / (1 + Math.exp(-(beta * x)));
+    dataPoints.push({
+      x: i,
+      probability: Math.max(0, Math.min(100, y))
+    });
+  }
+
+  const chartConfig = {
+    probability: {
+      label: "Probability (%)",
+      color: "var(--chart-1)",
+    },
+  } satisfies ChartConfig;
+
+  return (
+    <div>
+      <h4 className="text-sm font-450 text-gray-900 pb-4">Logistic Regression Curve</h4>
+      <ChartContainer config={chartConfig} className="h-[210px] w-full">
+        <LineChart data={dataPoints} margin={{ left: 4, right: 12, top: 8, bottom: 8 }}>
+          <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200" />
+          <XAxis
+            dataKey="x"
+            label={{ value: 'Input Variable', position: 'insideBottom', offset: -4, className: 'text-xs fill-gray-600' }}
+            className="text-xs"
+            interval={4}
+          />
+          <YAxis
+            className="text-xs"
+            width={24}
+            interval={0}
+          />
+          <ChartTooltip content={<ChartTooltipContent />} />
+          <Line
+            type="monotone"
+            dataKey="probability"
+            stroke="var(--color-probability)"
+            strokeWidth={2}
+            dot={false}
+          />
+        </LineChart>
+      </ChartContainer>
+      <div className="mt-3 pt-3 border-t border-gray-200 grid grid-cols-2 gap-2 text-xs">
+        <div>
+          <span className="text-gray-600">Coefficient (β): </span>
+          <span className="font-450 text-gray-900">{beta > 0 ? '+' : ''}{beta.toFixed(2)}</span>
         </div>
+        <div>
+          <span className="text-gray-600">95% CI: </span>
+          <span className="font-450 text-gray-900">[{ciLower.toFixed(2)}, {ciUpper.toFixed(2)}]</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Comparison Bar Chart Component for Attack Levels
+function AttackLevelComparisonChart({
+  levelRate,
+  overallAverage,
+  levelName
+}: {
+  levelRate: number;
+  overallAverage: number;
+  levelName: string;
+}) {
+  const data = [
+    {
+      name: 'Overall Average',
+      rate: overallAverage,
+    },
+    {
+      name: levelName,
+      rate: levelRate,
+    },
+  ];
+
+  const chartConfig = {
+    rate: {
+      label: "Success Rate (%)",
+      color: 'var(--chart-1)',
+    },
+  } satisfies ChartConfig;
+
+  return (
+    <div>
+      <h4 className="text-sm font-450 text-gray-900 pb-4">Comparison vs Overall Average</h4>
+      <ChartContainer config={chartConfig} className="h-[210px] w-full">
+        <BarChart data={data} margin={{ left: 4, right: 12, top: 8, bottom: 8 }}>
+          <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200" />
+          <XAxis
+            dataKey="name"
+            className="text-xs fill-gray-600"
+            tick={{ fontSize: 10 }}
+            interval={0}
+          />
+          <YAxis
+            className="text-xs fill-gray-600"
+            domain={[0, 100]}
+            width={24}
+            interval={0}
+          />
+          <ChartTooltip
+            content={<ChartTooltipContent formatter={(value) => `${Number(value).toFixed(1)}%`} />}
+          />
+          <Bar
+            dataKey="rate"
+            fill="var(--color-rate)"
+            radius={[4, 4, 0, 0]}
+            barSize={32}
+          />
+        </BarChart>
+      </ChartContainer>
+      <div className="mt-3 pt-3 border-t border-gray-200 text-xs text-gray-600">
+        <p className="flex items-center gap-1">
+          <span className={`inline-flex items-center px-1 py-0 rounded-full text-xs font-450 ${
+            (levelRate - overallAverage) > 0
+              ? 'bg-red-100 text-red-700'
+              : 'bg-green-100 text-green-700'
+          }`}>
+            {(levelRate - overallAverage) > 0 ? '+' : ''}{(levelRate - overallAverage).toFixed(1)}%
+          </span> difference from overall average
+        </p>
       </div>
     </div>
   );

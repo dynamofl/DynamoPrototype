@@ -130,7 +130,8 @@ export function getJailbreakSummaryConfig(): SummarySectionConfig[] {
       },
       props: {
         summary: (ctx: SummaryViewContext) => ctx.summary,
-        hasGuardrails: (ctx: SummaryViewContext) => ctx.hasGuardrails
+        hasGuardrails: (ctx: SummaryViewContext) => ctx.hasGuardrails,
+        riskPredictions: (ctx: SummaryViewContext) => (ctx.summary as any).riskPredictions
       }
     },
 

@@ -1,5 +1,5 @@
 import { useMemo, Fragment, useState } from "react";
-import { AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
+import { AlertTriangle, ChevronRight } from "lucide-react";
 import { Line, LineChart, Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import {
   ChartContainer,
@@ -287,7 +287,6 @@ export function TopicAnalysisSection({ topicAnalysis, policies: configPolicies, 
                   <TableHead className="font-450 text-right w-[120px]">Odds Ratio</TableHead>
                   <TableHead className="font-450 text-right w-[120px]">P-Value</TableHead>
                   <TableHead className="font-450 text-right w-[120px]">Significance</TableHead>
-                  <TableHead className="font-450 text-center w-20">Expand</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -295,7 +294,7 @@ export function TopicAnalysisSection({ topicAnalysis, policies: configPolicies, 
                   <Fragment key={`policy-reg-${policy.id}`}>
                     {/* Policy Header Row */}
                     <TableRow className="bg-gray-100 hover:bg-gray-100 border-t border-gray-200">
-                      <TableCell colSpan={5} className="h-8 pl-3 font-550  text-gray-900">
+                      <TableCell colSpan={4} className="h-8 pl-3 font-550  text-gray-900">
                         {policy.policy_name}
                       </TableCell>
                     </TableRow>
@@ -326,11 +325,14 @@ export function TopicAnalysisSection({ topicAnalysis, policies: configPolicies, 
                       return (
                         <Fragment key={rowKey}>
                           <TableRow
-                            className="cursor-pointer hover:bg-gray-50"
+                            className={`cursor-pointer ${isExpanded ? 'bg-blue-50 hover:bg-blue-50' : 'hover:bg-gray-50'}`}
                             onClick={() => setExpandedRegressionRow(isExpanded ? null : rowKey)}
                           >
-                            <TableCell className="pl-6 text-gray-900">
-                              {topic.topic_name}
+                            <TableCell className="pl-2 text-gray-900">
+                              <div className="flex items-center gap-1">
+                                <ChevronRight className={`w-3 h-3 text-gray-600 flex-shrink-0 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} />
+                                <span>{topic.topic_name}</span>
+                              </div>
                             </TableCell>
                             <TableCell className="text-right">
                               {oddsRatio.toFixed(2)}
@@ -341,23 +343,15 @@ export function TopicAnalysisSection({ topicAnalysis, policies: configPolicies, 
                             <TableCell className={`text-right ${significance ? 'text-green-600' : ''}`}>
                               {significance ? 'Yes' : 'No'}
                             </TableCell>
-                            <TableCell className="text-center">
-                              {isExpanded ? (
-                                <ChevronDown className="inline-block w-4 h-4 text-gray-600" />
-                              ) : (
-                                <ChevronUp className="inline-block w-4 h-4 text-gray-600 rotate-90" />
-                              )}
-                            </TableCell>
                           </TableRow>
 
                           {/* Expanded Row */}
                           {isExpanded && (
                             <TableRow>
-                              <TableCell colSpan={5} className="bg-gray-50 p-4">
+                              <TableCell colSpan={4} className="bg-gray-0 p-4">
                                 <div className="grid grid-cols-2 gap-6">
                                   {/* Left: Logistic Regression S-Curve */}
                                   <div className="space-y-3">
-                                    <h4 className="text-sm font-450 text-gray-900">Logistic Regression Curve</h4>
                                     <div className="bg-gray-0 border border-gray-200 rounded-lg p-4">
                                       <TopicRegressionChart
                                         beta={beta}
@@ -369,7 +363,6 @@ export function TopicAnalysisSection({ topicAnalysis, policies: configPolicies, 
 
                                   {/* Right: Comparison Chart */}
                                   <div className="space-y-3">
-                                    <h4 className="text-sm font-450 text-gray-900">Comparison vs Overall Average</h4>
                                     <div className="bg-gray-0 border border-gray-200 rounded-lg p-4">
                                       <TopicComparisonChart
                                         topicRate={topicSuccessRate}
@@ -428,23 +421,30 @@ function TopicRegressionChart({
   const chartConfig = {
     probability: {
       label: "Probability (%)",
-      color: "rgb(239, 68, 68)", // red-500
+      color: "var(--chart-1)", // red-500
     },
   } satisfies ChartConfig;
 
+
+
+
   return (
     <div>
-      <ChartContainer config={chartConfig} className="h-[200px] w-full">
-        <LineChart data={dataPoints}>
+      <h4 className="text-sm font-450 text-gray-900 pb-4">Logistic Regression Curve</h4>
+      <ChartContainer config={chartConfig} className="h-[210px] w-full">
+        <LineChart data={dataPoints} margin={{ left: 4, right: 12, top: 8, bottom: 8 }}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200" />
           <XAxis
             dataKey="x"
-            label={{ value: 'Input Variable', position: 'insideBottom', offset: -5, className: 'text-xs fill-gray-600' }}
-            className="text-xs fill-gray-600"
+            label={{ value: 'Input Variable', position: 'insideBottom', offset: -4, className: 'text-xs fill-gray-600' }}
+            className="text-xs "
+            interval={4}
           />
           <YAxis
-            label={{ value: 'Probability (%)', angle: -90, position: 'insideLeft', className: 'text-xs fill-gray-600' }}
-            className="text-xs fill-gray-600"
+            className="text-xs "
+            width={24}
+            interval={0}
+            
           />
           <ChartTooltip content={<ChartTooltipContent />} />
           <Line
@@ -494,14 +494,15 @@ function TopicComparisonChart({
   const chartConfig = {
     rate: {
       label: "Success Rate (%)",
-      color: "rgb(59, 130, 246)", // blue-500
+      color: 'var(--chart-1)', // blue-500
     },
   } satisfies ChartConfig;
 
   return (
     <div>
-      <ChartContainer config={chartConfig} className="h-[200px] w-full">
-        <BarChart data={data}>
+      <h4 className="text-sm font-450 text-gray-900 pb-4">Comparison vs Overall Average</h4>
+      <ChartContainer config={chartConfig} className="h-[210px] w-full">
+        <BarChart data={data} margin={{ left: 4, right: 12, top: 8, bottom: 8 }}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200" />
           <XAxis
             dataKey="name"
@@ -510,9 +511,10 @@ function TopicComparisonChart({
             interval={0}
           />
           <YAxis
-            label={{ value: 'Success Rate (%)', angle: -90, position: 'insideLeft', className: 'text-xs fill-gray-600' }}
             className="text-xs fill-gray-600"
             domain={[0, 100]}
+             width={24}
+            interval={0}
           />
           <ChartTooltip
             content={<ChartTooltipContent formatter={(value) => `${Number(value).toFixed(1)}%`} />}
@@ -521,15 +523,23 @@ function TopicComparisonChart({
             dataKey="rate"
             fill="var(--color-rate)"
             radius={[4, 4, 0, 0]}
+            barSize={32}
           />
         </BarChart>
       </ChartContainer>
       <div className="mt-3 pt-3 border-t border-gray-200 text-xs text-gray-600">
-        <p>
-          <span className="font-450 text-gray-900">{topicName}</span> has a {topicRate.toFixed(1)}% attack success rate
-          {topicRate > overallAverage ? ' (above average)' : ' (below average)'}
+        <p className="flex items-center gap-1">
+        
+          <span className={`inline-flex items-center px-1 py-0 rounded-full text-xs font-450 ${
+            (topicRate - overallAverage) > 0
+              ? 'bg-red-100 text-red-700'
+              : 'bg-green-100 text-green-700'
+          }`}>
+            {(topicRate - overallAverage) > 0 ? '+' : ''}{(topicRate - overallAverage).toFixed(1)}%
+          </span> difference from overall average
         </p>
       </div>
     </div>
   );
 }
+
