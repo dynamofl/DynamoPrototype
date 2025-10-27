@@ -1,6 +1,8 @@
 import { useMemo, useState, Fragment } from "react";
 import { AlertTriangle, ChevronRight } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, XAxis, LabelList, Line, LineChart, YAxis } from "recharts";
+import { motion, AnimatePresence } from "framer-motion";
+import useMeasure from "react-use-measure";
 import {
   ChartContainer,
   ChartTooltip,
@@ -401,59 +403,13 @@ export function AttackTypePerformanceSection({ summary, hasGuardrails = false, r
                     ) / riskPredictions.by_attack_level.length;
 
                     return (
-                      <Fragment key={rowKey}>
-                        <TableRow
-                          className={`cursor-pointer ${isExpanded ? 'bg-blue-50 hover:bg-blue-50' : 'hover:bg-gray-50'}`}
-                          onClick={() => setExpandedRegressionRow(isExpanded ? null : rowKey)}
-                        >
-                          <TableCell className="pl-2 text-gray-900">
-                            <div className="flex items-center gap-1">
-                              <ChevronRight className={`w-3 h-3 text-gray-600 flex-shrink-0 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} />
-                              <span>{level.entity_name}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {level.odds_ratio.toFixed(2)}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {level.p_value.toFixed(4)}
-                          </TableCell>
-                          <TableCell className={`text-right ${(level.significance === 'high' || level.significance === 'medium') ? 'text-green-600' : ''}`}>
-                            {(level.significance === 'high' || level.significance === 'medium') ? 'Yes' : 'No'}
-                          </TableCell>
-                        </TableRow>
-
-                        {/* Expanded Row */}
-                        {isExpanded && (
-                          <TableRow>
-                            <TableCell colSpan={4} className="bg-gray-0 p-4">
-                              <div className="grid grid-cols-2 gap-6">
-                                {/* Left: Logistic Regression S-Curve */}
-                                <div className="space-y-3">
-                                  <div className="bg-gray-0 border border-gray-200 rounded-lg p-4">
-                                    <AttackLevelRegressionChart
-                                      beta={level.beta}
-                                      ciLower={level.ci_lower}
-                                      ciUpper={level.ci_upper}
-                                    />
-                                  </div>
-                                </div>
-
-                                {/* Right: Comparison Chart */}
-                                <div className="space-y-3">
-                                  <div className="bg-gray-0 border border-gray-200 rounded-lg p-4">
-                                    <AttackLevelComparisonChart
-                                      levelRate={level.attack_success_rate}
-                                      overallAverage={overallSuccessRate}
-                                      levelName={level.entity_name}
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </Fragment>
+                      <ExpandableAttackLevelRow
+                        key={rowKey}
+                        isExpanded={isExpanded}
+                        onToggle={() => setExpandedRegressionRow(isExpanded ? null : rowKey)}
+                        level={level}
+                        overallSuccessRate={overallSuccessRate}
+                      />
                     );
                   })}
               </TableBody>
@@ -462,6 +418,100 @@ export function AttackTypePerformanceSection({ summary, hasGuardrails = false, r
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+// Expandable Attack Level Row Component with Framer Motion
+function ExpandableAttackLevelRow({
+  isExpanded,
+  onToggle,
+  level,
+  overallSuccessRate,
+}: {
+  isExpanded: boolean;
+  onToggle: () => void;
+  level: any;
+  overallSuccessRate: number;
+}) {
+  const [heightRef, { height }] = useMeasure();
+
+  return (
+    <Fragment>
+      <TableRow
+        className={`cursor-pointer ${isExpanded ? 'bg-blue-50 hover:bg-blue-50' : 'hover:bg-gray-50'}`}
+        onClick={onToggle}
+      >
+        <TableCell className="pl-2 text-gray-900">
+          <div className="flex items-center gap-1">
+            <ChevronRight
+              className={`w-3 h-3 text-gray-600 flex-shrink-0 transition-transform duration-200 ${
+                isExpanded ? 'rotate-90' : ''
+              }`}
+            />
+            <span>{level.entity_name}</span>
+          </div>
+        </TableCell>
+        <TableCell className="text-right">
+          {level.odds_ratio.toFixed(2)}
+        </TableCell>
+        <TableCell className="text-right">
+          {level.p_value.toFixed(4)}
+        </TableCell>
+        <TableCell className={`text-right ${(level.significance === 'high' || level.significance === 'medium') ? 'text-green-600' : ''}`}>
+          {(level.significance === 'high' || level.significance === 'medium') ? 'Yes' : 'No'}
+        </TableCell>
+      </TableRow>
+
+      {/* Expanded Row with Animated Height */}
+      <TableRow className="border-0 hover:bg-transparent">
+        <TableCell colSpan={4} className="bg-gray-0 p-0 h-0">
+          <motion.div
+            initial={false}
+            animate={{ height: isExpanded ? height : 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            style={{ overflow: "hidden" }}
+          >
+            <div ref={heightRef}>
+              <AnimatePresence mode="wait">
+                {isExpanded && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="p-4"
+                  >
+                    <div className="grid grid-cols-2 gap-6">
+                      {/* Left: Logistic Regression S-Curve */}
+                      <div className="space-y-3">
+                        <div className="bg-gray-0 border border-gray-200 rounded-lg p-4">
+                          <AttackLevelRegressionChart
+                            beta={level.beta}
+                            ciLower={level.ci_lower}
+                            ciUpper={level.ci_upper}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Right: Comparison Chart */}
+                      <div className="space-y-3">
+                        <div className="bg-gray-0 border border-gray-200 rounded-lg p-4">
+                          <AttackLevelComparisonChart
+                            levelRate={level.attack_success_rate}
+                            overallAverage={overallSuccessRate}
+                            levelName={level.entity_name}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        </TableCell>
+      </TableRow>
+    </Fragment>
   );
 }
 
