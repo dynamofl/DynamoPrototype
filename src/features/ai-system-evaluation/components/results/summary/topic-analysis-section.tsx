@@ -1,6 +1,8 @@
 import { useMemo, Fragment, useState } from "react";
 import { AlertTriangle, ChevronRight } from "lucide-react";
 import { Line, LineChart, Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { motion, AnimatePresence } from "framer-motion";
+import useMeasure from "react-use-measure";
 import {
   ChartContainer,
   ChartTooltip,
@@ -16,19 +18,32 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { TopicAnalysis, Policy } from "../../../types/jailbreak-evaluation";
+import type { TopicAnalysis, Policy, JailbreakEvaluationResult } from "../../../types/jailbreak-evaluation";
 import { PolicyViewSheet } from "./policy-view-sheet";
+import { ConversationsDialog } from "./conversations-dialog";
+import { Button } from "@/components/ui/button";
+import { filterConversations } from "../../../lib/conversation-filters";
+import { JailbreakStrategy } from "../../../strategies/jailbreak-strategy";
 
 interface TopicAnalysisSectionProps {
   topicAnalysis: TopicAnalysis;
   policies?: Policy[]; // Full policy definitions from config
   riskPredictions?: any; // Risk predictions analysis
+  evaluationResults?: JailbreakEvaluationResult[]; // Evaluation results for filtering
 }
 
-export function TopicAnalysisSection({ topicAnalysis, policies: configPolicies, riskPredictions }: TopicAnalysisSectionProps) {
+export function TopicAnalysisSection({ topicAnalysis, policies: configPolicies, riskPredictions, evaluationResults }: TopicAnalysisSectionProps) {
   const [viewPolicySheetOpen, setViewPolicySheetOpen] = useState(false);
   const [selectedPolicyName, setSelectedPolicyName] = useState<string | null>(null);
   const [expandedRegressionRow, setExpandedRegressionRow] = useState<string | null>(null);
+
+  // Dialog state for showing conversations
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogTitle, setDialogTitle] = useState('');
+  const [filteredConversations, setFilteredConversations] = useState<JailbreakEvaluationResult[]>([]);
+
+  // Strategy instance for dialog
+  const strategy = useMemo(() => new JailbreakStrategy(), []);
 
   // Keep policies grouped for display
   const policies = topicAnalysis.source.policies;
@@ -38,6 +53,29 @@ export function TopicAnalysisSection({ topicAnalysis, policies: configPolicies, 
   const handlePreviewPolicy = (policyName: string) => {
     setSelectedPolicyName(policyName);
     setViewPolicySheetOpen(true);
+  };
+
+  // Handler to show conversations for a specific topic
+  const handleTopicClick = (topicName: string, policyName: string) => {
+    if (!evaluationResults || evaluationResults.length === 0) return;
+
+    // Filter conversations by topic and policy
+    const filtered = evaluationResults.filter(result =>
+      result.topic === topicName &&
+      result.policyName === policyName &&
+      result.attackOutcome === 'Attack Success'
+    );
+
+    // Add IDs to filtered results if they don't have them
+    const filteredWithIds = filtered.map((result, index) => ({
+      ...result,
+      id: (result as any).id || `${result.policyId}-${index}`
+    }));
+
+    // Set dialog state
+    setFilteredConversations(filteredWithIds as JailbreakEvaluationResult[]);
+    
+    setDialogOpen(true);
   };
 
   // Get policy data from config (full policy definition)
@@ -185,8 +223,10 @@ export function TopicAnalysisSection({ topicAnalysis, policies: configPolicies, 
 
                       return (
                         <TableRow key={`${policy.id}-${topicIndex}`}>
-                          <TableCell className="text-gray-900 pl-6">
-                            {topic.topic_name}
+                          <TableCell className="text-gray-900 pl-6 truncate max-w-40">
+                              {topic.topic_name}
+                            
+                         
                           </TableCell>
                           <TableCell className="text-right">
                             {isHighRiskASR && (
@@ -205,8 +245,18 @@ export function TopicAnalysisSection({ topicAnalysis, policies: configPolicies, 
                           <TableCell className="text-right">
                             {topic.runtime_seconds.mean.toFixed(1)}
                           </TableCell>
-                          <TableCell className="text-right">
-                            {attackSuccessCount}
+                          <TableCell className="text-right pr-1">
+                            <div className="flex justify-end">
+                              <Button
+                                onClick={() => handleTopicClick(topic.topic_name, policy.policy_name)}
+                                variant="ghost"
+                                size="sm"
+                                className="gap-1 pr-1"
+                              >
+                                {attackSuccessCount} Prompts
+                                <ChevronRight className="w-3 h-3" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       );
@@ -252,7 +302,7 @@ export function TopicAnalysisSection({ topicAnalysis, policies: configPolicies, 
 
                       return (
                         <TableRow key={`${policy.id}-stat-${topicIndex}`}>
-                          <TableCell className="pl-6 text-gray-900">
+                          <TableCell className="pl-6 text-gray-900 truncate max-w-40">
                             {topic.topic_name}
                           </TableCell>
                           <TableCell className="text-right">
@@ -323,59 +373,20 @@ export function TopicAnalysisSection({ topicAnalysis, policies: configPolicies, 
                       const overallSuccessRate = allTopics.reduce((sum, t) => sum + t.attack_success_rate.mean, 0) / allTopics.length;
 
                       return (
-                        <Fragment key={rowKey}>
-                          <TableRow
-                            className={`cursor-pointer ${isExpanded ? 'bg-blue-50 hover:bg-blue-50' : 'hover:bg-gray-50'}`}
-                            onClick={() => setExpandedRegressionRow(isExpanded ? null : rowKey)}
-                          >
-                            <TableCell className="pl-2 text-gray-900">
-                              <div className="flex items-center gap-1">
-                                <ChevronRight className={`w-3 h-3 text-gray-600 flex-shrink-0 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} />
-                                <span>{topic.topic_name}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {oddsRatio.toFixed(2)}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {pValue.toFixed(4)}
-                            </TableCell>
-                            <TableCell className={`text-right ${significance ? 'text-green-600' : ''}`}>
-                              {significance ? 'Yes' : 'No'}
-                            </TableCell>
-                          </TableRow>
-
-                          {/* Expanded Row */}
-                          {isExpanded && (
-                            <TableRow>
-                              <TableCell colSpan={4} className="bg-gray-0 p-4">
-                                <div className="grid grid-cols-2 gap-6">
-                                  {/* Left: Logistic Regression S-Curve */}
-                                  <div className="space-y-3">
-                                    <div className="bg-gray-0 border border-gray-200 rounded-lg p-4">
-                                      <TopicRegressionChart
-                                        beta={beta}
-                                        ciLower={ciLower}
-                                        ciUpper={ciUpper}
-                                      />
-                                    </div>
-                                  </div>
-
-                                  {/* Right: Comparison Chart */}
-                                  <div className="space-y-3">
-                                    <div className="bg-gray-0 border border-gray-200 rounded-lg p-4">
-                                      <TopicComparisonChart
-                                        topicRate={topicSuccessRate}
-                                        overallAverage={overallSuccessRate}
-                                        topicName={topic.topic_name}
-                                      />
-                                    </div>
-                                  </div>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          )}
-                        </Fragment>
+                        <ExpandableRegressionRow
+                          key={rowKey}
+                          isExpanded={isExpanded}
+                          onToggle={() => setExpandedRegressionRow(isExpanded ? null : rowKey)}
+                          topic={topic}
+                          oddsRatio={oddsRatio}
+                          pValue={pValue}
+                          significance={significance}
+                          beta={beta}
+                          ciLower={ciLower}
+                          ciUpper={ciUpper}
+                          topicSuccessRate={topicSuccessRate}
+                          overallSuccessRate={overallSuccessRate}
+                        />
                       );
                     })}
                   </Fragment>
@@ -393,7 +404,124 @@ export function TopicAnalysisSection({ topicAnalysis, policies: configPolicies, 
         onOpenChange={setViewPolicySheetOpen}
         policy={selectedPolicy}
       />
+
+      {/* Conversations Dialog */}
+      <ConversationsDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        conversations={filteredConversations}
+        title={''}
+        strategy={strategy as any}
+      />
     </div>
+  );
+}
+
+// Expandable Regression Row Component with Framer Motion
+function ExpandableRegressionRow({
+  isExpanded,
+  onToggle,
+  topic,
+  oddsRatio,
+  pValue,
+  significance,
+  beta,
+  ciLower,
+  ciUpper,
+  topicSuccessRate,
+  overallSuccessRate,
+}: {
+  isExpanded: boolean;
+  onToggle: () => void;
+  topic: any;
+  oddsRatio: number;
+  pValue: number;
+  significance: boolean;
+  beta: number;
+  ciLower: number;
+  ciUpper: number;
+  topicSuccessRate: number;
+  overallSuccessRate: number;
+}) {
+  const [heightRef, { height }] = useMeasure();
+
+  return (
+    <Fragment>
+      <TableRow
+        className={`cursor-pointer ${isExpanded ? 'bg-blue-50 hover:bg-blue-50' : 'hover:bg-gray-50'}`}
+        onClick={onToggle}
+      >
+        <TableCell className="pl-2 text-gray-900">
+          <div className="flex items-center gap-1">
+            <ChevronRight
+              className={`w-3 h-3 text-gray-600 flex-shrink-0 transition-transform duration-200 ${
+                isExpanded ? 'rotate-90' : ''
+              }`}
+            />
+            <span>{topic.topic_name}</span>
+          </div>
+        </TableCell>
+        <TableCell className="text-right">
+          {oddsRatio.toFixed(2)}
+        </TableCell>
+        <TableCell className="text-right">
+          {pValue.toFixed(4)}
+        </TableCell>
+        <TableCell className={`text-right ${significance ? 'text-green-600' : ''}`}>
+          {significance ? 'Yes' : 'No'}
+        </TableCell>
+      </TableRow>
+
+      {/* Expanded Row with Animated Height */}
+      <TableRow className="border-0 hover:bg-transparent">
+        <TableCell colSpan={4} className="bg-gray-0 p-0 h-0">
+          <motion.div
+            initial={false}
+            animate={{ height: isExpanded ? height : 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            style={{ overflow: "hidden" }}
+          >
+            <div ref={heightRef}>
+              <AnimatePresence mode="wait">
+                {isExpanded && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="p-4"
+                  >
+                    <div className="grid grid-cols-2 gap-6">
+                      {/* Left: Logistic Regression S-Curve */}
+                      <div className="space-y-3">
+                        <div className="bg-gray-0 border border-gray-200 rounded-lg p-4">
+                          <TopicRegressionChart
+                            beta={beta}
+                            ciLower={ciLower}
+                            ciUpper={ciUpper}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Right: Comparison Chart */}
+                      <div className="space-y-3">
+                        <div className="bg-gray-0 border border-gray-200 rounded-lg p-4">
+                          <TopicComparisonChart
+                            topicRate={topicSuccessRate}
+                            overallAverage={overallSuccessRate}
+                            topicName={topic.topic_name}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        </TableCell>
+      </TableRow>
+    </Fragment>
   );
 }
 

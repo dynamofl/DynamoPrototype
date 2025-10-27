@@ -6,6 +6,7 @@ import { ConversationsDialog } from "./conversations-dialog";
 import { buildBehaviorViolationFilter } from "../../../lib/conversation-filter-builders";
 import { filterConversations } from "../../../lib/conversation-filters";
 import { JailbreakStrategy } from "../../../strategies/jailbreak-strategy";
+import { Button } from "@/components/ui/button";
 
 interface ViolatingBehaviorsSectionProps {
   evaluationResults?: JailbreakEvaluationResult[];
@@ -191,11 +192,12 @@ export function ViolatingBehaviorsSection({
         <h3 className="text-lg font-450 text-gray-900">
           Highly Violating Behaviors
         </h3>
-        <div className="flex flex-col p-3 border border-gray-200 rounded-lg gap-6">
+        <div className="flex flex-col rounded-lg gap-6">
           {Object.entries(violatingBehaviorsByPolicy).map(([policyName, behaviors], policyIndex) => (
             <div key={policyName} className="">
 
               {/* Source / Preview Policy */}
+              {Object.keys(violatingBehaviorsByPolicy).length > 1 && (
               <div className="flex items-center gap-1 pb-2">
                 <button
                   onClick={() => handlePreviewPolicy(policyName)}
@@ -204,22 +206,23 @@ export function ViolatingBehaviorsSection({
                   {policyName}
                   <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </button>
-              </div>
+              </div>)}
 
               {/* Behaviors List */}
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-2 pl-1">
                 {behaviors.map((item) => (
-                  <div key={item.behavior} className="flex gap-1 items-start pl-1">
+                  <div key={item.behavior} className="flex gap-2 items-start pl-1">
                     <span className="text-gray-900 text-sm leading-6">•</span>
                     <span className="text-sm text-gray-900 flex-1 leading-6">{item.behavior}</span>
-                    <div
+                    <Button
                       onClick={() => handleBehaviorClick(policyName, item.behavior)}
-                      className="bg-gray-0 flex items-center justify-center px-3 py-1 rounded-full cursor-pointer hover:bg-gray-100 transition-colors"
+                      variant="ghost"
+                      size="sm"
+                      className="gap-1 text-gray-600 pr-1"
                     >
-                      <span className="text-xs font-450 text-gray-600">
-                        {item.count} Prompts
-                      </span>
-                    </div>
+                      {item.count} Prompts
+                      <ChevronRight className="w-3 h-3" />
+                    </Button>
                   </div>
                 ))}
               </div>
