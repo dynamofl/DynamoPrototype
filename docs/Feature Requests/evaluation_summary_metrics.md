@@ -2,7 +2,7 @@
 
 **Date:** 2025-10-16  
 
-For each evaluation, generate and store the following **summary metrics** in the `evaluations` table.  
+For each evaluation, generate and store the following **summary metrics** jsonb in the `evaluations` table.  
 The data source is the `evaluation_prompt` dataset.  
 
 ---

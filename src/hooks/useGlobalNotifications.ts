@@ -21,7 +21,7 @@ export function useGlobalNotifications() {
           duration: 10000, // Extended duration to give user time to interact
           classNames: {
             toast: 'border-gray-200 bg-gray-0 shadow-lg',
-            title: 'text-gray-900 font-450 text-[13px] line-clamp-1',
+            title: 'text-gray-900 font-450 text-[13px]',
             description: 'text-gray-500 text-xs',
             actionButton: 'bg-gray-100  text-gray-900 border border-gray-200 hover:bg-gray-100 font-medium',
             cancelButton: 'hidden', // Hide the cancel button, use close icon instead

@@ -466,6 +466,53 @@ export function getJailbreakConversationSections(): ConversationSectionConfig[] 
       order: 2,
       render: (record: BaseEvaluationResult, ctx?: HighlightingContext) => {
         const jbRecord = record as JailbreakEvaluationResult
+        const adversarialPrompt = jbRecord.adversarialPrompt
+
+        // Check if it's a multi-turn conversation
+        const isMultiTurn = Array.isArray(adversarialPrompt)
+
+        if (isMultiTurn) {
+          return (
+            <>
+              <h3 className="px-2 text-[0.8125rem] font-450 leading-4 text-gray-600">
+                Jailbreak Prompt
+              </h3>
+              <div className="p-2 space-y-4 border border-gray-200 rounded-md">
+                {adversarialPrompt.map((turn: any, index: number) => {
+                  const isUser = turn.role === 'user'
+                  const isAssistant = turn.role === 'assistant'
+
+                  return (
+                    <div key={index} className="space-y-1">
+                      <div className="text-xs font-450 uppercase tracking-wide text-gray-600">
+                        {turn.role}
+                      </div>
+                      <div className="rounded-lg pt-1 pb-2 text-sm font-400 leading-5">
+                        {ctx ? (
+                          <HighlightedText
+                            highlightPhrases={ctx.shouldHighlightPrompt ? ctx.highlightPhrases : ctx.allInputPhrases}
+                            className="text-sm leading-5"
+                            highlightColor={ctx.highlightColor}
+                            hoveredBehavior={ctx.hoveredBehavior}
+                            selectedBehaviors={ctx.selectedBehaviors}
+                            onPhraseClick={(idx) => ctx.handlePhraseClick(idx, 'input')}
+                            showHighlightByDefault={true}
+                          >
+                            {turn.content}
+                          </HighlightedText>
+                        ) : (
+                          turn.content
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )
+        }
+
+        // Single turn - render as before
         return (
           <>
             <h3 className="px-2 text-[0.8125rem] font-450 leading-4 text-gray-600">

@@ -192,10 +192,10 @@ function RiskCombinationsTable({
   isPolicyView?: boolean;
 }) {
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
+    <div className="overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow className="bg-gray-50 border-0 hover:bg-gray-50">
+          <TableRow className="bg-gray-100 border-0 hover:bg-gray-50">
             <TableHead className="font-450 pl-3 w-12">Rank</TableHead>
             <TableHead className="font-450">{isPolicyView ? 'Policy' : 'Attack Area'}</TableHead>
             <TableHead className="font-450">{isLevelView ? 'Attack Level' : 'Attack Type'}</TableHead>
