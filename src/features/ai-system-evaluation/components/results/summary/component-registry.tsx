@@ -18,6 +18,13 @@ import { RiskCombinationsSection } from './risk-combinations-section'
 import { RiskPredictionsSection } from './risk-predictions-section'
 import { RiskStatsSection } from './risk-stats-section'
 
+// Template components
+import {
+  SummaryTextSection,
+  SummaryTableSection,
+  SummaryChartSection,
+} from './templates'
+
 /**
  * Component registry mapping component keys to React components
  * Add new components here as they are created
@@ -39,6 +46,11 @@ export const componentRegistry: Record<string, ComponentType<any>> = {
   RiskCombinationsSection,
   RiskPredictionsSection,
   RiskStatsSection,
+
+  // Template components
+  SummaryTextSection,
+  SummaryTableSection,
+  SummaryChartSection,
 }
 
 /**
