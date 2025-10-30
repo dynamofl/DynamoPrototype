@@ -6,6 +6,7 @@ import { AISystemIcon } from "@/components/patterns/ui-patterns/ai-system-icon";
 import { SummaryViewRenderer } from "./summary/summary-view-renderer";
 import { SummaryNavigation, type NavigationSection } from "./summary/summary-navigation";
 import { Badge } from "@/components/ui/badge";
+import { ChatComposer } from "./summary/chat-composer";
 
 interface EvaluationSummaryViewProps {
   summary: BaseEvaluationSummary;
@@ -159,7 +160,7 @@ export function EvaluationSummaryView({
 
   return (
     <div
-     
+
       className="relative w-full py-6"
     >
       {/* Left Sidebar Navigation - Fixed Position */}
@@ -204,7 +205,7 @@ export function EvaluationSummaryView({
         </div>
         </div>
 
-       
+
 
         {/* Config-driven summary view rendering */}
         <SummaryViewRenderer
@@ -217,6 +218,9 @@ export function EvaluationSummaryView({
           config={config}
         />
       </motion.div>
+
+      {/* Floating Chat Composer */}
+      <ChatComposer />
     </div>
   )
 }
