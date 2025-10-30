@@ -138,39 +138,6 @@ export function TopicAnalysisSection({ topicAnalysis, policies: configPolicies, 
           </div>
         </div>
 
-        {/* Policy Cards - Show when multiple policies */}
-        {policies.length > 1 && (
-          <div className="grid gap-3 pt-1 px-3" style={{ gridTemplateColumns: `repeat(${Math.min(policies.length, 3)}, 1fr)` }}>
-            {policies.map((policy) => {
-              // Calculate average attack success rate for this policy
-              const avgAttackSuccessRate = policy.topics.reduce(
-                (sum, topic) => sum + topic.attack_success_rate.mean,
-                0
-              ) / policy.topics.length;
-
-              return (
-                <div
-                  key={policy.id}
-                  className="bg-gray-0 border border-gray-200 rounded-lg p-3"
-                >
-                  <div className="flex flex-col gap-4">
-                    <h4 className="text-sm font-450 text-gray-900">
-                      {policy.policy_name}
-                    </h4>
-                    <div className="flex flex-col items-baseline gap-1">
-                      <p className={`text-lg font-450 ${avgAttackSuccessRate > 75 ? 'text-gray-900' : 'text-gray-900'}`}>
-                        {Math.round(avgAttackSuccessRate)}%
-                      </p>
-                      <p className="text-xs text-gray-600">Attack Success Rate</p>
-
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
         <div className="space-y-2 px-3">
           <p className="text-sm font-[425] leading-5 text-gray-600 leading-relaxed">
             {displayInsights}

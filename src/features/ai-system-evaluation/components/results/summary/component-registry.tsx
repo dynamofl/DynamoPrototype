@@ -16,6 +16,7 @@ import { ViolatingBehaviorsSection } from './violating-behaviors-section'
 import { AttackTypePerformanceSection } from './attack-type-performance-section'
 import { RiskCombinationsSection } from './risk-combinations-section'
 import { RiskPredictionsSection } from './risk-predictions-section'
+import { RiskStatsSection } from './risk-stats-section'
 
 /**
  * Component registry mapping component keys to React components
@@ -26,19 +27,6 @@ export const componentRegistry: Record<string, ComponentType<any>> = {
   OverviewSection,
   DualAttackScoreGauge,
   SummaryStatsCards,
-  HeroSection: ({ summary, hasGuardrails }: any) => (
-    <div className={`grid ${hasGuardrails ? 'grid-cols-6' : 'grid-cols-4'} mx-3 align-center items-center py-2 border-t border-b border-dashed border-gray-200`}>
-      {/* Left: Overview Description */}
-      <div className={hasGuardrails ? 'col-span-3' : 'col-span-3'}>
-        <OverviewSection summary={summary} hasGuardrails={hasGuardrails} />
-      </div>
-
-      {/* Right: Attack Score Gauge */}
-      <div className={hasGuardrails ? 'col-span-3' : 'col-span-1'}>
-        <DualAttackScoreGauge summary={summary} hasGuardrails={hasGuardrails} />
-      </div>
-    </div>
-  ),
 
   // Generic/shared components
   GenericSummaryCards,
@@ -50,6 +38,7 @@ export const componentRegistry: Record<string, ComponentType<any>> = {
   AttackTypePerformanceSection,
   RiskCombinationsSection,
   RiskPredictionsSection,
+  RiskStatsSection,
 }
 
 /**

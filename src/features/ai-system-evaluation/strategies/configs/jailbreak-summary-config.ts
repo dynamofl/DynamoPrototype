@@ -12,12 +12,12 @@ import type { JailbreakEvaluationSummary } from '../../types/jailbreak-evaluatio
  */
 export function getJailbreakSummaryConfig(): SummarySectionConfig[] {
   return [
-    // Section 1: Hero section with Overview and Dual Attack Score Gauge
+    // Section 1: Overview section with Description, Risk Stats Table, and Attack Score Gauge
     {
       key: 'overview',
       order: 1,
       label: 'Overview',
-      componentKey: 'HeroSection',
+      componentKey: 'OverviewSection',
       layout: {
         container: 'constrained',
         className: 'max-w-4xl mx-auto',
@@ -25,7 +25,8 @@ export function getJailbreakSummaryConfig(): SummarySectionConfig[] {
       },
       props: {
         // Props will be dynamically resolved by renderer
-        hasGuardrails: (ctx: SummaryViewContext) => ctx.hasGuardrails
+        hasGuardrails: (ctx: SummaryViewContext) => ctx.hasGuardrails,
+        evaluationResults: (ctx: SummaryViewContext) => ctx.evaluationResults
       }
     },
 
