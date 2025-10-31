@@ -46,6 +46,57 @@ uvicorn main:app --reload --port 8000
 
 The API will be available at: `http://localhost:8000`
 
+## Server Initialization
+
+### Quick Start
+
+```bash
+# Navigate to the agent-api directory
+cd agent-api
+
+# Activate the virtual environment
+source venv/bin/activate
+
+# Start the server
+python main.py
+```
+
+The server will start on **http://localhost:8000**
+
+### Running Frontend + Backend Together
+
+**Terminal 1 (Backend):**
+```bash
+cd agent-api
+source venv/bin/activate
+python main.py
+```
+
+**Terminal 2 (Frontend):**
+```bash
+npm run dev
+```
+
+Then open your browser to the frontend URL (usually http://localhost:5173 or http://localhost:5174) and navigate to an evaluation summary page to see the floating chat composer.
+
+### Quick Test Commands
+
+**Health check:**
+```bash
+curl http://localhost:8000/health
+```
+
+**Test query:**
+```bash
+curl -X POST http://localhost:8000/api/insight \
+  -H "Content-Type: application/json" \
+  -d '{"message": "How many evaluations are there?"}'
+```
+
+### Stopping the Server
+
+Press `Ctrl+C` in the terminal where the server is running.
+
 ## API Endpoints
 
 ### `GET /health`

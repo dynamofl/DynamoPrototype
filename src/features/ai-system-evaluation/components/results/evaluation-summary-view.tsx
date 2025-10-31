@@ -29,6 +29,7 @@ interface EvaluationSummaryViewProps {
   startedAt?: string;
   completedAt?: string;
   evaluationName?: string;
+  evaluationId?: string;
   tokenUtilization?: number;
   topicAnalysis?: any; // Topic analysis with AI insights
   evaluationResults?: BaseEvaluationResult[]; // Evaluation prompts for behavior extraction
@@ -46,6 +47,7 @@ export function EvaluationSummaryView({
   startedAt,
   completedAt,
   evaluationName,
+  evaluationId,
   tokenUtilization,
   topicAnalysis,
   evaluationResults,
@@ -217,10 +219,12 @@ export function EvaluationSummaryView({
           evaluationResults={evaluationResults}
           config={config}
         />
-      </motion.div>
 
-      {/* Floating Chat Composer */}
-      <ChatComposer />
+        {/* Chat Composer at bottom */}
+        <div className="mt-12 mb-8">
+          <ChatComposer evaluationId={evaluationId} evaluationType={testType} />
+        </div>
+      </motion.div>
     </div>
   )
 }

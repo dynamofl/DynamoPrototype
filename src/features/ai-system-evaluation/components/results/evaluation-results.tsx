@@ -276,6 +276,7 @@ export function EvaluationResults({
               startedAt={startedAt}
               completedAt={completedAt}
               evaluationName={evaluationName}
+              evaluationId={evaluationId}
               tokenUtilization={totalTokenUtilization}
               topicAnalysis={results.topic_analysis}
               evaluationResults={results.results}

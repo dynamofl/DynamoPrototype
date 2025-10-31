@@ -14,14 +14,16 @@ export class InsightAgentService {
    *
    * @param message - User's query message
    * @param evaluationId - Optional evaluation ID for context
+   * @param evaluationType - Optional evaluation type (jailbreak or compliance)
    * @returns Agent response with structured insight data
    */
   static async sendMessage(
     message: string,
-    evaluationId?: string
+    evaluationId?: string,
+    evaluationType?: string
   ): Promise<AgentServiceResponse> {
     try {
-      console.log("Agent query:", message, "Evaluation:", evaluationId);
+      console.log("Agent query:", message, "Evaluation:", evaluationId, "Type:", evaluationType);
 
       // Call the FastAPI endpoint
       const response = await fetch(`${AGENT_API_URL}/api/insight`, {
@@ -32,6 +34,7 @@ export class InsightAgentService {
         body: JSON.stringify({
           message,
           evaluationId,
+          evaluationType,
         }),
       });
 
@@ -51,18 +54,46 @@ export class InsightAgentService {
       // Parse the agent output
       const agentOutput: InsightGatheringOutput = result.output_parsed;
 
-      // The agent returns title, type, and data (stringified JSON)
-      // Parse the data field which contains the actual response structure
-      const parsedData = JSON.parse(agentOutput.data);
+      // Determine the format (backend uses different type names)
+      const rawType = agentOutput.type;
+      const format = rawType === "string" ? "text" : rawType as "text" | "table" | "chart";
 
-      // Map type to format (the agent uses 'string' but instructions use 'text')
-      const format = agentOutput.type === "string" ? "text" : agentOutput.type;
+      // For text type, data is already a plain string
+      // For table/chart types, data might be stringified JSON
+      let responseData: any;
+
+      if (rawType === "string") {
+        // Text type - data is already a string
+        responseData = {
+          data: agentOutput.data,
+          insights: null,
+        };
+      } else {
+        // Table or chart type - parse data if it's a string
+        try {
+          let parsedData = agentOutput.data;
+
+          // If data is a string, parse it
+          if (typeof agentOutput.data === 'string') {
+            parsedData = JSON.parse(agentOutput.data);
+          }
+
+          // Set the response data with parsed content
+          responseData = {
+            data: parsedData,
+            insights: null,
+          };
+        } catch (error) {
+          console.error("Failed to parse data:", error);
+          responseData = { data: agentOutput.data };
+        }
+      }
 
       // Construct the InsightResponse
       const insightResponse: InsightResponse = {
         title: agentOutput.title,
         format,
-        ...parsedData,
+        ...responseData,
       };
 
       return {

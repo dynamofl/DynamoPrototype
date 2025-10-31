@@ -80,12 +80,7 @@ function TableResponse({
   data,
   insights,
 }: {
-  data: Array<{
-    base_prompt: string;
-    attack_type: string;
-    attack_outcome: string;
-    policy_name: string[];
-  }>;
+  data: Array<Record<string, any>>;
   insights?: string;
 }) {
   if (!data || data.length === 0) {
@@ -94,54 +89,75 @@ function TableResponse({
     );
   }
 
+  // Get column names from the first row
+  const columns = Object.keys(data[0]);
+
+  // Helper to format column header
+  const formatHeader = (key: string) => {
+    return key
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  // Helper to render cell value
+  const renderCellValue = (value: any, key: string) => {
+    // Handle arrays (like policy_name)
+    if (Array.isArray(value)) {
+      return (
+        <div className="flex flex-wrap gap-1">
+          {value.map((item, idx) => (
+            <span
+              key={idx}
+              className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-gray-100 text-gray-700"
+            >
+              {String(item)}
+            </span>
+          ))}
+        </div>
+      );
+    }
+
+    // Handle attack_outcome with colored badges
+    if (key === 'attack_outcome') {
+      return (
+        <span
+          className={`inline-flex items-center px-2 py-0.5 rounded text-xs ${
+            value === "Attack Success"
+              ? "bg-red-100 text-red-700"
+              : "bg-green-100 text-green-700"
+          }`}
+        >
+          {String(value)}
+        </span>
+      );
+    }
+
+    // Default: render as string
+    return <span>{String(value)}</span>;
+  };
+
   return (
     <div className="space-y-3">
       <div className="rounded-md border border-gray-200 overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-100 border-0 hover:bg-gray-100">
-              <TableHead className="font-450 text-xs pl-3">
-                Base Prompt
-              </TableHead>
-              <TableHead className="font-450 text-xs">Attack Type</TableHead>
-              <TableHead className="font-450 text-xs">Outcome</TableHead>
-              <TableHead className="font-450 text-xs">Policies</TableHead>
+              {columns.map((column) => (
+                <TableHead key={column} className="font-450 text-xs pl-3">
+                  {formatHeader(column)}
+                </TableHead>
+              ))}
             </TableRow>
           </TableHeader>
           <TableBody>
             {data.map((row, index) => (
               <TableRow key={index}>
-                <TableCell className="text-xs font-450 text-gray-900 pl-3 max-w-[200px]">
-                  <div className="truncate" title={row.base_prompt}>
-                    {row.base_prompt}
-                  </div>
-                </TableCell>
-                <TableCell className="text-xs font-450 text-gray-900">
-                  {row.attack_type}
-                </TableCell>
-                <TableCell className="text-xs font-450">
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded text-xs ${
-                      row.attack_outcome === "Attack Success"
-                        ? "bg-red-100 text-red-700"
-                        : "bg-green-100 text-green-700"
-                    }`}
-                  >
-                    {row.attack_outcome}
-                  </span>
-                </TableCell>
-                <TableCell className="text-xs font-450 text-gray-900">
-                  <div className="flex flex-wrap gap-1">
-                    {row.policy_name.map((policy, policyIndex) => (
-                      <span
-                        key={policyIndex}
-                        className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-gray-100 text-gray-700"
-                      >
-                        {policy}
-                      </span>
-                    ))}
-                  </div>
-                </TableCell>
+                {columns.map((column) => (
+                  <TableCell key={column} className="text-xs font-450 text-gray-900 pl-3">
+                    {renderCellValue(row[column], column)}
+                  </TableCell>
+                ))}
               </TableRow>
             ))}
           </TableBody>
