@@ -54,8 +54,8 @@ export class InsightAgentService {
       // Parse the agent output
       const agentOutput: InsightGatheringOutput = result.output_parsed;
 
-      // Determine the format (backend uses different type names)
-      const rawType = agentOutput.type;
+      // Determine the format - check both 'format' and 'type' for compatibility
+      const rawType = (agentOutput as any).format || agentOutput.type;
       const format = rawType === "string" ? "text" : rawType as "text" | "table" | "chart";
 
       // For text type, data is already a plain string

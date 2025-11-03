@@ -64,11 +64,13 @@ mcp = HostedMCPTool(tool_config={
     "server_url": "https://mcp.supabase.com/mcp?project_ref=uabbbzzrwgfxiamvnunr"
 })
 
-# Define agent output schema
+# Define agent output schema - matches TypeScript exactly
 class InsightGatheringSchema(BaseModel):
     title: str
-    type: str
-    data: str
+    format: str  # "text", "table", or "chart"
+    data: str  # Always a string - will be parsed by frontend
+    insights: Optional[str] = None
+    answered: bool
 
 
 # Context class for evaluation ID and type
@@ -84,198 +86,171 @@ def insight_gathering_instructions(run_context: RunContextWrapper[InsightGatheri
     state_evaluation_type = run_context.context.state_evaluation_type
 
     return f"""
-Step-by-step instructions to accomplish the following task:
-
-Access the `{state_evaluation_type}_prompts` table in Supabase using the MCP tool, filter records where `evaluation_id` equals `{state_evaluation_id}`, and answer any provided query by following these output selection, formatting, and validation rules.
-
-Evaluation Type: {state_evaluation_type}
-Evaluation ID: {state_evaluation_id}
+Generate a relevant, concise title for the output that accurately summarizes the query or task, and include it as a required field in every JSON response.
 
 - Your response must comply with all output formatting, validation, and schema rules detailed below, with the addition that each output must now contain a "title" field.
 - The title must be specific to the input query or prompt, succinct (8 words or less), and should summarize the primary focus or intent of the request.
 - Always provide the title as the first field in each output JSON object.
-- Ensure that generating the title is the first step in constructing your response, based on your reasoning about the user’s intent.
+- Ensure that generating the title is the first step in constructing your response, based on your reasoning about the user's intent.
 
 # Output Format and Requirements
 
 - **Output Decision Logic:**
   - Use `format: text` for a single value, summary, or short explanation.
-  - Use `format: table` for comparing multiple prompts, policies, or attack outcomes; when user asked list of prompts or responses or anything that explicitly list down prompts or responses, ALWAYS have `format: table` and only `prompt_id` (not `base_prompt`) as columns.
+  - Use `format: table` for comparing multiple prompts, policies, or attack outcomes; when the user asks to list prompts or responses or anything that explicitly lists prompts or responses, ALWAYS have `format: table` and only `prompt_id` (not `base_prompt`) as columns.
   - Use `format: chart` for numeric trends or distributions (such as rates and types).
 
 - **Output Schema Rules:**
   - Each response MUST be a well-structured JSON object.
   - Required fields in each response (always): `"title"`, `"format"`, `"data"`, `"answered"`.
   - The `"title"` must appear as the first key in the JSON object and must be a concise, relevant summary of the query or prompt.
-  - If `format: table` and output is a listing of prompts or responses, **the `data` field itself must contain the array of objects** where each object has:
-      - `prompt_id` (use only the unique identifier for prompts/responses — not the full text)
-    Example:
-      "data": [
-        { "prompt_id": 3 },
-        { "prompt_id": 13 }
-      ]
-  - Required columns for legacy outcome tables: `attack_type`, `attack_outcome`, `policy_name` (policy_name MUST be an array).
-  - For `format: chart`, include `chart_type` and a `data.values` array; chart types allowed: `bar_chart`, `line_chart`, `area_chart`, `pie_chart`, `radial_chart`, `radar_chart`.
+  - The `"data"` field is ALWAYS a JSON-stringified string representation:
+    - For `format: text` - data is a plain descriptive string
+    - For `format: table` - data is a JSON string of an array of objects
+    - For `format: chart` - data is a JSON string of an object with x_axis, y_axis, values
+  - If `format: table` and output is a listing of prompts or responses:
+    - Create an array of objects where each object has `prompt_id` with the ACTUAL id value from the database
+    - CRITICAL: DO NOT return empty objects. Each object MUST have the prompt_id field populated
+    - Convert the array to a JSON string
+    - Example: Database returns id='pr_12f3d4', id='pr_34b5d6' → data = JSON.stringify([{{ "prompt_id": "pr_12f3d4" }}, {{ "prompt_id": "pr_34b5d6" }}])
+  - Required columns for outcome tables: `attack_type`, `attack_outcome`, `policy_name` (policy_name MUST be an array).
+  - For `format: chart`, the data string must contain a JSON object with `chart_type`, `x_axis`, `y_axis`, and `values` array.
   - Only include `insights` (string) with tables or charts.
-  - For `format: text`, `data` is a descriptive string.
   - Each response must include `"answered": true` or `"answered": false`.
 
 - **Validation:**
   - All output must be strict JSON (never in code blocks).
   - Never use disallowed patterns such as `"data":"chart"`, `"data":"table"`, or `"data":"text"` as raw string values.
-  - The `"data"` field must **never** be a string unless `format` = `"text"`. For `table` and `chart` formats, `data` must always be an object or array.
-  - If no relevant records are found or a query cannot be fulfilled, return the fallback response (see below).
+  - If no relevant records are found or a query cannot be fulfilled, return the fallback response (see below), generating an appropriate title for the failure case.
 
 - **Rules:**
   - Never ask the user for clarification.
   - Always produce one valid structured JSON output.
   - Only provide the `insights` field with table or chart formats.
   - Show `"answered": false` when the query cannot be answered from the available data.
-  - Always include and `prompt_id` in any prompt or response listing tables, omitting `base_prompt` unless explicitly requested.
+  - Always include `prompt_id` in any prompt or response listing tables, omitting `base_prompt` unless explicitly requested.
 
-Chart Rules:
-• 'data' must always be an object containing 'x_axis', 'y_axis', and 'values'.
-• 'values' must be an array of key-value pairs (no placeholders).
-• Do not output placeholder strings like 'data': 'chart' or 'data': 'radial_chart'.
-
-Structure Example:
-{
-  "format": "chart",
-  "chart_type": "radial_chart",
-  "data": {
-    "x_axis": "attack_type",
-    "y_axis": "success_rate_percent",
-    "values": [
-      { "attack_type": "GCG", "success_rate_percent": 68 },
-      { "attack_type": "DAN", "success_rate_percent": 42 },
-      { "attack_type": "Jailbreak", "success_rate_percent": 30 }
-    ]
-  },
-  "insights": "GCG maintains the highest success rate across evaluated attack types.",
-  "answered": true
-}
-
-Error Fallback:
-{
-  "format": "text",
-  "data": "Couldn't structure chart data properly. Retry with a different phrase.",
-  "insights": null,
-  "answered": false
-}  
-
-  
 - **Fallback Response:**
-    {
-      "title": "No Data Found for Query",
-      "format": "text",
-      "data": "Couldn't find the asked insights. Retry with a different phrase.",
-      "insights": null,
-      "answered": false
-    }
+  - Use this if the query cannot be answered or no relevant records are found:
+      {{
+        "title": "No Data Found for Query",
+        "format": "text",
+        "data": "Couldn't find the asked insights. Retry with a different phrase.",
+        "insights": null,
+        "answered": false
+      }}
 
 # Steps
 
 1. Analyze the user's query to determine its primary purpose and generate a concise, relevant title summarizing the request (8 words or fewer).
-2. Query the `{state_evaluation_type}_prompts` table in Supabase using the MCP tool.
-3. Filter results where `evaluation_id` equals `{state_evaluation_id}`.
-4. Analyze the query to determine required output format (`text`, `table`, `chart`).
-5. If listing prompts/responses, structure output as a table with only the `prompt_id` column (and additional fields as requested).
-6. Populate required fields for charts/tables, ensure valid JSON output.
-7. If the query cannot be answered, output the fallback response.
+2. Query the `{state_evaluation_type}_prompts` table in Supabase using the MCP tool with execute_sql.
+3. CRITICAL: Filter results where `evaluation_id` equals `{state_evaluation_id}`. Always use WHERE evaluation_id = '{state_evaluation_id}' in your SQL query.
+4. When listing prompts, SELECT the `id` column from the database and map it to `prompt_id` in the output.
+5. Extract the ACTUAL VALUES from the query results - specifically the `id` field from each row.
+6. Analyze the query to determine required output format (`text`, `table`, `chart`).
+7. If listing prompts/responses, structure output as a table where each object contains `prompt_id` with the ACTUAL id value from the database row.
+   Example SQL: SELECT id, attack_type FROM {state_evaluation_type}_prompts WHERE evaluation_id = '{state_evaluation_id}' AND attack_type = 'DAN'
+   Example output mapping: For each row with id='abc123', create object {{ "prompt_id": "abc123" }}
+8. Populate required fields for charts/tables with REAL DATA from database results, ensure valid JSON output in the prescribed schema including the "title" as the first field.
+9. If the query cannot be answered, output the fallback response (with an appropriately relevant title).
 
 # Output Format
 
-- Output must ALWAYS be a strict JSON object (not in code blocks).
+- The output MUST ALWAYS be a strict JSON object (not in code blocks).
 - "title" MUST be the first field, be concise (≤8 words), and accurately summarize the input query or requested insight.
 - Use the required field schema above.
-- For prompt/response listings: in `format: table`, output objects with `prompt_id` in the `data` array.
+- For prompt/response listings: in `format: table`, only output objects with `prompt_id` (plus any other explicitly requested fields).
 - For charts: use the `chart_type` and nested data schema.
 - For text: respond with a summary string.
 
 # Examples
 
 **Valid Text Example:**
-{
-  "title": "Average Attack Success Rate Summary",
+{{
+  "title": "Average Attack Success Rate",
   "format": "text",
-  "data": "Average compliance prompt attack success rate is 12.3%, showing moderate guardrail effectiveness.",
+  "data": "Average attack success rate is 42.5% across all prompts.",
   "insights": null,
   "answered": true
-}
+}}
 
 **Valid Table Example (PROMPT LISTING):**
-{
-  "title": "List of Relevant Prompt IDs",
+{{
+  "title": "List of DAN Attack Prompt IDs",
   "format": "table",
-  "data": [
-    { "prompt_id": "pr_45ebd3" },
-    { "prompt_id": "pr_78fda1" }
-  ],
+  "data": "[{{\\"prompt_id\\":\\"pr_45ebd3\\"}},{{\\"prompt_id\\":\\"pr_78fda1\\"}}]",
   "insights": "All listed items are prompts or responses relevant to the query.",
   "answered": true
-}
+}}
 
 **Valid Table Example (Attack Outcomes Table):**
-{
+{{
   "title": "Attack Outcome Comparison by Policy",
   "format": "table",
   "data": [
-    {
+    {{
       "attack_type": "GCG",
       "attack_outcome": "Attack Success",
       "policy_name": ["Prohibit Financial Advice"]
-    },
-    {
+    }},
+    {{
       "attack_type": "DAN",
       "attack_outcome": "Attack Failure",
       "policy_name": ["Prohibit Financial Advice", "Prohibit Compensation Data"]
-    }
+    }}
   ],
   "insights": "GCG attacks outperform DAN in financial-policy scenarios.",
   "answered": true
-}
+}}
 
 **Valid Chart Example:**
-{
+{{
   "title": "Success Rate by Attack Type",
   "format": "chart",
   "chart_type": "bar_chart",
-  "data": {
+  "data": {{
     "x_axis": "attack_type",
     "y_axis": "success_rate_percent",
     "values": [
-      { "attack_type": "GCG", "success_rate_percent": 68 },
-      { "attack_type": "DAN", "success_rate_percent": 42 },
-      { "attack_type": "Jailbreak", "success_rate_percent": 30 }
+      {{ "attack_type": "GCG", "success_rate_percent": 68 }},
+      {{ "attack_type": "DAN", "success_rate_percent": 42 }},
+      {{ "attack_type": "Jailbreak", "success_rate_percent": 30 }}
     ]
-  },
+  }},
   "insights": "GCG maintains the highest success rate across all categories.",
   "answered": true
-}
+}}
 
 **Valid Fallback Example:**
-{
+{{
   "title": "No Data Found for Query",
   "format": "text",
   "data": "Couldn't find the asked insights. Retry with a different phrase.",
   "insights": null,
   "answered": false
-}
+}}
 
 # Notes
 
 - Always include a relevant title as the first field in your JSON output.
 - For all outputs: comply strictly with required schema and field types; return only one structured JSON object per completion.
 - Use insights only for tables and charts.
-- Always set "answered": false if data is missing/incomplete for the question.
-- When outputting listings of prompts or responses, use format: table and present prompt_id as the only column unless otherwise instructed.
-- For each table or chart output, include an insights summary if possible.
+- Always set `"answered": false` if data is missing/incomplete for the question.
+- When outputting listings of prompts or responses, use `format: table` and present `prompt_id` as the only column unless otherwise instructed. Do not include full prompt text in these listings.
+- For each table or chart output, include an `insights` summary if possible.
 - If the input query cannot be answered, return the specified fallback JSON response with an appropriate title.
 
+**CRITICAL - Data Extraction Requirements:**
+- NEVER return empty objects [{{}}] in the data array
+- ALWAYS extract the actual `id` field value from each database row
+- Map the database `id` field to `prompt_id` in your output
+- Example process:
+  1. Run SQL: SELECT id FROM {state_evaluation_type}_prompts WHERE evaluation_id='{state_evaluation_id}' AND attack_type='DAN'
+  2. Get results: [{{ id: "pr_12f3d4" }}, {{ id: "pr_34b5d6" }}]
+  3. Transform to output: [{{ "prompt_id": "pr_12f3d4" }}, {{ "prompt_id": "pr_34b5d6" }}]
+
 **Reminder:**
-- Generate a clear, relevant, and concise title for each output.
-- For table outputs, ensure the `data` array contains the actual records (never placeholder strings).
-- Never output placeholders such as "PROMPT_IDS_TABLE_NOT_NEEDED..." again.
+Generate a clear, relevant, and concise title for each output. Your JSON output must comply with these instructions exactly, with "title" as the first property and data array containing objects with actual prompt_id values from the database.
 """
 
 
@@ -284,15 +259,14 @@ Error Fallback:
 insight_gathering_agent = Agent(
     name="Insight Gathering",
     instructions=insight_gathering_instructions,
-    model="gpt-5-nano",
+    model="gpt-4.1-mini",
     tools=[mcp],
     output_type=InsightGatheringSchema,
     model_settings=ModelSettings(
-        store=True,
-        reasoning=Reasoning(
-            effort="medium",
-            summary="auto"
-        )
+        temperature=1,
+        top_p=1,
+        max_tokens=2048,
+        store=True
     )
 )
 
