@@ -190,19 +190,6 @@ export function AgentResponseRenderer({
   // Parse the raw response into properly typed data
   const parsed = parseAgentResponseSafe(response);
 
-  // Debug logging
-  if (parsed.format === "chart") {
-    console.log("Chart Response Debug:", {
-      title: parsed.title,
-      chart_type: parsed.chart_type,
-      data_type: typeof parsed.data,
-      data_is_object: typeof parsed.data === "object",
-      data_keys: typeof parsed.data === "object" ? Object.keys(parsed.data) : "not an object",
-      x_axis: typeof parsed.data === "object" ? (parsed.data as any).x_axis : "N/A",
-      y_axis: typeof parsed.data === "object" ? (parsed.data as any).y_axis : "N/A",
-    });
-  }
-
   return (
     <>
       {/* Render based on format type */}
@@ -241,17 +228,12 @@ export function AgentResponseRenderer({
           }
 
           const chartType = mapChartType(parsed.chart_type);
-          console.log("Mapped chart type:", parsed.chart_type, "->", chartType);
-
           const transformedData = transformChartData(parsed.data, chartType);
-          console.log("Transformed data:", transformedData);
-
           const config = generateChartConfig(
             transformedData,
             chartType,
             parsed.data.y_axis
           );
-          console.log("Generated config:", config);
 
           return (
             <SummaryChartSection
