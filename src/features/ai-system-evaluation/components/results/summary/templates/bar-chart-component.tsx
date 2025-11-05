@@ -35,7 +35,7 @@ export function BarChartComponent({
           <Bar
             key={key}
             dataKey={key}
-            fill={`var(--color-${key})`}
+            fill={`var(--chart-1})`}
             radius={[4, 4, 0, 0]}
           />
         ))}

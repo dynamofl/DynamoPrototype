@@ -231,7 +231,7 @@ export function ChatComposer({
       </div>
 
       {/* Chat Composer - Fixed at Bottom */}
-      <div className="fixed bottom-4 left-0 right-0 z-50 flex justify-center pointer-events-none px-4">
+      <div className="fixed bottom-8 left-0 right-0 z-50 flex justify-center pointer-events-none px-4">
         <motion.div
           className="pointer-events-auto rounded-2xl"
           ref={composerRef}
@@ -247,7 +247,7 @@ export function ChatComposer({
             borderRadius: 24,
           }}
         >
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="popLayout">
             {composerState === "closed" ? (
               // Closed State - Button
               <motion.button
@@ -260,7 +260,7 @@ export function ChatComposer({
                 animate={{ opacity: 1}}
                 transition={{ type: "spring", stiffness: 100, damping: 15, duration: 0.2 }}
               >
-                <motion.span layoutId="composer-title" className="text-sm">Ask Insights</motion.span>
+                <motion.span animate={{opacity:1}}layoutId="composer-title" className="text-sm">Ask Insights</motion.span>
                 <ScanSearch className="h-4 w-4" />
 
               </motion.button>
@@ -299,13 +299,13 @@ export function ChatComposer({
                 {/* Main Composer Area */}
                 <div className="p-2 pl-4">
                   {/* Hidden placeholder for smooth layoutId transition */}
-                  {/* <motion.span
+                  {(message == "" && composerState === "open") && (<motion.span
                     layoutId="composer-title"
                     aria-hidden
-                    className="absolute opacity-0 pointer-events-none"
+                    className="absolute opacity-0 pointer-events-none pt-1 text-sm text-gray-600"
                   >
                     Ask Insights
-                  </motion.span> */}
+                  </motion.span>)}
 
                   {composerState === "loading" ? (
                     // Loading State
@@ -334,24 +334,23 @@ export function ChatComposer({
                     // Open State - Form
                     <motion.form
                       key="form"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
+                     
                       onSubmit={(e) => {
                         e.preventDefault();
                         handleSendMessage();
                       }}
                       className="flex items-end gap-3"
                     >
-                      <textarea
+                      <motion.textarea
                         ref={textareaRef}
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder="Ask Insights"
+                        placeholder=""
                         className="flex-1 resize-none bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus-visible:outline-none overflow-y-auto min-h-[24px] pb-2"
                         rows={1}
                         style={{ maxHeight: "200px" }}
+                        autoFocus
                       />
                       <button
                         type="submit"
