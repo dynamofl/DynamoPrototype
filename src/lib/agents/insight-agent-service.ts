@@ -63,7 +63,7 @@ export class InsightAgentService {
         // Text type - data is already a string
         responseData = {
           data: agentOutput.data,
-          insights: null,
+          insights: (agentOutput as any).insights || undefined,
         };
       } else {
         // Table or chart type - parse data if it's a string
@@ -78,11 +78,11 @@ export class InsightAgentService {
           // Set the response data with parsed content
           responseData = {
             data: parsedData,
-            insights: null,
+            insights: (agentOutput as any).insights || undefined,
           };
         } catch (error) {
           console.error("Failed to parse data:", error);
-          responseData = { data: agentOutput.data };
+          responseData = { data: agentOutput.data, insights: (agentOutput as any).insights || undefined };
         }
       }
 
