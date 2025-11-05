@@ -6,6 +6,7 @@ import {
   SummaryChartSection,
 } from "./templates";
 import type { ChartConfig } from "@/components/ui/chart";
+import { parseAgentResponseSafe } from "./parse-agent-response";
 
 interface AgentResponseRendererProps {
   response: InsightResponse;
@@ -123,18 +124,12 @@ function transformChartData(
 
 // Helper function to generate chart config with proper color assignments
 function generateChartConfig(
-  agentData: {
-    x_axis: string;
-    y_axis: string;
-    values: Array<{ [key: string]: string | number }>;
-  },
-  chartType: ChartType
+  transformedData: Array<{ [key: string]: string | number }>,
+  chartType: ChartType,
+  originalYAxis?: string
 ): ChartConfig {
-  const { y_axis, values } = agentData;
-
   // For pie and radial charts, create color entries for each name value
   if (chartType === "pie" || chartType === "radial") {
-    const nameField = chartType === "pie" ? "name" : "name";
     const chartConfig: ChartConfig = {};
     const colorVars = [
       "var(--chart-1)",
@@ -144,8 +139,8 @@ function generateChartConfig(
       "var(--chart-5)",
     ];
 
-    values.forEach((item, index) => {
-      const nameValue = String(item[nameField] || item["name"] || "");
+    transformedData.forEach((item, index) => {
+      const nameValue = String(item["name"] || "");
       if (nameValue) {
         chartConfig[nameValue] = {
           label: nameValue,
@@ -163,8 +158,8 @@ function generateChartConfig(
     const colorVars = ["var(--chart-1)", "var(--chart-2)"];
 
     // Find all numeric keys in the data (excluding metric field)
-    if (values.length > 0) {
-      const firstItem = values[0];
+    if (transformedData.length > 0) {
+      const firstItem = transformedData[0];
       Object.keys(firstItem).forEach((key, index) => {
         if (key !== "metric") {
           chartConfig[key] = {
@@ -178,10 +173,11 @@ function generateChartConfig(
     return chartConfig;
   }
 
-  // For bar, line, area charts
+  // For bar, line, area charts - use the original y_axis label
+  const yAxisLabel = originalYAxis || "Value";
   return {
-    [y_axis]: {
-      label: formatHeader(y_axis),
+    [yAxisLabel]: {
+      label: formatHeader(yAxisLabel),
       color: "var(--chart-1)",
     },
   };
@@ -191,52 +187,91 @@ export function AgentResponseRenderer({
   response,
   className = "",
 }: AgentResponseRendererProps) {
+  // Parse the raw response into properly typed data
+  const parsed = parseAgentResponseSafe(response);
+
+  // Debug logging
+  if (parsed.format === "chart") {
+    console.log("Chart Response Debug:", {
+      title: parsed.title,
+      chart_type: parsed.chart_type,
+      data_type: typeof parsed.data,
+      data_is_object: typeof parsed.data === "object",
+      data_keys: typeof parsed.data === "object" ? Object.keys(parsed.data) : "not an object",
+      x_axis: typeof parsed.data === "object" ? (parsed.data as any).x_axis : "N/A",
+      y_axis: typeof parsed.data === "object" ? (parsed.data as any).y_axis : "N/A",
+    });
+  }
+
   return (
     <>
       {/* Render based on format type */}
-      {response.format === "text" && (
+      {parsed.format === "text" && (
         <SummaryTextSection
-          title={response.title}
-          description={response.data as string}
-          bottomDescription={response.insights || undefined}
+          title={parsed.title}
+          description={parsed.data}
+          bottomDescription={parsed.insights}
           className={className}
         />
       )}
 
-      {response.format === "table" && response.data && (
+      {parsed.format === "table" && (
         <SummaryTableSection
-          title={response.title}
+          title={parsed.title}
           columns={
-            response.data && (response.data as any[]).length > 0
-              ? Object.keys((response.data as any[])[0]).map((key) => ({
+            parsed.data && parsed.data.length > 0
+              ? Object.keys(parsed.data[0]).map((key) => ({
                   key,
                   header: formatHeader(key),
                   render: createCellRenderer(key),
                 }))
               : []
           }
-          data={response.data as any[]}
-          bottomDescription={response.insights || undefined}
+          data={parsed.data}
+          bottomDescription={parsed.insights}
           className={className}
         />
       )}
 
-      {response.format === "chart" && (
-        <SummaryChartSection
-          title={response.title}
-          chartType={mapChartType(response.chart_type)}
-          data={transformChartData(
-            response.data,
-            mapChartType(response.chart_type)
-          )}
-          chartConfig={generateChartConfig(
-            response.data,
-            mapChartType(response.chart_type)
-          )}
-          bottomDescription={response.insights || undefined}
-          className={className}
-        />
-      )}
+      {parsed.format === "chart" && (() => {
+        try {
+          // Ensure data is an object
+          if (typeof parsed.data !== "object" || parsed.data === null) {
+            throw new Error(`Chart data must be an object, got ${typeof parsed.data}`);
+          }
+
+          const chartType = mapChartType(parsed.chart_type);
+          console.log("Mapped chart type:", parsed.chart_type, "->", chartType);
+
+          const transformedData = transformChartData(parsed.data, chartType);
+          console.log("Transformed data:", transformedData);
+
+          const config = generateChartConfig(
+            transformedData,
+            chartType,
+            parsed.data.y_axis
+          );
+          console.log("Generated config:", config);
+
+          return (
+            <SummaryChartSection
+              title={parsed.title}
+              chartType={chartType}
+              data={transformedData}
+              chartConfig={config}
+              bottomDescription={parsed.insights}
+              className={className}
+            />
+          );
+        } catch (error) {
+          console.error("Error rendering chart:", error);
+          return (
+            <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              Error rendering chart: {error instanceof Error ? error.message : String(error)}
+            </div>
+          );
+        }
+      })()}
     </>
   );
 }

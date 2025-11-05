@@ -94,6 +94,10 @@ export class InsightAgentService {
         title: agentOutput.title,
         format,
         ...responseData,
+        // Include chart_type for chart format responses
+        ...(format === "chart" && (agentOutput as any).chart_type
+          ? { chart_type: (agentOutput as any).chart_type }
+          : {}),
       };
 
       return {

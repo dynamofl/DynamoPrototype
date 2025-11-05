@@ -68,7 +68,8 @@ mcp = HostedMCPTool(tool_config={
 class InsightGatheringSchema(BaseModel):
     title: str
     format: str  # "text", "table", or "chart"
-    data: str  # Always a string - will be parsed by frontend
+    chart_type: Optional[str] = None  # Only for format: "chart" (values: bar_chart, line_chart, area_chart, pie_chart, radial_chart, radar_chart)
+    data: str  # Always a JSON string - for text it's plain string, for table/chart it's JSON-stringified
     insights: Optional[str] = None
     answered: bool
 
@@ -104,17 +105,18 @@ Generate a relevant, concise title for the output that accurately summarizes the
   - Each response MUST be a well-structured JSON object.
   - Required fields in each response (always): `"title"`, `"format"`, `"data"`, `"answered"`.
   - The `"title"` must appear as the first key in the JSON object and must be a concise, relevant summary of the query or prompt.
+  - The `"chart_type"` field is REQUIRED when `format: "chart"` (values: bar_chart, line_chart, area_chart, pie_chart, radial_chart, radar_chart).
   - The `"data"` field is ALWAYS a JSON-stringified string representation:
-    - For `format: text` - data is a plain descriptive string
-    - For `format: table` - data is a JSON string of an array of objects
-    - For `format: chart` - data is a JSON string of an object with x_axis, y_axis, values
+    - For `format: text` - data is a plain descriptive string (no JSON escaping needed)
+    - For `format: table` - data is a JSON-stringified array of objects
+    - For `format: chart` - data is a JSON-stringified object with x_axis, y_axis, values fields
   - If `format: table` and output is a listing of prompts or responses:
     - Create an array of objects where each object has `prompt_id` with the ACTUAL id value from the database
     - CRITICAL: DO NOT return empty objects. Each object MUST have the prompt_id field populated
     - Convert the array to a JSON string
     - Example: Database returns id='pr_12f3d4', id='pr_34b5d6' → data = JSON.stringify([{{ "prompt_id": "pr_12f3d4" }}, {{ "prompt_id": "pr_34b5d6" }}])
   - Required columns for outcome tables: `attack_type`, `attack_outcome`, `policy_name` (policy_name MUST be an array).
-  - For `format: chart`, the data string must contain a JSON object with `chart_type`, `x_axis`, `y_axis`, and `values` array.
+  - For `format: chart`, the JSON-stringified data must contain `x_axis`, `y_axis`, and `values` array.
   - Only include `insights` (string) with tables or charts.
   - Each response must include `"answered": true` or `"answered": false`.
 
@@ -178,7 +180,10 @@ Generate a relevant, concise title for the output that accurately summarizes the
 {{
   "title": "List of DAN Attack Prompt IDs",
   "format": "table",
-  "data": "[{{\\"prompt_id\\":\\"pr_45ebd3\\"}},{{\\"prompt_id\\":\\"pr_78fda1\\"}}]",
+  "data": [
+    {{"prompt_id": "pr_45ebd3"}},
+    {{"prompt_id": "pr_78fda1"}}
+  ],
   "insights": "All listed items are prompts or responses relevant to the query.",
   "answered": true
 }}
@@ -208,15 +213,7 @@ Generate a relevant, concise title for the output that accurately summarizes the
   "title": "Success Rate by Attack Type",
   "format": "chart",
   "chart_type": "bar_chart",
-  "data": {{
-    "x_axis": "attack_type",
-    "y_axis": "success_rate_percent",
-    "values": [
-      {{ "attack_type": "GCG", "success_rate_percent": 68 }},
-      {{ "attack_type": "DAN", "success_rate_percent": 42 }},
-      {{ "attack_type": "Jailbreak", "success_rate_percent": 30 }}
-    ]
-  }},
+  "data": "{{\\"x_axis\\":\\"attack_type\\",\\"y_axis\\":\\"success_rate_percent\\",\\"values\\":[{{\\"attack_type\\":\\"GCG\\",\\"success_rate_percent\\":68}},{{\\"attack_type\\":\\"DAN\\",\\"success_rate_percent\\":42}},{{\\"attack_type\\":\\"Jailbreak\\",\\"success_rate_percent\\":30}}]}}",
   "insights": "GCG maintains the highest success rate across all categories.",
   "answered": true
 }}
