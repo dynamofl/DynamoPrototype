@@ -89,10 +89,11 @@ def insight_gathering_instructions(run_context: RunContextWrapper[InsightGatheri
     return f"""
 Generate a relevant, concise title for the output that accurately summarizes the query or task, and include it as a required field in every JSON response.
 
-- Your response must comply with all output formatting, validation, and schema rules detailed below, with the addition that each output must now contain a "title" field.
-- The title must be specific to the input query or prompt, succinct (8 words or less), and should summarize the primary focus or intent of the request.
-- Always provide the title as the first field in each output JSON object.
-- Ensure that generating the title is the first step in constructing your response, based on your reasoning about the user's intent.
+- Analyze the user's query to generate a concise, relevant title (8 words or fewer) that summarizes the primary focus or intent of the request. This title must be included as the first property of every output JSON object.
+- Strictly comply with the schema, output formatting, and validation requirements detailed below.
+- The output `insights` field is required for tables or charts and must contain detailed, critical analysis of the data, with a focus on identifying key patterns, trends, risk factors, anomalies, or critical knowledge useful for risk understanding and mitigation—not just restating data.
+- Ensure that your insights help the user understand the underlying patterns, critical risk factors, or actionable knowledge present in the data (for example: surfacing underlying causes of high attack success rates, highlighting outlier behaviors, or exposing trends connected to policy vulnerabilities).
+- All responses must be a single, well-formed JSON object (never in code blocks).
 
 # Output Format and Requirements
 
@@ -117,7 +118,7 @@ Generate a relevant, concise title for the output that accurately summarizes the
     - Example: Database returns id='pr_12f3d4', id='pr_34b5d6' → data = JSON.stringify([{{ "prompt_id": "pr_12f3d4" }}, {{ "prompt_id": "pr_34b5d6" }}])
   - Required columns for outcome tables: `attack_type`, `attack_outcome`, `policy_name` (policy_name MUST be an array).
   - For `format: chart`, the JSON-stringified data must contain `x_axis`, `y_axis`, and `values` array.
-  - Only include `insights` (string) with tables or charts.
+  - Only include `insights` (string) with tables or charts. Make sure insights are highly detailed and analytical, surfacing meaningful, non-obvious patterns or risk information.
   - Each response must include `"answered": true` or `"answered": false`.
 
 - **Validation:**
@@ -154,7 +155,8 @@ Generate a relevant, concise title for the output that accurately summarizes the
    Example SQL: SELECT id, attack_type FROM {state_evaluation_type}_prompts WHERE evaluation_id = '{state_evaluation_id}' AND attack_type = 'DAN'
    Example output mapping: For each row with id='abc123', create object {{ "prompt_id": "abc123" }}
 8. Populate required fields for charts/tables with REAL DATA from database results, ensure valid JSON output in the prescribed schema including the "title" as the first field.
-9. If the query cannot be answered, output the fallback response (with an appropriately relevant title).
+9. For tables or charts, provide not only the required data and structure, but also a highly detailed, pattern-finding, analytical `insights` field highlighting significant patterns, anomalies, or risk-relevant trends.
+10. If the query cannot be answered, output the fallback response (with an appropriately relevant title).
 
 # Output Format
 
@@ -163,6 +165,7 @@ Generate a relevant, concise title for the output that accurately summarizes the
 - Use the required field schema above.
 - For prompt/response listings: in `format: table`, only output objects with `prompt_id` (plus any other explicitly requested fields).
 - For charts: use the `chart_type` and nested data schema.
+- "insights" must be present (with detailed, critical, risk-focused analysis) for tables/charts and absent for text.
 - For text: respond with a summary string.
 
 # Examples
@@ -184,9 +187,10 @@ Generate a relevant, concise title for the output that accurately summarizes the
     {{"prompt_id": "pr_45ebd3"}},
     {{"prompt_id": "pr_78fda1"}}
   ],
-  "insights": "All listed items are prompts or responses relevant to the query.",
+  "insights": "Prompts listed have been frequently targeted by jailbreak attacks, indicating a pattern in attacker preferences that may reveal underlying vulnerabilities within the current evaluation scope.",
   "answered": true
 }}
+(Real outputs should provide deeper insight about the distribution or clustering of prompt usage over time, attack focus, or related policy weaknesses when such patterns exist.)
 
 **Valid Table Example (Attack Outcomes Table):**
 {{
@@ -204,7 +208,7 @@ Generate a relevant, concise title for the output that accurately summarizes the
       "policy_name": ["Prohibit Financial Advice", "Prohibit Compensation Data"]
     }}
   ],
-  "insights": "GCG attacks outperform DAN in financial-policy scenarios.",
+  "insights": "GCG attacks demonstrate a high success rate against the 'Prohibit Financial Advice' policy, revealing a significant policy vulnerability compared to cases where multiple policies are enforced. This suggests targeted risk in single-policy contexts.",
   "answered": true
 }}
 
@@ -214,7 +218,7 @@ Generate a relevant, concise title for the output that accurately summarizes the
   "format": "chart",
   "chart_type": "bar_chart",
   "data": "{{\\"x_axis\\":\\"attack_type\\",\\"y_axis\\":\\"success_rate_percent\\",\\"values\\":[{{\\"attack_type\\":\\"GCG\\",\\"success_rate_percent\\":68}},{{\\"attack_type\\":\\"DAN\\",\\"success_rate_percent\\":42}},{{\\"attack_type\\":\\"Jailbreak\\",\\"success_rate_percent\\":30}}]}}",
-  "insights": "GCG maintains the highest success rate across all categories.",
+  "insights": "There is a clear pattern of elevated success rates for GCG-type attacks, with a drop-off for other types, suggesting that current defenses may need to specifically address GCG methodologies to mitigate risk.",
   "answered": true
 }}
 
@@ -236,6 +240,7 @@ Generate a relevant, concise title for the output that accurately summarizes the
 - When outputting listings of prompts or responses, use `format: table` and present `prompt_id` as the only column unless otherwise instructed. Do not include full prompt text in these listings.
 - For each table or chart output, include an `insights` summary if possible.
 - If the input query cannot be answered, return the specified fallback JSON response with an appropriate title.
+- "insights" must always demonstrate reasoning that critically examines the data, exposes non-obvious trends, or analyzes risk factors and critical patterns—do not merely restate data or describe columns.
 
 **CRITICAL - Data Extraction Requirements:**
 - NEVER return empty objects [{{}}] in the data array

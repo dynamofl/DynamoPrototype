@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { InsightResponse } from "@/lib/agents/types";
 import type { ChartType } from "./templates/types";
 import {
@@ -7,10 +8,13 @@ import {
 } from "./templates";
 import type { ChartConfig } from "@/components/ui/chart";
 import { parseAgentResponseSafe } from "./parse-agent-response";
+import { PromptEnrichmentService } from "@/lib/services/prompt-enrichment-service";
 
 interface AgentResponseRendererProps {
   response: InsightResponse;
   className?: string;
+  evaluationId?: string;
+  evaluationType?: 'jailbreak' | 'compliance';
 }
 
 // Helper function to map chart type names from underscore format to simple format
@@ -36,9 +40,22 @@ function formatHeader(key: string): string {
     .join(' ');
 }
 
+// Helper function to truncate long text
+function truncateText(text: string, maxLength: number = 60): string {
+  if (text.length <= maxLength) {
+    return text;
+  }
+  return text.substring(0, maxLength) + '...';
+}
+
 // Helper function to render cell values with special handling for arrays and badges
 function createCellRenderer(key: string) {
   return (value: any) => {
+    // Handle empty values
+    if (value === null || value === undefined || value === '') {
+      return <span className="text-gray-400">—</span>;
+    }
+
     // Handle arrays (like policy_name)
     if (Array.isArray(value)) {
       return (
@@ -55,23 +72,78 @@ function createCellRenderer(key: string) {
       );
     }
 
-    // Handle attack_outcome with colored badges
-    if (key === 'attack_outcome') {
+    // Handle base_prompt - truncate long text with title hover
+    if (key === 'base_prompt') {
+      const textValue = String(value);
+      const truncated = truncateText(textValue, 60);
       return (
-        <span
-          className={`inline-flex items-center px-2 py-0.5 rounded text-xs ${
-            value === "Attack Success"
-              ? "bg-red-100 text-red-700"
-              : "bg-green-100 text-green-700"
-          }`}
-        >
+        <span title={textValue} className="text-gray-700 cursor-help">
+          {truncated}
+        </span>
+      );
+    }
+
+    // Handle topic - display as gray badge
+    if (key === 'topic') {
+      return (
+        <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-450 bg-gray-100 text-gray-700">
           {String(value)}
         </span>
       );
     }
 
+    // Handle attack_type - display as colored badge
+    if (key === 'attack_type') {
+      const attackTypeColors: Record<string, string> = {
+        'DAN': 'bg-blue-100 text-blue-700',
+        'TAP': 'bg-purple-100 text-purple-700',
+        'PAP': 'bg-pink-100 text-pink-700',
+        'GCG': 'bg-amber-100 text-amber-700',
+        'IRIS': 'bg-green-100 text-green-700',
+        'Leetspeak': 'bg-orange-100 text-orange-700',
+        'ASCII Art': 'bg-cyan-100 text-cyan-700',
+        'Typos': 'bg-indigo-100 text-indigo-700',
+        'Casing Changes': 'bg-slate-100 text-slate-700',
+        'Synonyms': 'bg-teal-100 text-teal-700',
+      };
+      const textValue = String(value);
+      const colorClass = attackTypeColors[textValue] || 'bg-gray-100 text-gray-700';
+
+      return (
+        <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-450 ${colorClass}`}>
+          {textValue}
+        </span>
+      );
+    }
+
+    // Handle attack_outcome with colored badges
+    if (key === 'attack_outcome') {
+      const textValue = String(value);
+      return (
+        <span
+          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-450 ${
+            textValue === "Attack Success"
+              ? "bg-red-100 text-red-700"
+              : textValue === "Attack Failure"
+                ? "bg-green-100 text-green-700"
+                : textValue === "TP"
+                  ? "bg-green-100 text-green-700"
+                  : textValue === "TN"
+                    ? "bg-green-100 text-green-700"
+                    : textValue === "FP"
+                      ? "bg-red-100 text-red-700"
+                      : textValue === "FN"
+                        ? "bg-amber-100 text-amber-700"
+                        : "bg-gray-100 text-gray-700"
+          }`}
+        >
+          {textValue}
+        </span>
+      );
+    }
+
     // Default: render as string
-    return <span>{String(value)}</span>;
+    return <span className="text-gray-700">{String(value)}</span>;
   };
 }
 
@@ -186,9 +258,72 @@ function generateChartConfig(
 export function AgentResponseRenderer({
   response,
   className = "",
+  evaluationId,
+  evaluationType,
 }: AgentResponseRendererProps) {
   // Parse the raw response into properly typed data
   const parsed = parseAgentResponseSafe(response);
+
+  // State for table enrichment
+  const [enrichedTableData, setEnrichedTableData] = useState<any[] | null>(null);
+  const [isEnriching, setIsEnriching] = useState(false);
+  const [enrichmentError, setEnrichmentError] = useState<string | null>(null);
+
+  // Effect to enrich table data if needed
+  useEffect(() => {
+    if (
+      parsed.format === "table" &&
+      evaluationId &&
+      Array.isArray(parsed.data) &&
+      PromptEnrichmentService.hasPromptIdColumn(parsed.data)
+    ) {
+      enrichTableData();
+    }
+  }, [parsed, evaluationId, evaluationType]);
+
+  // Function to perform table enrichment
+  const enrichTableData = async () => {
+    if (!evaluationId || !Array.isArray(parsed.data)) {
+      return;
+    }
+
+    setIsEnriching(true);
+    setEnrichmentError(null);
+
+    try {
+      const result = await PromptEnrichmentService.enrichTableData(parsed.data, {
+        evaluationId,
+        evaluationType,
+        promptIds: PromptEnrichmentService.extractPromptIds(parsed.data),
+      });
+
+      if (result.success && result.enrichedData) {
+        const mergedData = PromptEnrichmentService.mergeEnrichedData(
+          parsed.data,
+          result.enrichedData
+        );
+        setEnrichedTableData(mergedData);
+
+        if (result.failedPromptIds && result.failedPromptIds.length > 0) {
+          setEnrichmentError(
+            `Warning: Could not enrich ${result.failedPromptIds.length} prompt(s)`
+          );
+        }
+      } else {
+        setEnrichmentError(result.error || 'Failed to enrich table data');
+      }
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown enrichment error';
+      console.error('Table enrichment error:', errorMessage);
+      setEnrichmentError(errorMessage);
+    } finally {
+      setIsEnriching(false);
+    }
+  };
+
+  // Determine which data to display (enriched or original)
+  const displayData = parsed.format === "table" && enrichedTableData ? enrichedTableData : parsed.data;
 
   return (
     <>
@@ -203,21 +338,43 @@ export function AgentResponseRenderer({
       )}
 
       {parsed.format === "table" && (
-        <SummaryTableSection
-          title={parsed.title}
-          columns={
-            parsed.data && parsed.data.length > 0
-              ? Object.keys(parsed.data[0]).map((key) => ({
-                  key,
-                  header: formatHeader(key),
-                  render: createCellRenderer(key),
-                }))
-              : []
-          }
-          data={parsed.data}
-          bottomDescription={parsed.insights}
-          className={className}
-        />
+        <>
+          {/* Enrichment loading state */}
+          {isEnriching && (
+            <div className="max-w-4xl mx-auto my-4 px-3">
+              <div className="flex items-center gap-2 p-3 rounded-md bg-blue-50 border border-blue-200">
+                <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                <span className="text-sm text-blue-700">Enriching table data...</span>
+              </div>
+            </div>
+          )}
+
+          {/* Enrichment error state */}
+          {enrichmentError && (
+            <div className="max-w-4xl mx-auto my-4 px-3">
+              <div className="p-3 rounded-md bg-amber-50 border border-amber-200">
+                <span className="text-sm text-amber-700">{enrichmentError}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Table rendering */}
+          <SummaryTableSection
+            title={parsed.title}
+            columns={
+              displayData && Array.isArray(displayData) && displayData.length > 0
+                ? Object.keys(displayData[0]).map((key) => ({
+                    key,
+                    header: formatHeader(key),
+                    render: createCellRenderer(key),
+                  }))
+                : []
+            }
+            data={displayData || []}
+            bottomDescription={parsed.insights}
+            className={className}
+          />
+        </>
       )}
 
       {parsed.format === "chart" && (() => {
