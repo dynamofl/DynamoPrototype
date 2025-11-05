@@ -23,8 +23,6 @@ export class InsightAgentService {
     evaluationType?: string
   ): Promise<AgentServiceResponse> {
     try {
-      console.log("Agent query:", message, "Evaluation:", evaluationId, "Type:", evaluationType);
-
       // Call the FastAPI endpoint
       const response = await fetch(`${AGENT_API_URL}/api/insight`, {
         method: 'POST',
@@ -40,12 +38,11 @@ export class InsightAgentService {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Edge function error response:', errorText);
-        throw new Error(`Edge function error (${response.status}): ${errorText}`);
+        console.error('Agent API error response:', errorText);
+        throw new Error(`Agent API error (${response.status}): ${errorText}`);
       }
 
       const result = await response.json();
-      console.log('Edge function result:', result);
 
       if (!result.success) {
         throw new Error(result.error || 'Unknown error from edge function');

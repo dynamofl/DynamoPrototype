@@ -98,13 +98,7 @@ export function parseAgentResponse(response: InsightResponse): ParsedInsightResp
 
     // Handle chart format - data is JSON stringified object with chart metadata (may be double-stringified)
     if (response.format === "chart") {
-      console.log("Parsing chart response. Raw response:", response);
-      console.log("Raw data type:", typeof response.data);
-
       const chartData = parseJSON(response.data);
-
-      console.log("After parseJSON, chartData type:", typeof chartData, "keys:",
-        typeof chartData === "object" && chartData ? Object.keys(chartData) : "N/A");
 
       // Validate chart data structure
       if (!chartData || typeof chartData !== "object") {
@@ -117,25 +111,19 @@ export function parseAgentResponse(response: InsightResponse): ParsedInsightResp
       // Try 1: Direct property access
       if ((response as any).chart_type) {
         chartType = (response as any).chart_type;
-        console.log("Found chart_type via direct property:", chartType);
       }
       // Try 2: Object.keys search
       else if (Object.keys(response).find(key => key === "chart_type")) {
         chartType = (Object.entries(response).find(([key]) => key === "chart_type")?.[1] as string);
-        console.log("Found chart_type via Object.keys:", chartType);
       }
       // Try 3: Within chart data
       else if (chartData.chart_type) {
         chartType = chartData.chart_type;
-        console.log("Found chart_type within chart data:", chartType);
       }
       // Default fallback
       else {
         chartType = "bar_chart";
-        console.warn("chart_type not found, defaulting to bar_chart");
       }
-
-      console.log("Final extracted chart_type:", chartType);
 
       if (!chartData.x_axis || !chartData.y_axis || !Array.isArray(chartData.values)) {
         throw new Error(
@@ -156,7 +144,6 @@ export function parseAgentResponse(response: InsightResponse): ParsedInsightResp
         answered: (response as any).answered ?? true,
       };
 
-      console.log("Parsed chart response:", parsed);
       return parsed;
     }
 
