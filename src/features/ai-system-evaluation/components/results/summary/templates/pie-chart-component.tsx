@@ -5,11 +5,12 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import type { ChartComponentProps } from "./types";
+import styles from "./pie-chart-component.module.css";
 
 export function PieChartComponent({
   data,
   chartConfig,
-  height = "240px",
+  height = "320px",
   className = "",
 }: ChartComponentProps) {
   // Get colors from chartConfig for each data item
@@ -30,7 +31,7 @@ export function PieChartComponent({
   };
 
   return (
-    <ChartContainer config={chartConfig} className={`h-[${height}] w-full ${className}`}>
+    <ChartContainer config={chartConfig} className={`h-64 w-full ${className} ${styles.pieChart}`}>
       <PieChart>
         <ChartTooltip content={<ChartTooltipContent />} />
         <Pie
@@ -40,19 +41,24 @@ export function PieChartComponent({
           cx="50%"
           cy="50%"
           outerRadius={80}
-          label={(entry) => entry.name}
-          labelLine={true}
+          label={(entry: any) => (
+            <text
+              x={entry.x}
+              y={entry.y}
+              fill="rgb(var(--gray-600))"
+              fontSize="12px"
+              textAnchor={entry.textAnchor}
+            >
+              {`${entry.name}: ${entry.value}`}
+            </text>
+          )}
+          labelLine={{ stroke: "rgb(var(--gray-300))" }}
         >
           {data.map((entry: any, index: number) => (
             <Cell key={`cell-${index}`} fill={getColor(index, entry.name)} />
           ))}
         </Pie>
-        <Legend
-          verticalAlign="bottom"
-          height={36}
-          iconType="circle"
-          wrapperStyle={{ fontSize: "12px" }}
-        />
+       
       </PieChart>
     </ChartContainer>
   );

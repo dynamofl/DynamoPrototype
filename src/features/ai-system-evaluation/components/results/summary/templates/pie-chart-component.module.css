@@ -1,0 +1,3 @@
+.pieChart :global(.recharts-legend-item-text) {
+  color: rgb(var(--gray-600)) !important;
+}
