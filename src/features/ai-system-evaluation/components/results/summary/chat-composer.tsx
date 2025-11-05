@@ -207,7 +207,11 @@ export function ChatComposer({
         <div key={result.id} className="mb-6">
           {/* Result Content */}
           {result.response && (
-            <AgentResponseRenderer response={result.response} />
+            <AgentResponseRenderer
+              response={result.response}
+              evaluationId={evaluationId}
+              evaluationType={evaluationType as 'jailbreak' | 'compliance' | undefined}
+            />
           )}
         </div>
       ))}
