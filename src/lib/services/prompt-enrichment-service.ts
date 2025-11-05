@@ -48,15 +48,23 @@ export class PromptEnrichmentService {
     tableData: any[],
     options: PromptEnrichmentOptions
   ): Promise<EnrichmentResult> {
+    const logPrefix = `[PromptEnrichment] Eval: ${options.evaluationId}`;
+
     try {
+      console.log(`${logPrefix} Starting enrichment process...`);
+
       // Check if enrichment is needed
       if (!this.hasPromptIdColumn(tableData)) {
+        console.log(`${logPrefix} No prompt_id column detected, skipping enrichment`);
         return { success: true, enrichedData: {} };
       }
 
       // Extract unique prompt IDs
       const promptIds = this.extractPromptIds(tableData);
+      console.log(`${logPrefix} Extracted ${promptIds.length} unique prompt IDs:`, promptIds);
+
       if (promptIds.length === 0) {
+        console.log(`${logPrefix} No prompt IDs found, skipping enrichment`);
         return { success: true, enrichedData: {} };
       }
 
@@ -67,28 +75,46 @@ export class PromptEnrichmentService {
         ? promptIds.filter((id) => !cachedData!.has(id))
         : promptIds;
 
+      console.log(`${logPrefix} Cache check:`, {
+        hasCachedData: !!cachedData,
+        cachedCount: cachedData?.size || 0,
+        neededIds: neededIds.length,
+      });
+
       if (neededIds.length === 0 && cachedData) {
         // All data is cached
+        console.log(`${logPrefix} All data found in cache, returning cached results`);
         return { success: true, enrichedData: Object.fromEntries(cachedData) };
       }
 
       // Fetch results for this evaluation
+      console.log(`${logPrefix} Fetching evaluation results for ${neededIds.length} needed IDs...`);
       const results = await EvaluationService.getEvaluationResults(
         options.evaluationId
       );
 
+      console.log(`${logPrefix} Fetch results:`, {
+        resultType: typeof results,
+        isArray: Array.isArray(results),
+        resultCount: Array.isArray(results) ? results.length : 'N/A',
+      });
+
       if (!results || !Array.isArray(results)) {
+        const errorMsg = `Results is not an array. Type: ${typeof results}, Value: ${JSON.stringify(results).substring(0, 100)}`;
+        console.error(`${logPrefix} ${errorMsg}`);
         return {
           success: false,
-          error: 'Failed to fetch evaluation results',
+          error: `Failed to fetch evaluation results: ${errorMsg}`,
           failedPromptIds: promptIds,
         };
       }
 
+      console.log(`${logPrefix} Processing ${results.length} evaluation results...`);
+
       // Create map of prompt_id -> enriched data
       const enrichedMap = new Map<string, EnrichedPromptData>();
 
-      results.forEach((result: any) => {
+      results.forEach((result: any, index: number) => {
         const promptId = result.id;
 
         // Extract relevant fields from result
@@ -101,7 +127,13 @@ export class PromptEnrichmentService {
         };
 
         enrichedMap.set(promptId, enrichedData);
+
+        if (index < 3) {
+          console.log(`${logPrefix} Sample result ${index + 1}:`, enrichedData);
+        }
       });
+
+      console.log(`${logPrefix} Mapped ${enrichedMap.size} prompts for enrichment`);
 
       // Update cache
       if (!cachedData) {
@@ -116,6 +148,12 @@ export class PromptEnrichmentService {
       // Track failed IDs
       const failedIds = promptIds.filter((id) => !enrichedMap.has(id));
 
+      if (failedIds.length > 0) {
+        console.warn(`${logPrefix} ${failedIds.length} prompt IDs not found in results:`, failedIds);
+      }
+
+      console.log(`${logPrefix} Enrichment complete. Success: ${failedIds.length === 0}`);
+
       return {
         success: failedIds.length === 0,
         enrichedData: Object.fromEntries(enrichedMap),
@@ -124,7 +162,8 @@ export class PromptEnrichmentService {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error during enrichment';
-      console.error('Prompt enrichment error:', errorMessage);
+      const stack = error instanceof Error ? error.stack : '';
+      console.error(`${logPrefix} ERROR:`, { errorMessage, stack });
 
       return {
         success: false,
