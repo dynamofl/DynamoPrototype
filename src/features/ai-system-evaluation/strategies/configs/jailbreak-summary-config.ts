@@ -140,20 +140,20 @@ export function getJailbreakSummaryConfig(): SummarySectionConfig[] {
     },
 
     // Section 9: Risk Combinations
-    {
-      key: 'riskCombinations',
-      order: 9,
-      label: 'High Risk Scenarios',
-      componentKey: 'RiskCombinationsSection',
-      layout: {
-        container: 'constrained',
-        className: 'max-w-4xl mx-auto pb-2'
-      },
-      condition: (ctx: SummaryViewContext) => !!(ctx.summary as JailbreakEvaluationSummary).riskCombinations,
-      props: {
-        riskCombinations: (ctx: SummaryViewContext) => (ctx.summary as JailbreakEvaluationSummary).riskCombinations
-      }
-    },
+    // {
+    //   key: 'riskCombinations',
+    //   order: 9,
+    //   label: 'High Risk Scenarios',
+    //   componentKey: 'RiskCombinationsSection',
+    //   layout: {
+    //     container: 'constrained',
+    //     className: 'max-w-4xl mx-auto pb-2'
+    //   },
+    //   condition: (ctx: SummaryViewContext) => !!(ctx.summary as JailbreakEvaluationSummary).riskCombinations,
+    //   props: {
+    //     riskCombinations: (ctx: SummaryViewContext) => (ctx.summary as JailbreakEvaluationSummary).riskCombinations
+    //   }
+    // },
 
     // Section 10: Template Example - Text Section
     // {
