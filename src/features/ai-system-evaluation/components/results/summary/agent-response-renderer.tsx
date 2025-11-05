@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import type { InsightResponse } from "@/lib/agents/types";
 import type { ChartType } from "./templates/types";
 import {
@@ -8,13 +7,10 @@ import {
 } from "./templates";
 import type { ChartConfig } from "@/components/ui/chart";
 import { parseAgentResponseSafe } from "./parse-agent-response";
-import { PromptEnrichmentService } from "@/lib/services/prompt-enrichment-service";
 
 interface AgentResponseRendererProps {
   response: InsightResponse;
   className?: string;
-  evaluationId?: string;
-  evaluationType?: 'jailbreak' | 'compliance';
 }
 
 // Helper function to map chart type names from underscore format to simple format
@@ -258,97 +254,9 @@ function generateChartConfig(
 export function AgentResponseRenderer({
   response,
   className = "",
-  evaluationId,
-  evaluationType,
 }: AgentResponseRendererProps) {
   // Parse the raw response into properly typed data
   const parsed = parseAgentResponseSafe(response);
-
-  // State for table enrichment
-  const [enrichedTableData, setEnrichedTableData] = useState<any[] | null>(null);
-  const [isEnriching, setIsEnriching] = useState(false);
-  const [enrichmentError, setEnrichmentError] = useState<string | null>(null);
-
-  // Effect to enrich table data if needed
-  useEffect(() => {
-    if (
-      parsed.format === "table" &&
-      evaluationId &&
-      Array.isArray(parsed.data) &&
-      PromptEnrichmentService.hasPromptIdColumn(parsed.data)
-    ) {
-      console.log('[AgentRenderer] Table detected with prompt_id column, starting enrichment');
-      enrichTableData();
-    } else if (parsed.format === "table" && evaluationId) {
-      console.log('[AgentRenderer] Table detected but no prompt_id column, showing original data');
-    }
-  }, [parsed, evaluationId, evaluationType]);
-
-  // Function to perform table enrichment
-  const enrichTableData = async () => {
-    if (!evaluationId || !Array.isArray(parsed.data)) {
-      console.log('[AgentRenderer] Cannot enrich: missing evaluationId or data');
-      return;
-    }
-
-    setIsEnriching(true);
-    setEnrichmentError(null);
-    console.log('[AgentRenderer] Starting enrichment process...');
-
-    try {
-      const promptIds = PromptEnrichmentService.extractPromptIds(parsed.data);
-      console.log(`[AgentRenderer] Found ${promptIds.length} prompt IDs, calling enrichment service`);
-
-      const result = await PromptEnrichmentService.enrichTableData(parsed.data, {
-        evaluationId,
-        evaluationType,
-        promptIds,
-      });
-
-      console.log('[AgentRenderer] Enrichment service returned:', {
-        success: result.success,
-        enrichedCount: Object.keys(result.enrichedData || {}).length,
-        failedCount: result.failedPromptIds?.length || 0,
-        error: result.error,
-      });
-
-      if (result.success && result.enrichedData && Object.keys(result.enrichedData).length > 0) {
-        console.log('[AgentRenderer] Enrichment successful, merging data...');
-        const mergedData = PromptEnrichmentService.mergeEnrichedData(
-          parsed.data,
-          result.enrichedData
-        );
-        console.log('[AgentRenderer] Data merged, updating state with enriched table');
-        setEnrichedTableData(mergedData);
-
-        if (result.failedPromptIds && result.failedPromptIds.length > 0) {
-          const warningMsg = `Warning: Could not enrich ${result.failedPromptIds.length} prompt(s)`;
-          console.warn('[AgentRenderer]', warningMsg);
-          setEnrichmentError(warningMsg);
-        } else {
-          console.log('[AgentRenderer] All prompts enriched successfully');
-        }
-      } else if (result.error) {
-        const errorMsg = result.error || 'Failed to enrich table data';
-        console.error('[AgentRenderer] Enrichment failed:', errorMsg);
-        setEnrichmentError(errorMsg);
-      } else {
-        console.log('[AgentRenderer] Enrichment returned empty data');
-        setEnrichmentError('No enriched data available');
-      }
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown enrichment error';
-      console.error('[AgentRenderer] Enrichment threw error:', errorMessage, error);
-      setEnrichmentError(errorMessage);
-    } finally {
-      setIsEnriching(false);
-      console.log('[AgentRenderer] Enrichment process complete');
-    }
-  };
-
-  // Determine which data to display (enriched or original)
-  const displayData = parsed.format === "table" && enrichedTableData ? enrichedTableData : parsed.data;
 
   return (
     <>
@@ -363,48 +271,21 @@ export function AgentResponseRenderer({
       )}
 
       {parsed.format === "table" && (
-        <>
-          {/* Enrichment loading state */}
-          {isEnriching && (
-            <div className="max-w-4xl mx-auto my-4 px-3">
-              <div className="flex items-center gap-2 p-3 rounded-md bg-blue-50 border border-blue-200">
-                <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                <span className="text-sm text-blue-700">Enriching table data with full prompt details...</span>
-              </div>
-            </div>
-          )}
-
-          {/* Only show table after enrichment completes (or if no enrichment needed) */}
-          {!isEnriching && (
-            <>
-              {/* Enrichment error state */}
-              {enrichmentError && (
-                <div className="max-w-4xl mx-auto my-4 px-3">
-                  <div className="p-3 rounded-md bg-amber-50 border border-amber-200">
-                    <span className="text-sm text-amber-700">{enrichmentError}</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Table rendering */}
-              <SummaryTableSection
-                title={parsed.title}
-                columns={
-                  displayData && Array.isArray(displayData) && displayData.length > 0
-                    ? Object.keys(displayData[0]).map((key) => ({
-                        key,
-                        header: formatHeader(key),
-                        render: createCellRenderer(key),
-                      }))
-                    : []
-                }
-                data={displayData || []}
-                bottomDescription={parsed.insights}
-                className={className}
-              />
-            </>
-          )}
-        </>
+        <SummaryTableSection
+          title={parsed.title}
+          columns={
+            parsed.data && Array.isArray(parsed.data) && parsed.data.length > 0
+              ? Object.keys(parsed.data[0]).map((key) => ({
+                  key,
+                  header: formatHeader(key),
+                  render: createCellRenderer(key),
+                }))
+              : []
+          }
+          data={parsed.data || []}
+          bottomDescription={parsed.insights}
+          className={className}
+        />
       )}
 
       {parsed.format === "chart" && (() => {
