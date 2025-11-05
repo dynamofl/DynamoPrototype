@@ -1,107 +1,43 @@
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import type { InsightResponse } from "@/lib/agents/types";
+import type { ChartType } from "./templates/types";
+import {
+  SummaryTextSection,
+  SummaryTableSection,
+  SummaryChartSection,
+} from "./templates";
+import type { ChartConfig } from "@/components/ui/chart";
 
 interface AgentResponseRendererProps {
   response: InsightResponse;
   className?: string;
 }
 
-export function AgentResponseRenderer({
-  response,
-  className = "",
-}: AgentResponseRendererProps) {
-  return (
-    <div className={`space-y-3 ${className}`}>
-      {/* Display title if present */}
-      {response.title && (
-        <div className="pb-1">
-          <h4 className="text-sm font-550 text-gray-900">{response.title}</h4>
-        </div>
-      )}
-
-      {/* Render based on format type */}
-      {response.format === "text" && (
-        <TextResponse data={response.data} insights={response.insights} />
-      )}
-
-      {response.format === "table" && (
-        <TableResponse data={response.data} insights={response.insights} />
-      )}
-
-      {response.format === "chart" && (
-        <ChartResponse
-          data={response.data}
-          insights={response.insights}
-          chartType={response.chart_type}
-        />
-      )}
-    </div>
-  );
-}
-
-// Text Response Component
-function TextResponse({
-  data,
-  insights,
-}: {
-  data: string;
-  insights: string | null;
-}) {
-  return (
-    <div className="space-y-2">
-      <p className="text-sm font-[425] leading-5 text-gray-900">{data}</p>
-      {insights && (
-        <div className="mt-2 pt-2 border-t border-gray-200">
-          <p className="text-xs font-450 text-gray-600 mb-1">Insights:</p>
-          <p className="text-xs font-[425] leading-5 text-gray-600">
-            {insights}
-          </p>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Table Response Component
-function TableResponse({
-  data,
-  insights,
-}: {
-  data: Array<Record<string, any>>;
-  insights?: string;
-}) {
-  if (!data || data.length === 0) {
-    return (
-      <p className="text-sm font-[425] text-gray-600">No data available</p>
-    );
-  }
-
-  // Get column names from the first row
-  const columns = Object.keys(data[0]);
-
-  // Helper to format column header
-  const formatHeader = (key: string) => {
-    return key
-      .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+// Helper function to map chart type names from underscore format to simple format
+function mapChartType(
+  chartType: "bar_chart" | "line_chart" | "area_chart" | "pie_chart" | "radial_chart" | "radar_chart"
+): ChartType {
+  const chartTypeMap: Record<string, ChartType> = {
+    bar_chart: "bar",
+    line_chart: "line",
+    area_chart: "area",
+    pie_chart: "pie",
+    radial_chart: "radial",
+    radar_chart: "radar",
   };
+  return chartTypeMap[chartType] || "bar";
+}
 
-  // Helper to render cell value
-  const renderCellValue = (value: any, key: string) => {
+// Helper function to format column header from snake_case to Title Case
+function formatHeader(key: string): string {
+  return key
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+// Helper function to render cell values with special handling for arrays and badges
+function createCellRenderer(key: string) {
+  return (value: any) => {
     // Handle arrays (like policy_name)
     if (Array.isArray(value)) {
       return (
@@ -136,116 +72,171 @@ function TableResponse({
     // Default: render as string
     return <span>{String(value)}</span>;
   };
-
-  return (
-    <div className="space-y-3">
-      <div className="rounded-md border border-gray-200 overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-100 border-0 hover:bg-gray-100">
-              {columns.map((column) => (
-                <TableHead key={column} className="font-450 text-xs pl-3">
-                  {formatHeader(column)}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.map((row, index) => (
-              <TableRow key={index}>
-                {columns.map((column) => (
-                  <TableCell key={column} className="text-xs font-450 text-gray-900 pl-3">
-                    {renderCellValue(row[column], column)}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
-      {insights && (
-        <div className="pt-2 border-t border-gray-200">
-          <p className="text-xs font-450 text-gray-600 mb-1">Insights:</p>
-          <p className="text-xs font-[425] leading-5 text-gray-600">
-            {insights}
-          </p>
-        </div>
-      )}
-    </div>
-  );
 }
 
-// Chart Response Component
-function ChartResponse({
-  data,
-  insights,
-  chartType,
-}: {
-  data: {
+// Helper function to transform chart data to template format
+function transformChartData(
+  agentData: {
     x_axis: string;
     y_axis: string;
-    values: Array<{
-      [key: string]: string | number;
-    }>;
+    values: Array<{ [key: string]: string | number }>;
+  },
+  chartType: ChartType
+): Array<{ [key: string]: string | number }> {
+  const { values, x_axis, y_axis } = agentData;
+
+  // Map field names based on chart type
+  const fieldMapping: Record<ChartType, { xField: string; yField: string | null }> = {
+    bar: { xField: "category", yField: null },
+    line: { xField: "x", yField: null },
+    area: { xField: "x", yField: null },
+    pie: { xField: "name", yField: "value" },
+    radial: { xField: "name", yField: "value" },
+    radar: { xField: "metric", yField: null },
   };
-  insights?: string;
-  chartType: "bar_chart" | "line_chart" | "area_chart" | "pie_chart" | "radial_chart" | "radar_chart";
-}) {
-  if (!data || !data.values || data.values.length === 0) {
-    return (
-      <p className="text-sm font-[425] text-gray-600">No chart data available</p>
-    );
+
+  const mapping = fieldMapping[chartType];
+
+  return values.map((item) => {
+    const transformed: { [key: string]: string | number } = {};
+
+    // Map x_axis to the appropriate field name for this chart type
+    transformed[mapping.xField] = item[x_axis];
+
+    // Map y_axis value(s)
+    if (mapping.yField) {
+      transformed[mapping.yField] = item[y_axis];
+    } else {
+      transformed[y_axis] = item[y_axis];
+    }
+
+    // Include any additional fields in the original data
+    Object.keys(item).forEach((key) => {
+      if (key !== x_axis && key !== y_axis) {
+        transformed[key] = item[key];
+      }
+    });
+
+    return transformed;
+  });
+}
+
+// Helper function to generate chart config with proper color assignments
+function generateChartConfig(
+  agentData: {
+    x_axis: string;
+    y_axis: string;
+    values: Array<{ [key: string]: string | number }>;
+  },
+  chartType: ChartType
+): ChartConfig {
+  const { y_axis, values } = agentData;
+
+  // For pie and radial charts, create color entries for each name value
+  if (chartType === "pie" || chartType === "radial") {
+    const nameField = chartType === "pie" ? "name" : "name";
+    const chartConfig: ChartConfig = {};
+    const colorVars = [
+      "var(--chart-1)",
+      "var(--chart-2)",
+      "var(--chart-3)",
+      "var(--chart-4)",
+      "var(--chart-5)",
+    ];
+
+    values.forEach((item, index) => {
+      const nameValue = String(item[nameField] || item["name"] || "");
+      if (nameValue) {
+        chartConfig[nameValue] = {
+          label: nameValue,
+          color: colorVars[index % colorVars.length],
+        };
+      }
+    });
+
+    return chartConfig;
   }
 
-  // Create chart config dynamically
-  const chartConfig = {
-    [data.y_axis]: {
-      label: data.y_axis,
-      color: "hsl(var(--chart-1))",
+  // For radar chart, get unique y-axis values
+  if (chartType === "radar") {
+    const chartConfig: ChartConfig = {};
+    const colorVars = ["var(--chart-1)", "var(--chart-2)"];
+
+    // Find all numeric keys in the data (excluding metric field)
+    if (values.length > 0) {
+      const firstItem = values[0];
+      Object.keys(firstItem).forEach((key, index) => {
+        if (key !== "metric") {
+          chartConfig[key] = {
+            label: formatHeader(key),
+            color: colorVars[index % colorVars.length],
+          };
+        }
+      });
+    }
+
+    return chartConfig;
+  }
+
+  // For bar, line, area charts
+  return {
+    [y_axis]: {
+      label: formatHeader(y_axis),
+      color: "var(--chart-1)",
     },
   };
+}
 
+export function AgentResponseRenderer({
+  response,
+  className = "",
+}: AgentResponseRendererProps) {
   return (
-    <div className="space-y-3">
-      <div className="rounded-md border border-gray-200 p-3">
-        {/* TODO: Implement different chart types based on chartType prop */}
-        {/* Currently rendering bar_chart for all types */}
-        <ChartContainer config={chartConfig} className="h-[200px] w-full">
-          <BarChart
-            data={data.values}
-            margin={{ left: 4, right: 12, top: 8, bottom: 8 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200" />
-            <XAxis
-              dataKey={data.x_axis}
-              tickLine={false}
-              axisLine={false}
-              className="text-xs text-gray-600"
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              className="text-xs text-gray-600"
-            />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar
-              dataKey={data.y_axis}
-              fill={`var(--color-${data.y_axis})`}
-              radius={[4, 4, 0, 0]}
-            />
-          </BarChart>
-        </ChartContainer>
-      </div>
-
-      {insights && (
-        <div className="pt-2 border-t border-gray-200">
-          <p className="text-xs font-450 text-gray-600 mb-1">Insights:</p>
-          <p className="text-xs font-[425] leading-5 text-gray-600">
-            {insights}
-          </p>
-        </div>
+    <>
+      {/* Render based on format type */}
+      {response.format === "text" && (
+        <SummaryTextSection
+          title={response.title}
+          description={response.data as string}
+          bottomDescription={response.insights || undefined}
+          className={className}
+        />
       )}
-    </div>
+
+      {response.format === "table" && response.data && (
+        <SummaryTableSection
+          title={response.title}
+          columns={
+            response.data && (response.data as any[]).length > 0
+              ? Object.keys((response.data as any[])[0]).map((key) => ({
+                  key,
+                  header: formatHeader(key),
+                  render: createCellRenderer(key),
+                }))
+              : []
+          }
+          data={response.data as any[]}
+          bottomDescription={response.insights || undefined}
+          className={className}
+        />
+      )}
+
+      {response.format === "chart" && (
+        <SummaryChartSection
+          title={response.title}
+          chartType={mapChartType(response.chart_type)}
+          data={transformChartData(
+            response.data,
+            mapChartType(response.chart_type)
+          )}
+          chartConfig={generateChartConfig(
+            response.data,
+            mapChartType(response.chart_type)
+          )}
+          bottomDescription={response.insights || undefined}
+          className={className}
+        />
+      )}
+    </>
   );
 }
