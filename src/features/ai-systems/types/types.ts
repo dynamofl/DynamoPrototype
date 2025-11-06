@@ -7,7 +7,7 @@ export interface AISystem {
   name: string
   createdAt: string
   status: 'connected' | 'disconnected'
-  icon: 'OpenAI' | 'Azure' | 'Mistral' | 'Databricks' | 'HuggingFace' | 'Anthropic' | 'Remote' | 'Local' | 'AWS' | 'DynamoAI' | 'Gemini'
+  icon: 'OpenAI' | 'Azure' | 'Mistral' | 'Databricks' | 'HuggingFace' | 'Anthropic' | 'Custom' | 'AWS' | 'DynamoAI' | 'Gemini'
   hasGuardrails: boolean
   isEvaluated: boolean
   // New fields for dynamic functionality

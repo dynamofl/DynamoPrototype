@@ -12,8 +12,7 @@ export type ProviderType =
   | 'HuggingFace'
   | 'AWS'
   | 'Gemini'
-  | 'Remote'
-  | 'Local'
+  | 'Custom'
 
 /**
  * Provider-specific validation configuration
@@ -77,15 +76,10 @@ const PROVIDER_VALIDATION_CONFIGS: Record<ProviderType, ProviderValidationConfig
     errorMessage: 'Gemini API keys must be at least 20 characters long',
     placeholder: 'Enter Gemini API key'
   },
-  Remote: {
+  Custom: {
     minLength: 1,
     errorMessage: 'API key is required',
-    placeholder: 'Enter API key'
-  },
-  Local: {
-    minLength: 1,
-    errorMessage: 'API key is required',
-    placeholder: 'Enter API key (if required)'
+    placeholder: 'Enter API key or endpoint URL'
   }
 }
 
@@ -139,13 +133,13 @@ export function getProviderKeyPlaceholder(provider: ProviderType): string {
 
 /**
  * Check if a provider requires API key validation
- * Some providers might not require API keys (e.g., Local)
+ * All providers require API key or endpoint configuration
  * @param provider - The AI provider type
  * @returns True if provider requires API key validation
  */
 export function providerRequiresAPIKey(provider: ProviderType): boolean {
-  // Local providers might not always require API keys
-  return provider !== 'Local'
+  // All providers require API key or endpoint
+  return true
 }
 
 /**

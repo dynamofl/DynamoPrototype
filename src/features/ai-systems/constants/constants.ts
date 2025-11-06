@@ -71,18 +71,10 @@ export const availableProviderTypes: ProviderOption[] = [
     hasApiKeys: false
   },
   {
-    id: 'remote',
-    name: 'Remote',
-    type: 'Remote',
-    icon: 'Remote',
-    apiKeys: [],
-    hasApiKeys: false
-  },
-  {
-    id: 'local',
-    name: 'Local',
-    type: 'Local',
-    icon: 'Local',
+    id: 'custom',
+    name: 'Custom API Endpoint',
+    type: 'Custom',
+    icon: 'Custom',
     apiKeys: [],
     hasApiKeys: false
   }
@@ -131,8 +123,7 @@ export const PROVIDER_OPTIONS = [
   { value: 'HuggingFace', label: 'Hugging Face' },
   { value: 'AWS', label: 'AWS Bedrock' },
   { value: 'Gemini', label: 'Gemini' },
-  { value: 'Remote', label: 'Remote' },
-  { value: 'Local', label: 'Local' }
+  { value: 'Custom', label: 'Custom API Endpoint' }
 ]
 
 export const BOOLEAN_OPTIONS = [

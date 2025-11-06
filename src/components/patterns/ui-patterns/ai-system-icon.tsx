@@ -1,8 +1,7 @@
 import { cn } from "@/lib/utils"
 import {
   OpenAIInlineIcon,
-  RemoteInlineIcon,
-  LocalInlineIcon,
+  CustomInlineIcon,
   AnthropicInlineIcon
 } from "./inline-ai-icons"
 
@@ -16,14 +15,14 @@ import DynamoAISvg from "@/assets/icons/AISystem/DynamoAI.svg"
 import GeminiSvg from "@/assets/icons/AISystem/Gemini.svg"
 
 interface AISystemIconProps {
-  type: 'OpenAI' | 'Azure' | 'Mistral' | 'Databricks' | 'HuggingFace' | 'Anthropic' | 'Remote' | 'Local' | 'AWS' | 'DynamoAI' | 'Gemini'
+  type: 'OpenAI' | 'Azure' | 'Mistral' | 'Databricks' | 'HuggingFace' | 'Anthropic' | 'Custom' | 'AWS' | 'DynamoAI' | 'Gemini'
   className?: string
 }
 
 export function AISystemIcon({ type, className }: AISystemIconProps) {
   // Check if the icon has fill="currentColor" and should adapt to theme
   const hasCurrentColorFill = () => {
-    return ['OpenAI', 'Remote', 'Local', 'Anthropic'].includes(type)
+    return ['OpenAI', 'Custom', 'Anthropic'].includes(type)
   }
 
   const getIconColor = () => {
@@ -62,8 +61,7 @@ export function AISystemIcon({ type, className }: AISystemIconProps) {
     return (
       <div className={cn("flex items-center justify-center w-8 h-8 rounded-full", className)}>
         {type === 'OpenAI' && <OpenAIInlineIcon className={getIconColor()} />}
-        {type === 'Remote' && <RemoteInlineIcon className={getIconColor()} />}
-        {type === 'Local' && <LocalInlineIcon className={getIconColor()} />}
+        {type === 'Custom' && <CustomInlineIcon className={getIconColor()} />}
         {type === 'Anthropic' && <AnthropicInlineIcon className={getIconColor()} />}
       </div>
     )

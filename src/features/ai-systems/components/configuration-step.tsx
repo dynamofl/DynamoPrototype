@@ -75,7 +75,7 @@ export function ConfigurationStep({
   const apiKeyPlaceholder = getProviderKeyPlaceholder(selectedProvider.type as ProviderType);
 
   return (
-    <div className="flex-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+    <div className="flex-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 animate-in zoom-in-96 fade-in-50 slide-in-from-right-98 duration-200">
       <div className="space-y-6">
         {/* Validation Error Display */}
         {validationError && (
@@ -96,7 +96,7 @@ export function ConfigurationStep({
 
         {/* Provider Configuration */}
         <div className="space-y-2">
-          <Label htmlFor="api-key-name">API Provider</Label>
+          <Label htmlFor="api-key-name">API Providerss</Label>
           <div className="flex items-center space-x-1 p-1 bg-gray-50 rounded-lg border border-gray-200">
             <AISystemIcon
               type={selectedProvider.icon as any}

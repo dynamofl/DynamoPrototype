@@ -25,10 +25,10 @@ export function ProviderSelectionStep({
       <div className="space-y-4">
         <div className="grid grid-cols-1">
           {providers.map((provider) => (
-            <div
+            <button
               key={provider.id}
               onClick={() => onProviderSelect(provider)}
-              className="p-2 border-b flex flex-row items-center justify-between cursor-pointer transition-all border-gray-200 hover:bg-gray-50 hover:shadow-sm"
+              className="w-full p-2 border-b flex flex-row items-center justify-between cursor-pointer transition-all border-gray-200 hover:bg-gray-50 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 text-left"
             >
               <div className="flex flex-row items-center space-x-1 text-center align-middle">
                 <AISystemIcon
@@ -40,7 +40,7 @@ export function ProviderSelectionStep({
                 </p>
               </div>
               <ChevronRight className="w-4 h-4 text-gray-500" />
-            </div>
+            </button>
           ))}
         </div>
 
