@@ -18,7 +18,7 @@ export function ProviderSelectionStep({
 }: ProviderSelectionStepProps) {
   return (
     <div className="space-y-3">
-      <div className="border-gray-100">
+      <div className="border-gray-100 px-2">
         <p className="text-[0.8125rem]  text-gray-600">Select AI System Provider</p>
       </div>
 
@@ -28,7 +28,8 @@ export function ProviderSelectionStep({
             <button
               key={provider.id}
               onClick={() => onProviderSelect(provider)}
-              className="w-full p-2 border-b flex flex-row items-center justify-between cursor-pointer transition-all border-gray-200 hover:bg-gray-50 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 text-left"
+              autoFocus={false}
+              className="w-full p-2 pl-1 pr-3 flex flex-row items-center justify-between cursor-pointer bg-transparent transition-all border-gray-200 hover:border-none hover:rounded-md hover:bg-gray-100 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 text-left"
             >
               <div className="flex flex-row items-center space-x-1 text-center align-middle">
                 <AISystemIcon

@@ -56,21 +56,14 @@ export function AISystemsPage() {
   // Use Supabase hook for AI systems data
   const { aiSystems, loading: aiSystemsLoading, reload: reloadAISystems } = useAISystemsSupabase()
 
-  // Log AI systems for debugging
-  useEffect(() => {
-    console.log('[AISystemsPage] AI System IDs from Supabase:', aiSystems.map((s: AISystem) => ({ id: s.id, name: s.name })))
-  }, [aiSystems])
 
 
 
   // Handle system creation
   const handleSystemCreated = async (system: AISystem) => {
-    console.log('[AISystemsPage] handleSystemCreated called with system:', system)
-
     try {
       // Ensure authenticated
       await ensureAuthenticated()
-      console.log('[AISystemsPage] Authentication successful')
 
       // IMPORTANT: Do NOT store actual API key in config
       // The API key is already securely stored in Supabase Vault
@@ -105,13 +98,6 @@ export function AISystemsPage() {
         providerName = providerTypeMap[system.icon] || system.icon.toLowerCase();
       }
 
-      console.log('[AISystemsPage] Provider mapping:', {
-        original: system.providerId,
-        providerName: system.providerName,
-        icon: system.icon,
-        mapped: providerName
-      });
-
       // Prepare insert data
       const insertData = {
         id: system.id,
@@ -131,8 +117,6 @@ export function AISystemsPage() {
         }
       }
 
-      console.log('[AISystemsPage] Inserting to Supabase:', insertData)
-
       // Create AI system in Supabase
       const { data, error } = await supabase
         .from('ai_systems')
@@ -140,15 +124,11 @@ export function AISystemsPage() {
         .select()
 
       if (error) {
-        console.error('[AISystemsPage] Supabase insert error:', error)
         throw error
       }
 
-      console.log('[AISystemsPage] Supabase insert successful:', data)
-
       // Trigger reload of AI systems
       await reloadAISystems()
-      console.log('[AISystemsPage] AI systems reloaded')
     } catch (error) {
       console.error('[AISystemsPage] Failed to create system:', error)
     }
@@ -465,6 +445,7 @@ export function AISystemsPage() {
 
           {/* Create System Sheet */}
           <AISystemCreateSheet
+            key="ai-system-create-sheet"
             open={isAddingSystem}
             onOpenChange={setIsAddingSystem}
             onAISystemCreated={handleSystemCreated}

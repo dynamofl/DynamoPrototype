@@ -16,6 +16,8 @@ interface ViewEditSheetProps {
   side?: 'left' | 'right' | 'top' | 'bottom';
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
   footer?: ReactNode;
+  disableInitialFocus?: boolean;
+  disableClose?: boolean;
 }
 
 const sizeClasses = {
@@ -35,11 +37,21 @@ export function ViewEditSheet({
   children,
   side = 'right',
   size = 'lg',
-  footer
+  footer,
+  disableInitialFocus = true,
+  disableClose = false
 }: ViewEditSheetProps) {
+  const handleSheetOpenChange = (isOpen: boolean) => {
+    // If disableClose is true and user is trying to close, prevent it
+    if (!isOpen && disableClose) {
+      return;
+    }
+    onOpenChange(isOpen);
+  };
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side={side} className={`${sizeClasses[size]} flex flex-col`}>
+    <Sheet open={open} onOpenChange={handleSheetOpenChange}>
+      <SheetContent side={side} className={`${sizeClasses[size]} flex flex-col`} onOpenAutoFocus={(e) => disableInitialFocus && e.preventDefault()}>
         {/* Fixed Header */}
         <SheetHeader className="flex-shrink-0 border-b border-gray-200">
           <SheetTitle>{title}</SheetTitle>
@@ -51,7 +63,7 @@ export function ViewEditSheet({
         </SheetHeader>
         
         {/* Scrollable Content Slot */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto py-4 px-2">
           {children}
         </div>
         

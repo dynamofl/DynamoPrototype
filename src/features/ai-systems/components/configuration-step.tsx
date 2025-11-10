@@ -75,8 +75,8 @@ export function ConfigurationStep({
   const apiKeyPlaceholder = getProviderKeyPlaceholder(selectedProvider.type as ProviderType);
 
   return (
-    <div className="flex-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 animate-in zoom-in-96 fade-in-50 slide-in-from-right-98 duration-200">
-      <div className="space-y-6">
+    <div className="flex-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 animate-in fade-in slide-in-from-right-4 duration-300">
+      <div className="space-y-6 px-2">
         {/* Validation Error Display */}
         {validationError && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -95,7 +95,7 @@ export function ConfigurationStep({
         )} */}
 
         {/* Provider Configuration */}
-        <div className="space-y-2">
+        <div className="space-y-2 ">
           <Label htmlFor="api-key-name">API Providerss</Label>
           <div className="flex items-center space-x-1 p-1 bg-gray-50 rounded-lg border border-gray-200">
             <AISystemIcon
@@ -394,22 +394,23 @@ export function ConfigurationStep({
           {/* Model Selection */}
           <div className="space-y-2">
             <Label>Model</Label>
-            <Select
-              value={selectedModel}
-              onValueChange={onModelSelect}
-              disabled={availableModels.length === 0 || isFetchingModels}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue 
-                  placeholder={
-                    isFetchingModels
-                      ? "Fetching models..."
-                      : availableModels.length === 0 
-                        ? "Select API key first to fetch models" 
-                        : "Select a model"
-                  } 
-                />
-              </SelectTrigger>
+            <div className="relative w-full">
+              <Select
+                value={selectedModel}
+                onValueChange={onModelSelect}
+                disabled={availableModels.length === 0 || isFetchingModels}
+              >
+                <SelectTrigger className={`w-full ${isFetchingModels ? '[&>svg]:hidden' : ''}`}>
+                  <SelectValue
+                    placeholder={
+                      isFetchingModels
+                        ? "Fetching models..."
+                        : availableModels.length === 0
+                          ? "Select API key first to fetch models"
+                          : "Select a model"
+                    }
+                  />
+                </SelectTrigger>
               <SelectContent>
                 {isFetchingModels ? (
                   <div className="flex items-center justify-center py-4">
@@ -425,21 +426,27 @@ export function ConfigurationStep({
                 )}
               </SelectContent>
             </Select>
-            {availableModels.length === 0 && !primaryAPIKey && !isFetchingModels && (
+              {isFetchingModels && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <RefreshCw className="h-4 w-4 animate-spin text-gray-400" />
+                </div>
+              )}
+            </div>
+            {/* {availableModels.length === 0 && !primaryAPIKey && !isFetchingModels && (
               <p className="text-xs text-gray-500">
                 Select an API key to automatically fetch available models
               </p>
-            )}
+            )} */}
             {availableModels.length === 0 && primaryAPIKey && !isFetchingModels && (
               <p className="text-xs text-gray-500">
                 No models available for the selected primary key
               </p>
             )}
-            {isFetchingModels && (
+            {/* {isFetchingModels && (
               <p className="text-xs text-gray-500">
                 Fetching models from the primary API key...
               </p>
-            )}
+            )} */}
           </div>
         </div>
       </div>

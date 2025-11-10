@@ -3,8 +3,11 @@
  * Displays the success screen after AI system creation
  */
 
+import { useEffect, useState } from "react";
 import { FolderOpen, Shield, CircleGauge, ChevronRight } from "lucide-react";
-import { AISystemIcon, AnimatedCheck } from "@/components/patterns";
+import Lottie from "lottie-react";
+import { AISystemIcon } from "@/components/patterns";
+import confirmationTickAnimation from "@/assets/assets/Confirmation Tick.json";
 
 export interface SuccessStepProps {
   createdSystem: {
@@ -14,19 +17,39 @@ export interface SuccessStepProps {
 }
 
 export function SuccessStep({ createdSystem }: SuccessStepProps) {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Set loading to false after component mounts
+    setIsLoading(false);
+  }, []);
+
   return (
     <div className="flex-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-      <div className="space-y-6 p-1">
+      <div className="space-y-6 px-2">
         {/* Success Header */}
-        <div className="space-y-3 py-2">
+        <div className="space-y-3 py-2 ">
           <div className="flex">
-            <AnimatedCheck className="text-green-600" size={32} />
+            <div className="w-12 h-12 -ml-2 -mb-2">
+              {!isLoading ? (
+                <Lottie
+                  animationData={confirmationTickAnimation}
+                  loop={false}
+                  autoplay={true}
+                  style={{ width: "100%", height: "100%" }}
+                />
+              ) : (
+                // Loading placeholder
+                <div className="w-12 h-12 bg-gray-200 rounded-full animate-pulse" />
+              )}
+            </div>
           </div>
           <div className="space-y-1">
-            <h3 className="text-base font-450 text-gray-600">
-              AI System Connection Successful
+            <h3 className="text-base font-450 text-gray-900">
+              {createdSystem?.name} Connection Successful
             </h3>
-            <div className="flex items-center gap-1">
+            {/* <div className="flex items-center gap-1">
+             
             <AISystemIcon
               type={createdSystem?.icon as any}
               className="w-5 h-5"
@@ -36,7 +59,7 @@ export function SuccessStep({ createdSystem }: SuccessStepProps) {
                 {createdSystem?.name}
               </span>
               
-            </div>
+            </div> */}
           </div>
         </div>
 

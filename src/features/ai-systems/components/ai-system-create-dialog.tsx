@@ -6,6 +6,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ViewEditSheet } from "@/components/patterns";
+import { Loader2 } from "lucide-react";
 import { ProviderSelectionStep } from "./provider-selection-step";
 import { ConfigurationStep } from "./configuration-step";
 import { SuccessStep } from "./success-step";
@@ -34,6 +35,7 @@ export function AISystemCreateSheet({
   const [currentStep, setCurrentStep] = useState<"select" | "configure" | "success">(
     "select"
   );
+
   const [selectedProvider, setSelectedProvider] =
     useState<ProviderOption | null>(null);
   const [selectedAPIKeys, setSelectedAPIKeys] = useState<string[]>([]);
@@ -273,7 +275,13 @@ export function AISystemCreateSheet({
     });
   };
 
-  const handleDialogOpenChange = (open: boolean) => {
+  const handleDialogOpenChange = (open: boolean, isExplicitDismiss: boolean = false) => {
+    // Prevent closing the dialog on success step except via explicit dismiss
+    if (!open && currentStep === "success" && !isExplicitDismiss) {
+      // Keep dialog open by explicitly telling parent to stay open
+      onOpenChange(true);
+      return;
+    }
     onOpenChange(open);
     if (!open) {
       resetDialogState();
@@ -281,7 +289,12 @@ export function AISystemCreateSheet({
   };
 
   const handleDismiss = () => {
-    handleDialogOpenChange(false);
+    // Trigger parent callback to save the system and reload
+    if (createdSystem) {
+      onAISystemCreated(createdSystem);
+    }
+    // Close the dialog
+    handleDialogOpenChange(false, true);
   };
 
   const handleCreateAISystem = () => {
@@ -302,7 +315,7 @@ export function AISystemCreateSheet({
 
     // Set connecting state and start timeout
     setIsConnecting(true);
-    
+
     // Simulate connection process with 2-second timeout
     setTimeout(() => {
       const selectedModelDetails = availableModels.find(
@@ -340,14 +353,16 @@ export function AISystemCreateSheet({
       setCreatedSystem(newSystem);
       setCurrentStep("success");
       setIsConnecting(false);
-      onAISystemCreated(newSystem);
     }, 2000);
   };
+
+  const shouldDisableClose = currentStep === "success";
 
   return (
     <ViewEditSheet
       open={open}
-      onOpenChange={handleDialogOpenChange}
+      onOpenChange={(isOpen) => handleDialogOpenChange(isOpen, false)}
+      disableClose={shouldDisableClose}
       title="Connect AI System"
       size="lg"
       footer={
@@ -363,10 +378,17 @@ export function AISystemCreateSheet({
              <Button
                onClick={handleCreateAISystem}
                disabled={
-                 !primaryAPIKey || !selectedModel || !formData.name.trim() || isConnecting
+                 !primaryAPIKey || !selectedModel || !formData.name.trim() || isConnecting || isValidating
                }
              >
-               {isConnecting ? "Connecting..." : "Validate & Connect"}
+               {isValidating || isConnecting ? (
+                 <>
+                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                   {isValidating ? "Validating..." : "Connecting..."}
+                 </>
+               ) : (
+                 "Validate & Connect"
+               )}
              </Button>
           </div>
         ) : currentStep === "success" ? (
