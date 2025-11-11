@@ -89,6 +89,7 @@ export function EvaluationDataFilters({ filters, onFiltersChange, currentView, o
       guardrailJudgment: [],
       modelJudgment: [],
       behaviorType: [],
+      topic: [],
       searchTerm: ''
     })
   }

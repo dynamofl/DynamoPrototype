@@ -147,7 +147,7 @@ export function parseAgentResponse(response: InsightResponse): ParsedInsightResp
       return parsed;
     }
 
-    throw new Error(`Unknown format: ${response.format}`);
+    throw new Error(`Unknown format: ${(response as any).format}`);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("Failed to parse agent response:", errorMessage);

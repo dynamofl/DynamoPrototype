@@ -43,11 +43,14 @@ export function GuardrailsFilters({ filters, onFiltersChange }: GuardrailsFilter
 
   const removeFilter = (filterType: string, value: string | number | boolean) => {
     const newFilters = { ...filters }
-    
+
     if (filterType !== 'searchTerm') {
-      newFilters[filterType as keyof GuardrailsFilterState] = (filters[filterType as keyof GuardrailsFilterState] as string[]).filter(item => item !== value)
+      const currentValues = filters[filterType as keyof GuardrailsFilterState]
+      if (Array.isArray(currentValues)) {
+        (newFilters as any)[filterType] = currentValues.filter(item => item !== value)
+      }
     }
-    
+
     onFiltersChange(newFilters)
   }
 

@@ -92,7 +92,7 @@ export class EvaluationTestStorage {
 
     if (status === 'completed') {
       updates.completedAt = new Date().toISOString();
-    } else if (status === 'in_progress' && !additionalUpdates?.startedAt) {
+    } else if (status === 'running' && !additionalUpdates?.startedAt) {
       updates.startedAt = new Date().toISOString();
     }
 

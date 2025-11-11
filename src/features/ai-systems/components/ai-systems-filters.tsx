@@ -59,13 +59,16 @@ export function AISystemsFilters({ filters, onFiltersChange }: AISystemsFiltersP
 
   const removeFilter = (filterType: string, value: string | number | boolean) => {
     const newFilters = { ...filters }
-    
+
     if (filterType === 'hasGuardrails' || filterType === 'isEvaluated') {
-      newFilters[filterType as keyof AISystemsFilterState] = null
+      (newFilters as any)[filterType] = null
     } else if (filterType !== 'searchTerm') {
-      newFilters[filterType as keyof AISystemsFilterState] = (filters[filterType as keyof AISystemsFilterState] as string[]).filter(item => item !== value)
+      const currentValues = filters[filterType as keyof AISystemsFilterState]
+      if (Array.isArray(currentValues)) {
+        (newFilters as any)[filterType] = currentValues.filter(item => item !== value)
+      }
     }
-    
+
     onFiltersChange(newFilters)
   }
 

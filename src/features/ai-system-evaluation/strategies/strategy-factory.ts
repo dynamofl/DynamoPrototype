@@ -16,8 +16,8 @@ import type { ComplianceEvaluationResult } from '../types/compliance-evaluation'
  * 3. That's it! All components will automatically work with the new type
  */
 const STRATEGY_REGISTRY: Record<string, EvaluationStrategy> = {
-  'jailbreak': new JailbreakStrategy(),
-  'compliance': new ComplianceStrategy()
+  'jailbreak': new JailbreakStrategy() as EvaluationStrategy,
+  'compliance': new ComplianceStrategy() as EvaluationStrategy
   // Future test types can be added here:
   // 'quality': new QualityStrategy(),
   // 'bias': new BiasStrategy(),
@@ -63,8 +63,8 @@ export function getTestTypeDisplayNames(): Record<string, string> {
 /**
  * Type guard to check if a result is a jailbreak result
  */
-export function isJailbreakResult(result: BaseEvaluationResult): result is JailbreakEvaluationResult {
-  return 'attackType' in result &&
+export function isJailbreakResult(result: any): result is JailbreakEvaluationResult {
+  return result && 'attackType' in result &&
          'adversarialPrompt' in result &&
          'attackOutcome' in result
 }

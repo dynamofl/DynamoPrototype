@@ -2,7 +2,8 @@
  * Custom storage adapter for AI Providers that bridges APIKeyStorage with TablePattern
  */
 
-import type { TableStorage, TableRow, TableStorageConfig } from '@/types/table'
+import type { TableRow, TableStorageConfig } from '@/types/table'
+import type { TableStorage } from '@/lib/storage/types'
 import { APIKeyStorage } from '@/lib/storage/secure-storage'
 
 export class AIProvidersTableStorage implements TableStorage {
@@ -42,7 +43,7 @@ export class AIProvidersTableStorage implements TableStorage {
       }
 
       // Save using APIKeyStorage
-      const success = APIKeyStorage.saveProviders(processedData)
+      const success = APIKeyStorage.saveProviders(processedData as any)
       return success
     } catch (error) {
       console.error('Failed to save AI providers:', error)

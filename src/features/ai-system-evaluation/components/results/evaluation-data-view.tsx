@@ -493,10 +493,10 @@ export function EvaluationDataView({
         onOpenChange={handleSideSheetClose}
         record={
           sideSheetRecordId
-            ? allData.find((r) => (r as any).id === sideSheetRecordId) || null
+            ? (allData.find((r) => (r as any).id === sideSheetRecordId) as any) || null
             : null
         }
-        allRecords={allData}
+        allRecords={allData as any}
         onNavigateNext={handleSideSheetNavigateNext}
         onNavigatePrevious={handleSideSheetNavigatePrevious}
         onExpand={handleSideSheetExpand}

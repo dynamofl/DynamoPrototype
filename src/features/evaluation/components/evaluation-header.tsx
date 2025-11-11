@@ -26,7 +26,7 @@ export function EvaluationHeader({
         {
           icon: showHistory ? Plus : Play,
           label: showHistory ? "New Evaluation" : (isLoading ? "Evaluating..." : "Run Evaluation"),
-          onClick: showHistory ? onNewEvaluation : onRunEvaluation,
+          onClick: showHistory ? (onNewEvaluation || (() => {})) : onRunEvaluation,
           variant: 'default',
           disabled: !showHistory && isDisabled
         },

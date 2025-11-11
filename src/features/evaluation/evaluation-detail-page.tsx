@@ -111,7 +111,7 @@ export function EvaluationDetailPage() {
           setResult(test.result);
         }
         if (test.config.guardrails) {
-          setSelectedGuardrails(test.config.guardrails);
+          setSelectedGuardrails(test.config.guardrails as any);
         }
       } else {
         // Test not found, redirect to list

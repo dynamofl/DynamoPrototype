@@ -68,7 +68,7 @@ export function GenericEvaluationFilters({
         key: filter.key,
         label: filter.label,
         options: options.length > 0 ? options : [{ value: '', label: 'No options' }],
-        type: 'array'
+        type: 'array' as const
       }
     })
   }, [strategy, hasGuardrails, data.length])

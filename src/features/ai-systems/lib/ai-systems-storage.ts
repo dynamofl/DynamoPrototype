@@ -3,7 +3,8 @@
  */
 
 import { TableStorageFactory } from '@/lib/storage'
-import type { TableStorage, TableStorageConfig, TableRow } from '@/types/table'
+import type { TableStorageConfig, TableRow } from '@/types/table'
+import type { TableStorage } from '@/lib/storage/types'
 import type { AISystem } from '../types'
 import { AI_SYSTEMS_STORAGE_KEY } from '../constants'
 import { aiSystemsStateManager } from './ai-systems-state-manager'
@@ -100,9 +101,9 @@ export class AISystemsTableStorage implements TableStorage {
   async load(): Promise<TableRow[]> {
     const data = await this.storage.load()
     const systems = data || []
-    
+
     // Enhance systems with validation state
-    return await aiSystemsStateManager.enhanceAISystems(systems)
+    return await aiSystemsStateManager.enhanceAISystems(systems as AISystem[])
   }
 
   async save(data: TableRow[]): Promise<boolean> {

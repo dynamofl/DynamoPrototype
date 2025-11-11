@@ -74,7 +74,7 @@ export function GuardrailViewSheet({
   const disallowedCount = countBehaviors((guardrail?.disallowedBehavior as string) || '')
 
   const handleEdit = () => {
-    if (guardrail) {
+    if (guardrail && onEdit) {
       onEdit(guardrail)
       onOpenChange(false)
     }

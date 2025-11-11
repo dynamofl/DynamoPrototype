@@ -111,7 +111,9 @@ export function GenericEvaluationDetail({
               AI Response
             </h3>
             <div className="border border-gray-200 rounded p-3 text-[0.8125rem] text-gray-900 leading-relaxed">
-              {record.system_response}
+              {typeof record.system_response === 'string'
+                ? record.system_response
+                : record.system_response?.content || 'No response'}
             </div>
           </section>
         )}

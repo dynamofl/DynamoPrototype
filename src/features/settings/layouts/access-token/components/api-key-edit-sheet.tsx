@@ -93,7 +93,7 @@ export function APIKeyEditSheet({
             .map(key => ({
               id: key.id,
               name: key.name,
-              key: `${key.keyPrefix}••••••${key.keySuffix}`, // Masked key for display
+              key: key.masked, // Masked key for display
               createdAt: key.createdAt
             }))
 

@@ -204,6 +204,11 @@ export function EvaluationHistoryTableDirect({
         icon: Loader2,
         color: 'text-gray-400',
         label: 'Preparing'
+      },
+      cancelled: {
+        icon: XCircle,
+        color: 'text-gray-500',
+        label: 'Cancelled'
       }
     }
 

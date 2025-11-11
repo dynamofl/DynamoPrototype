@@ -42,6 +42,7 @@ export function AISystemCreateSheet({
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [isFetchingModels, setIsFetchingModels] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [createdSystem, setCreatedSystem] = useState<any>(null);
 
   // Form data
@@ -414,6 +415,7 @@ export function AISystemCreateSheet({
           onShowAddKeyFormChange={setShowAddKeyForm}
           fieldErrors={fieldErrors}
           isValidating={isValidating}
+          isConnecting={isConnecting}
         />
       ) : (
         <SuccessStep createdSystem={createdSystem} />

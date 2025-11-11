@@ -110,7 +110,7 @@ export const aiSystemsColumns: TableColumn[] = [
         'lisa.garcia@company.com'
       ]
       // Use a simple hash of the system ID to get consistent email for each system
-      const hash = row.id.split('').reduce((a, b) => {
+      const hash = row.id.split('').reduce((a: number, b: string) => {
         a = ((a << 5) - a) + b.charCodeAt(0)
         return a & a
       }, 0)
@@ -132,14 +132,14 @@ export const aiSystemsColumns: TableColumn[] = [
     type: 'badge',
     colorMap: {
       'Connected': {
-        variant: 'success',
+        variant: 'default' as const,
         className: 'bg-green-100 text-green-800 border border-green-200',
         icon: React.createElement(Squircle, {
           className: 'w-2 h-2 fill-green-600 text-green-600'
         })
       },
       'Disconnected': {
-        variant: 'secondary',
+        variant: 'secondary' as const,
         className: 'bg-gray-100 text-gray-600 border border-gray-200',
         icon: React.createElement(Squircle, {
           className: 'w-2 h-2 text-gray-600'

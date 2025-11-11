@@ -36,7 +36,7 @@ export function RadarChartComponent({
         {Object.keys(chartConfig).map((key) => (
           <Radar
             key={key}
-            name={chartConfig[key].label}
+            name={typeof chartConfig[key].label === 'string' ? chartConfig[key].label : String(chartConfig[key].label || key)}
             dataKey={key}
             stroke={`var(--color-${key})`}
             fill={`var(--color-${key})`}

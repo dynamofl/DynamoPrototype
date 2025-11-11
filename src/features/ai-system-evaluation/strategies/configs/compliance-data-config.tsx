@@ -462,7 +462,10 @@ export function getComplianceExportFields(): ExportFieldConfig[] {
     {
       key: 'systemResponse',
       label: 'System Response',
-      getValue: (record) => record.system_response || '',
+      getValue: (record) => {
+        const response = record.system_response
+        return typeof response === 'string' ? response : (response?.content || '')
+      },
       format: 'string'
     },
     {

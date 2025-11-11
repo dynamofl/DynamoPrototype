@@ -58,7 +58,10 @@ export function EvaluationHistoryFilters({ filters, onFiltersChange }: Evaluatio
     const newFilters = { ...filters }
 
     if (filterType !== 'searchTerm') {
-      newFilters[filterType as keyof EvaluationHistoryFilterState] = (filters[filterType as keyof EvaluationHistoryFilterState] as string[]).filter(item => item !== value)
+      const currentValues = filters[filterType as keyof EvaluationHistoryFilterState]
+      if (Array.isArray(currentValues)) {
+        (newFilters as any)[filterType] = currentValues.filter(item => item !== value)
+      }
     }
 
     onFiltersChange(newFilters)

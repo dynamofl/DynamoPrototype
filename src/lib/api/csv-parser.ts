@@ -1,4 +1,4 @@
-import type { EvaluationPrompt } from '@/types/evaluation';
+import type { EvaluationPrompt } from '@/features/evaluation/types/evaluation';
 import type { CSVParseResult, CSVValidationRule, CSVRowValidation } from '@/types/csv';
 
 // Define validation rules based on table structure

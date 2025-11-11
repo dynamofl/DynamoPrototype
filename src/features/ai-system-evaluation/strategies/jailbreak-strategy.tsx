@@ -38,7 +38,7 @@ export class JailbreakStrategy implements EvaluationStrategy {
   /**
    * Transform database records to frontend result format
    */
-  transformPrompts(dbRecords: any[]): JailbreakEvaluationResult[] {
+  transformPrompts(dbRecords: any[]): BaseEvaluationResult[] {
     const transformed = dbRecords.map(record => {
       // Check if already transformed (has camelCase properties)
       if ('basePrompt' in record && 'behaviorType' in record && 'attackType' in record) {
@@ -103,14 +103,14 @@ export class JailbreakStrategy implements EvaluationStrategy {
         totalTokens: (record.ai_system_response?.input_tokens || 0) + (record.ai_system_response?.output_tokens || 0)
       }
     })
-    return transformed
+    return transformed as unknown as BaseEvaluationResult[]
   }
 
   /**
    * Calculate summary metrics from results
    */
-  calculateSummary(results: BaseEvaluationResult[]): JailbreakEvaluationSummary {
-    return calculateSummaryFromResults(results as unknown as JailbreakEvaluationResult[])
+  calculateSummary(results: BaseEvaluationResult[]): BaseEvaluationSummary {
+    return calculateSummaryFromResults(results as unknown as JailbreakEvaluationResult[]) as BaseEvaluationSummary
   }
 
   /**
