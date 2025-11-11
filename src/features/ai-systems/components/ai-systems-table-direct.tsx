@@ -33,7 +33,7 @@ interface AISystemsTableDirectProps {
 }
 
 // Map provider names to AISystemIcon types
-const providerIconMap: Record<string, 'OpenAI' | 'Azure' | 'Mistral' | 'Databricks' | 'HuggingFace' | 'Anthropic' | 'Remote' | 'Local' | 'AWS' | 'DynamoAI'> = {
+const providerIconMap: Record<string, 'OpenAI' | 'Azure' | 'Mistral' | 'Databricks' | 'HuggingFace' | 'Anthropic' | 'Custom' | 'AWS' | 'DynamoAI' | 'Gemini'> = {
   'openai': 'OpenAI',
   'OpenAI': 'OpenAI',
   'azure': 'Azure',
@@ -51,7 +51,11 @@ const providerIconMap: Record<string, 'OpenAI' | 'Azure' | 'Mistral' | 'Databric
   'huggingface': 'HuggingFace',
   'HuggingFace': 'HuggingFace',
   'dynamoai': 'DynamoAI',
-  'DynamoAI': 'DynamoAI'
+  'DynamoAI': 'DynamoAI',
+  'gemini': 'Gemini',
+  'Gemini': 'Gemini',
+  'custom': 'Custom',
+  'Custom': 'Custom'
 }
 
 export function AISystemsTableDirect({

@@ -118,7 +118,7 @@ export function PhraseHighlighter({
   }
 
   // Build the highlighted text with proper React elements
-  const elements: JSX.Element[] = []
+  const elements: React.ReactElement[] = []
   let lastIndex = 0
 
   ranges.forEach((range, idx) => {

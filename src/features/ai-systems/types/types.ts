@@ -56,10 +56,10 @@ export interface AIModel {
   object: string
   created: number
   owned_by: string
-  permission: any[]
-  root: string
-  parent: string | null
-  logging: any
+  permission?: any[]
+  root?: string
+  parent?: string | null
+  logging?: any
 }
 
 export interface APIKeyOption {

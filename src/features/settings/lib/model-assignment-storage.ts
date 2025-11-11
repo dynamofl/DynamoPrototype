@@ -17,6 +17,7 @@ export class ModelAssignmentStorage {
           inputGuardrail: null,
           outputGuardrail: null,
           judgeModel: null,
+          topicInsightModel: null,
         };
       }
     }
@@ -28,6 +29,7 @@ export class ModelAssignmentStorage {
       inputGuardrail: null,
       outputGuardrail: null,
       judgeModel: null,
+      topicInsightModel: null,
     };
   }
 
