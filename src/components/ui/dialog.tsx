@@ -220,20 +220,23 @@ export interface DialogFooterButtonSetProps extends React.HTMLAttributes<HTMLDiv
   onSecondaryClick?: () => void
   /** Show only primary button */
   primaryOnly?: boolean
+  /** Disable primary button */
+  primaryDisabled?: boolean
 }
 
 const DialogFooterButtonSet = React.forwardRef<
   HTMLDivElement,
   DialogFooterButtonSetProps
->(({ 
-  className, 
-  variant = "default", 
-  primaryText = "Accept", 
+>(({
+  className,
+  variant = "default",
+  primaryText = "Accept",
   secondaryText = "Cancel",
   onPrimaryClick,
   onSecondaryClick,
   primaryOnly = false,
-  ...props 
+  primaryDisabled = false,
+  ...props
 }, ref) => (
   <div
     ref={ref}
@@ -252,11 +255,12 @@ const DialogFooterButtonSet = React.forwardRef<
     <button
       type="button"
       onClick={onPrimaryClick}
+      disabled={primaryDisabled}
       className={cn(
         "px-3 py-2 text-[0.8125rem]  font-medium text-blue-50 rounded-md transition-colors leading-4",
         variant === "default" && "",
-        variant === "danger" && "bg-red-600 hover:bg-red-700",
-        variant === "success" && "bg-green-600 hover:bg-green-700"
+        variant === "danger" && "bg-red-600 hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed",
+        variant === "success" && "bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed"
       )}
     >
       {primaryText}

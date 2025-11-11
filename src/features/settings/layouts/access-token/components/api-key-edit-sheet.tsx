@@ -8,16 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ViewEditSheet } from '@/components/patterns'
 import { AISystemIcon } from '@/components/patterns/ui-patterns/ai-system-icon'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
+import { APIKeyDeleteDialog } from './api-key-delete-dialog'
 import { KeyRound, Loader2, CheckCircle, XCircle, Trash2, Plus } from 'lucide-react'
 import type { TableRow } from '@/types/table'
 import { createAndStoreAPIKey } from '@/features/ai-systems/lib/api-integration'
@@ -680,29 +671,13 @@ export function APIKeyEditSheet({
       </div>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteConfirmDialog.open} onOpenChange={(open) => {
-        if (!open) {
-          cancelDeleteKey()
-        }
-      }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete API Key</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete the API key "{deleteConfirmDialog.keyName}"? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={cancelDeleteKey}>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={confirmDeleteKey}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <APIKeyDeleteDialog
+        open={deleteConfirmDialog.open}
+        keyId={deleteConfirmDialog.keyId}
+        keyName={deleteConfirmDialog.keyName}
+        onConfirm={confirmDeleteKey}
+        onCancel={cancelDeleteKey}
+      />
     </ViewEditSheet>
   )
 }

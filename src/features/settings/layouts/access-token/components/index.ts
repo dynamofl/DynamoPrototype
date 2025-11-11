@@ -1,5 +1,6 @@
 export { APIKeyCreateSheet } from './api-key-create-sheet'
 export { APIKeyEditSheet } from './api-key-edit-sheet'
+export { APIKeyDeleteDialog } from './api-key-delete-dialog'
 export { TokenDialog } from './token-dialog'
 export { AccessTokenTable } from './access-token-table'
 export type { APIKeyCreateSheetProps } from './api-key-create-sheet'
