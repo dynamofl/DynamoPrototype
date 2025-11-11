@@ -33,9 +33,9 @@ export async function migrateLocalStorageToSupabase() {
           .upsert({
             id,
             name: system.name,
-            description: system.description || '',
+            description: (system as any).description || '',
             provider: system.providerId || system.providerName || 'unknown',
-            model: system.selectedModel || system.model || 'unknown',
+            model: system.selectedModel || (system as any).model || 'unknown',
             config: {
               apiKeyId: system.apiKeyId,
               apiKeyName: system.apiKeyName,

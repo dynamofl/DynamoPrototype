@@ -58,11 +58,12 @@ export async function migrateKeysToVault() {
         await updateAISystemReferences(provider.id, vaultKey.id);
 
       } catch (error) {
-        console.error(`   ❌ Failed: ${error.message}`);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error(`   ❌ Failed: ${errorMessage}`);
         migrationReport.failed++;
         migrationReport.errors.push({
           provider: provider.name,
-          error: error.message
+          error: errorMessage
         });
       }
 
@@ -140,7 +141,8 @@ async function updateAISystemReferences(oldProviderId: string, newVaultKeyId: st
       }
     }
   } catch (error) {
-    console.warn(`   ⚠️  Error updating AI system references: ${error.message}`);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.warn(`   ⚠️  Error updating AI system references: ${errorMessage}`);
   }
 }
 
