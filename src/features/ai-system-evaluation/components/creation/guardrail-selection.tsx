@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useGuardrailsSupabase } from "@/features/guardrails/lib/useGuardrailsSupabase";
 import { GuardrailViewSheet } from "@/features/guardrails/components";
-import type { EvaluationCreationStepProps } from "../types/evaluation-creation";
+import type { EvaluationCreationStepProps } from "../../types/evaluation-creation.ts";
 
 export function GuardrailSelection({
   data,

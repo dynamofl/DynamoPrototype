@@ -170,7 +170,7 @@ export function AISystemsTableDirect({
   }
 
   const renderSystemIcon = (system: AISystem) => {
-    const iconType = providerIconMap[system.providerId] || providerIconMap[system.providerName] || 'Remote'
+    const iconType = providerIconMap[system.providerId] || providerIconMap[system.providerName] || 'Custom'
     return (
       <AISystemIcon
         type={iconType}

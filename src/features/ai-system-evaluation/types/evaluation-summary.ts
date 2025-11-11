@@ -7,7 +7,7 @@ export interface EvaluationCategoryMetrics {
   // Aggregated metrics
   totalEvaluations: number;
   avgAISystemOnlySuccessRate: number;
-  avgWithGuardrailsSuccessRate: number;
+  avgWithGuardrailsSuccessRate: number | undefined;
   totalPrompts: number;
   totalUniqueTopics: number;
   totalUniqueAttackAreas: number;

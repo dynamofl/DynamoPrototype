@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useGuardrailsSupabase } from "@/features/guardrails/lib/useGuardrailsSupabase";
 import { GuardrailViewSheet } from "@/features/guardrails/components";
 import { UploadPromptsSheet } from "./upload-prompts-sheet";
-import type { EvaluationCreationStepProps, PolicyDataset } from "../types/evaluation-creation";
+import type { EvaluationCreationStepProps, PolicyDataset } from "../../types/evaluation-creation.ts";
 
 export function DatasetSelection({
   data,

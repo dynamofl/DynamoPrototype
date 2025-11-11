@@ -158,9 +158,16 @@ export function EvaluationDataConversationView({
 
                 {/* Conversation Content */}
                 <div className="flex-1 min-w-0 pl-3">
-                  <div className="text-[0.8125rem]  font-450 text-gray-800 truncate max-w-md" title={record.basePrompt}>
-                    {record.basePrompt}
-                  </div>
+                  {(() => {
+                    // Access base prompt - check both snake_case and camelCase
+                    const recordAny = record as any
+                    const basePromptText = record.base_prompt || recordAny.basePrompt || 'No prompt'
+                    return (
+                      <div className="text-[0.8125rem]  font-450 text-gray-800 truncate max-w-md" title={basePromptText}>
+                        {basePromptText}
+                      </div>
+                    )
+                  })()}
                 </div>
 
                 {/* Status Badge */}

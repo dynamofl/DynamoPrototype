@@ -1,7 +1,7 @@
-import { Users, KeyRound, Box, Database } from 'lucide-react'
+import { Users, KeyRound, Box } from 'lucide-react'
 import { SidebarPattern, type SidebarGroup } from '@/components/patterns/ui-patterns/sidebar-pattern'
 
-type SettingsPage = 'access-token' | 'team-members' | 'evaluation' | 'migration'
+type SettingsPage = 'access-token' | 'team-members' | 'evaluation'
 
 interface SettingsSidebarProps {
   activePage: SettingsPage
@@ -33,18 +33,6 @@ export function SettingsSidebar({ activePage, onPageChange }: SettingsSidebarPro
           icon: <Box className="h-4 w-4" />,
           onClick: () => onPageChange('evaluation'),
           isActive: activePage === 'evaluation'
-        }
-      ]
-    },
-    {
-      label: 'Maintenance',
-      items: [
-        {
-          id: 'migration',
-          label: 'Data Migration',
-          icon: <Database className="h-4 w-4" />,
-          onClick: () => onPageChange('migration'),
-          isActive: activePage === 'migration'
         }
       ]
     }

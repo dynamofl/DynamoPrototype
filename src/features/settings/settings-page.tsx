@@ -7,10 +7,9 @@ import { SettingsLayout } from './layouts/settings-layout'
 import { AccessTokenContent } from './layouts/access-token'
 import { TeamMembersContent } from './layouts/team-members'
 import { EvaluationSettingsContent } from './layouts/evaluation-settings'
-import { SummaryMetricsMigration } from './components/migration/summary-metrics-migration'
 import { SettingsSidebar } from './components/settings-sidebar'
 
-type SettingsPage = 'access-token' | 'team-members' | 'evaluation' | 'migration'
+type SettingsPage = 'access-token' | 'team-members' | 'evaluation'
 
 export function SettingsPage() {
   const [activePage, setActivePage] = useState<SettingsPage>('access-token')
@@ -23,8 +22,6 @@ export function SettingsPage() {
         return <TeamMembersContent />
       case 'evaluation':
         return <EvaluationSettingsContent />
-      case 'migration':
-        return <SummaryMetricsMigration />
       default:
         return <AccessTokenContent />
     }

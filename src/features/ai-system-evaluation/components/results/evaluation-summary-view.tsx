@@ -21,10 +21,10 @@ interface EvaluationSummaryViewProps {
     | "Databricks"
     | "HuggingFace"
     | "Anthropic"
-    | "Remote"
-    | "Local"
+    | "Custom"
     | "AWS"
-    | "DynamoAI";
+    | "DynamoAI"
+    | "Gemini";
   timestamp: string;
   startedAt?: string;
   completedAt?: string;

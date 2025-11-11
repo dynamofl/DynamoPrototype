@@ -10,7 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { EvaluationCreationStepProps } from "../types/evaluation-creation";
+import type { EvaluationCreationStepProps } from "../../types/evaluation-creation.ts";
 
 export type PerturbationType = "rewording" | "misspelling" | "leet" | "random-upper";
 

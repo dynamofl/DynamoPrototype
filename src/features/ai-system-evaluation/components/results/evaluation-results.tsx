@@ -26,7 +26,7 @@ interface EvaluationResultsProps {
   evaluationName?: string;
   evaluationType?: string; // Type of evaluation (Jailbreak, Compliance, etc.)
   aiSystemName?: string; // AI system name for breadcrumb
-  aiSystemIcon?: 'OpenAI' | 'Azure' | 'Mistral' | 'Databricks' | 'HuggingFace' | 'Anthropic' | 'Remote' | 'Local' | 'AWS' | 'DynamoAI';
+  aiSystemIcon?: 'OpenAI' | 'Azure' | 'Mistral' | 'Databricks' | 'HuggingFace' | 'Anthropic' | 'Custom' | 'AWS' | 'DynamoAI' | 'Gemini';
   startedAt?: string;
   completedAt?: string;
   onExport?: (format: 'json' | 'csv') => void;

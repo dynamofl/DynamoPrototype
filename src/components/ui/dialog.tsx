@@ -307,11 +307,3 @@ export {
   DialogDescription,
 }
 
-export type {
-  DialogContentProps,
-  DialogHeaderProps,
-  DialogBodyProps,
-  DialogFooterProps,
-  DialogFooterButtonSetProps,
-}
-

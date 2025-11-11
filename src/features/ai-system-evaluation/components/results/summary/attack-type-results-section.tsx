@@ -5,6 +5,8 @@ interface AttackTypeResultsSectionProps {
 }
 
 export function AttackTypeResultsSection({ byAttackType }: AttackTypeResultsSectionProps) {
+  if (!byAttackType) return null;
+
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-gray-900">Results by Attack Type</h3>

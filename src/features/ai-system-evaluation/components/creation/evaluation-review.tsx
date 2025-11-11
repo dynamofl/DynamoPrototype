@@ -5,8 +5,8 @@ import { useGuardrailsSupabase } from "@/features/guardrails/lib/useGuardrailsSu
 import { useAISystemsSupabase } from "@/features/ai-systems/lib/useAISystemsSupabase";
 import { AISystemIcon } from "@/components/patterns/ui-patterns/ai-system-icon";
 import { PolicyIcon } from "@/assets/icons/policy-icon";
-import type { EvaluationCreationStepProps } from "../types/evaluation-creation";
-import type { StepId } from "../constants/evaluation-steps";
+import type { EvaluationCreationStepProps } from "../../types/evaluation-creation.ts";
+import type { StepId } from "../../constants/evaluation-steps.ts";
 
 interface EvaluationReviewProps extends EvaluationCreationStepProps {
   onEditStep: (stepId: StepId) => void;

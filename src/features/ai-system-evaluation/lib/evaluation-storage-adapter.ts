@@ -19,10 +19,9 @@ export class EvaluationStorageAdapter {
     const config = {
       candidateModel: aiSystemName,
       judgeModel: 'Internal Judge Model', // From settings
-      systemPrompt: `Jailbreak evaluation for ${evaluationData.policyIds?.length || 0} policies`,
       temperature: 1.0,
-      maxTokens: 2048,
-      numSamples: results.results.length
+      maxLength: 2048,
+      topP: 1.0
     };
 
     const now = new Date().toISOString();
@@ -43,7 +42,7 @@ export class EvaluationStorageAdapter {
         input: {
           prompts: results.results.map(r => ({
             id: `prompt-${r.policyId}`,
-            prompt: r.adversarialPrompt, // Store adversarial prompt as the main prompt
+            prompt: r.jailbreakPrompt, // Use extracted text from adversarial prompt
             topic: r.policyName,
             userMarkedAdversarial: r.behaviorType === 'Disallowed' ? 'Adversarial' : 'Not Adversarial'
           }))
@@ -51,7 +50,7 @@ export class EvaluationStorageAdapter {
         config,
         promptResults: results.results.map(r => ({
           promptId: `prompt-${r.policyId}`,
-          prompt: r.adversarialPrompt, // Store adversarial prompt
+          prompt: r.jailbreakPrompt, // Use extracted text from adversarial prompt
           topic: r.policyName,
           userMarkedAdversarial: r.behaviorType === 'Disallowed' ? 'Adversarial' : 'Not Adversarial',
           judgeDetectedAdversarial: r.guardrailJudgement === 'Blocked',
@@ -72,10 +71,10 @@ export class EvaluationStorageAdapter {
           }
         })),
         overallMetrics: {
-          averageAccuracy: (results.summary.attackFailures / results.summary.totalTests) * 100,
-          totalPrompts: results.summary.totalTests,
-          totalBlocked: results.summary.attackFailures,
-          totalPassed: results.summary.attackSuccesses,
+          averageAccuracy: ((results.summary.attackFailures ?? 0) / (results.summary.totalTests ?? 1)) * 100,
+          totalPrompts: results.summary.totalTests ?? 0,
+          totalBlocked: results.summary.attackFailures ?? 0,
+          totalPassed: results.summary.attackSuccesses ?? 0,
           averagePrecision: 0,
           averageRecall: 0
         },
@@ -85,8 +84,8 @@ export class EvaluationStorageAdapter {
       startedAt: results.timestamp, // Set start time when test begins
       completedAt: now, // Set completion time
       metadata: {
-        evaluationData,
-        jailbreakResults: results // Store complete jailbreak results for later retrieval
+        evaluationData
+        // Note: Complete jailbreak results are stored in the result field
       }
     };
 
@@ -109,10 +108,9 @@ export class EvaluationStorageAdapter {
       config: {
         candidateModel: aiSystemName,
         judgeModel: 'Internal Judge Model',
-        systemPrompt: `Jailbreak evaluation for ${evaluationData.policyIds?.length || 0} policies`,
         temperature: 1.0,
-        maxTokens: 2048,
-        numSamples: 0 // Will be updated
+        maxLength: 2048,
+        topP: 1.0
       },
       input: {
         prompts: [] // Will be populated during execution
@@ -161,10 +159,10 @@ export class EvaluationStorageAdapter {
           localScores: {}
         })),
         overallMetrics: {
-          averageAccuracy: (results.summary.attackFailures / results.summary.totalTests) * 100,
-          totalPrompts: results.summary.totalTests,
-          totalBlocked: results.summary.attackFailures,
-          totalPassed: results.summary.attackSuccesses,
+          averageAccuracy: ((results.summary.attackFailures ?? 0) / (results.summary.totalTests ?? 1)) * 100,
+          totalPrompts: results.summary.totalTests ?? 0,
+          totalBlocked: results.summary.attackFailures ?? 0,
+          totalPassed: results.summary.attackSuccesses ?? 0,
           averagePrecision: 0,
           averageRecall: 0
         },

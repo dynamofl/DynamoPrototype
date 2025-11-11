@@ -120,7 +120,7 @@ export function ensureValidSummary(
   results: JailbreakEvaluationResult[]
 ): JailbreakEvaluationSummary {
   // If summary exists and has valid data, use it
-  if (summary && summary.totalTests > 0) {
+  if (summary && (summary.totalTests ?? 0) > 0) {
     return summary
   }
 

@@ -16,7 +16,7 @@ export interface AIModel {
 export interface AIProvider {
   id: string
   name: string
-  type: 'OpenAI' | 'Azure' | 'Mistral' | 'Databricks' | 'HuggingFace' | 'Anthropic' | 'Remote' | 'Local' | 'AWS' | 'DynamoAI' | 'Gemini'
+  type: 'OpenAI' | 'Azure' | 'Mistral' | 'Databricks' | 'HuggingFace' | 'Anthropic' | 'Custom' | 'AWS' | 'DynamoAI' | 'Gemini'
   apiKey: string
   status: 'active' | 'inactive' | 'testing'
   createdAt: string

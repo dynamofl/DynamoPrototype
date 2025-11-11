@@ -73,9 +73,9 @@ export const availableProviderTypes: ProviderType[] = [
   {
     id: 'local',
     name: 'Local Model',
-    type: 'Local',
+    type: 'Custom',
     description: 'Self-hosted or local AI models',
-    icon: 'Local',
+    icon: 'Custom',
     isAvailable: false
   }
 ]

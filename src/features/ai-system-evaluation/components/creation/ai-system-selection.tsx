@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAISystemsSupabase } from "@/features/ai-systems/lib/useAISystemsSupabase";
 import { AISystemIcon } from "@/components/patterns/ui-patterns/ai-system-icon";
-import type { EvaluationCreationStepProps } from "../types/evaluation-creation";
+import type { EvaluationCreationStepProps } from "../../types/evaluation-creation.ts";
 
 export function AISystemSelection({
   data,

@@ -5,7 +5,7 @@ export interface AISystem {
   owner: string;
   createdAt: string;
   status: 'active' | 'inactive';
-  icon: 'HuggingFace' | 'OpenAI' | 'Azure' | 'Mistral' | 'Anthropic' | 'Databricks' | 'Remote' | 'Local' | 'Gemini';
+  icon: 'HuggingFace' | 'OpenAI' | 'Azure' | 'Mistral' | 'Anthropic' | 'Databricks' | 'Custom' | 'AWS' | 'DynamoAI' | 'Gemini';
   hasGuardrails: boolean;
   isEvaluated: boolean;
 }
@@ -66,7 +66,7 @@ export interface Guardrail {
   createdAt: string;
   updatedAt: string;
   status: 'active' | 'inactive';
-  category?: string;
+  category: string;
   type?: string;
   guardrailType?: 'input' | 'output'; // Input (evaluates prompts) or Output (evaluates responses)
   allowedBehavior?: string;

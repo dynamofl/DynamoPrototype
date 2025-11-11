@@ -18,8 +18,6 @@ export {
   sendToGuardrail,
   judgeModel,
   calculateOutcome,
-  getGPT4oApiKey,
-  getDefaultEvaluationAISystemId,
   getEvaluationApiKey
 } from './jailbreak-execution';
 

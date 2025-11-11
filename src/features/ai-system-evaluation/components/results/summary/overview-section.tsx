@@ -89,7 +89,7 @@ function getRiskLevel(successRate: number): string {
 
 export function OverviewSection({ summary, hasGuardrails = false, evaluationResults }: OverviewSectionProps) {
   const policyCount = Object.keys(summary.byPolicy || {}).length;
-  const riskLevel = getRiskLevel(summary.successRate);
+  const riskLevel = getRiskLevel(summary.successRate ?? 0);
 
   // Get attack type count from byAttackType
   const attackTypeCount = Object.keys(summary.byAttackType || {}).length;

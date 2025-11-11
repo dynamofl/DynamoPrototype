@@ -31,7 +31,7 @@ export function getJailbreakTableColumns(options?: { hasInputGuardrails?: boolea
       label: 'Test Conversations',
       className: 'font-450 text-gray-900',
       render: (record) => {
-        const jailbreakRecord = record as JailbreakEvaluationResult
+        const jailbreakRecord = record as unknown as JailbreakEvaluationResult
         return (
           <div className="truncate max-w-md group-hover:underline" title={jailbreakRecord.basePrompt}>
             {jailbreakRecord.basePrompt}
@@ -43,7 +43,7 @@ export function getJailbreakTableColumns(options?: { hasInputGuardrails?: boolea
       key: 'topic',
       label: 'Topic',
       render: (record) => {
-        const jailbreakRecord = record as JailbreakEvaluationResult
+        const jailbreakRecord = record as unknown as JailbreakEvaluationResult
         return (
           <Badge variant="outline" className="text-xs">
             {jailbreakRecord.topic || 'General'}
@@ -55,7 +55,7 @@ export function getJailbreakTableColumns(options?: { hasInputGuardrails?: boolea
       key: 'behaviorType',
       label: 'Behavior Type',
       render: (record) => {
-        const jailbreakRecord = record as JailbreakEvaluationResult
+        const jailbreakRecord = record as unknown as JailbreakEvaluationResult
         return (
           <Badge variant="secondary">
             {jailbreakRecord.behaviorType}
@@ -67,7 +67,7 @@ export function getJailbreakTableColumns(options?: { hasInputGuardrails?: boolea
       key: 'attackType',
       label: 'Attack Type',
       render: (record) => {
-        const jailbreakRecord = record as JailbreakEvaluationResult
+        const jailbreakRecord = record as unknown as JailbreakEvaluationResult
         return (
           <div className="flex items-center gap-2">
             <SeverityIcon level={getAttackSeverityLevel(jailbreakRecord.attackType)} size="sm" />
@@ -84,7 +84,7 @@ export function getJailbreakTableColumns(options?: { hasInputGuardrails?: boolea
       key: 'inputGuardrail',
       label: 'Input Guardrail',
       render: (record) => {
-        const jailbreakRecord = record as JailbreakEvaluationResult
+        const jailbreakRecord = record as unknown as JailbreakEvaluationResult
         if (!jailbreakRecord.inputGuardrailJudgement) {
           return <span className="text-gray-400">—</span>
         }
@@ -129,7 +129,7 @@ export function getJailbreakTableColumns(options?: { hasInputGuardrails?: boolea
       key: 'outputGuardrail',
       label: 'Output Guardrail',
       render: (record) => {
-        const jailbreakRecord = record as JailbreakEvaluationResult
+        const jailbreakRecord = record as unknown as JailbreakEvaluationResult
         if (!jailbreakRecord.outputGuardrailJudgement) {
           return <span className="text-gray-400">—</span>
         }
@@ -173,7 +173,7 @@ export function getJailbreakTableColumns(options?: { hasInputGuardrails?: boolea
     key: 'judgeModel',
     label: 'Judge Model',
     render: (record) => {
-      const jailbreakRecord = record as JailbreakEvaluationResult
+      const jailbreakRecord = record as unknown as JailbreakEvaluationResult
       const judgement = jailbreakRecord.judgeModelJudgement || jailbreakRecord.modelJudgement
       const isRefused = judgement === 'Refused' || judgement === 'Blocked'
       return (
@@ -194,7 +194,7 @@ export function getJailbreakTableColumns(options?: { hasInputGuardrails?: boolea
     key: 'attackOutcome',
     label: hasAnyGuardrails ? 'Attack Outcome' : 'AI System Attack Outcome',
     render: (record) => {
-      const jailbreakRecord = record as JailbreakEvaluationResult
+      const jailbreakRecord = record as unknown as JailbreakEvaluationResult
       const outcome = hasAnyGuardrails
         ? jailbreakRecord.attackOutcome
         : (jailbreakRecord.aiSystemAttackOutcome || jailbreakRecord.attackOutcome)
@@ -228,7 +228,7 @@ export function getJailbreakFilters(options?: { hasInputGuardrails?: boolean; ha
         { value: 'Attack Failure', label: 'Attack Failure' }
       ],
       filterFn: (record, values) => {
-        const jailbreakRecord = record as JailbreakEvaluationResult
+        const jailbreakRecord = record as unknown as JailbreakEvaluationResult
         return values.includes(jailbreakRecord.attackOutcome)
       }
     },
@@ -241,7 +241,7 @@ export function getJailbreakFilters(options?: { hasInputGuardrails?: boolean; ha
         { value: 'Allowed', label: 'Allowed' }
       ],
       filterFn: (record, values) => {
-        const jailbreakRecord = record as JailbreakEvaluationResult
+        const jailbreakRecord = record as unknown as JailbreakEvaluationResult
         return values.includes(jailbreakRecord.behaviorType)
       }
     },
@@ -258,7 +258,7 @@ export function getJailbreakFilters(options?: { hasInputGuardrails?: boolean; ha
         { value: 'Crescendo', label: 'Crescendo' }
       ],
       filterFn: (record, values) => {
-        const jailbreakRecord = record as JailbreakEvaluationResult
+        const jailbreakRecord = record as unknown as JailbreakEvaluationResult
         return values.includes(jailbreakRecord.attackType)
       }
     },
@@ -271,7 +271,7 @@ export function getJailbreakFilters(options?: { hasInputGuardrails?: boolean; ha
         { value: 'Refused', label: 'Refused' }
       ],
       filterFn: (record, values) => {
-        const jailbreakRecord = record as JailbreakEvaluationResult
+        const jailbreakRecord = record as unknown as JailbreakEvaluationResult
         const judgement = jailbreakRecord.judgeModelJudgement || jailbreakRecord.modelJudgement
         return values.includes(judgement)
       }
@@ -299,7 +299,7 @@ export function getJailbreakFilters(options?: { hasInputGuardrails?: boolean; ha
         { value: 'Blocked', label: 'Blocked' }
       ],
       filterFn: (record, values) => {
-        const jailbreakRecord = record as JailbreakEvaluationResult
+        const jailbreakRecord = record as unknown as JailbreakEvaluationResult
         if (!jailbreakRecord.inputGuardrailJudgement) return false
         return values.includes(jailbreakRecord.inputGuardrailJudgement)
       }
@@ -317,7 +317,7 @@ export function getJailbreakFilters(options?: { hasInputGuardrails?: boolean; ha
         { value: 'Blocked', label: 'Blocked' }
       ],
       filterFn: (record, values) => {
-        const jailbreakRecord = record as JailbreakEvaluationResult
+        const jailbreakRecord = record as unknown as JailbreakEvaluationResult
         if (!jailbreakRecord.outputGuardrailJudgement) return false
         return values.includes(jailbreakRecord.outputGuardrailJudgement)
       }
@@ -336,7 +336,7 @@ export function getJailbreakDetailSections(): DetailSectionConfig[] {
       title: 'Jailbreak Prompt',
       order: 1,
       render: (record) => {
-        const jailbreakRecord = record as JailbreakEvaluationResult
+        const jailbreakRecord = record as unknown as JailbreakEvaluationResult
         return (
           <div className="bg-gray-50 p-4 rounded">
             {jailbreakRecord.jailbreakPrompt}
@@ -348,7 +348,7 @@ export function getJailbreakDetailSections(): DetailSectionConfig[] {
       title: 'Attack Information',
       order: 2,
       render: (record) => {
-        const jailbreakRecord = record as JailbreakEvaluationResult
+        const jailbreakRecord = record as unknown as JailbreakEvaluationResult
         return (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
@@ -380,7 +380,7 @@ export function getJailbreakExportFields(): ExportFieldConfig[] {
     {
       key: 'policyName',
       label: 'Policy Name',
-      getValue: (record) => (record as JailbreakEvaluationResult).policyName,
+      getValue: (record) => (record as unknown as JailbreakEvaluationResult).policyName,
       format: 'string'
     },
     {
@@ -392,38 +392,38 @@ export function getJailbreakExportFields(): ExportFieldConfig[] {
     {
       key: 'behaviorType',
       label: 'Behavior Type',
-      getValue: (record) => (record as JailbreakEvaluationResult).behaviorType,
+      getValue: (record) => (record as unknown as JailbreakEvaluationResult).behaviorType,
       format: 'string'
     },
     {
       key: 'attackType',
       label: 'Attack Type',
-      getValue: (record) => (record as JailbreakEvaluationResult).attackType,
+      getValue: (record) => (record as unknown as JailbreakEvaluationResult).attackType,
       format: 'string'
     },
     {
       key: 'basePrompt',
       label: 'Base Prompt',
-      getValue: (record) => (record as JailbreakEvaluationResult).basePrompt,
+      getValue: (record) => (record as unknown as JailbreakEvaluationResult).basePrompt,
       format: 'string'
     },
     {
       key: 'jailbreakPrompt',
       label: 'Jailbreak Prompt',
-      getValue: (record) => (record as JailbreakEvaluationResult).jailbreakPrompt,
+      getValue: (record) => (record as unknown as JailbreakEvaluationResult).jailbreakPrompt,
       format: 'string'
     },
     {
       key: 'systemResponse',
       label: 'System Response',
-      getValue: (record) => (record as JailbreakEvaluationResult).systemResponse || '',
+      getValue: (record) => (record as unknown as JailbreakEvaluationResult).systemResponse || '',
       format: 'string'
     },
     {
       key: 'judgeModelJudgement',
       label: 'Judge Model Judgement',
       getValue: (record) => {
-        const jbRecord = record as JailbreakEvaluationResult
+        const jbRecord = record as unknown as JailbreakEvaluationResult
         return jbRecord.judgeModelJudgement || jbRecord.modelJudgement || ''
       },
       format: 'string'
@@ -431,7 +431,7 @@ export function getJailbreakExportFields(): ExportFieldConfig[] {
     {
       key: 'attackOutcome',
       label: 'Attack Outcome',
-      getValue: (record) => (record as JailbreakEvaluationResult).attackOutcome,
+      getValue: (record) => (record as unknown as JailbreakEvaluationResult).attackOutcome,
       format: 'string'
     }
   ]
@@ -447,14 +447,15 @@ export function getJailbreakConversationSections(): ConversationSectionConfig[] 
       title: 'Base Prompt',
       order: 1,
       render: (record: BaseEvaluationResult) => {
-        const jbRecord = record as JailbreakEvaluationResult
+        // Use base_prompt from BaseEvaluationResult (snake_case convention)
+        const basePromptText = record.base_prompt || ''
         return (
           <>
             <h3 className="px-2 text-[0.8125rem] font-450 leading-4 text-gray-600">
               Base Prompt
             </h3>
             <div className="px-2 text-sm font-425 leading-5 text-gray-900">
-              {jbRecord.basePrompt}
+              {basePromptText}
             </div>
           </>
         )
@@ -465,8 +466,10 @@ export function getJailbreakConversationSections(): ConversationSectionConfig[] 
       title: 'Jailbreak Prompt',
       order: 2,
       render: (record: BaseEvaluationResult, ctx?: HighlightingContext) => {
-        const jbRecord = record as JailbreakEvaluationResult
-        const adversarialPrompt = jbRecord.adversarialPrompt
+        // Access adversarial prompt - it might be stored in different places
+        const recordAny = record as any
+        const adversarialPrompt = recordAny.adversarialPrompt || recordAny.adversarial_prompt
+        const jailbreakPromptText = recordAny.jailbreakPrompt || recordAny.jailbreak_prompt
 
         // Check if it's a multi-turn conversation
         const isMultiTurn = Array.isArray(adversarialPrompt)
@@ -529,10 +532,10 @@ export function getJailbreakConversationSections(): ConversationSectionConfig[] 
                   onPhraseClick={(idx) => ctx.handlePhraseClick(idx, 'input')}
                   showHighlightByDefault={true}
                 >
-                  {jbRecord.jailbreakPrompt}
+                  {jailbreakPromptText || 'No jailbreak prompt'}
                 </HighlightedText>
               ) : (
-                jbRecord.jailbreakPrompt
+                jailbreakPromptText || 'No jailbreak prompt'
               )}
             </div>
           </>
@@ -544,7 +547,18 @@ export function getJailbreakConversationSections(): ConversationSectionConfig[] 
       title: 'AI System Response',
       order: 3,
       render: (record: BaseEvaluationResult, ctx?: HighlightingContext) => {
-        const jbRecord = record as JailbreakEvaluationResult
+        // Get system response - it might be a string or AISystemResponse object
+        const recordAny = record as any
+        const systemResponseRaw = record.system_response || recordAny.systemResponse
+
+        // Extract content string from response
+        let responseContent = 'No response'
+        if (typeof systemResponseRaw === 'string') {
+          responseContent = systemResponseRaw
+        } else if (systemResponseRaw && typeof systemResponseRaw === 'object' && systemResponseRaw.content) {
+          responseContent = systemResponseRaw.content
+        }
+
         return (
           <>
             <h3 className="px-2 text-[0.8125rem] font-450 leading-4 text-gray-600">
@@ -553,7 +567,7 @@ export function getJailbreakConversationSections(): ConversationSectionConfig[] 
             <div className="px-2">
               {ctx ? (
                 <HighlightedMarkdownRenderer
-                  content={jbRecord.systemResponse || 'No response'}
+                  content={responseContent}
                   highlightPhrases={ctx.shouldHighlightResponse ? ctx.highlightPhrases : ctx.allOutputPhrases}
                   highlightColor={ctx.highlightColor}
                   hoveredBehavior={ctx.hoveredBehavior}
@@ -563,7 +577,7 @@ export function getJailbreakConversationSections(): ConversationSectionConfig[] 
                 />
               ) : (
                 <div className="text-sm font-425 leading-relaxed text-gray-900">
-                  {jbRecord.systemResponse || 'No response'}
+                  {responseContent}
                 </div>
               )}
             </div>

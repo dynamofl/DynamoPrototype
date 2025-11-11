@@ -191,8 +191,8 @@ export async function migrateEvaluationSummaries() {
 
         console.log(`  ✓ Calculated metrics:`, {
           totalTests: summary.totalTests,
-          successRate: summary.successRate.toFixed(1) + '%',
-          aiSystemOnlySuccessRate: summary.aiSystemOnlySuccessRate.toFixed(1) + '%'
+          successRate: (summary.successRate ?? 0).toFixed(1) + '%',
+          aiSystemOnlySuccessRate: (summary.aiSystemOnlySuccessRate ?? 0).toFixed(1) + '%'
         });
 
         // Update evaluation with summary metrics

@@ -110,7 +110,7 @@ export class JailbreakStrategy implements EvaluationStrategy {
    * Calculate summary metrics from results
    */
   calculateSummary(results: BaseEvaluationResult[]): JailbreakEvaluationSummary {
-    return calculateSummaryFromResults(results as JailbreakEvaluationResult[])
+    return calculateSummaryFromResults(results as unknown as JailbreakEvaluationResult[])
   }
 
   /**
@@ -150,31 +150,31 @@ export class JailbreakStrategy implements EvaluationStrategy {
     return [
       {
         title: 'Total Tests',
-        getValue: (summary) => (summary as JailbreakEvaluationSummary).totalTests,
+        getValue: (summary) => (summary as JailbreakEvaluationSummary).totalTests ?? 0,
         format: 'number',
         color: 'blue',
         description: 'Total number of jailbreak attempts'
       },
       {
         title: 'Attack Success Rate',
-        getValue: (summary) => (summary as JailbreakEvaluationSummary).attackSuccessRate,
+        getValue: (summary) => (summary as JailbreakEvaluationSummary).successRate ?? 0,
         format: 'percentage',
         color: 'red',
         description: 'Percentage of successful attacks'
       },
       {
-        title: 'Guardrail Block Rate',
-        getValue: (summary) => (summary as JailbreakEvaluationSummary).guardrailBlockRate || 0,
-        format: 'percentage',
+        title: 'Attack Failures',
+        getValue: (summary) => (summary as JailbreakEvaluationSummary).attackFailures ?? 0,
+        format: 'number',
         color: 'green',
-        description: 'Percentage of attacks blocked by guardrails'
+        description: 'Number of failed attacks'
       },
       {
-        title: 'AI System Refusal Rate',
-        getValue: (summary) => (summary as JailbreakEvaluationSummary).aiSystemRefusalRate || 0,
-        format: 'percentage',
-        color: 'green',
-        description: 'Percentage of attacks refused by AI system'
+        title: 'Attack Successes',
+        getValue: (summary) => (summary as JailbreakEvaluationSummary).attackSuccesses ?? 0,
+        format: 'number',
+        color: 'red',
+        description: 'Number of successful attacks'
       }
     ]
   }
@@ -221,12 +221,12 @@ export class JailbreakStrategy implements EvaluationStrategy {
   }
 
   getConversationTitle(record: BaseEvaluationResult): string | null {
-    const jailbreakRecord = record as JailbreakEvaluationResult
+    const jailbreakRecord = record as unknown as JailbreakEvaluationResult
     return jailbreakRecord.promptTitle || null
   }
 
   getConversationBadge(record: BaseEvaluationResult) {
-    const jailbreakRecord = record as JailbreakEvaluationResult
+    const jailbreakRecord = record as unknown as JailbreakEvaluationResult
     const isAttackSuccess = jailbreakRecord.attackOutcome === 'Attack Success'
 
     return {

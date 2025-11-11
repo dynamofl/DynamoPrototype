@@ -1,4 +1,5 @@
-import { useState, ReactNode } from 'react'
+import { useState } from 'react'
+import type { ReactNode } from 'react'
 import { Search, ChevronDown, Plus, X } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -19,7 +20,7 @@ export interface FilterOption {
 export interface FilterConfig {
   key: string
   label: string
-  options: FilterOption[]
+  options: readonly FilterOption[] | FilterOption[]
   type?: 'array' | 'single' | 'boolean'
   isAdditional?: boolean
 }

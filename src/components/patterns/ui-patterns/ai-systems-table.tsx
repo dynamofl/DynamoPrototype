@@ -28,7 +28,7 @@ interface AISystem {
   owner: string;
   createdAt: string;
   status: 'active' | 'inactive';
-  icon: 'OpenAI' | 'Azure' | 'Mistral' | 'Databricks' | 'HuggingFace' | 'Anthropic' | 'Remote' | 'Local';
+  icon: 'OpenAI' | 'Azure' | 'Mistral' | 'Databricks' | 'HuggingFace' | 'Anthropic' | 'Custom' | 'AWS' | 'DynamoAI' | 'Gemini';
   hasGuardrails: boolean;
   isEvaluated: boolean;
 }

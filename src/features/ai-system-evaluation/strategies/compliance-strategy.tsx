@@ -245,12 +245,10 @@ export class ComplianceStrategy implements EvaluationStrategy {
       precision,
       recall,
       f1_score: f1Score,
-      f1Score: f1Score,
       accuracy,
       by_policy: byPolicy,
       by_behavior_type: byBehaviorType,
-      by_perturbation_type: byPerturbationType,
-      byPerturbationType: byPerturbationType
+      by_perturbation_type: byPerturbationType
     }
   }
 
@@ -319,7 +317,7 @@ export class ComplianceStrategy implements EvaluationStrategy {
       },
       {
         title: 'F1 Score',
-        getValue: (summary) => (summary as ComplianceEvaluationSummary).f1Score,
+        getValue: (summary) => (summary as ComplianceEvaluationSummary).f1_score,
         format: 'percentage',
         formatFn: (value) => `${((value as number) * 100).toFixed(1)}%`,
         color: 'blue',
@@ -354,8 +352,8 @@ export class ComplianceStrategy implements EvaluationStrategy {
         render: () => null,
         condition: (summary) => {
           const complianceSummary = summary as ComplianceEvaluationSummary
-          return !!complianceSummary.byPerturbationType &&
-            Object.keys(complianceSummary.byPerturbationType).length > 1
+          return !!complianceSummary.by_perturbation_type &&
+            Object.keys(complianceSummary.by_perturbation_type).length > 1
         }
       },
       {
@@ -384,7 +382,7 @@ export class ComplianceStrategy implements EvaluationStrategy {
 
   getConversationTitle(record: BaseEvaluationResult): string | null {
     const complianceRecord = record as ComplianceEvaluationResult
-    return complianceRecord.promptTitle || complianceRecord.base_prompt.substring(0, 50) + '...'
+    return complianceRecord.prompt_title || complianceRecord.base_prompt.substring(0, 50) + '...'
   }
 
   getConversationBadge(record: BaseEvaluationResult) {

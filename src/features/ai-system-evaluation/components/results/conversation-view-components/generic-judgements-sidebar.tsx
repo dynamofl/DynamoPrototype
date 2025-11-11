@@ -63,7 +63,7 @@ function ResponseJudgementCard({ record, aiSystemName, isExpanded, onToggle, hov
   const hasAnswerPhrases = record.judgeModelAnswerPhrases && record.judgeModelAnswerPhrases.length > 0
 
   // Get judgement - works for both jailbreak and compliance
-  const judgement = record.judgeModelJudgement || record.modelJudgement || (record as ComplianceEvaluationResult).complianceJudgement || 'Answered'
+  const judgement = record.judgeModelJudgement || record.modelJudgement || (record as ComplianceEvaluationResult).compliance_judgement || 'Answered'
 
   const handleClick = () => {
     if (!hasAnswerPhrases) return
@@ -399,7 +399,7 @@ export function GenericJudgementsSidebar({
               // Compliance: Base Prompt Card (Ground Truth)
               (() => {
                 const complianceRecord = record as ComplianceEvaluationResult
-                const groundTruth = complianceRecord.groundTruth
+                const groundTruth = complianceRecord.ground_truth
                 const isCompliant = groundTruth === 'Compliant'
 
                 return (
@@ -451,7 +451,7 @@ export function GenericJudgementsSidebar({
                 {(() => {
                   const judgement = hasAttackType
                     ? (jbRecord.judgeModelJudgement || jbRecord.modelJudgement)
-                    : ((record as ComplianceEvaluationResult).complianceJudgement || 'Answered')
+                    : ((record as ComplianceEvaluationResult).compliance_judgement || 'Answered')
 
                   const isRefused = judgement === 'Blocked' || judgement === 'Refused'
 
@@ -529,7 +529,7 @@ export function GenericJudgementsSidebar({
         {(() => {
           const hasResponseJudgement = hasAttackType
             ? (jbRecord.judgeModelJudgement || jbRecord.modelJudgement)
-            : ((record as ComplianceEvaluationResult).complianceJudgement)
+            : ((record as ComplianceEvaluationResult).compliance_judgement)
 
           if (!hasResponseJudgement) return null
 

@@ -9,7 +9,7 @@ import type { TableColumn, ExpandableConfig, TableStorageConfig } from '@/types/
 import { AI_SYSTEMS_STORAGE_KEY, AI_SYSTEMS_ITEMS_PER_PAGE } from '../constants'
 
 // Map provider names to AISystemIcon types
-const providerIconMap: Record<string, 'OpenAI' | 'Azure' | 'Mistral' | 'Databricks' | 'HuggingFace' | 'Anthropic' | 'Remote' | 'Local' | 'AWS' | 'DynamoAI' | 'Gemini'> = {
+const providerIconMap: Record<string, 'OpenAI' | 'Azure' | 'Mistral' | 'Databricks' | 'HuggingFace' | 'Anthropic' | 'Custom' | 'AWS' | 'DynamoAI' | 'Gemini'> = {
   'openai': 'OpenAI',
   'OpenAI': 'OpenAI',
   'azure': 'Azure',
@@ -30,13 +30,13 @@ const providerIconMap: Record<string, 'OpenAI' | 'Azure' | 'Mistral' | 'Databric
   'DynamoAI': 'DynamoAI',
   'gemini': 'Gemini',
   'Gemini': 'Gemini',
-  'remote': 'Remote',
-  'Remote': 'Remote'
+  'custom': 'Custom',
+  'Custom': 'Custom'
 }
 
 // Function to render AI system name with provider icon
 const renderAISystemName = (_value: string, row: any) => {
-  const iconType = providerIconMap[row.providerId] || providerIconMap[row.providerName] || 'Remote'
+  const iconType = providerIconMap[row.providerId] || providerIconMap[row.providerName] || 'Custom'
   return React.createElement('div', {
     className: 'flex items-center gap-3 min-w-0 flex-1'
   }, [

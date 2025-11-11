@@ -14,6 +14,7 @@ import { ViewEditSheet } from "@/components/patterns";
 import type {
   AISystem,
   ProviderOption,
+  AIModel,
 } from "../types";
 import {
   getProvidersWithAPIKeys,
@@ -38,6 +39,9 @@ export function AISystemEditSheet({
   const [selectedAPIKeys, setSelectedAPIKeys] = useState<string[]>([]);
   const [primaryAPIKey, setPrimaryAPIKey] = useState<string | null>(null);
   const [isValidating, setIsValidating] = useState(false);
+  const [isFetchingModels, setIsFetchingModels] = useState(false);
+  const [availableModels, setAvailableModels] = useState<AIModel[]>([]);
+  const [validationError, setValidationError] = useState<string>("");
 
   // Form data
   const [formData, setFormData] = useState({
@@ -133,7 +137,7 @@ export function AISystemEditSheet({
 
     try {
       const currentProviderToUse = provider || currentProvider;
-      const apiKey = currentProviderToUse?.apiKeys.find(ak => ak.id === apiKeyId);
+      const apiKey = currentProviderToUse?.apiKeys.find((ak: any) => ak.id === apiKeyId);
       if (apiKey && currentProviderToUse) {
         const models = await fetchModelsFromProvider(currentProviderToUse.type, apiKey.key);
         setAvailableModels(models);
