@@ -59,6 +59,7 @@ export function GenericConversationView({
         onExpandedKeysChange={setExpandedKeys}
         hoveredBehavior={hoveredBehavior}
         onBehaviorHover={setHoveredBehavior}
+        onBehaviorClick={highlightingContext.handleBehaviorClick}
         selectedBehaviors={selectedBehaviors}
         isAnnotationModeEnabled={isAnnotationModeEnabled}
         testType={testType}

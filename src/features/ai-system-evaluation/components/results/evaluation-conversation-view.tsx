@@ -3,7 +3,7 @@ import { JudgementsSidebar } from './judgements-sidebar'
 import { Badge } from '@/components/ui/badge'
 import { MarkdownRenderer } from '@/components/patterns/ui-patterns/markdown-renderer'
 import { HighlightedText, type HighlightPhrase, type HoveredBehaviorContext } from '@/components/patterns/ui-patterns/phrase-highlighter'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 
 interface EvaluationConversationViewProps {
   record: JailbreakEvaluationResult
@@ -152,6 +152,14 @@ export function EvaluationConversationView({ record, aiSystemName }: EvaluationC
     return allPhrases
   }, [expandedKeys, record.inputGuardrailDetails, record.outputGuardrailDetails, record.judgeModelAnswerPhrases])
 
+  // Reset highlight states when all cards are collapsed
+  useEffect(() => {
+    if (expandedKeys.size === 0) {
+      setHoveredBehavior(null)
+      setSelectedBehaviors(null)
+    }
+  }, [expandedKeys])
+
   // Determine which text to highlight based on guardrail types
   const shouldHighlightPrompt = Array.from(expandedKeys).some(key => key.startsWith('input-'))
   const shouldHighlightResponse = Array.from(expandedKeys).some(key => key.startsWith('output-') || key === 'judge-model')
@@ -160,6 +168,10 @@ export function EvaluationConversationView({ record, aiSystemName }: EvaluationC
   // Get all clickable phrases for input and output
   const allInputPhrases = getAllPhrasesForContext('input')
   const allOutputPhrases = [...getAllPhrasesForContext('output'), ...getAllPhrasesForContext('judge-model')]
+
+  // Always show borders for all phrases, backgrounds are controlled by hover/selection states
+  const inputPhrasesToShow = shouldHighlightPrompt ? highlightPhrases : allInputPhrases
+  const outputPhrasesToShow = shouldHighlightResponse ? highlightPhrases : allOutputPhrases
 
   // Handle phrase click - expand all corresponding guardrails and highlight all associated behaviors
   const handlePhraseClick = (phraseIndex: number, type: 'input' | 'output') => {
@@ -249,7 +261,7 @@ export function EvaluationConversationView({ record, aiSystemName }: EvaluationC
                     <div className="text-sm leading-5 text-gray-900 whitespace-pre-wrap">
                       {turn.role === 'user' ? (
                         <HighlightedText
-                          highlightPhrases={shouldHighlightPrompt ? highlightPhrases : allInputPhrases}
+                          highlightPhrases={inputPhrasesToShow}
                           className="text-sm leading-5 text-gray-900"
                           highlightColor={highlightColor}
                           hoveredBehavior={hoveredBehavior}
@@ -270,7 +282,7 @@ export function EvaluationConversationView({ record, aiSystemName }: EvaluationC
                 <div className="px-2 space-y-2">
                   <div className="text-sm leading-5 text-gray-900">
                     <HighlightedText
-                      highlightPhrases={shouldHighlightPrompt ? highlightPhrases : allInputPhrases}
+                      highlightPhrases={inputPhrasesToShow}
                       className="text-sm leading-5 text-gray-900"
                       highlightColor={highlightColor}
                       hoveredBehavior={hoveredBehavior}
@@ -293,7 +305,7 @@ export function EvaluationConversationView({ record, aiSystemName }: EvaluationC
             <div className=''>
               <HighlightedMarkdownRenderer
                 content={record.systemResponse}
-                highlightPhrases={shouldHighlightResponse ? highlightPhrases : allOutputPhrases}
+                highlightPhrases={outputPhrasesToShow}
                 highlightColor={highlightColor}
                 hoveredBehavior={hoveredBehavior}
                 selectedBehaviors={selectedBehaviors}

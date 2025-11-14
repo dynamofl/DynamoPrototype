@@ -10,7 +10,9 @@ interface HighlightedMarkdownRendererProps {
   highlightPhrases: HighlightPhrase[]
   highlightColor: 'amber' | 'green' | 'red'
   hoveredBehavior?: HoveredBehaviorContext | null
+  selectedBehavior?: HoveredBehaviorContext | null
   selectedBehaviors?: Set<string> | null
+  selectedPhraseText?: string | null
   onPhraseClick?: (index: number) => void
   showHighlightByDefault?: boolean
 }
@@ -20,7 +22,9 @@ export function HighlightedMarkdownRenderer({
   highlightPhrases,
   highlightColor,
   hoveredBehavior,
+  selectedBehavior,
   selectedBehaviors,
+  selectedPhraseText,
   onPhraseClick,
   showHighlightByDefault
 }: HighlightedMarkdownRendererProps) {
@@ -32,7 +36,9 @@ export function HighlightedMarkdownRenderer({
           highlightPhrases={highlightPhrases}
           highlightColor={highlightColor}
           hoveredBehavior={hoveredBehavior}
+          selectedBehavior={selectedBehavior}
           selectedBehaviors={selectedBehaviors}
+          selectedPhraseText={selectedPhraseText}
           onPhraseClick={onPhraseClick}
           showHighlightByDefault={showHighlightByDefault}
         >

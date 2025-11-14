@@ -536,7 +536,9 @@ export function getComplianceConversationSections(): ConversationSectionConfig[]
                   className="text-sm leading-5 text-gray-900"
                   highlightColor={ctx.highlightColor}
                   hoveredBehavior={ctx.hoveredBehavior}
+                  selectedBehavior={ctx.selectedBehavior}
                   selectedBehaviors={ctx.selectedBehaviors}
+                  selectedPhraseText={ctx.selectedPhraseText}
                   onPhraseClick={(idx) => ctx.handlePhraseClick(idx, 'input')}
                   showHighlightByDefault={true}
                 >
@@ -586,7 +588,9 @@ export function getComplianceConversationSections(): ConversationSectionConfig[]
                   highlightPhrases={ctx.shouldHighlightResponse ? ctx.highlightPhrases : ctx.allOutputPhrases}
                   highlightColor={ctx.highlightColor}
                   hoveredBehavior={ctx.hoveredBehavior}
+                  selectedBehavior={ctx.selectedBehavior}
                   selectedBehaviors={ctx.selectedBehaviors}
+                  selectedPhraseText={ctx.selectedPhraseText}
                   onPhraseClick={(idx) => ctx.handlePhraseClick(idx, 'output')}
                   showHighlightByDefault={true}
                 />

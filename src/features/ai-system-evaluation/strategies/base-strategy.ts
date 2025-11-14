@@ -129,8 +129,11 @@ export interface HighlightingContext {
   allOutputPhrases: any[]
   highlightColor: 'amber' | 'green' | 'red'
   hoveredBehavior: any | null
+  selectedBehavior?: any | null
   selectedBehaviors: Set<string> | null
+  selectedPhraseText?: string | null
   handlePhraseClick: (phraseIndex: number, type: 'input' | 'output') => void
+  handleBehaviorClick?: (behavior: any) => void
 }
 
 /**

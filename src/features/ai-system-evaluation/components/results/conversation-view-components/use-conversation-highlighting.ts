@@ -1,6 +1,6 @@
 // Hook for managing conversation highlighting state and context
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import type { BaseEvaluationResult } from '../../../types/base-evaluation'
 import type { HighlightPhrase, HoveredBehaviorContext } from '@/components/patterns/ui-patterns/phrase-highlighter'
 import type { HighlightingContext } from '../../../strategies/base-strategy'
@@ -18,6 +18,18 @@ export function useConversationHighlighting(record: BaseEvaluationResult | null)
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set())
   const [hoveredBehavior, setHoveredBehavior] = useState<HoveredBehaviorContext | null>(null)
   const [selectedBehaviors, setSelectedBehaviors] = useState<Set<string> | null>(null)
+  const [selectedPhraseText, setSelectedPhraseText] = useState<string | null>(null)
+  const [selectedBehavior, setSelectedBehavior] = useState<HoveredBehaviorContext | null>(null)
+
+  // Reset highlight states when all cards are collapsed
+  useEffect(() => {
+    if (expandedKeys.size === 0) {
+      setHoveredBehavior(null)
+      setSelectedBehaviors(null)
+      setSelectedPhraseText(null)
+      setSelectedBehavior(null)
+    }
+  }, [expandedKeys])
 
   // Build map of all phrases to their guardrail keys (for click handling)
   const phraseToKeysMap = useMemo(() => {
@@ -138,6 +150,10 @@ export function useConversationHighlighting(record: BaseEvaluationResult | null)
   const allInputPhrases = getAllPhrasesForContext('input')
   const allOutputPhrases = [...getAllPhrasesForContext('output'), ...getAllPhrasesForContext('judge-model')]
 
+  // Always show borders for all phrases, backgrounds are controlled by hover/selection states
+  const inputPhrasesToShow = shouldHighlightPrompt ? highlightPhrases : allInputPhrases
+  const outputPhrasesToShow = shouldHighlightResponse ? highlightPhrases : allOutputPhrases
+
   // Handle phrase click
   const handlePhraseClick = (phraseIndex: number, type: 'input' | 'output') => {
     const phrases = type === 'input' ? allInputPhrases : allOutputPhrases
@@ -150,27 +166,25 @@ export function useConversationHighlighting(record: BaseEvaluationResult | null)
       // Expand all guardrail keys for this phrase
       setExpandedKeys(new Set(guardrailKeys))
 
-      // Collect all behaviors associated with this phrase from all guardrails
-      const behaviorsToHighlight = new Set<string>()
+      // Set only the clicked phrase text for highlighting
+      setSelectedPhraseText(phrase.phrase.toLowerCase())
+      // Clear behavior selection when phrase is clicked
+      setSelectedBehavior(null)
 
-      // Add behaviors from the clicked phrase
+      // Also set behaviors for backward compatibility
+      const behaviorsToHighlight = new Set<string>()
       phrase.violatedBehaviors.forEach(behavior => {
         behaviorsToHighlight.add(behavior)
       })
-
-      // Find all other phrases with the same text and collect their behaviors too
-      const allPhrases = [...allInputPhrases, ...allOutputPhrases]
-      allPhrases.forEach(p => {
-        if (p.phrase.toLowerCase() === phraseKey) {
-          p.violatedBehaviors.forEach(behavior => {
-            behaviorsToHighlight.add(behavior)
-          })
-        }
-      })
-
-      // Set the selected behaviors
       setSelectedBehaviors(behaviorsToHighlight)
     }
+  }
+
+  // Handle behavior click (when clicking behavior in sidebar)
+  const handleBehaviorClick = (behavior: HoveredBehaviorContext) => {
+    setSelectedBehavior(behavior)
+    // Clear phrase selection when behavior is clicked
+    setSelectedPhraseText(null)
   }
 
   // Create context object to pass to strategy sections
@@ -178,12 +192,15 @@ export function useConversationHighlighting(record: BaseEvaluationResult | null)
     shouldHighlightPrompt,
     shouldHighlightResponse,
     highlightPhrases,
-    allInputPhrases,
-    allOutputPhrases,
+    allInputPhrases: inputPhrasesToShow,
+    allOutputPhrases: outputPhrasesToShow,
     highlightColor,
     hoveredBehavior,
+    selectedBehavior,
     selectedBehaviors,
-    handlePhraseClick
+    selectedPhraseText,
+    handlePhraseClick,
+    handleBehaviorClick
   }
 
   return {

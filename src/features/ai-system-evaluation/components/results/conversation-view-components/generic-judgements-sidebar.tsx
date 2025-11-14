@@ -28,6 +28,7 @@ interface GenericJudgementsSidebarProps {
   onExpandedKeysChange?: (keys: Set<string>) => void
   hoveredBehavior?: HoveredBehaviorContext | null
   onBehaviorHover?: (behavior: HoveredBehaviorContext | null) => void
+  onBehaviorClick?: (behavior: HoveredBehaviorContext) => void
   selectedBehaviors?: Set<string> | null
   isAnnotationModeEnabled?: boolean
   testType?: 'jailbreak' | 'compliance'
@@ -48,6 +49,7 @@ interface GuardrailDetailCardProps {
   onToggle: (key: string) => void
   hoveredBehavior?: HoveredBehaviorContext | null
   onBehaviorHover?: (behavior: HoveredBehaviorContext | null) => void
+  onBehaviorClick?: (behavior: HoveredBehaviorContext) => void
   selectedBehaviors?: Set<string> | null
   onPreviewPolicy?: (guardrailId: string) => void
 }
@@ -59,6 +61,7 @@ interface ResponseJudgementCardProps {
   onToggle: (key: string) => void
   hoveredBehavior?: HoveredBehaviorContext | null
   onBehaviorHover?: (behavior: HoveredBehaviorContext | null) => void
+  onBehaviorClick?: (behavior: HoveredBehaviorContext) => void
   selectedBehaviors?: Set<string> | null
   isAnnotationMode?: boolean
   testType?: 'jailbreak' | 'compliance'
@@ -72,6 +75,7 @@ function ResponseJudgementCard({
   onToggle,
   hoveredBehavior,
   onBehaviorHover,
+  onBehaviorClick,
   selectedBehaviors,
   isAnnotationMode = false,
   testType = 'jailbreak',
@@ -154,8 +158,8 @@ function ResponseJudgementCard({
             className="flex flex-col gap-2 overflow-hidden pb-3"
           >
             {record.judgeModelAnswerPhrases!.map((answerPhrase: any, idx: number) => {
-              // For answer phrases, use the reasoning as the behavior
-              const judgeModelName = aiSystemName // AI system name for judge model
+              // For answer phrases, use 'Answer Phrase' as the guardrail name to match the hook
+              const judgeModelName = 'Answer Phrase'
               const isHovered = hoveredBehavior !== null && hoveredBehavior !== undefined &&
                 hoveredBehavior.behavior === answerPhrase.reasoning &&
                 hoveredBehavior.guardrailName === judgeModelName
@@ -167,6 +171,7 @@ function ResponseJudgementCard({
                   className="flex gap-2 items-start px-2 cursor-pointer"
                   onMouseEnter={() => onBehaviorHover?.({ behavior: answerPhrase.reasoning, guardrailName: judgeModelName })}
                   onMouseLeave={() => onBehaviorHover?.(null)}
+                  onClick={() => onBehaviorClick?.({ behavior: answerPhrase.reasoning, guardrailName: judgeModelName })}
                 >
                   <div className="w-6 h-6 flex items-center justify-center shrink-0">
                     <Circle className={`w-2 h-2 transition-all ${
@@ -232,6 +237,7 @@ function GuardrailDetailCard({
   onToggle,
   hoveredBehavior,
   onBehaviorHover,
+  onBehaviorClick,
   selectedBehaviors,
   onPreviewPolicy
 }: GuardrailDetailCardProps) {
@@ -330,6 +336,7 @@ function GuardrailDetailCard({
                     className="flex gap-2 items-start px-2 cursor-pointer"
                     onMouseEnter={() => onBehaviorHover?.({ behavior, guardrailName: detail.guardrailName })}
                     onMouseLeave={() => onBehaviorHover?.(null)}
+                    onClick={() => onBehaviorClick?.({ behavior, guardrailName: detail.guardrailName })}
                   >
                     <div className="w-6 h-6 flex items-center justify-center shrink-0">
                       <Circle className={`w-2 h-2 transition-all ${
@@ -375,6 +382,7 @@ export function GenericJudgementsSidebar({
   onExpandedKeysChange,
   hoveredBehavior,
   onBehaviorHover,
+  onBehaviorClick,
   selectedBehaviors,
   isAnnotationModeEnabled = false,
   testType,
@@ -643,6 +651,7 @@ export function GenericJudgementsSidebar({
                         onToggle={handleToggle}
                         hoveredBehavior={hoveredBehavior}
                         onBehaviorHover={onBehaviorHover}
+                        onBehaviorClick={onBehaviorClick}
                         selectedBehaviors={selectedBehaviors}
                         onPreviewPolicy={handlePreviewPolicy}
                       />
@@ -664,6 +673,7 @@ export function GenericJudgementsSidebar({
                         onToggle={handleToggle}
                         hoveredBehavior={hoveredBehavior}
                         onBehaviorHover={onBehaviorHover}
+                        onBehaviorClick={onBehaviorClick}
                         selectedBehaviors={selectedBehaviors}
                         onPreviewPolicy={handlePreviewPolicy}
                       />
@@ -695,6 +705,7 @@ export function GenericJudgementsSidebar({
                 onToggle={handleToggle}
                 hoveredBehavior={hoveredBehavior}
                 onBehaviorHover={onBehaviorHover}
+                onBehaviorClick={onBehaviorClick}
                 selectedBehaviors={selectedBehaviors}
                 isAnnotationMode={isAnnotationModeEnabled}
                 testType={testType}

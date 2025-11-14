@@ -20,7 +20,9 @@ interface PhraseHighlighterProps {
   highlightColor?: HighlightColor  // Defaults to 'amber' for violations
   hoveredPhraseIndex?: number | null  // Index of the phrase being hovered in sidebar
   hoveredBehavior?: HoveredBehaviorContext | null  // Specific behavior being hovered (for behavior-level highlighting)
+  selectedBehavior?: HoveredBehaviorContext | null  // Specific behavior clicked (for persistent highlighting)
   selectedBehaviors?: Set<string> | null  // Behaviors selected from phrase click (for multi-behavior highlighting)
+  selectedPhraseText?: string | null  // Specific phrase text selected (for single phrase highlighting)
   onPhraseHover?: (index: number | null) => void  // Callback when phrase is hovered
   onPhraseClick?: (index: number) => void  // Callback when phrase is clicked
   showHighlightByDefault?: boolean  // If false, only show highlight on hover (default: true)
@@ -47,7 +49,9 @@ export function PhraseHighlighter({
   highlightColor = 'amber',
   hoveredPhraseIndex = null,
   hoveredBehavior = null,
+  selectedBehavior = null,
   selectedBehaviors = null,
+  selectedPhraseText = null,
   onPhraseHover,
   onPhraseClick,
   showHighlightByDefault = true
@@ -144,9 +148,14 @@ export function PhraseHighlighter({
       range.phraseInfo.guardrailName === hoveredBehavior.guardrailName &&
       range.phraseInfo.violatedBehaviors.includes(hoveredBehavior.behavior)
 
-    // Check if this phrase is associated with any selected behaviors (from phrase click)
-    const hasSelectedBehavior = selectedBehaviors !== null && selectedBehaviors.size > 0 &&
-      range.phraseInfo.violatedBehaviors.some(behavior => selectedBehaviors.has(behavior))
+    // Check if this phrase is associated with the selected behavior (clicked behavior in sidebar)
+    const isBehaviorSelected = selectedBehavior !== null &&
+      range.phraseInfo.guardrailName === selectedBehavior.guardrailName &&
+      range.phraseInfo.violatedBehaviors.includes(selectedBehavior.behavior)
+
+    // Check if this specific phrase text is selected (for single phrase highlighting)
+    const isPhraseSelected = selectedPhraseText !== null &&
+      range.phraseInfo.phrase.toLowerCase() === selectedPhraseText.toLowerCase()
 
     // Dynamic color classes based on highlightColor prop
     // Base classes: show border only if showHighlightByDefault is true
@@ -156,8 +165,9 @@ export function PhraseHighlighter({
          'border-b-2 border-amber-400')
       : ''
 
-    // Background: show when hovered (emphasis effect), behavior is hovered, or phrase has selected behaviors
-    const backgroundClass = (isHovered || isBehaviorHovered || hasSelectedBehavior)
+    // Background: show when hovered, behavior is hovered/selected, or specific phrase is selected
+    // Priority: isPhraseSelected OR isBehaviorSelected > hoveredBehavior
+    const backgroundClass = (isHovered || isBehaviorHovered || isBehaviorSelected || isPhraseSelected)
       ? (highlightColor === 'green' ? 'bg-green-100' :
          highlightColor === 'red' ? 'bg-red-100' :
          'bg-amber-100')
@@ -203,7 +213,9 @@ interface HighlightedTextProps {
   highlightColor?: HighlightColor
   hoveredPhraseIndex?: number | null
   hoveredBehavior?: HoveredBehaviorContext | null
+  selectedBehavior?: HoveredBehaviorContext | null
   selectedBehaviors?: Set<string> | null
+  selectedPhraseText?: string | null
   onPhraseHover?: (index: number | null) => void
   onPhraseClick?: (index: number) => void
   showHighlightByDefault?: boolean
@@ -216,7 +228,9 @@ export function HighlightedText({
   highlightColor,
   hoveredPhraseIndex,
   hoveredBehavior,
+  selectedBehavior,
   selectedBehaviors,
+  selectedPhraseText,
   onPhraseHover,
   onPhraseClick,
   showHighlightByDefault
@@ -229,7 +243,9 @@ export function HighlightedText({
       highlightColor={highlightColor}
       hoveredPhraseIndex={hoveredPhraseIndex}
       hoveredBehavior={hoveredBehavior}
+      selectedBehavior={selectedBehavior}
       selectedBehaviors={selectedBehaviors}
+      selectedPhraseText={selectedPhraseText}
       onPhraseHover={onPhraseHover}
       onPhraseClick={onPhraseClick}
       showHighlightByDefault={showHighlightByDefault}
