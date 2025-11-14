@@ -561,6 +561,19 @@ export function getComplianceConversationSections(): ConversationSectionConfig[]
       order: 3,
       render: (record: BaseEvaluationResult, ctx?: HighlightingContext) => {
         const complianceRecord = record as ComplianceEvaluationResult
+
+        // Get system response - it might be a string or AISystemResponse object
+        const recordAny = complianceRecord as any
+        const systemResponseRaw = recordAny.system_response || recordAny.systemResponse
+
+        // Extract content string from response
+        let responseContent = 'No response'
+        if (typeof systemResponseRaw === 'string') {
+          responseContent = systemResponseRaw
+        } else if (systemResponseRaw && typeof systemResponseRaw === 'object' && systemResponseRaw.content) {
+          responseContent = systemResponseRaw.content
+        }
+
         return (
           <>
             <h3 className="px-2 text-[0.8125rem] font-450 leading-4 text-gray-600">
@@ -569,7 +582,7 @@ export function getComplianceConversationSections(): ConversationSectionConfig[]
             <div className="px-2">
               {ctx ? (
                 <HighlightedMarkdownRenderer
-                  content={(complianceRecord as any).system_response || 'No response'}
+                  content={responseContent}
                   highlightPhrases={ctx.shouldHighlightResponse ? ctx.highlightPhrases : ctx.allOutputPhrases}
                   highlightColor={ctx.highlightColor}
                   hoveredBehavior={ctx.hoveredBehavior}
@@ -579,7 +592,7 @@ export function getComplianceConversationSections(): ConversationSectionConfig[]
                 />
               ) : (
                 <div className="text-sm font-425 leading-relaxed text-gray-900">
-                  {(complianceRecord as any).system_response || 'No response'}
+                  {responseContent}
                 </div>
               )}
             </div>

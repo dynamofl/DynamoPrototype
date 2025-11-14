@@ -387,10 +387,12 @@ export function EvaluationDataView({
           ...record,
           // Update system_response with the new ai_system_response from database
           system_response: dbRecord.ai_system_response || (record as any).system_response,
-          // Update attack_outcome (snake_case from database)
+          // Update attack_outcome (snake_case from database) - used by jailbreak
           attack_outcome: dbRecord.attack_outcome || (record as any).attack_outcome,
           // Update attackOutcome (camelCase for transformed records)
-          attackOutcome: dbRecord.attack_outcome || (record as any).attackOutcome,
+          attackOutcome: dbRecord.attack_outcome || dbRecord.final_outcome || (record as any).attackOutcome,
+          // Update final_outcome (snake_case from database) - used by compliance
+          final_outcome: dbRecord.final_outcome || (record as any).final_outcome,
           // Update aiSystemAttackOutcome if present
           aiSystemAttackOutcome: dbRecord.ai_system_attack_outcome || (record as any).aiSystemAttackOutcome,
           // Preserve uniqueKey

@@ -47,6 +47,7 @@ export function GenericConversationView({
         record={record}
         strategy={strategy}
         highlightingContext={highlightingContext}
+        testType={testType}
       />
 
       {/* Judgements Sidebar - Right Side */}

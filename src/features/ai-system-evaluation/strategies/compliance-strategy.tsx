@@ -80,7 +80,7 @@ export class ComplianceStrategy implements EvaluationStrategy {
 
         // System response (from ai_system_response)
         systemResponse: record.ai_system_response?.content || '',
-        system_response: record.ai_system_response?.content || '',
+        system_response: record.ai_system_response || record.system_response,
 
         // Judgement and outcome
         complianceJudgement: record.ai_system_response?.judgement || record.compliance_judgement || null,
