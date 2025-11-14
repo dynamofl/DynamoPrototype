@@ -225,12 +225,50 @@ function aggregateCategoryMetrics(
     ? sumWithGuardrailsRate / evaluationsWithGuardrails
     : undefined;
 
+  // Extract latest evaluation metrics
+  // Sort by completedAt (most recent first), fallback to createdAt
+  const sortedByCompletion = [...evaluations].sort(
+    (a, b) => {
+      const dateA = new Date(a.completedAt || a.createdAt).getTime();
+      const dateB = new Date(b.completedAt || b.createdAt).getTime();
+      return dateB - dateA; // Descending order (newest first)
+    }
+  );
+
+  const latestEvaluation = sortedByCompletion[0];
+  const latestMetrics = latestEvaluation?.metrics as any;
+  const isCompliance = category === 'compliance';
+
+  // Extract latest rates based on category (same logic as trend data extraction)
+  let latestAISystemOnlySuccessRate: number;
+  let latestWithGuardrailsSuccessRate: number | undefined;
+
+  if (isCompliance) {
+    latestAISystemOnlySuccessRate = latestMetrics?.ai_system?.compliance_rate ?? 0;
+    const hasGuardrailData = latestMetrics?.ai_system_with_guardrails?.compliance_rate !== undefined
+      && latestMetrics?.ai_system_with_guardrails?.compliance_rate !== null;
+    latestWithGuardrailsSuccessRate = hasGuardrailData
+      ? latestMetrics?.ai_system_with_guardrails?.compliance_rate
+      : undefined;
+  } else {
+    latestAISystemOnlySuccessRate = latestMetrics?.ai_system_attack_success_rate ?? 0;
+    const hasGuardrailData = latestMetrics?.ai_system_guardrail_attack_success_rate !== undefined
+      && latestMetrics?.ai_system_guardrail_attack_success_rate !== null;
+    latestWithGuardrailsSuccessRate = hasGuardrailData
+      ? latestMetrics?.ai_system_guardrail_attack_success_rate
+      : undefined;
+  }
+
   return {
     category,
     categoryLabel,
     totalEvaluations: evaluations.length,
     avgAISystemOnlySuccessRate,
     avgWithGuardrailsSuccessRate,
+    latestAISystemOnlySuccessRate,
+    latestWithGuardrailsSuccessRate,
+    latestEvaluationDate: latestEvaluation?.completedAt || latestEvaluation?.createdAt,
+    latestEvaluationName: latestEvaluation?.name,
     totalPrompts,
     totalUniqueTopics: uniqueTopics,
     totalUniqueAttackAreas: uniqueAttackAreas,

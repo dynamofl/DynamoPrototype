@@ -2,7 +2,9 @@
 // Uses strategy pattern to provide filters for different test types
 
 import { useMemo, useCallback } from 'react'
+import { ClipboardCheck } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Switch } from '@/components/ui/switch'
 import { FilterSearch } from '@/components/patterns/ui-patterns'
 import type { FilterConfig as UIFilterConfig, FilterChip } from '@/components/patterns/ui-patterns'
 import type { EvaluationStrategy, FilterConfig as StrategyFilterConfig } from '../../../strategies/base-strategy'
@@ -16,6 +18,8 @@ interface GenericEvaluationFiltersProps {
   onViewChange: (view: 'table' | 'conversation') => void
   hasGuardrails?: boolean
   data?: BaseEvaluationResult[]  // For dynamic filter options
+  isAnnotationModeEnabled?: boolean
+  onAnnotationModeChange?: (enabled: boolean) => void
 }
 
 export function GenericEvaluationFilters({
@@ -25,7 +29,9 @@ export function GenericEvaluationFilters({
   currentView,
   onViewChange,
   hasGuardrails = true,
-  data = []
+  data = [],
+  isAnnotationModeEnabled = false,
+  onAnnotationModeChange
 }: GenericEvaluationFiltersProps) {
   // Check if any records have input/output guardrail judgements
   const hasInputGuardrails = useMemo(() =>
@@ -143,19 +149,40 @@ export function GenericEvaluationFilters({
     return chips
   }, [filters, uiFilters])
 
-  // Right content for view switcher
+  // Right content for view switcher and annotation toggle
   const rightContent = (
-    <Tabs value={currentView} onValueChange={(value) => onViewChange(value as 'table' | 'conversation')}>
-      <TabsList className="px-0.5 rounded-full">
-         <TabsTrigger value="conversation" className="text-[0.8125rem] px-3 rounded-full">
-          Conversation View
-        </TabsTrigger>
-        <TabsTrigger value="table" className="text-[0.8125rem] px-3 rounded-full">
-          Table View
-        </TabsTrigger>
-       
-      </TabsList>
-    </Tabs>
+    <div className="flex items-center gap-3">
+
+ {onAnnotationModeChange && (
+        <div className="flex items-center gap-2 pl-3">
+          <label
+            htmlFor="annotation-mode-toggle"
+            className="text-xs font-400 text-gray-700 cursor-pointer select-none flex items-center gap-1.5"
+          >
+            Enable Human Judgement
+          </label>
+          <Switch
+            id="annotation-mode-toggle"
+            checked={isAnnotationModeEnabled}
+            onCheckedChange={onAnnotationModeChange}
+          />
+        </div>
+      )}
+
+
+      <Tabs value={currentView} onValueChange={(value) => onViewChange(value as 'table' | 'conversation')}>
+        <TabsList className="px-0.5 rounded-full">
+          <TabsTrigger value="conversation" className="text-[0.8125rem] px-3 rounded-full">
+            Conversation View
+          </TabsTrigger>
+          <TabsTrigger value="table" className="text-[0.8125rem] px-3 rounded-full">
+            Table View
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+     
+    </div>
   )
 
   return (

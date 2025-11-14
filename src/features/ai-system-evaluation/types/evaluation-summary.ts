@@ -8,6 +8,13 @@ export interface EvaluationCategoryMetrics {
   totalEvaluations: number;
   avgAISystemOnlySuccessRate: number;
   avgWithGuardrailsSuccessRate: number | undefined;
+
+  // Latest evaluation metrics
+  latestAISystemOnlySuccessRate: number;
+  latestWithGuardrailsSuccessRate: number | undefined;
+  latestEvaluationDate: string | undefined;
+  latestEvaluationName: string | undefined;
+
   totalPrompts: number;
   totalUniqueTopics: number;
   totalUniqueAttackAreas: number;

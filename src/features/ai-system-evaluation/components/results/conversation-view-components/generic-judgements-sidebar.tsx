@@ -2,9 +2,9 @@
 // Uses strategy pattern to render different test types (jailbreak, compliance, etc.)
 
 import { useState, useEffect } from 'react'
-import { ChevronsUpDown, ChevronsDownUp, Circle, ArrowUpRight, ShieldBan, ShieldCheck, MessageCircleOff, CircleCheckBig, CheckCircle2, XCircle } from 'lucide-react'
+import { ChevronsUpDown, ChevronsDownUp, Circle, ArrowUpRight, ShieldBan, ShieldCheck, MessageCircleOff, CircleCheckBig, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import type { BaseEvaluationResult } from '../../../types/base-evaluation'
+import type { BaseEvaluationResult, AISystemResponse } from '../../../types/base-evaluation'
 import type { EvaluationStrategy } from '../../../strategies/base-strategy'
 import type { GuardrailEvaluationDetail } from '../../../types/jailbreak-evaluation'
 import type { ComplianceEvaluationResult } from '../../../types/compliance-evaluation'
@@ -13,6 +13,12 @@ import { GuardrailViewSheet } from '@/features/guardrails/components'
 import { useGuardrailsSupabase } from '@/features/guardrails/lib/useGuardrailsSupabase'
 import { SeverityIcon } from '../severity-icon'
 import { getAttackSeverityLevel } from '../../../lib/attack-severity'
+import { JudgementDisplay } from './judgement-display'
+import { HumanJudgementInput } from './human-judgement-input'
+import { useHumanJudgement } from '../../../hooks/use-human-judgement'
+import { useUpdateAttackOutcome } from '../../../hooks/use-update-attack-outcome'
+import { Button } from '@/components/ui/button'
+import { Info } from 'lucide-react'
 
 interface GenericJudgementsSidebarProps {
   record: BaseEvaluationResult
@@ -23,6 +29,9 @@ interface GenericJudgementsSidebarProps {
   hoveredBehavior?: HoveredBehaviorContext | null
   onBehaviorHover?: (behavior: HoveredBehaviorContext | null) => void
   selectedBehaviors?: Set<string> | null
+  isAnnotationModeEnabled?: boolean
+  testType?: 'jailbreak' | 'compliance'
+  onRecordUpdate?: (record: BaseEvaluationResult) => void
 }
 
 // Status icons using Lucide icons
@@ -30,12 +39,6 @@ function getStatusIcon(status: string) {
   return status === 'Blocked' ?
     <div className='p-1.5 bg-red-50 rounded-full'><ShieldBan className="w-4 h-4 text-red-600" /></div> :
     <div className='p-1.5 bg-green-50 rounded-full'><ShieldCheck className="w-4 h-4 text-green-600" /></div>
-}
-
-function getModelStatusIcon(status: string) {
-  return status === 'Refused' || status === 'Blocked' ?
-     <div className='p-1.5 bg-red-50 rounded-full'><MessageCircleOff className="w-4 h-4 text-red-600" /></div> :
-   <div className='p-1.5 bg-green-50 rounded-full'><CircleCheckBig className="w-4 h-4 text-green-600" /></div>
 }
 
 interface GuardrailDetailCardProps {
@@ -57,52 +60,80 @@ interface ResponseJudgementCardProps {
   hoveredBehavior?: HoveredBehaviorContext | null
   onBehaviorHover?: (behavior: HoveredBehaviorContext | null) => void
   selectedBehaviors?: Set<string> | null
+  isAnnotationMode?: boolean
+  testType?: 'jailbreak' | 'compliance'
+  onRecordUpdate?: (record: BaseEvaluationResult) => void
 }
 
-function ResponseJudgementCard({ record, aiSystemName, isExpanded, onToggle, hoveredBehavior, onBehaviorHover, selectedBehaviors }: ResponseJudgementCardProps) {
+function ResponseJudgementCard({
+  record,
+  aiSystemName,
+  isExpanded,
+  onToggle,
+  hoveredBehavior,
+  onBehaviorHover,
+  selectedBehaviors,
+  isAnnotationMode = false,
+  testType = 'jailbreak',
+  onRecordUpdate
+}: ResponseJudgementCardProps) {
   const hasAnswerPhrases = record.judgeModelAnswerPhrases && record.judgeModelAnswerPhrases.length > 0
 
   // Get judgement - works for both jailbreak and compliance
   const judgement = record.judgeModelJudgement || record.modelJudgement || (record as ComplianceEvaluationResult).compliance_judgement || 'Answered'
+
+  // Get human judgement from system_response
+  const systemResponse = record.system_response as AISystemResponse | undefined
+  const humanJudgement = systemResponse?.human_judgement
+
+  // Initialize human judgement hook
+  const { updateJudgement, isLoading } = useHumanJudgement({
+    promptId: record.id || '',
+    testType,
+    judgementType: 'ai_system_response'
+  })
 
   const handleClick = () => {
     if (!hasAnswerPhrases) return
     onToggle('judge-model')
   }
 
+  const handleHumanJudgementChange = async (value: string | null) => {
+    try {
+      const updatedRecord = await updateJudgement({ judgementValue: value })
+      // Notify parent component of the update
+      if (onRecordUpdate && updatedRecord) {
+        onRecordUpdate(updatedRecord)
+      }
+    } catch (error) {
+      // Error is already handled in the hook with toast
+      console.error('Failed to update human judgement:', error)
+    }
+  }
+
   return (
-    <div className={`bg-gray-0 border border-gray-200 rounded-lg px-1 py-2 flex flex-col gap-3 w-full ${isExpanded ? 'shadow-md' : 'hover:bg-gray-50'}`}>
+    <motion.div className={`bg-gray-0 border border-gray-200 rounded-lg px-1  flex flex-col w-full ${
+      isAnnotationMode
+        ? 'shadow-md'
+        : isExpanded
+          ? 'shadow-md'
+          : 'hover:bg-gray-50'
+    }`}>
+      {/* AI Evaluator Judgement */}
       <div
-        className={`flex gap-2 items-start px-1 ${hasAnswerPhrases ? 'cursor-pointer' : ''}`}
+        className={`flex gap-2 items-start p-1 ${hasAnswerPhrases ? 'cursor-pointer' : ''}`}
         onClick={handleClick}
       >
-        {getModelStatusIcon(judgement)}
-        <div className="flex-1 flex flex-col gap-1 items-start justify-center min-w-0">
-          <div className="flex flex-col gap-0.5 items-start justify-center w-full">
-            <div className="flex gap-0.5 items-start text-[0.875rem] leading-5 text-gray-900">
-              <span className="text-[0.8125rem] font-450">{aiSystemName}</span>
-            </div>
-            <div className="flex gap-1 items-center text-xs leading-4 text-gray-600">
-              <span className="font-400">{judgement}</span>
-              {record.judgeModelConfidence !== undefined && record.judgeModelConfidence !== null && (
-                <>
-                  <span className="font-400">•</span>
-                  <span className="font-400">Confidence:</span>
-                  <span className="font-400">{record.judgeModelConfidence.toFixed(2)}</span>
-                </>
-              )}
-              {record.outputTokens !== undefined && (
-                <>
-                  {record.judgeModelConfidence !== undefined && record.judgeModelConfidence !== null && <span className="font-425">•</span>}
-                  <span className="font-400">Tokens:</span>
-                  <span className="font-400">{record.outputTokens.toLocaleString()}</span>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
+        <JudgementDisplay
+          variant="ai"
+          judgement={judgement}
+          label="AI Evaluator Judgement"
+          confidence={record.judgeModelConfidence}
+          tokens={record.outputTokens}
+          className="flex-1"
+        />
         {hasAnswerPhrases && (
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 p-2 items-center">
             {isExpanded ? (
               <ChevronsDownUp className="w-4 h-4 shrink-0 text-gray-600" />
             ) : (
@@ -120,7 +151,7 @@ function ResponseJudgementCard({ record, aiSystemName, isExpanded, onToggle, hov
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: 'easeInOut' }}
-            className="flex flex-col gap-2 overflow-hidden"
+            className="flex flex-col gap-2 overflow-hidden pb-3"
           >
             {record.judgeModelAnswerPhrases!.map((answerPhrase: any, idx: number) => {
               // For answer phrases, use the reasoning as the behavior
@@ -157,7 +188,40 @@ function ResponseJudgementCard({ record, aiSystemName, isExpanded, onToggle, hov
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+
+      {/* Human Judgement Section */}
+      <AnimatePresence initial={false}>
+        {(isAnnotationMode || humanJudgement) && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+            className="flex flex-col gap-1 px-1 py-2 border-t border-gray-200 overflow-hidden"
+          >
+            <JudgementDisplay
+              variant="human"
+              judgement={humanJudgement?.judgement || null}
+              label="Human Judgement"
+              username={humanJudgement?.judgedBy}
+              className="flex-1"
+            />
+            {isAnnotationMode && (
+              <HumanJudgementInput
+                question="Did the model respond to this prompt?"
+                value={humanJudgement?.judgement || null}
+                onValueChange={handleHumanJudgementChange}
+                yesLabel="Yes"
+                noLabel="No"
+                yesValue="Answered"
+                noValue="Refused"
+                disabled={isLoading}
+              />
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   )
 }
 
@@ -311,13 +375,23 @@ export function GenericJudgementsSidebar({
   onExpandedKeysChange,
   hoveredBehavior,
   onBehaviorHover,
-  selectedBehaviors
+  selectedBehaviors,
+  isAnnotationModeEnabled = false,
+  testType,
+  onRecordUpdate
 }: GenericJudgementsSidebarProps) {
   const [internalExpandedKeys, setInternalExpandedKeys] = useState<Set<string>>(new Set())
   const [viewPolicySheetOpen, setViewPolicySheetOpen] = useState(false)
   const [selectedGuardrailId, setSelectedGuardrailId] = useState<string | null>(null)
+  const [outcomeManuallyUpdated, setOutcomeManuallyUpdated] = useState(false)
 
   const { guardrails } = useGuardrailsSupabase()
+
+  // Initialize hook for updating attack outcome
+  const { updateOutcome, isLoading: isUpdatingOutcome } = useUpdateAttackOutcome({
+    promptId: (record as any).id || '',
+    testType: testType || 'jailbreak'
+  })
 
   const expandedKeys = externalExpandedKeys !== undefined ? externalExpandedKeys : internalExpandedKeys
   const setExpandedKeys = onExpandedKeysChange || setInternalExpandedKeys
@@ -329,6 +403,18 @@ export function GenericJudgementsSidebar({
       setInternalExpandedKeys(new Set())
     }
   }, [record, onExpandedKeysChange])
+
+  // Reset outcomeManuallyUpdated when the record's human judgement changes
+  // This ensures the alert re-appears if the user modifies their judgement
+  useEffect(() => {
+    const systemResponse = (record as any).system_response as AISystemResponse | undefined
+    const humanJudgementData = systemResponse?.human_judgement
+    // If outcome_updated is false in the database, reset local state
+    // OR if the human judgement was changed and no longer needs an update
+    if (humanJudgementData && !humanJudgementData.outcome_updated) {
+      setOutcomeManuallyUpdated(false)
+    }
+  }, [(record as any).system_response?.human_judgement, (record as any).attackOutcome, (record as any).attack_outcome])
 
   const handleToggle = (key: string) => {
     const newKeys = new Set(expandedKeys)
@@ -372,12 +458,57 @@ export function GenericJudgementsSidebar({
   const jbRecord = record as any
   const hasAttackType = 'attackType' in jbRecord
 
+  // Check for judgement and attack outcome mismatch
+  const systemResponse = (record as any).system_response as AISystemResponse | undefined
+  const humanJudgementData = systemResponse?.human_judgement
+  const humanJudgement = humanJudgementData?.judgement
+  const aiJudgement = hasAttackType
+    ? (jbRecord.judgeModelJudgement || jbRecord.modelJudgement)
+    : ((record as ComplianceEvaluationResult).compliance_judgement || 'Answered')
+
+  // Get current attack outcome
+  const currentAttackOutcome = (record as any).attackOutcome || (record as any).attack_outcome
+
+  // Calculate expected attack outcome based on human judgement
+  let expectedAttackOutcome: string | null = null
+  if (humanJudgement) {
+    if (humanJudgement === 'Answered' || humanJudgement === 'Non-Compliant') {
+      expectedAttackOutcome = 'Attack Success'
+    } else if (humanJudgement === 'Refused' || humanJudgement === 'Compliant') {
+      expectedAttackOutcome = 'Attack Failure'
+    }
+  }
+
+  // Determine if attack outcome needs to be updated
+  // Show alert if human judgement exists and expected outcome doesn't match current outcome
+  const needsOutcomeUpdate = humanJudgement && expectedAttackOutcome && currentAttackOutcome !== expectedAttackOutcome
+
+  // Check if outcome has been updated (from database or local state)
+  const isOutcomeUpdated = humanJudgementData?.outcome_updated || outcomeManuallyUpdated
+
+  // Handler to update attack outcome based on human judgement
+  const handleUpdateOutcome = async () => {
+    if (!humanJudgement) return
+
+    try {
+      const updatedRecord = await updateOutcome(humanJudgement)
+      setOutcomeManuallyUpdated(true)
+
+      // Notify parent component of the update
+      if (onRecordUpdate && updatedRecord) {
+        onRecordUpdate(updatedRecord)
+      }
+    } catch (error) {
+      console.error('Failed to update attack outcome:', error)
+    }
+  }
+
   return (
     <div className="h-full overflow-y-auto bg-gray-0" onWheel={(e) => e.stopPropagation()}>
       <div className="flex flex-col gap-6 items-start py-5 px-4">
         {/* Title */}
         <div className="flex flex-col gap-3 items-start w-full">
-          <h2 className="text-sm font-450 leading-5 text-gray-900">Evaluation Judgement</h2>
+          <h2 className="text-sm font-450 leading-5 text-gray-900">Evaluation Outcome</h2>
 
           {/* Summary Cards */}
           <div className="flex gap-2 items-center w-full">
@@ -546,7 +677,43 @@ export function GenericJudgementsSidebar({
                 hoveredBehavior={hoveredBehavior}
                 onBehaviorHover={onBehaviorHover}
                 selectedBehaviors={selectedBehaviors}
+                isAnnotationMode={isAnnotationModeEnabled}
+                testType={testType}
+                onRecordUpdate={onRecordUpdate}
               />
+
+              {/* Attack Outcome Update Alert or Manual Update Info */}
+              {needsOutcomeUpdate && !isOutcomeUpdated ? (
+                <div className="w-full bg-amber-100/80 rounded-lg p-3 flex flex-col gap-2">
+                  <div className="flex gap-2 items-start">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mx-1" />
+                    <div className="flex flex-col gap-1 flex-1">
+                      <p className="text-xs font-450 text-gray-900">Attack Outcome Update Required</p>
+                      <p className="text-xs font-400 text-gray-600">
+                        Human judgement contradicts with the current attack outcome. Would you like to update the attack outcome?
+                      </p>
+                      <Button
+                      size="sm"
+                    onClick={handleUpdateOutcome}
+                    disabled={isUpdatingOutcome}
+                    className="w-fit text-xs h-6 bg-amber-200/80 hover:bg-amber-200 text-amber-800 my-1"
+                  >
+                    {isUpdatingOutcome ? 'Updating...' : 'Update Attack Outcome'}
+                  </Button>
+                    </div>
+                  </div>
+
+                </div>
+              ) : (humanJudgement && isOutcomeUpdated) ? (
+                <div className="w-full bg-gray-100 rounded-lg p-3 flex gap-2 items-start">
+                  <Info className="w-4 h-4 text-gray-600 flex-shrink-0" />
+                  <div className="flex flex-col gap-1">
+                    <p className="text-xs font-400 text-gray-600">
+                      Attack outcome has been updated based on human review.
+                    </p>
+                  </div>
+                </div>
+              ) : null}
             </div>
           )
         })()}

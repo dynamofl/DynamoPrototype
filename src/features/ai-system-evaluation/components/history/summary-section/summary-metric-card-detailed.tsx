@@ -205,6 +205,7 @@ export function SummaryMetricCardDetailed({
                 <p className="text-xs font-425 text-gray-600 leading-5">
                   {aiSystemLabel}
                 </p>
+                <span className="text-[10px] font-500 text-gray-500 leading-4">(Latest)</span>
               </div>
               <p className="text-xl font-550 text-gray-900 leading-6 tracking-[-0.3px]">
                 {aiSystemAvg ?? '--'}
@@ -218,6 +219,7 @@ export function SummaryMetricCardDetailed({
                 <p className="text-xs font-425 text-gray-600 leading-5 whitespace-nowrap">
                   {aiSystemGuardrailLabel}
                 </p>
+                <span className="text-[10px] font-500 text-gray-500 leading-4">(Latest)</span>
               </div>
               <p className="text-xl font-550 text-gray-900 leading-6 tracking-[-0.3px] whitespace-nowrap">
                 {aiSystemGuardrailAvg ?? '--'}

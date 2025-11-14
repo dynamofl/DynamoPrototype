@@ -41,6 +41,11 @@ export class ComplianceStrategy implements EvaluationStrategy {
   transformPrompts(dbRecords: any[]): ComplianceEvaluationResult[] {
     return dbRecords.map((record) => {
       const result = {
+        // IDs
+        id: record.id,
+        evaluationId: record.evaluation_id,
+        evaluation_id: record.evaluation_id,
+
         // Base fields (both camelCase and snake_case for compatibility)
         policyId: record.policy_id,
         policy_id: record.policy_id,

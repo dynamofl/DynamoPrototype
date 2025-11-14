@@ -139,9 +139,26 @@ export function EvaluationDataConversationView({
             {data.map((record, index) => {
               const recordWithId = record as any
               const isSelected = selectedConversationId === recordWithId.id
+              // Check if record has human judgement
+              const hasHumanJudgement = recordWithId.system_response?.human_judgement
+
+              // Check for judgement contradiction
+              const aiJudgement = recordWithId.judgeModelJudgement || recordWithId.modelJudgement || recordWithId.compliance_judgement
+              const humanJudgement = hasHumanJudgement?.judgement
+              const hasContradiction = humanJudgement && aiJudgement && (
+                (aiJudgement === 'Answered' && humanJudgement === 'Refused') ||
+                (aiJudgement === 'Refused' && humanJudgement === 'Answered') ||
+                (aiJudgement === 'Compliant' && humanJudgement === 'Non-Compliant') ||
+                (aiJudgement === 'Non-Compliant' && humanJudgement === 'Compliant')
+              )
+
+              // Check if outcome has been updated - only show amber if contradiction exists and not yet updated
+              const isOutcomeUpdated = hasHumanJudgement?.outcome_updated
+              const showAmberDot = hasContradiction && !isOutcomeUpdated
+
               return (
                 <div
-                  key={recordWithId.id}
+                  key={recordWithId.uniqueKey || recordWithId.id}
                   onClick={() => onConversationSelect(recordWithId.id)}
                   className={`flex p-2 items-center group transition-colors rounded-md cursor-pointer ${
                     isSelected
@@ -150,7 +167,12 @@ export function EvaluationDataConversationView({
                   }`}
                 >
                 {/* Row Number Cell */}
-                <div className="w-8 flex items-center justify-center">
+                <div className="w-8 flex items-center justify-center relative">
+                  {hasHumanJudgement && (
+                    <div className={`absolute left-0 w-1 h-1 rounded-full ${
+                      showAmberDot ? 'bg-amber-600' : 'bg-blue-600'
+                    }`} />
+                  )}
                   <span className="text-[0.8125rem]  text-gray-500">
                     {index + 1}
                   </span>

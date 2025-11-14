@@ -33,6 +33,18 @@ export interface BaseEvaluationPrompt {
 }
 
 /**
+ * Human judgement data structure
+ * Stores user annotations for evaluation results
+ */
+export interface HumanJudgement {
+  judgement: 'Answered' | 'Refused' | 'Compliant' | 'Non-Compliant' | string
+  judgedBy: string // User ID or username
+  judgedAt: string // ISO timestamp
+  outcome_updated?: boolean // Whether attack outcome has been updated based on this judgement
+  outcome_updated_at?: string // ISO timestamp of when outcome was updated
+}
+
+/**
  * AI System Response structure (JSONB format)
  * Used for both jailbreak and compliance test types
  */
@@ -48,6 +60,7 @@ export interface AISystemResponse {
     reasoning: string
   }>
   confidenceScore?: number
+  human_judgement?: HumanJudgement
 }
 
 /**
@@ -159,3 +172,27 @@ export type EvaluationType =
   | 'compliance_with_perturbations'
   | 'quality'
   | 'bias'
+
+/**
+ * Judgement variant type for UI components
+ */
+export type JudgementVariant = 'ai' | 'human'
+
+/**
+ * Judgement type identifier
+ * Used to determine which judgement field to update
+ */
+export type JudgementType = 'ai_system_response' | 'input_guardrail' | 'output_guardrail' | 'prompt_generation'
+
+/**
+ * Configuration for human judgement questions
+ * Different test types and judgement types may have different questions
+ */
+export interface JudgementConfig {
+  judgementType: JudgementType
+  question: string
+  options: Array<{
+    label: string
+    value: string
+  }>
+}

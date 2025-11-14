@@ -61,6 +61,9 @@ export class JailbreakStrategy implements EvaluationStrategy {
         : adversarialPrompt?.text || ''
 
       return {
+        id: record.id,
+        evaluationId: record.evaluation_id,
+        promptIndex: record.prompt_index,
         policyId: record.policy_id,
         policyName: record.policy_name,
         topic: record.topic,
@@ -72,6 +75,7 @@ export class JailbreakStrategy implements EvaluationStrategy {
         adversarialPrompt,
         jailbreakPrompt,
         systemResponse: record.ai_system_response?.content || record.system_response || '',
+        system_response: record.ai_system_response || record.system_response,
 
         // Input guardrail
         inputGuardrailJudgement: record.input_guardrail?.judgement || null,

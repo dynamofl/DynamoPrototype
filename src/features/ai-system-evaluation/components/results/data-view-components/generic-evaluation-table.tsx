@@ -82,9 +82,11 @@ export function GenericEvaluationTable({
         <TableBody>
           {data.map((record, index) => {
             const recordWithId = record as any
+            // Check if record has human judgement
+            const hasHumanJudgement = recordWithId.system_response?.human_judgement
             return (
               <TableRow
-                key={recordWithId.id}
+                key={recordWithId.uniqueKey || recordWithId.id}
                 onClick={() => onRowClick?.(record)}
                 className={`group transition-colors cursor-pointer ${
                   selectedRows.includes(recordWithId.id)
@@ -94,6 +96,9 @@ export function GenericEvaluationTable({
               >
                 <TableCell>
                   <div className="flex items-center justify-center relative">
+                    {hasHumanJudgement && (
+                      <div className="absolute left-2 w-1.5 h-1.5 bg-blue-600 rounded-full" />
+                    )}
                     <span
                       className={`text-gray-500 transition-opacity ${
                         selectedRows.includes(recordWithId.id)

@@ -816,6 +816,45 @@ export function AISystemEvaluationUnifiedPage() {
                 current={evaluationProgress.current}
                 total={evaluationProgress.total}
                 message={evaluationProgress.message}
+                aiSystemName={aiSystem?.name}
+                aiSystemIcon={aiSystem?.icon}
+                evaluationName={selectedTest.name}
+                evaluationType={selectedTest.type === 'compliance' ? 'Compliance Evaluation' : 'Jailbreak Evaluation'}
+                startedAt={selectedTest.startedAt}
+                attacks={[
+                  {
+                    id: '1',
+                    name: 'Attack 1',
+                    temperature: 1,
+                    status: 'in-progress',
+                    progress: 50,
+                    currentStage: 'Evaluate Output Guardrails',
+                    substages: [
+                      { id: '1-1', name: 'Evaluate Input Guardrails', status: 'completed' },
+                      { id: '1-2', name: 'Call AI System', status: 'completed' },
+                      { id: '1-3', name: 'Evaluate Output Guardrails', status: 'in-progress' },
+                      { id: '1-4', name: 'Judge Model Evaluation', status: 'pending' },
+                      { id: '1-5', name: 'Determine Attack Outcome', status: 'pending' },
+                      { id: '1-6', name: 'Save Results', status: 'pending' }
+                    ]
+                  },
+                  {
+                    id: '2',
+                    name: 'Attack 2',
+                    temperature: 0.50,
+                    status: 'in-progress',
+                    progress: 33,
+                    currentStage: 'Call AI System',
+                    substages: [
+                      { id: '2-1', name: 'Evaluate Input Guardrails', status: 'completed' },
+                      { id: '2-2', name: 'Call AI System', status: 'in-progress' },
+                      { id: '2-3', name: 'Evaluate Output Guardrails', status: 'pending' },
+                      { id: '2-4', name: 'Judge Model Evaluation', status: 'pending' },
+                      { id: '2-5', name: 'Determine Attack Outcome', status: 'pending' },
+                      { id: '2-6', name: 'Save Results', status: 'pending' }
+                    ]
+                  }
+                ]}
               />
             </div>
           </motion.div>

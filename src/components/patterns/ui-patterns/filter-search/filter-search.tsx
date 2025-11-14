@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { Search, ChevronDown, Plus, X } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -62,6 +63,15 @@ export function FilterSearch({
 }: FilterSearchProps) {
   // State to track which additional filters are visible
   const [visibleAdditionalFilters, setVisibleAdditionalFilters] = useState<Set<string>>(new Set())
+  // State to track if search is expanded
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false)
+
+  // Keep search expanded if there's a value
+  useEffect(() => {
+    if (searchValue && searchValue.length > 0) {
+      setIsSearchExpanded(true)
+    }
+  }, [searchValue])
 
   const addAdditionalFilter = (filterKey: string) => {
     setVisibleAdditionalFilters(prev => new Set([...prev, filterKey]))
@@ -170,6 +180,46 @@ export function FilterSearch({
       {/* Primary Filter Row */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
+          {/* Collapsible Search Bar with Animation */}
+          <motion.div
+            initial={false}
+            animate={{
+              width: isSearchExpanded ? 256 : 28, // 64 * 4 = 256px (w-64), 28px for icon button
+            }}
+            transition={{
+              duration: 0.3,
+              ease: [0.4, 0.0, 0.2, 1], // Tailwind's ease-out
+            }}
+            className="relative"
+          >
+            {isSearchExpanded ? (
+              <>
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" strokeWidth={2} />
+                <Input
+                  placeholder={searchPlaceholder}
+                  value={searchValue}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  onBlur={() => {
+                    // Only collapse if search is empty
+                    if (!searchValue) {
+                      setIsSearchExpanded(false)
+                    }
+                  }}
+                  autoFocus
+                  className="pl-9 w-full h-7 rounded-full"
+                />
+              </>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={() => setIsSearchExpanded(true)}
+                className="h-7 w-7 p-0 border-gray-300"
+              >
+                <Search className="h-4 w-4 text-gray-600" strokeWidth={2} />
+              </Button>
+            )}
+          </motion.div>
+
           {/* Primary Filters */}
           {primaryFilters.map(filter => renderFilterDropdown(filter))}
 
@@ -203,17 +253,8 @@ export function FilterSearch({
           )}
         </div>
 
-        {/* Right Side - Search and additional content */}
+        {/* Right Side - Additional content */}
         <div className="flex items-center gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" strokeWidth={2} />
-            <Input
-              placeholder={searchPlaceholder}
-              value={searchValue}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-9 w-64 rounded-full"
-            />
-          </div>
           {rightContent}
         </div>
       </div>

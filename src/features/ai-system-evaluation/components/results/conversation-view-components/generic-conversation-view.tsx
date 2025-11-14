@@ -12,13 +12,19 @@ interface GenericConversationViewProps {
   strategy: EvaluationStrategy
   aiSystemName?: string
   judgementSidebarWidth?: number  // Width in pixels for the judgement sidebar (default: 450)
+  testType?: 'jailbreak' | 'compliance'
+  onRecordUpdate?: (record: BaseEvaluationResult) => void
+  isAnnotationModeEnabled?: boolean
 }
 
 export function GenericConversationView({
   record,
   strategy,
   aiSystemName,
-  judgementSidebarWidth = 450
+  judgementSidebarWidth = 450,
+  testType,
+  onRecordUpdate,
+  isAnnotationModeEnabled = false
 }: GenericConversationViewProps) {
   // Use highlighting hook for state management
   const {
@@ -53,6 +59,9 @@ export function GenericConversationView({
         hoveredBehavior={hoveredBehavior}
         onBehaviorHover={setHoveredBehavior}
         selectedBehaviors={selectedBehaviors}
+        isAnnotationModeEnabled={isAnnotationModeEnabled}
+        testType={testType}
+        onRecordUpdate={onRecordUpdate}
       />
     </div>
   )

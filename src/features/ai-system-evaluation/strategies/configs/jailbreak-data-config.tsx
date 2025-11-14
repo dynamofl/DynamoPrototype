@@ -447,8 +447,9 @@ export function getJailbreakConversationSections(): ConversationSectionConfig[] 
       title: 'Base Prompt',
       order: 1,
       render: (record: BaseEvaluationResult) => {
-        // Use base_prompt from BaseEvaluationResult (snake_case convention)
-        const basePromptText = record.base_prompt || ''
+        // Use basePrompt from transformed JailbreakEvaluationResult (camelCase convention)
+        const jailbreakRecord = record as unknown as JailbreakEvaluationResult
+        const basePromptText = jailbreakRecord.basePrompt || ''
         return (
           <>
             <h3 className="px-2 text-[0.8125rem] font-450 leading-4 text-gray-600">

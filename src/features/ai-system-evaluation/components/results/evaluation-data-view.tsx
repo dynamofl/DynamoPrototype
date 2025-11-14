@@ -75,6 +75,9 @@ export function EvaluationDataView({
     searchTerm: "",
   });
 
+  // Annotation mode state (page-level)
+  const [isAnnotationModeEnabled, setIsAnnotationModeEnabled] = useState(false);
+
   const [pagination, setPagination] = useState<PaginationState>({
     page: 1,
     pageSize: DEFAULT_PAGE_SIZE,
@@ -171,10 +174,11 @@ export function EvaluationDataView({
   // Load initial data
   useEffect(() => {
     // Results are already transformed by the service layer (evaluation-service.ts)
-    // Don't transform again - just add unique IDs for tracking
+    // Don't transform again - just add unique keys for React rendering
+    // Keep the original 'id' field (database UUID) intact for database operations
     const dataWithIds = results.map((result, index) => ({
       ...result,
-      id: `${(result as any).policyId || (result as any).policy_id}-${index}`,
+      uniqueKey: `${(result as any).policyId || (result as any).policy_id}-${index}`,
     }));
 
     setAllData(dataWithIds as any);
@@ -369,6 +373,39 @@ export function EvaluationDataView({
     }
   };
 
+  const handleRecordUpdate = (updatedRecord: BaseEvaluationResult) => {
+    const recordId = (updatedRecord as any).id;
+
+    // Update function to merge updated record with existing record
+    const updateRecord = (record: BaseEvaluationResult) => {
+      if ((record as any).id === recordId) {
+        // The updatedRecord from the edge function is in snake_case (database format)
+        // We need to merge the updated fields from the database
+        const dbRecord = updatedRecord as any;
+
+        return {
+          ...record,
+          // Update system_response with the new ai_system_response from database
+          system_response: dbRecord.ai_system_response || (record as any).system_response,
+          // Update attack_outcome (snake_case from database)
+          attack_outcome: dbRecord.attack_outcome || (record as any).attack_outcome,
+          // Update attackOutcome (camelCase for transformed records)
+          attackOutcome: dbRecord.attack_outcome || (record as any).attackOutcome,
+          // Update aiSystemAttackOutcome if present
+          aiSystemAttackOutcome: dbRecord.ai_system_attack_outcome || (record as any).aiSystemAttackOutcome,
+          // Preserve uniqueKey
+          uniqueKey: (record as any).uniqueKey,
+        };
+      }
+      return record;
+    };
+
+    // Update all data arrays
+    setAllData((prev) => prev.map(updateRecord));
+    setFilteredData((prev) => prev.map(updateRecord));
+    setDisplayData((prev) => prev.map(updateRecord));
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -387,6 +424,8 @@ export function EvaluationDataView({
         onViewChange={handleViewChange}
         hasGuardrails={hasGuardrails}
         data={allData}
+        isAnnotationModeEnabled={isAnnotationModeEnabled}
+        onAnnotationModeChange={setIsAnnotationModeEnabled}
       />
 
       {/* Content Area */}
@@ -456,6 +495,9 @@ export function EvaluationDataView({
                           record={selectedRecord}
                           strategy={strategy}
                           aiSystemName={aiSystemName}
+                          testType={testType as 'jailbreak' | 'compliance'}
+                          isAnnotationModeEnabled={isAnnotationModeEnabled}
+                          onRecordUpdate={handleRecordUpdate}
                         />
                       </div>
                     ) : (
