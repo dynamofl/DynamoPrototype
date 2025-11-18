@@ -1,5 +1,5 @@
 <style>
-/* Custom styles for enhanced Storybook layout */
+/* Canvas Kit-inspired Light Theme for Storybook */
 
 /* Improve the overall layout spacing */
 #storybook-root {
@@ -12,25 +12,32 @@
   padding: 1rem;
 }
 
-/* Enhanced panel styling */
+/* Enhanced sidebar styling with cleaner design */
 .sidebar-item[data-selected="true"] {
-  background-color: rgba(59, 130, 246, 0.1);
-  border-left: 3px solid #3b82f6;
+  background-color: #F3F4F6;
+  border-left: 3px solid #2563EB;
+  font-weight: 500;
 }
 
-/* Better button styling in panels */
+.sidebar-item:hover {
+  background-color: #F9FAFB;
+}
+
+/* Better button styling in panels with softer colors */
 button[role="tab"] {
   border-radius: 6px;
   transition: all 0.2s ease;
+  font-weight: 500;
 }
 
 button[role="tab"]:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: #F3F4F6;
 }
 
 button[role="tab"][aria-selected="true"] {
-  background-color: #3b82f6;
+  background-color: #2563EB;
   color: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 /* Improved controls styling */
@@ -45,11 +52,11 @@ button[role="tab"][aria-selected="true"] {
   font-size: 12px;
 }
 
-/* Enhanced component canvas styling */
+/* Enhanced component canvas styling with clean background */
 #storybook-preview-wrapper {
   background-color: #ffffff;
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 /* Dark theme support */
@@ -65,10 +72,10 @@ button[role="tab"][aria-selected="true"] {
   }
 }
 
-/* Custom toolbar styling */
+/* Custom toolbar styling - clean and minimal */
 .storybook-toolbar {
-  border-bottom: 1px solid #e5e7eb;
-  background-color: #f9fafb;
+  border-bottom: 1px solid #E5E7EB;
+  background-color: #FFFFFF;
 }
 
 /* Better docs page styling */
@@ -76,14 +83,32 @@ button[role="tab"][aria-selected="true"] {
   max-width: none;
 }
 
-/* Enhanced addon panel styling */
+/* Enhanced addon panel styling with light background */
 .addon-panel {
-  background-color: #ffffff;
-  border-left: 1px solid #e5e7eb;
+  background-color: #FAFBFC;
+  border-left: 1px solid #E5E7EB;
 }
 
 [data-theme="dark"] .addon-panel {
   background-color: #1f2937;
   border-left-color: #374151;
+}
+
+/* Canvas Kit inspired typography */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Clean separator lines */
+hr {
+  border-color: #E5E7EB;
+}
+
+/* Subtle focus rings */
+*:focus-visible {
+  outline: 2px solid #2563EB;
+  outline-offset: 2px;
 }
 </style>
