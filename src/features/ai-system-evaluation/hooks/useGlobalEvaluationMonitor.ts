@@ -23,6 +23,7 @@ export function useGlobalEvaluationMonitor() {
   const lastSeenStatusRef = useRef<Map<string, string>>(new Map());
   const sessionShownRef = useRef<Set<string>>(new Set());
   const [isInitialized, setIsInitialized] = useState(false);
+  const isMountedRef = useRef(true);
 
   // Load persisted data on mount
   useEffect(() => {
@@ -84,9 +85,12 @@ export function useGlobalEvaluationMonitor() {
 
         if (error) {
           console.error('Error loading evaluations:', error);
-          setIsInitialized(true);
+          if (isMountedRef.current) setIsInitialized(true);
           return;
         }
+
+        // Check if component is still mounted before processing
+        if (!isMountedRef.current) return;
 
         evaluations?.forEach((evaluation: any) => {
           const lastSeenStatus = lastSeenStatusRef.current.get(evaluation.id);
@@ -115,10 +119,10 @@ export function useGlobalEvaluationMonitor() {
         });
 
         saveLastSeenStatus();
-        setIsInitialized(true);
+        if (isMountedRef.current) setIsInitialized(true);
       } catch (error) {
         console.error('Failed to check completed evaluations:', error);
-        setIsInitialized(true);
+        if (isMountedRef.current) setIsInitialized(true);
       }
     };
 
@@ -160,6 +164,9 @@ export function useGlobalEvaluationMonitor() {
               .eq('id', updatedEval.ai_system_id)
               .single();
 
+            // Check if component is still mounted before triggering notification
+            if (!isMountedRef.current) return;
+
             notificationService.triggerEvaluationCompletion({
               evaluationId: updatedEval.id,
               evaluationName: updatedEval.name,
@@ -190,9 +197,10 @@ export function useGlobalEvaluationMonitor() {
     };
   }, [isInitialized]);
 
-  // Save on unmount
+  // Save on unmount and mark as unmounted
   useEffect(() => {
     return () => {
+      isMountedRef.current = false;
       saveLastSeenStatus();
     };
   }, []);

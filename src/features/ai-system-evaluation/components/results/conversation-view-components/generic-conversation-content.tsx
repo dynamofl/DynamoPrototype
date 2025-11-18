@@ -93,11 +93,11 @@ export function GenericConversationContent({
             <div className="flex items-center gap-2">
               {badge && (
                 <span
-                  className={`px-2 py-1 rounded-full text-xs font-450 ${
+                  className={`px-2 py-0.5 rounded-full text-xs font-450 ${
                     badge.variant === 'destructive'
-                      ? 'bg-red-50 text-red-700'
+                      ? 'bg-red-50 text-red-700 border border-red-100'
                       : badge.variant === 'default'
-                      ? 'bg-green-50 text-green-700'
+                      ? 'bg-green-50 text-green-700 border border-green-100'
                       : badge.variant === 'outline'
                       ? 'bg-gray-50 text-gray-700 border border-gray-200'
                       : 'bg-gray-100 text-gray-700'
@@ -112,8 +112,8 @@ export function GenericConversationContent({
                 </span>
               )}
               {hasHumanJudgement && !hasJudgementConflict && (
-                <span className="px-2 py-1 rounded-full text-xs font-450 bg-blue-50 text-blue-700 flex items-center gap-1">
-                  <UserRoundCheck className="w-3.5 h-3.5" />
+                <span className="px-2 py-0.5 rounded-full text-xs font-450 bg-gray-100 border text-gray-600 flex items-center gap-1">
+                  <UserRoundCheck className="w-3.5 h-3.5 text-blue-600" />
                   Human Labeled
                 </span>
               )}
