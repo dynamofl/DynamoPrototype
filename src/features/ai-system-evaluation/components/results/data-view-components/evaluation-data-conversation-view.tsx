@@ -84,7 +84,7 @@ export function EvaluationDataConversationView({
     return (
       <Badge
         variant="secondary"
-        className={`text-xs ${badge.color}`}
+        className={`text-xs ${badge.color} bg-transparent border-0 font-400 text-gray-500`}
       >
         {badge.text}
       </Badge>
@@ -100,7 +100,7 @@ export function EvaluationDataConversationView({
       style={{ outline: 'none' }}
     >
       {/* Header Row - Fixed */}
-      <div className="flex items-center h-8 bg-gray-100 flex-shrink-0 px-2 mb-1 rounded-sm">
+      <div className="flex items-center h-8 border-b flex-shrink-0 px-2 my-1 ">
         <div className="w-8 flex items-center justify-center">
           <MessagesSquare className="h-4 w-4 text-gray-500" strokeWidth="2" />
         </div>

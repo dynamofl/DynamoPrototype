@@ -262,12 +262,15 @@ serve(async (req: Request) => {
         });
 
         // Trigger async execution (invoke run-evaluation function)
+        // Use SERVICE_ROLE_KEY for edge function to edge function communication
         console.log(`🚀 [BACKGROUND] Triggering run-evaluation for ${evaluation.id}...`);
+
+        // Use the service key that's already loaded at the top of the file
         const triggerResponse = await fetch(`${supabaseUrl}/functions/v1/run-evaluation`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`
+            'Authorization': `Bearer ${supabaseServiceKey}`
           },
           body: JSON.stringify({ evaluationId: evaluation.id })
         });

@@ -1,9 +1,13 @@
 import type { Preview } from '@storybook/react-vite'
 import { withThemeByClassName } from '@storybook/addon-themes'
+import { dynamoTheme } from './dynamo-theme'
 import '../src/index.css'
 
 const preview: Preview = {
   parameters: {
+    docs: {
+      theme: dynamoTheme,
+    },
     // Storybook 9.x built-in panels configuration
     actions: {},
     controls: {
@@ -74,7 +78,18 @@ const preview: Preview = {
     // Options for better UX
     options: {
       storySort: {
-        order: ['Introduction', 'Components', 'Patterns', 'Features'],
+        order: [
+          'Introduction',
+          'Category',
+          'Data Display',
+          'Feedback',
+          'Inputs',
+          'Layout',
+          'Navigation',
+          'Overlays',
+          'Patterns',
+          ['Table Patterns', 'Data Upload'],
+        ],
       },
     },
   },

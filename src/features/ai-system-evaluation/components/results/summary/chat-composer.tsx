@@ -324,7 +324,7 @@ export function ChatComposer({
                       </div>
                       <button
                         onClick={handleCancel}
-                        className="h-8 w-8 rounded-full bg-gray-900 text-gray-0 flex items-center justify-center hover:bg-gray-800 transition-colors"
+                        className="h-8 w-8 rounded-full bg-gray-100 text-red-600 flex items-center justify-center hover:bg-gray-800 transition-colors"
                         title="Cancel"
                       >
                         <Square className="h-4 w-4 fill-current" />

@@ -7,12 +7,12 @@ const currentDir = path.dirname(fileURLToPath(import.meta.url));
 
 const config: StorybookConfig = {
   "stories": [
-    "../src/stories/**/*.stories.@(js|jsx|mjs|ts|tsx)",
-    "../src/stories/**/*.mdx"
+    "../src/stories/**/*.stories.@(js|jsx|mjs|ts|tsx)"
   ],
   "addons": [
     "@chromatic-com/storybook",
     "@storybook/addon-onboarding",
+    "@storybook/addon-docs",
     "@storybook/addon-a11y",
     "@storybook/addon-themes"
   ],
