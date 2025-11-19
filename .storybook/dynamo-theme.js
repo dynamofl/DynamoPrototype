@@ -39,9 +39,9 @@ export const dynamoTheme = {
 
   // Color palette
   colorPrimary: '#2563EB',
-  colorSecondary: '#6366F1',
+  colorSecondary: '#2563EB',
 
   // Typography
-  fontBase: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+  fontBase: 'Inter Variable, Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif',
   fontCode: '"Fira Code", "Courier New", monospace',
 };

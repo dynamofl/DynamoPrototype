@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { CsvUpload } from '@/components/patterns/ui-patterns/csv-upload';
+import { CSVUpload } from '@/components/patterns/ui-patterns/csv-upload';
 
-const meta: Meta<typeof CsvUpload> = {
+const meta: Meta<typeof CSVUpload> = {
   title: 'Patterns/Data Upload/CSV Upload',
-  component: CsvUpload,
+  component: CSVUpload,
   parameters: {
     layout: 'centered',
   },
