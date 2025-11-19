@@ -17,8 +17,7 @@ import type { JailbreakEvaluationResult } from '../../types/jailbreak-evaluation
 import { Badge } from '@/components/ui/badge'
 import { SeverityIcon } from '../../components/results/severity-icon'
 import { getAttackSeverityLevel } from '../../lib/attack-severity'
-import { HighlightedText } from '@/components/patterns/ui-patterns/phrase-highlighter'
-import { HighlightedMarkdownRenderer } from '../../components/results/conversation-view-components/shared-components'
+import { ConversationFeedItem } from '../../components/results/conversation-view-components/conversation-feed-item'
 
 /**
  * Get table columns configuration for jailbreak evaluations
@@ -447,18 +446,17 @@ export function getJailbreakConversationSections(): ConversationSectionConfig[] 
       title: 'Base Prompt',
       order: 1,
       render: (record: BaseEvaluationResult) => {
-        // Use basePrompt from transformed JailbreakEvaluationResult (camelCase convention)
         const jailbreakRecord = record as unknown as JailbreakEvaluationResult
         const basePromptText = jailbreakRecord.basePrompt || ''
+
         return (
-          <>
-            <h3 className="px-2 text-[0.8125rem] font-450 leading-4 text-gray-600">
-              Base Prompt
-            </h3>
-            <div className="px-2 text-sm font-425 leading-5 text-gray-900">
-              {basePromptText}
-            </div>
-          </>
+          <ConversationFeedItem
+            title="Base Prompt"
+            variant="single-turn"
+            content={basePromptText}
+            enableMarkdown={false}
+            enableHighlight={false}
+          />
         )
       }
     },
@@ -477,73 +475,31 @@ export function getJailbreakConversationSections(): ConversationSectionConfig[] 
 
         if (isMultiTurn) {
           return (
-            <>
-              <h3 className="px-2 text-[0.8125rem] font-450 leading-4 text-gray-600">
-                Jailbreak Prompt
-              </h3>
-              <div className="p-2 space-y-4 border border-gray-200 rounded-md">
-                {adversarialPrompt.map((turn: any, index: number) => {
-                  const isUser = turn.role === 'user'
-                  const isAssistant = turn.role === 'assistant'
-
-                  return (
-                    <div key={index} className="space-y-1">
-                      <div className="text-xs font-450 uppercase tracking-wide text-gray-600">
-                        {turn.role}
-                      </div>
-                      <div className="rounded-lg pt-1 pb-2 text-sm font-400 leading-5">
-                        {ctx ? (
-                          <HighlightedText
-                            highlightPhrases={ctx.shouldHighlightPrompt ? ctx.highlightPhrases : ctx.allInputPhrases}
-                            className="text-sm leading-5"
-                            highlightColor={ctx.highlightColor}
-                            hoveredBehavior={ctx.hoveredBehavior}
-                            selectedBehavior={ctx.selectedBehavior}
-                            selectedBehaviors={ctx.selectedBehaviors}
-                            selectedPhraseText={ctx.selectedPhraseText}
-                            onPhraseClick={(idx) => ctx.handlePhraseClick(idx, 'input')}
-                            showHighlightByDefault={true}
-                          >
-                            {turn.content}
-                          </HighlightedText>
-                        ) : (
-                          turn.content
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </>
+            <ConversationFeedItem
+              title="Jailbreak Prompt"
+              variant="multi-turn"
+              content={adversarialPrompt}
+              enableMarkdown={false}
+              enableHighlight={!!ctx}
+              highlightingContext={ctx}
+              highlightType="input"
+              showHighlightByDefault={true}
+            />
           )
         }
 
-        // Single turn - render as before
+        // Single turn
         return (
-          <>
-            <h3 className="px-2 text-[0.8125rem] font-450 leading-4 text-gray-600">
-              Jailbreak Prompt
-            </h3>
-            <div className="px-2 text-sm font-425 leading-5 text-gray-900">
-              {ctx ? (
-                <HighlightedText
-                  highlightPhrases={ctx.shouldHighlightPrompt ? ctx.highlightPhrases : ctx.allInputPhrases}
-                  className="text-sm leading-5 text-gray-900"
-                  highlightColor={ctx.highlightColor}
-                  hoveredBehavior={ctx.hoveredBehavior}
-                  selectedBehavior={ctx.selectedBehavior}
-                            selectedBehaviors={ctx.selectedBehaviors}
-                  selectedPhraseText={ctx.selectedPhraseText}
-                  onPhraseClick={(idx) => ctx.handlePhraseClick(idx, 'input')}
-                  showHighlightByDefault={true}
-                >
-                  {jailbreakPromptText || 'No jailbreak prompt'}
-                </HighlightedText>
-              ) : (
-                jailbreakPromptText || 'No jailbreak prompt'
-              )}
-            </div>
-          </>
+          <ConversationFeedItem
+            title="Jailbreak Prompt"
+            variant="single-turn"
+            content={jailbreakPromptText || 'No jailbreak prompt'}
+            enableMarkdown={false}
+            enableHighlight={!!ctx}
+            highlightingContext={ctx}
+            highlightType="input"
+            showHighlightByDefault={true}
+          />
         )
       }
     },
@@ -565,30 +521,16 @@ export function getJailbreakConversationSections(): ConversationSectionConfig[] 
         }
 
         return (
-          <>
-            <h3 className="px-2 text-[0.8125rem] font-450 leading-4 text-gray-600">
-              AI System Response
-            </h3>
-            <div className="px-2">
-              {ctx ? (
-                <HighlightedMarkdownRenderer
-                  content={responseContent}
-                  highlightPhrases={ctx.shouldHighlightResponse ? ctx.highlightPhrases : ctx.allOutputPhrases}
-                  highlightColor={ctx.highlightColor}
-                  hoveredBehavior={ctx.hoveredBehavior}
-                  selectedBehavior={ctx.selectedBehavior}
-                            selectedBehaviors={ctx.selectedBehaviors}
-                  selectedPhraseText={ctx.selectedPhraseText}
-                  onPhraseClick={(idx) => ctx.handlePhraseClick(idx, 'output')}
-                  showHighlightByDefault={true}
-                />
-              ) : (
-                <div className="text-sm font-425 leading-relaxed text-gray-900">
-                  {responseContent}
-                </div>
-              )}
-            </div>
-          </>
+          <ConversationFeedItem
+            title="AI System Response"
+            variant="single-turn"
+            content={responseContent}
+            enableMarkdown={true}
+            enableHighlight={!!ctx}
+            highlightingContext={ctx}
+            highlightType="output"
+            showHighlightByDefault={true}
+          />
         )
       }
     }

@@ -15,8 +15,7 @@ import type {
 import type { BaseEvaluationResult } from '../../types/base-evaluation'
 import type { ComplianceEvaluationResult } from '../../types/compliance-evaluation'
 import { Badge } from '@/components/ui/badge'
-import { HighlightedText } from '@/components/patterns/ui-patterns/phrase-highlighter'
-import { HighlightedMarkdownRenderer } from '../../components/results/conversation-view-components/shared-components'
+import { ConversationFeedItem } from '../../components/results/conversation-view-components/conversation-feed-item'
 
 /**
  * Get table columns configuration for compliance evaluations
@@ -504,14 +503,13 @@ export function getComplianceConversationSections(): ConversationSectionConfig[]
       render: (record: BaseEvaluationResult) => {
         const complianceRecord = record as ComplianceEvaluationResult
         return (
-          <>
-            <h3 className="px-2 text-[0.8125rem] font-450 leading-4 text-gray-600">
-              Base Prompt
-            </h3>
-            <div className="px-2 text-sm font-425 leading-5 text-gray-900">
-              {complianceRecord.base_prompt}
-            </div>
-          </>
+          <ConversationFeedItem
+            title="Base Prompt"
+            variant="single-turn"
+            content={complianceRecord.base_prompt}
+            enableMarkdown={false}
+            enableHighlight={false}
+          />
         )
       }
     },
@@ -521,39 +519,22 @@ export function getComplianceConversationSections(): ConversationSectionConfig[]
       order: 2,
       render: (record: BaseEvaluationResult, ctx?: HighlightingContext) => {
         const complianceRecord = record as ComplianceEvaluationResult
+        const subtitle = complianceRecord.perturbation_type
+          ? `(${complianceRecord.perturbation_type})`
+          : undefined
+
         return (
-          <>
-            <h3 className="px-2 text-[0.8125rem] font-450 leading-4 text-gray-600">
-              Actual Prompt
-              {complianceRecord.perturbation_type && (
-                <span className="text-gray-500"> ({complianceRecord.perturbation_type})</span>
-              )}
-            </h3>
-            <div className="px-2 text-sm font-425 leading-5 text-gray-900">
-              {ctx ? (
-                <HighlightedText
-                  highlightPhrases={ctx.shouldHighlightPrompt ? ctx.highlightPhrases : ctx.allInputPhrases}
-                  className="text-sm leading-5 text-gray-900"
-                  highlightColor={ctx.highlightColor}
-                  hoveredBehavior={ctx.hoveredBehavior}
-                  selectedBehavior={ctx.selectedBehavior}
-                  selectedBehaviors={ctx.selectedBehaviors}
-                  selectedPhraseText={ctx.selectedPhraseText}
-                  onPhraseClick={(idx) => ctx.handlePhraseClick(idx, 'input')}
-                  showHighlightByDefault={true}
-                >
-                  {(complianceRecord as any).actual_prompt}
-                </HighlightedText>
-              ) : (
-                (complianceRecord as any).actual_prompt
-              )}
-            </div>
-            {complianceRecord.perturbation_type && (
-              <div className="px-2 text-xs text-gray-500 italic">
-                Perturbation applied: {complianceRecord.perturbation_type}
-              </div>
-            )}
-          </>
+          <ConversationFeedItem
+            title="Actual Prompt"
+            subtitle={subtitle}
+            variant="single-turn"
+            content={(complianceRecord as any).actual_prompt}
+            enableMarkdown={false}
+            enableHighlight={!!ctx}
+            highlightingContext={ctx}
+            highlightType="input"
+            showHighlightByDefault={true}
+          />
         )
       }
     },
@@ -577,30 +558,16 @@ export function getComplianceConversationSections(): ConversationSectionConfig[]
         }
 
         return (
-          <>
-            <h3 className="px-2 text-[0.8125rem] font-450 leading-4 text-gray-600">
-              AI System Response
-            </h3>
-            <div className="px-2">
-              {ctx ? (
-                <HighlightedMarkdownRenderer
-                  content={responseContent}
-                  highlightPhrases={ctx.shouldHighlightResponse ? ctx.highlightPhrases : ctx.allOutputPhrases}
-                  highlightColor={ctx.highlightColor}
-                  hoveredBehavior={ctx.hoveredBehavior}
-                  selectedBehavior={ctx.selectedBehavior}
-                  selectedBehaviors={ctx.selectedBehaviors}
-                  selectedPhraseText={ctx.selectedPhraseText}
-                  onPhraseClick={(idx) => ctx.handlePhraseClick(idx, 'output')}
-                  showHighlightByDefault={true}
-                />
-              ) : (
-                <div className="text-sm font-425 leading-relaxed text-gray-900">
-                  {responseContent}
-                </div>
-              )}
-            </div>
-          </>
+          <ConversationFeedItem
+            title="AI System Response"
+            variant="single-turn"
+            content={responseContent}
+            enableMarkdown={true}
+            enableHighlight={!!ctx}
+            highlightingContext={ctx}
+            highlightType="output"
+            showHighlightByDefault={true}
+          />
         )
       }
     }

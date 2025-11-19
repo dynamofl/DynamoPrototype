@@ -8,6 +8,7 @@ export const dynamoTheme = {
   brandTitle: 'Dynamo Design System',
   brandUrl: '/',
   brandTarget: '_self',
+  brandImage: '/assets/Logo Flux.png',
 
   // UI Colors
   appBg: '#FFFFFF',

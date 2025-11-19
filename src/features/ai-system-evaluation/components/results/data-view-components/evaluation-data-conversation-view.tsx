@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import type { BaseEvaluationResult } from '../../../types/base-evaluation'
 import type { EvaluationStrategy } from '../../../strategies/base-strategy'
+import { ConversationListItem } from '../conversation-view-components/conversation-list-item'
 
 interface EvaluationDataConversationViewProps {
   data: BaseEvaluationResult[]
@@ -139,6 +140,7 @@ export function EvaluationDataConversationView({
             {data.map((record, index) => {
               const recordWithId = record as any
               const isSelected = selectedConversationId === recordWithId.id
+
               // Check if record has human judgement
               const hasHumanJudgement = recordWithId.system_response?.human_judgement
 
@@ -156,48 +158,24 @@ export function EvaluationDataConversationView({
               const isOutcomeUpdated = hasHumanJudgement?.outcome_updated
               const showAmberDot = hasContradiction && !isOutcomeUpdated
 
+              // Access base prompt - check both snake_case and camelCase
+              const basePromptText = record.base_prompt || recordWithId.basePrompt || 'No prompt'
+
               return (
-                <div
+                <ConversationListItem
                   key={recordWithId.uniqueKey || recordWithId.id}
+                  rowNumber={index + 1}
+                  content={basePromptText}
+                  contentTitle={basePromptText}
+                  indicator={hasHumanJudgement ? {
+                    show: true,
+                    color: showAmberDot ? 'amber' : 'blue'
+                  } : undefined}
+                  badge={renderOutcomeBadge(record)}
+                  isSelected={isSelected}
                   onClick={() => onConversationSelect(recordWithId.id)}
-                  className={`flex p-2 items-center group transition-colors rounded-md cursor-pointer ${
-                    isSelected
-                      ? 'bg-blue-50 border-blue-200'
-                      : 'hover:bg-gray-100 border-none'
-                  }`}
-                >
-                {/* Row Number Cell */}
-                <div className="w-8 flex items-center justify-center relative">
-                  {hasHumanJudgement && (
-                    <div className={`absolute left-0 w-1 h-1 rounded-full ${
-                      showAmberDot ? 'bg-amber-600' : 'bg-blue-600'
-                    }`} />
-                  )}
-                  <span className="text-[0.8125rem]  text-gray-500">
-                    {index + 1}
-                  </span>
-                </div>
-
-                {/* Conversation Content */}
-                <div className="flex-1 min-w-0 pl-3">
-                  {(() => {
-                    // Access base prompt - check both snake_case and camelCase
-                    const recordAny = record as any
-                    const basePromptText = record.base_prompt || recordAny.basePrompt || 'No prompt'
-                    return (
-                      <div className="text-[0.8125rem]  font-450 text-gray-800 truncate max-w-md" title={basePromptText}>
-                        {basePromptText}
-                      </div>
-                    )
-                  })()}
-                </div>
-
-                {/* Status Badge */}
-                <div className="w-[120px] flex justify-end ">
-                  {renderOutcomeBadge(record)}
-                </div>
-              </div>
-            )
+                />
+              )
             })}
           </div>
         ) : (
