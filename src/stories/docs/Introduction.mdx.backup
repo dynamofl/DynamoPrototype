@@ -1,0 +1,76 @@
+import { Meta } from '@storybook/blocks';
+
+<Meta title="Introduction" />
+
+# Dynamo Design System
+
+Welcome to the Dynamo Design System - a comprehensive collection of reusable components and patterns built with React, TypeScript, and Tailwind CSS.
+
+## Design Philosophy
+
+Our design system follows industry-standard patterns inspired by leading design systems like [Canvas Kit](https://workday.github.io/canvas-kit/), emphasizing:
+
+- **Clarity**: Clean, professional light theme with excellent contrast and readability
+- **Consistency**: Unified visual language across all components
+- **Accessibility**: WCAG 2.1 AA compliant components with keyboard navigation
+- **Scalability**: Hierarchical organization that grows with your needs
+
+## Theme
+
+The Dynamo Design System uses a light theme by default, featuring:
+
+- **Clean Backgrounds**: Pure white (`#FFFFFF`) with subtle grays for hierarchy
+- **Professional Typography**: System font stack for optimal readability
+- **Accessible Colors**: Carefully chosen color palette meeting WCAG standards
+- **Subtle Shadows**: Minimal depth with `box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05)`
+
+### Color Palette
+
+| Purpose | Color | Hex |
+|---------|-------|-----|
+| Primary | Blue | `#2563EB` |
+| Background | White | `#FFFFFF` |
+| Surface | Light Gray | `#F9FAFB` |
+| Border | Gray | `#E5E7EB` |
+| Text Primary | Dark Gray | `#1F2937` |
+| Text Secondary | Medium Gray | `#6B7280` |
+
+## Component Categories
+
+### Category
+Brand identity and core visual elements.
+
+### Data Display
+Components for displaying data, tables, statistics, and information.
+
+### Feedback
+Components for providing feedback to users through alerts, notifications, and progress indicators.
+
+### Inputs
+Interactive components for user input and data entry, including specialized table cell types.
+
+### Layout
+Components for page structure, organization, and spacing.
+
+### Navigation
+Components for navigation, wayfinding, and user settings.
+
+### Overlays
+Components that appear above page content for modal interactions.
+
+### Patterns
+Complex pattern compositions combining multiple components for complete features.
+
+## Getting Started
+
+Browse the components in the sidebar to explore:
+- **Component Examples**: Interactive demos with configurable props
+- **Usage Guidelines**: Best practices and implementation details
+- **Accessibility**: Keyboard navigation and screen reader support
+
+## Resources
+
+- [Storybook Documentation](https://storybook.js.org/docs)
+- [Canvas Kit Design System](https://workday.github.io/canvas-kit/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [React Documentation](https://react.dev/)
