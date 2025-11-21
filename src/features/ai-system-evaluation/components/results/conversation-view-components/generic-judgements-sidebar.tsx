@@ -235,6 +235,15 @@ function GuardrailDetailCard({
       hoveredBehavior={hoveredBehavior}
       selectedBehaviors={selectedBehaviors}
       showExpandIcon={!isAllowed && hasViolations}
+      primaryAction={
+        isAllowed
+          ? {
+              label: 'Preview Policy',
+              icon: <ArrowUpRight className="w-4 h-4" />,
+              onClick: handlePreviewPolicy
+            }
+          : undefined
+      }
       expandedAction={
         hasViolations
           ? {
@@ -270,15 +279,6 @@ function GuardrailDetailCard({
             )}
           </div>
         </div>
-        {isAllowed && (
-          <button
-            onClick={handlePreviewPolicy}
-            className="flex items-center gap-0.5 px-1 py-1 text-xs font-450 text-gray-600 hover:bg-gray-100 pl-2 rounded-full transition-colors"
-          >
-            Preview Policy
-            <ArrowUpRight className="w-4 h-4" />
-          </button>
-        )}
       </div>
     </JudgementItemCard>
   )

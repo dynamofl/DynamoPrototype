@@ -3,7 +3,7 @@ import React from 'react';
 import { FreeTextCell } from '../../components/patterns/ui-patterns/cell-types/free-text-cell';
 
 const meta: Meta<typeof FreeTextCell> = {
-  title: 'Inputs/Cell Types/Free Text Cell',
+  title: 'Data Display/Table/Free Text Cell',
   component: FreeTextCell,
   parameters: {
     layout: 'centered',

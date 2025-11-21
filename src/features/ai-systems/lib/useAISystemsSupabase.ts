@@ -4,6 +4,34 @@ import { ensureAuthenticated } from '@/lib/supabase/client'
 import type { AISystem } from '../types/types'
 import { aiSystemsStateManager } from './ai-systems-state-manager'
 
+// Map provider names to AISystemIcon types
+const providerIconMap: Record<string, 'OpenAI' | 'Azure' | 'Mistral' | 'Databricks' | 'HuggingFace' | 'Anthropic' | 'Custom' | 'AWS' | 'DynamoAI' | 'Gemini'> = {
+  'openai': 'OpenAI',
+  'OpenAI': 'OpenAI',
+  'azure': 'Azure',
+  'Azure': 'Azure',
+  'Azure OpenAI': 'Azure',
+  'databricks': 'Databricks',
+  'Databricks': 'Databricks',
+  'mistral': 'Mistral',
+  'Mistral': 'Mistral',
+  'aws': 'AWS',
+  'AWS': 'AWS',
+  'AWS Bedrock': 'AWS',
+  'anthropic': 'Anthropic',
+  'Anthropic': 'Anthropic',
+  'huggingface': 'HuggingFace',
+  'HuggingFace': 'HuggingFace',
+  'dynamoai': 'DynamoAI',
+  'DynamoAI': 'DynamoAI',
+  'gemini': 'Gemini',
+  'Gemini': 'Gemini',
+  'google': 'Gemini',
+  'Google': 'Gemini',
+  'custom': 'Custom',
+  'Custom': 'Custom'
+}
+
 /**
  * Hook to fetch AI systems from Supabase backend
  * Replaces localStorage-based storage
@@ -67,7 +95,7 @@ export function useAISystemsSupabase() {
         apiKeyId: item.config?.apiKeyId,
         apiKeyName: item.config?.apiKeyName,
         modelDetails: item.config?.modelDetails,
-        icon: item.config?.icon || 'custom',
+        icon: providerIconMap[item.provider] || providerIconMap[item.config?.icon] || 'Custom',
         status: item.config?.status || 'active',
         hasValidAPIKey: false, // Will be updated during enhancement
         hasGuardrails: false,

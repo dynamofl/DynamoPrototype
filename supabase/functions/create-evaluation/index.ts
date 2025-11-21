@@ -261,15 +261,16 @@ serve(async (req: Request) => {
           metadata: { policyIds, guardrailIds, promptCount: prompts.length }
         });
 
-        // Trigger async execution (invoke run-evaluation function)
-        // Use SERVICE_ROLE_KEY for edge function to edge function communication
+        // Trigger async execution with proper Supabase authentication
+        // apikey: ANON_KEY (project identifier), Authorization: SERVICE_ROLE_KEY (elevated access)
         console.log(`🚀 [BACKGROUND] Triggering run-evaluation for ${evaluation.id}...`);
 
-        // Use the service key that's already loaded at the top of the file
+        const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
         const triggerResponse = await fetch(`${supabaseUrl}/functions/v1/run-evaluation`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'apikey': supabaseAnonKey,
             'Authorization': `Bearer ${supabaseServiceKey}`
           },
           body: JSON.stringify({ evaluationId: evaluation.id })

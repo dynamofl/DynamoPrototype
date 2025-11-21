@@ -3,7 +3,7 @@ import { StatCardSection } from '../../components/patterns/ui-patterns/stat-card
 import type { StatCardData } from '../../components/patterns/ui-patterns/stat-card-section';
 
 const meta: Meta<typeof StatCardSection> = {
-  title: 'Data Display/Stat Card Section',
+  title: 'Data Display/Card/Stat Card Section',
   component: StatCardSection,
   parameters: {
     layout: 'centered',

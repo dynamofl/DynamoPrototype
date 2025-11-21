@@ -404,7 +404,7 @@ export const Expanded: Story = {
 /**
  * Expanded card with action button for additional interactions.
  */
-export const ExpandedWithAction: Story = {
+export const ExpandedAction: Story = {
   tags: ['!dev'],
   args: {
     icon: (

@@ -3,7 +3,7 @@ import React from 'react';
 import { DropdownCell } from '../../components/patterns/ui-patterns/cell-types/dropdown-cell';
 
 const meta: Meta<typeof DropdownCell> = {
-  title: 'Inputs/Cell Types/Dropdown Cell',
+  title: 'Data Display/Table/Dropdown Cell',
   component: DropdownCell,
   parameters: {
     layout: 'centered',

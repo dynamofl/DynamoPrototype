@@ -63,7 +63,7 @@ const mockAISystems: AISystem[] = [
 ];
 
 const meta: Meta<typeof AISystemsTable> = {
-  title: 'Data Display/AI Systems Table',
+  title: 'Data Display/Table/AI Systems Table',
   component: AISystemsTable,
   parameters: {
     layout: 'fullscreen',

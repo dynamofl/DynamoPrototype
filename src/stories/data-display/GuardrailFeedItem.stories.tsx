@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { GuardrailFeedItem } from '../../components/ui/guardrail-feed-item';
 
 const meta: Meta<typeof GuardrailFeedItem> = {
-  title: 'Data Display/Guardrail Feed Item',
+  title: 'Components/Guardrail Feed Item',
   component: GuardrailFeedItem,
   parameters: {
     layout: 'centered',

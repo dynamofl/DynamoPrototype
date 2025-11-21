@@ -3,7 +3,7 @@ import { BadgeCell } from '../../components/patterns/ui-patterns/cell-types/badg
 import { CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
 
 const meta: Meta<typeof BadgeCell> = {
-  title: 'Inputs/Cell Types/Badge Cell',
+  title: 'Data Display/Table/Badge Cell',
   component: BadgeCell,
   parameters: {
     layout: 'centered',

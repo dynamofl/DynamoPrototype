@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { HeaderStats } from '../../components/patterns/ui-patterns/header-stats';
 
 const meta: Meta<typeof HeaderStats> = {
-  title: 'Data Display/Header Stats',
+  title: 'Data Display/Card/Header Stats',
   component: HeaderStats,
   parameters: {
     layout: 'centered',

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { ConversationFeedItem } from '../../components/ui/conversation-feed-item';
 
 const meta: Meta<typeof ConversationFeedItem> = {
-  title: 'Data Display/Conversation Feed Item',
+  title: 'Components/Conversation Feed Item',
   component: ConversationFeedItem,
   parameters: {
     layout: 'centered',

@@ -3,7 +3,7 @@ import { FileItem } from '../../components/patterns/ui-patterns/file-item';
 import type { FileState } from '@/types/csv';
 
 const meta: Meta<typeof FileItem> = {
-  title: 'Data Display/File Item',
+  title: 'Components/File Item',
   component: FileItem,
   parameters: {
     layout: 'centered',

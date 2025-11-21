@@ -172,12 +172,16 @@ serve(async (req: Request) => {
 
     // If more prompts remain, re-invoke self for next batch
     if (remainingCount && remainingCount > 0) {
-      // Fire and forget - don't wait for response
+      // Fire and forget with proper Supabase authentication
+      // apikey: ANON_KEY (project identifier), Authorization: SERVICE_ROLE_KEY (elevated access)
+      const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+      const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
       fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/run-evaluation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`
+          'apikey': anonKey,
+          'Authorization': `Bearer ${serviceRoleKey}`
         },
         body: JSON.stringify({ evaluationId })
       }).catch((error) => {

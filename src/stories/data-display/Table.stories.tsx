@@ -11,7 +11,7 @@ import {
 } from '../../components/ui/table';
 
 const meta: Meta<typeof Table> = {
-  title: 'Data Display/Table',
+  title: 'Data Display/Table/Table',
   component: Table,
   parameters: {
     layout: 'centered',

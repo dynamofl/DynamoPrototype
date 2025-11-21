@@ -3,7 +3,7 @@ import React from 'react';
 import { DateCell } from '../../components/patterns/ui-patterns/cell-types/date-cell';
 
 const meta: Meta<typeof DateCell> = {
-  title: 'Inputs/Cell Types/Date Cell',
+  title: 'Data Display/Table/Date Cell',
   component: DateCell,
   parameters: {
     layout: 'centered',

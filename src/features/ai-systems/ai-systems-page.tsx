@@ -295,7 +295,7 @@ export function AISystemsPage() {
     const selectedSystems = aiSystems.filter(system => selectedRows.includes(system.id))
 
     // Check if all selected systems have the same provider type
-    const providerTypes = [...new Set(selectedSystems.map(system => system.icon))]
+    const providerTypes = [...new Set(selectedSystems.map(system => system.providerId))]
 
     if (providerTypes.length > 1) {
       // Multiple provider types selected - this shouldn't happen as the button should be disabled

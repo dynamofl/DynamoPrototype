@@ -36,6 +36,11 @@ export interface JudgementItemCardProps {
 
   // Actions
   showExpandIcon?: boolean
+  primaryAction?: {
+    label: string
+    icon?: React.ReactNode
+    onClick: (e: React.MouseEvent) => void
+  }
   expandedAction?: {
     label: string
     icon?: React.ReactNode
@@ -60,6 +65,7 @@ export function JudgementItemCard({
   hoveredBehavior,
   selectedBehaviors,
   showExpandIcon = true,
+  primaryAction,
   expandedAction,
   className = '',
   isAnnotationMode = false
@@ -95,6 +101,17 @@ export function JudgementItemCard({
         <div className="flex-1 min-w-0">
           {children}
         </div>
+
+        {/* Primary Action Button - shown before expand icon */}
+        {primaryAction && (
+          <button
+            onClick={primaryAction.onClick}
+            className="flex items-center gap-0.5 px-2 py-1 text-xs font-450 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            {primaryAction.label}
+            {primaryAction.icon}
+          </button>
+        )}
 
         {/* Expand/Collapse Icon */}
         {expandable && hasExpandedItems && showExpandIcon && (

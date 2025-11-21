@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { SwitchCell } from '../../components/patterns/ui-patterns/cell-types/switch-cell';
 
 const meta: Meta<typeof SwitchCell> = {
-  title: 'Inputs/Cell Types/Switch Cell',
+  title: 'Data Display/Table/Switch Cell',
   component: SwitchCell,
   parameters: {
     layout: 'centered',

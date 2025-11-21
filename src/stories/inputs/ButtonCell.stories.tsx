@@ -3,7 +3,7 @@ import { ButtonCell } from '../../components/patterns/ui-patterns/cell-types/but
 import { Edit, Trash2, Eye, Copy, MoreHorizontal } from 'lucide-react';
 
 const meta: Meta<typeof ButtonCell> = {
-  title: 'Inputs/Cell Types/Button Cell',
+  title: 'Data Display/Table/Button Cell',
   component: ButtonCell,
   parameters: {
     layout: 'centered',

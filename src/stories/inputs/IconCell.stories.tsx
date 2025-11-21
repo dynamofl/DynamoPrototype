@@ -4,7 +4,7 @@ import { IconCell } from '../../components/patterns/ui-patterns/cell-types/icon-
 import { CheckCircle, AlertTriangle, XCircle, Settings } from 'lucide-react';
 
 const meta: Meta<typeof IconCell> = {
-  title: 'Inputs/Cell Types/Icon Cell',
+  title: 'Data Display/Table/Icon Cell',
   component: IconCell,
   parameters: {
     layout: 'centered',

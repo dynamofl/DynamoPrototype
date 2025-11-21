@@ -1,159 +1,525 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import React from 'react';
-import { MemoryRouter, NavLink } from 'react-router-dom';
-import { DynamoLogoTypeface } from '@/assets/icons/dynamo-logo-typeface'
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Switch } from "@/components/ui/switch"
-import { cn } from "@/lib/utils"
-import {
-  Settings,
-  LogOut,
-  Sun,
-  Moon,
-  Monitor,
-} from "lucide-react"
+import { AppBar } from '@/components/patterns/ui-patterns/app-bar';
+import type { BreadcrumbItem, AppBarActionButton } from '@/components/patterns/ui-patterns/app-bar';
+import { MemoryRouter } from 'react-router-dom';
+import { Play, Settings } from 'lucide-react';
+import { useState } from 'react';
 
-// Mock AppBar component for Storybook
-const MockAppBar = ({ experimentsEnabled = false }: { experimentsEnabled?: boolean }) => {
-  const mockNavigate = () => console.log('Navigate called');
-  const mockSetTheme = (theme: string) => console.log('Theme changed to:', theme);
-
-  const experimentNavItems = [
-    { name: "Evaluation Sandbox", path: "/evaluation-sandbox" },
-    { name: "AI Providers", path: "/ai-providers" },
-    { name: "Policies", path: "/guardrails" },
-  ]
-
-  const standardNavItems = [
-    { name: "AI Systems", path: "/ai-systems" },
-    { name: "Policies", path: "/guardrails" },
-  ]
-
-  const currentNavItems = experimentsEnabled ? experimentNavItems : standardNavItems
-
-  return (
-    <header className="border-b bg-gray-0/95 backdrop-blur supports-[backdrop-filter]:bg-gray-0/60">
-      <div className=" mx-auto px-6 py-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <DynamoLogoTypeface />
-            <div className="hidden md:block ml-4 mr-2 w-px h-4 bg-gray-300"></div>
-
-            <nav className="hidden md:flex items-center gap-1">
-              {currentNavItems.map((item) => (
-                <NavLink
-                  key={item.name}
-                  to={item.path}
-                  className={({ isActive }) => cn(
-                    "inline-flex items-center px-2 py-1 rounded-md text-[0.8125rem]  font-450 transition-colors hover:text-foreground relative",
-                    isActive
-                      ? "text-gray-800 bg-gray-100"
-                      : "text-gray-600 hover:bg-gray-50"
-                  )}
-                >
-                  {item.name}
-                </NavLink>
-              ))}
-            </nav>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-2">
-              <span className="text-[0.8125rem]  font-450 text-gray-600">Experiments</span>
-              <Switch
-                checked={experimentsEnabled}
-                onCheckedChange={(checked) => console.log('Experiments:', checked)}
-              />
-            </div>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="w-8 h-8  bg-gray-200 hover:bg-gray-300 text-primary-foreground rounded-full p-0"
-                >
-                  <span className="text-gray-800 font-450 text-[0.8125rem] ">PK</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={() => mockSetTheme("light")}>
-                  <Sun className="mr-2 h-4 w-4" />
-                  Light Theme
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => mockSetTheme("dark")}>
-                  <Moon className="mr-2 h-4 w-4" />
-                  Dark Theme
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => mockSetTheme("system")}>
-                  <Monitor className="mr-2 h-4 w-4" />
-                  System Theme
-                </DropdownMenuItem>
-
-                <DropdownMenuSeparator />
-
-                <DropdownMenuItem onClick={() => mockNavigate()}>
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
-                </DropdownMenuItem>
-
-                <DropdownMenuSeparator />
-
-                <DropdownMenuItem className="text-destructive focus:text-destructive">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </div>
-    </header>
-  )
-}
-
-// Create a simple wrapper that provides the necessary context
-const AppBarWrapper = ({ experimentsEnabled = false }: { experimentsEnabled?: boolean }) => {
+// Wrapper to provide routing context
+const AppBarWrapper = ({ children }: { children: React.ReactNode }) => {
   return (
     <MemoryRouter initialEntries={['/ai-systems']}>
-      <MockAppBar experimentsEnabled={experimentsEnabled} />
+      {children}
     </MemoryRouter>
   );
 };
 
-// Theme wrapper for stories that need specific theme override
-const ThemeOverrideWrapper = ({ theme, children }: { theme: string, children: React.ReactNode }) => {
-  return (
-    <div className={theme === 'dark' ? 'dark' : theme === 'light' ? 'light' : ''}>
-      {children}
-    </div>
-  );
-};
-
-const meta: Meta<typeof MockAppBar> = {
+const meta: Meta<typeof AppBar> = {
   title: 'Navigation/App Bar',
-  component: MockAppBar,
+  component: AppBar,
   parameters: {
     layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `The AppBar component provides top-level navigation for the application. It supports two variants: a default variant with main navigation links, and a breadcrumb variant for hierarchical navigation within specific sections. The component includes profile management, theme switching, and support for custom action buttons.`,
+      },
+      toc: {
+        headingSelector: 'h3',
+        title: '',
+        disable: false,
+      },
+    },
   },
-  // Direct story without docs
+  tags: ['autodocs'],
+  decorators: [
+    (Story) => (
+      <AppBarWrapper>
+        <Story />
+      </AppBarWrapper>
+    ),
+  ],
+  argTypes: {
+    variant: {
+      control: { type: 'select' },
+      options: ['default', 'breadcrumb'],
+      description: 'Visual variant of the app bar',
+      table: {
+        type: { summary: 'string' },
+        defaultValue: { summary: 'default' },
+        category: 'Appearance',
+      },
+    },
+    breadcrumbs: {
+      description: 'Array of breadcrumb items for navigation hierarchy',
+      table: {
+        type: { summary: 'BreadcrumbItem[]' },
+        category: 'Navigation',
+      },
+    },
+    currentSection: {
+      description: 'Current section information with optional dropdown',
+      table: {
+        type: { summary: 'object' },
+        category: 'Navigation',
+      },
+    },
+    actionButtons: {
+      description: 'Array of action buttons displayed in the app bar',
+      table: {
+        type: { summary: 'AppBarActionButton[]' },
+        category: 'Actions',
+      },
+    },
+  },
 };
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/**
+ * ### Basic Variants
+ *
+ * Core app bar configurations.
+ *
+ * Default variant with main navigation links.
+ */
 export const Default: Story = {
-  render: () => <AppBarWrapper experimentsEnabled={false} />,
+  tags: ['!dev'],
+  args: {
+    variant: 'default',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Default app bar showing main navigation with Projects, AI Systems, and Policies links. Includes Beta Features access and profile dropdown with theme controls.',
+      },
+    },
+  },
 };
 
-export const WithExperiments: Story = {
-  render: () => <AppBarWrapper experimentsEnabled={true} />,
+/**
+ * Simple breadcrumb variant without navigation.
+ */
+export const BreadcrumbSimple: Story = {
+  tags: ['!dev'],
+  args: {
+    variant: 'breadcrumb',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Breadcrumb variant showing just the logo with Beta Features and profile controls.',
+      },
+    },
+  },
 };
 
+/**
+ * ### Breadcrumb Navigation
+ *
+ * Hierarchical navigation patterns.
+ *
+ * Breadcrumb with navigation trail.
+ */
+export const WithBreadcrumbs: Story = {
+  tags: ['!dev'],
+  args: {
+    variant: 'breadcrumb',
+    breadcrumbs: [
+      { name: 'AI Systems', path: '/ai-systems' },
+      { name: 'Customer Support Bot', path: '/ai-systems/123', current: true },
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Breadcrumb navigation showing the current location within the app hierarchy. Breadcrumb items are clickable links except for the current page.',
+      },
+    },
+  },
+};
 
+/**
+ * Breadcrumb with current section display.
+ */
+export const WithCurrentSection: Story = {
+  tags: ['!dev'],
+  args: {
+    variant: 'breadcrumb',
+    breadcrumbs: [
+      { name: 'AI Systems', path: '/ai-systems' },
+    ],
+    currentSection: {
+      name: 'Customer Support Bot',
+    },
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Breadcrumb with a highlighted current section showing the active item.',
+      },
+    },
+  },
+};
+
+/**
+ * Current section with badge indicator.
+ */
+export const WithBadge: Story = {
+  tags: ['!dev'],
+  args: {
+    variant: 'breadcrumb',
+    breadcrumbs: [
+      { name: 'AI Systems', path: '/ai-systems' },
+    ],
+    currentSection: {
+      name: 'Customer Support Bot',
+      badge: 'v2.1',
+    },
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Current section with a badge showing version or status information.',
+      },
+    },
+  },
+};
+
+/**
+ * Current section with dropdown selection.
+ */
+export const WithDropdown: Story = {
+  tags: ['!dev'],
+  render: () => {
+    const [selectedId, setSelectedId] = useState('system-1');
+
+    const dropdownOptions = [
+      { id: 'system-1', name: 'Customer Support Bot', isActive: selectedId === 'system-1' },
+      { id: 'system-2', name: 'Sales Assistant', isActive: selectedId === 'system-2' },
+      { id: 'system-3', name: 'Content Generator', isActive: selectedId === 'system-3' },
+    ];
+
+    return (
+      <AppBar
+        variant="breadcrumb"
+        breadcrumbs={[
+          { name: 'AI Systems', path: '/ai-systems' },
+        ]}
+        currentSection={{
+          name: dropdownOptions.find(opt => opt.id === selectedId)?.name || 'Customer Support Bot',
+          badge: 'v2.1',
+          dropdownOptions,
+          onDropdownSelect: (id) => {
+            setSelectedId(id);
+            console.log('Selected:', id);
+          },
+        }}
+      />
+    );
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Interactive dropdown allowing users to switch between different items (e.g., different AI systems). Click the chevron icon to see available options.',
+      },
+    },
+  },
+};
+
+/**
+ * ### Action Buttons
+ *
+ * Custom actions in the app bar.
+ *
+ * Single primary action button.
+ */
+export const WithActionButton: Story = {
+  tags: ['!dev'],
+  args: {
+    variant: 'breadcrumb',
+    breadcrumbs: [
+      { name: 'AI Systems', path: '/ai-systems' },
+    ],
+    currentSection: {
+      name: 'Customer Support Bot',
+    },
+    actionButtons: [
+      {
+        label: 'Run Test',
+        onClick: () => console.log('Run test clicked'),
+        variant: 'primary',
+        icon: <Play className="w-3 h-3" />,
+      },
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'App bar with a primary action button for quick access to key functionality.',
+      },
+    },
+  },
+};
+
+/**
+ * Multiple action buttons with different variants.
+ */
+export const MultipleActions: Story = {
+  tags: ['!dev'],
+  args: {
+    variant: 'breadcrumb',
+    breadcrumbs: [
+      { name: 'AI Systems', path: '/ai-systems' },
+    ],
+    currentSection: {
+      name: 'Customer Support Bot',
+    },
+    actionButtons: [
+      {
+        label: 'Settings',
+        onClick: () => console.log('Settings clicked'),
+        variant: 'secondary',
+        icon: <Settings className="w-3 h-3" />,
+      },
+      {
+        label: 'Run Test',
+        onClick: () => console.log('Run test clicked'),
+        variant: 'primary',
+        icon: <Play className="w-3 h-3" />,
+      },
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Multiple action buttons showing both primary and secondary actions.',
+      },
+    },
+  },
+};
+
+/**
+ * Action button in loading state.
+ */
+export const LoadingAction: Story = {
+  tags: ['!dev'],
+  args: {
+    variant: 'breadcrumb',
+    breadcrumbs: [
+      { name: 'AI Systems', path: '/ai-systems' },
+    ],
+    currentSection: {
+      name: 'Customer Support Bot',
+    },
+    actionButtons: [
+      {
+        label: 'Running...',
+        onClick: () => console.log('Run test clicked'),
+        variant: 'primary',
+        icon: <Play className="w-3 h-3" />,
+        loading: true,
+      },
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Action button showing loading state during async operations.',
+      },
+    },
+  },
+};
+
+/**
+ * Disabled action button.
+ */
+export const DisabledAction: Story = {
+  tags: ['!dev'],
+  args: {
+    variant: 'breadcrumb',
+    breadcrumbs: [
+      { name: 'AI Systems', path: '/ai-systems' },
+    ],
+    currentSection: {
+      name: 'Customer Support Bot',
+    },
+    actionButtons: [
+      {
+        label: 'Run Test',
+        onClick: () => console.log('Run test clicked'),
+        variant: 'primary',
+        icon: <Play className="w-3 h-3" />,
+        disabled: true,
+      },
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Disabled action button when the action is not currently available.',
+      },
+    },
+  },
+};
+
+/**
+ * ### Examples
+ *
+ * Complete real-world examples.
+ *
+ * Complete evaluation page navigation.
+ */
+export const EvaluationPage: Story = {
+  tags: ['!dev'],
+  render: () => {
+    const [selectedId, setSelectedId] = useState('eval-1');
+
+    const evaluations = [
+      { id: 'eval-1', name: 'Production Test - Jan 15', isActive: selectedId === 'eval-1' },
+      { id: 'eval-2', name: 'Staging Test - Jan 14', isActive: selectedId === 'eval-2' },
+      { id: 'eval-3', name: 'Development Test - Jan 13', isActive: selectedId === 'eval-3' },
+    ];
+
+    return (
+      <AppBar
+        variant="breadcrumb"
+        breadcrumbs={[
+          { name: 'AI Systems', path: '/ai-systems' },
+          { name: 'Customer Support Bot', path: '/ai-systems/123' },
+        ]}
+        currentSection={{
+          name: evaluations.find(e => e.id === selectedId)?.name || 'Production Test - Jan 15',
+          dropdownOptions: evaluations,
+          onDropdownSelect: (id) => {
+            setSelectedId(id);
+            console.log('Selected evaluation:', id);
+          },
+        }}
+        actionButtons={[
+          {
+            label: 'Settings',
+            onClick: () => console.log('Settings clicked'),
+            variant: 'secondary',
+            icon: <Settings className="w-3 h-3" />,
+          },
+          {
+            label: 'Run Evaluation',
+            onClick: () => console.log('Run evaluation clicked'),
+            variant: 'primary',
+            icon: <Play className="w-3 h-3" />,
+          },
+        ]}
+      />
+    );
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Complete example showing an evaluation page with breadcrumb navigation, evaluation selector dropdown, and action buttons.',
+      },
+    },
+  },
+};
+
+/**
+ * System configuration page.
+ */
+export const SystemConfiguration: Story = {
+  tags: ['!dev'],
+  args: {
+    variant: 'breadcrumb',
+    breadcrumbs: [
+      { name: 'AI Systems', path: '/ai-systems' },
+      { name: 'Customer Support Bot', path: '/ai-systems/123' },
+    ],
+    currentSection: {
+      name: 'Configuration',
+    },
+    actionButtons: [
+      {
+        label: 'Save Changes',
+        onClick: () => console.log('Save clicked'),
+        variant: 'primary',
+      },
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Configuration page showing deep navigation hierarchy with save action.',
+      },
+    },
+  },
+};
+
+/**
+ * Multiple breadcrumb levels.
+ */
+export const DeepNavigation: Story = {
+  tags: ['!dev'],
+  args: {
+    variant: 'breadcrumb',
+    breadcrumbs: [
+      { name: 'AI Systems', path: '/ai-systems' },
+      { name: 'Customer Support Bot', path: '/ai-systems/123' },
+      { name: 'Evaluations', path: '/ai-systems/123/evaluations' },
+      { name: 'Test Results', path: '/ai-systems/123/evaluations/456' },
+    ],
+    currentSection: {
+      name: 'Conversation #42',
+    },
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Deep navigation hierarchy with multiple breadcrumb levels showing complex app structure.',
+      },
+    },
+  },
+};
+
+/**
+ * Comparison of both variants.
+ */
+export const VariantComparison: Story = {
+  tags: ['!dev'],
+  render: () => (
+    <div className="space-y-4">
+      <div>
+        <h4 className="text-sm font-medium mb-2 text-gray-900 px-6">Default Variant</h4>
+        <AppBar variant="default" />
+      </div>
+
+      <div className="border-t pt-4">
+        <h4 className="text-sm font-medium mb-2 text-gray-900 px-6">Breadcrumb Variant</h4>
+        <AppBar
+          variant="breadcrumb"
+          breadcrumbs={[
+            { name: 'AI Systems', path: '/ai-systems' },
+            { name: 'Customer Support Bot', path: '/ai-systems/123' },
+          ]}
+          currentSection={{
+            name: 'Evaluation Results',
+            badge: 'Live',
+          }}
+          actionButtons={[
+            {
+              label: 'Run Test',
+              onClick: () => console.log('Run test'),
+              variant: 'primary',
+              icon: <Play className="w-3 h-3" />,
+            },
+          ]}
+        />
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Side-by-side comparison of default and breadcrumb variants showing their different use cases.',
+      },
+    },
+  },
+};

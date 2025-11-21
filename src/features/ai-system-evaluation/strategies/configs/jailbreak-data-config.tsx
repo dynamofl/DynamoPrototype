@@ -51,18 +51,6 @@ export function getJailbreakTableColumns(options?: { hasInputGuardrails?: boolea
       }
     },
     {
-      key: 'behaviorType',
-      label: 'Behavior Type',
-      render: (record) => {
-        const jailbreakRecord = record as unknown as JailbreakEvaluationResult
-        return (
-          <Badge variant="secondary">
-            {jailbreakRecord.behaviorType}
-          </Badge>
-        )
-      }
-    },
-    {
       key: 'attackType',
       label: 'Attack Type',
       render: (record) => {
@@ -231,19 +219,7 @@ export function getJailbreakFilters(options?: { hasInputGuardrails?: boolean; ha
         return values.includes(jailbreakRecord.attackOutcome)
       }
     },
-    {
-      key: 'behaviorType',
-      label: 'Behavior Type',
-      type: 'multiselect',
-      options: [
-        { value: 'Disallowed', label: 'Disallowed' },
-        { value: 'Allowed', label: 'Allowed' }
-      ],
-      filterFn: (record, values) => {
-        const jailbreakRecord = record as unknown as JailbreakEvaluationResult
-        return values.includes(jailbreakRecord.behaviorType)
-      }
-    },
+    
     {
       key: 'attackType',
       label: 'Attack Type',
