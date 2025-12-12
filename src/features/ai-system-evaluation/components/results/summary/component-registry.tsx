@@ -17,6 +17,9 @@ import { AttackTypePerformanceSection } from './attack-type-performance-section'
 import { RiskCombinationsSection } from './risk-combinations-section'
 import { RiskPredictionsSection } from './risk-predictions-section'
 import { RiskStatsSection } from './risk-stats-section'
+import { CategoryResultsSection } from './category-results-section'
+import { HallucinationOverviewSection } from './hallucination-overview-section'
+import { CategoryBreakdownTableSection } from './category-breakdown-table-section'
 
 // Template components
 import {
@@ -40,6 +43,9 @@ export const componentRegistry: Record<string, ComponentType<any>> = {
   PolicyResultsSection,
   AttackTypeResultsSection,
   BehaviorTypeResultsSection,
+  CategoryResultsSection,
+  HallucinationOverviewSection,
+  CategoryBreakdownTableSection,
   TopicAnalysisSection,
   ViolatingBehaviorsSection,
   AttackTypePerformanceSection,

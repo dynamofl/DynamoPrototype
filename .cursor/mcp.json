@@ -3,6 +3,11 @@
     "shadcn": {
       "command": "shadcn",
       "args": ["mcp"]
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["-y", "chrome-devtools-mcp@latest"]
     }
   }
 }
+

@@ -295,9 +295,17 @@ export class EvaluationService {
     const testType = evaluation.config?.testType || evaluation.config?.test_type || 'jailbreak';
 
     // Route to correct table based on test type
-    const tableName = testType === 'compliance'
-      ? 'compliance_prompts'
-      : 'jailbreak_prompts';
+    let tableName: string;
+    switch (testType) {
+      case 'compliance':
+        tableName = 'compliance_prompts';
+        break;
+      case 'hallucination':
+        tableName = 'hallucination_prompts';
+        break;
+      default:
+        tableName = 'jailbreak_prompts';
+    }
 
     // Fetch prompts from the appropriate table
     const { data: prompts, error: promptsError } = await supabase
@@ -360,8 +368,22 @@ export class EvaluationService {
     // Transform prompts using strategy
     const results = strategy.transformPrompts(prompts || []);
 
-    // Calculate summary using strategy
-    const summary = strategy.calculateSummary(results);
+    // Calculate or retrieve summary
+    // For hallucination: Use pre-calculated metrics from database if available
+    // For jailbreak/compliance: Always calculate to ensure correct structure and field names
+    let summary;
+    if (testType === 'hallucination' && evaluation.metrics && Object.keys(evaluation.metrics).length > 0) {
+      // Use pre-calculated metrics from database (hallucination only)
+      summary = {
+        total_tests: results.length,
+        by_policy: {},
+        by_behavior_type: {},
+        ...evaluation.metrics
+      };
+    } else {
+      // Calculate summary from results using strategy
+      summary = strategy.calculateSummary(results);
+    }
 
     // Merge database-stored analytics into summary
     // For jailbreak evaluations, include risk_combinations and risk_predictions if present
@@ -416,9 +438,17 @@ export class EvaluationService {
 
     // Determine table based on test type
     const testType = evaluation.config?.testType || evaluation.config?.test_type || 'jailbreak';
-    const tableName = testType === 'compliance'
-      ? 'compliance_prompts'
-      : 'jailbreak_prompts';
+    let tableName: string;
+    switch (testType) {
+      case 'compliance':
+        tableName = 'compliance_prompts';
+        break;
+      case 'hallucination':
+        tableName = 'hallucination_prompts';
+        break;
+      default:
+        tableName = 'jailbreak_prompts';
+    }
 
     // Get all prompts
     const { data: prompts, error: promptsError } = await supabase
@@ -511,7 +541,7 @@ export class EvaluationService {
 
   /**
    * Get unique topics and attack areas across all evaluations for an AI system
-   * Separated by test type (jailbreak/compliance)
+   * Separated by test type (jailbreak/compliance/hallucination)
    */
   static async getUniqueTopicsAndAttackAreas(aiSystemName: string): Promise<{
     jailbreak: {
@@ -521,6 +551,10 @@ export class EvaluationService {
     compliance: {
       uniqueTopics: number;
       uniqueAttackAreas: number;
+    };
+    hallucination: {
+      uniqueTopics: number;
+      uniqueCategories: number;
     };
   }> {
     await ensureAuthenticated();
@@ -536,7 +570,8 @@ export class EvaluationService {
       console.error('Failed to find AI system:', aiSystemError);
       return {
         jailbreak: { uniqueTopics: 0, uniqueAttackAreas: 0 },
-        compliance: { uniqueTopics: 0, uniqueAttackAreas: 0 }
+        compliance: { uniqueTopics: 0, uniqueAttackAreas: 0 },
+        hallucination: { uniqueTopics: 0, uniqueCategories: 0 }
       };
     }
 
@@ -550,7 +585,8 @@ export class EvaluationService {
       console.error('Failed to fetch evaluations or no evaluations found:', evaluationsError);
       return {
         jailbreak: { uniqueTopics: 0, uniqueAttackAreas: 0 },
-        compliance: { uniqueTopics: 0, uniqueAttackAreas: 0 }
+        compliance: { uniqueTopics: 0, uniqueAttackAreas: 0 },
+        hallucination: { uniqueTopics: 0, uniqueCategories: 0 }
       };
     }
 
@@ -560,6 +596,9 @@ export class EvaluationService {
       .map(e => e.id);
     const complianceEvaluationIds = evaluations
       .filter(e => e.evaluation_type === 'compliance')
+      .map(e => e.id);
+    const hallucinationEvaluationIds = evaluations
+      .filter(e => e.evaluation_type === 'hallucination')
       .map(e => e.id);
 
     // Query jailbreak prompts for unique topics and attack areas
@@ -604,6 +643,35 @@ export class EvaluationService {
       };
     }
 
-    return { jailbreak: jailbreakMetrics, compliance: complianceMetrics };
+    // Query hallucination prompts for unique topics and categories
+    let hallucinationMetrics = { uniqueTopics: 0, uniqueCategories: 0 };
+    if (hallucinationEvaluationIds.length > 0) {
+      const { data: hallucinationTopicsData } = await supabase
+        .from('hallucination_prompts')
+        .select('topic')
+        .in('evaluation_id', hallucinationEvaluationIds)
+        .not('topic', 'is', null);
+
+      const { data: hallucinationCategoriesData } = await supabase
+        .from('hallucination_prompts')
+        .select('violated_category')
+        .in('evaluation_id', hallucinationEvaluationIds)
+        .not('violated_category', 'is', null);
+
+      hallucinationMetrics = {
+        uniqueTopics: hallucinationTopicsData
+          ? new Set(hallucinationTopicsData.map((row) => row.topic)).size
+          : 0,
+        uniqueCategories: hallucinationCategoriesData
+          ? new Set(hallucinationCategoriesData.map((row) => row.violated_category)).size
+          : 0
+      };
+    }
+
+    return {
+      jailbreak: jailbreakMetrics,
+      compliance: complianceMetrics,
+      hallucination: hallucinationMetrics
+    };
   }
 }

@@ -41,6 +41,7 @@ export function aggregateEvaluationMetrics(
   uniqueMetrics?: {
     jailbreak: { uniqueTopics: number; uniqueAttackAreas: number };
     compliance: { uniqueTopics: number; uniqueAttackAreas: number };
+    hallucination: { uniqueTopics: number; uniqueCategories: number };
   }
 ): EvaluationSummaryData {
   // Filter completed evaluations only
@@ -56,13 +57,16 @@ export function aggregateEvaluationMetrics(
     return { hasData: false };
   }
 
-  // Group evaluations by category (jailbreak/compliance)
+  // Group evaluations by category (jailbreak/compliance/hallucination)
   // Use strict filtering - only count evaluations that are explicitly typed
   const jailbreakEvaluations = completedEvaluations.filter(
     (e) => e.type === 'jailbreak'
   );
   const complianceEvaluations = completedEvaluations.filter(
     (e) => e.type === 'compliance'
+  );
+  const hallucinationEvaluations = completedEvaluations.filter(
+    (e) => e.type === 'hallucination'
   );
 
   const result: EvaluationSummaryData = { hasData: false };
@@ -71,6 +75,8 @@ export function aggregateEvaluationMetrics(
   const jailbreakUniqueTopics = uniqueMetrics?.jailbreak?.uniqueTopics ?? getUniqueTopicsForEvaluations(jailbreakEvaluations);
   const jailbreakUniqueAttackAreas = uniqueMetrics?.jailbreak?.uniqueAttackAreas ?? getUniqueAttackAreasForEvaluations(jailbreakEvaluations);
   const complianceUniqueTopics = uniqueMetrics?.compliance?.uniqueTopics ?? getUniqueTopicsForEvaluations(complianceEvaluations);
+  const hallucinationUniqueTopics = uniqueMetrics?.hallucination?.uniqueTopics ?? getUniqueTopicsForEvaluations(hallucinationEvaluations);
+  const hallucinationUniqueCategories = uniqueMetrics?.hallucination?.uniqueCategories ?? 0;
 
   // Process jailbreak evaluations - only show if 1 or more completed evaluations
   if (jailbreakEvaluations.length >= 1) {
@@ -94,6 +100,17 @@ export function aggregateEvaluationMetrics(
     result.hasData = true;
   }
 
+  // Process hallucination evaluations - only show if 1 or more completed evaluations
+  if (hallucinationEvaluations.length >= 1) {
+    result.hallucination = aggregateCategoryMetrics(
+      hallucinationEvaluations,
+      'hallucination',
+      hallucinationUniqueTopics,
+      hallucinationUniqueCategories // Use categories instead of attack areas
+    );
+    result.hasData = true;
+  }
+
   return result;
 }
 
@@ -102,11 +119,13 @@ export function aggregateEvaluationMetrics(
  */
 function aggregateCategoryMetrics(
   evaluations: EvaluationTest[],
-  category: 'jailbreak' | 'compliance',
+  category: 'jailbreak' | 'compliance' | 'hallucination',
   uniqueTopics: number,
   uniqueAttackAreas: number
 ): EvaluationCategoryMetrics {
-  const categoryLabel = category === 'jailbreak' ? 'Jailbreak' : 'Compliance';
+  const categoryLabel = category === 'jailbreak' ? 'Jailbreak' :
+                        category === 'compliance' ? 'Compliance' :
+                        'Hallucination';
 
   // Calculate aggregated metrics
   let totalPrompts = 0;
@@ -133,6 +152,7 @@ function aggregateCategoryMetrics(
 
     // Determine evaluation type
     const isCompliance = category === 'compliance';
+    const isHallucination = category === 'hallucination';
 
     // PRIORITY 1: Use metrics JSONB column from evaluations table
     // These are the pre-calculated metrics stored as JSONB
@@ -153,6 +173,14 @@ function aggregateCategoryMetrics(
       withGuardrailsRate = hasGuardrailData
         ? (metrics?.ai_system_with_guardrails?.compliance_rate ?? 0)
         : 0;
+    } else if (isHallucination) {
+      // For hallucination: Use safety rate (100 - hallucination_rate)
+      // Higher is better for hallucination (means less hallucinations)
+      const hallucinationRate = metrics?.hallucination_rate ?? 0;
+      aiSystemOnlyRate = 100 - hallucinationRate;
+
+      // Hallucination typically doesn't use guardrails in the same way
+      withGuardrailsRate = 0;
     } else {
       // For jailbreak: Use existing flat structure
       aiSystemOnlyRate = metrics?.ai_system_attack_success_rate
@@ -239,24 +267,82 @@ function aggregateCategoryMetrics(
   const latestMetrics = latestEvaluation?.metrics as any;
   const isCompliance = category === 'compliance';
 
+  // Helper function to check if an evaluation has meaningful guardrail data
+  // Uses the same logic as the trend data hasGuardrails check
+  const hasGuardrailDataForEvaluation = (evaluation: EvaluationTest): boolean => {
+    const evalMetrics = evaluation.metrics as any;
+    const overallMetrics = evaluation.result?.overallMetrics as any;
+
+    if (isCompliance) {
+      // For compliance: Check if guardrails object exists and has different values
+      return evalMetrics?.ai_system_with_guardrails?.compliance_rate !== undefined &&
+        evalMetrics?.ai_system_with_guardrails?.compliance_rate !== null &&
+        (
+          evalMetrics?.ai_system_with_guardrails?.compliance_rate !== evalMetrics?.ai_system?.compliance_rate ||
+          evalMetrics?.ai_system_with_guardrails?.tp !== evalMetrics?.ai_system?.tp ||
+          evalMetrics?.ai_system_with_guardrails?.tn !== evalMetrics?.ai_system?.tn ||
+          evalMetrics?.ai_system_with_guardrails?.fp !== evalMetrics?.ai_system?.fp ||
+          evalMetrics?.ai_system_with_guardrails?.fn !== evalMetrics?.ai_system?.fn
+        );
+    } else {
+      // For jailbreak: Calculate rates using all possible sources
+      const aiSystemOnlyRate = evalMetrics?.ai_system_attack_success_rate
+        ?? overallMetrics?.summaryMetrics?.aiSystemAttackSuccessRate
+        ?? overallMetrics?.aiSystem?.aiSystemOnlySuccessRate
+        ?? overallMetrics?.aiSystemOnlySuccessRate
+        ?? overallMetrics?.aiSystem?.successRate
+        ?? overallMetrics?.successRate
+        ?? 0;
+
+      const withGuardrailsRate = evalMetrics?.ai_system_guardrail_attack_success_rate
+        ?? evalMetrics?.guardrail_success_rate
+        ?? overallMetrics?.summaryMetrics?.aiSystemGuardrailAttackSuccessRate
+        ?? overallMetrics?.aiSystem?.successRate
+        ?? overallMetrics?.successRate
+        ?? 0;
+
+      // Check if rates differ or if guardrail fields explicitly exist
+      return aiSystemOnlyRate !== withGuardrailsRate ||
+        (evalMetrics?.guardrail_success_rate !== undefined && evalMetrics?.guardrail_success_rate !== null) ||
+        (overallMetrics?.aiSystem?.aiSystemOnlySuccessRate !== undefined && overallMetrics.aiSystem.aiSystemOnlySuccessRate !== overallMetrics.aiSystem.successRate) ||
+        (overallMetrics?.aiSystemOnlySuccessRate !== undefined && overallMetrics.aiSystemOnlySuccessRate !== overallMetrics.successRate) ||
+        (overallMetrics?.guardrails && overallMetrics.guardrails.length > 0);
+    }
+  };
+
   // Extract latest rates based on category (same logic as trend data extraction)
   let latestAISystemOnlySuccessRate: number;
   let latestWithGuardrailsSuccessRate: number | undefined;
 
   if (isCompliance) {
     latestAISystemOnlySuccessRate = latestMetrics?.ai_system?.compliance_rate ?? 0;
-    const hasGuardrailData = latestMetrics?.ai_system_with_guardrails?.compliance_rate !== undefined
-      && latestMetrics?.ai_system_with_guardrails?.compliance_rate !== null;
-    latestWithGuardrailsSuccessRate = hasGuardrailData
-      ? latestMetrics?.ai_system_with_guardrails?.compliance_rate
-      : undefined;
   } else {
     latestAISystemOnlySuccessRate = latestMetrics?.ai_system_attack_success_rate ?? 0;
-    const hasGuardrailData = latestMetrics?.ai_system_guardrail_attack_success_rate !== undefined
-      && latestMetrics?.ai_system_guardrail_attack_success_rate !== null;
-    latestWithGuardrailsSuccessRate = hasGuardrailData
-      ? latestMetrics?.ai_system_guardrail_attack_success_rate
-      : undefined;
+  }
+
+  // Find the latest evaluation that has guardrail data
+  // This could be the latest evaluation or an earlier one if the latest doesn't have guardrails
+  const latestEvaluationWithGuardrails = sortedByCompletion.find(
+    (evaluation) => hasGuardrailDataForEvaluation(evaluation)
+  );
+
+  let latestGuardrailEvaluationDate: string | undefined;
+
+  if (latestEvaluationWithGuardrails) {
+    const guardrailMetrics = latestEvaluationWithGuardrails.metrics as any;
+    const guardrailOverallMetrics = latestEvaluationWithGuardrails.result?.overallMetrics as any;
+    latestGuardrailEvaluationDate = latestEvaluationWithGuardrails.completedAt || latestEvaluationWithGuardrails.createdAt;
+    if (isCompliance) {
+      latestWithGuardrailsSuccessRate = guardrailMetrics?.ai_system_with_guardrails?.compliance_rate;
+    } else {
+      // Use all possible sources for guardrail rate (same as trend data)
+      latestWithGuardrailsSuccessRate = guardrailMetrics?.ai_system_guardrail_attack_success_rate
+        ?? guardrailMetrics?.guardrail_success_rate
+        ?? guardrailOverallMetrics?.summaryMetrics?.aiSystemGuardrailAttackSuccessRate;
+    }
+  } else {
+    latestWithGuardrailsSuccessRate = undefined;
+    latestGuardrailEvaluationDate = undefined;
   }
 
   return {
@@ -269,6 +355,7 @@ function aggregateCategoryMetrics(
     latestWithGuardrailsSuccessRate,
     latestEvaluationDate: latestEvaluation?.completedAt || latestEvaluation?.createdAt,
     latestEvaluationName: latestEvaluation?.name,
+    latestGuardrailEvaluationDate,
     totalPrompts,
     totalUniqueTopics: uniqueTopics,
     totalUniqueAttackAreas: uniqueAttackAreas,

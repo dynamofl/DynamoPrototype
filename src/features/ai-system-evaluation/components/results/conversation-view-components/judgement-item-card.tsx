@@ -81,12 +81,12 @@ export function JudgementItemCard({
 
   return (
     <motion.div
-      className={`bg-gray-0 border border-gray-200 rounded-lg px-1 flex flex-col w-full ${
+      className={`bg-gray-0 border border-gray-200  px-1 flex flex-col w-full ${
         isAnnotationMode
-          ? 'shadow-md'
+          ? 'rounded-t-lg'
           : isExpanded
-            ? 'shadow-md'
-            : 'hover:bg-gray-50'
+            ? 'shadow-md rounded-lg'
+            : 'hover:bg-gray-50 rounded-lg'
       } ${className}`}
     >
       {/* Main Content Area */}

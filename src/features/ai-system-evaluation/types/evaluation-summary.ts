@@ -1,8 +1,8 @@
 // Evaluation Summary Types - For aggregated metrics across multiple evaluations
 
 export interface EvaluationCategoryMetrics {
-  category: 'jailbreak' | 'compliance';
-  categoryLabel: string; // "Jailbreak" or "Compliance"
+  category: 'jailbreak' | 'compliance' | 'hallucination';
+  categoryLabel: string; // "Jailbreak", "Compliance", or "Hallucination"
 
   // Aggregated metrics
   totalEvaluations: number;
@@ -14,6 +14,7 @@ export interface EvaluationCategoryMetrics {
   latestWithGuardrailsSuccessRate: number | undefined;
   latestEvaluationDate: string | undefined;
   latestEvaluationName: string | undefined;
+  latestGuardrailEvaluationDate: string | undefined; // Date of the latest evaluation with guardrails
 
   totalPrompts: number;
   totalUniqueTopics: number;
@@ -32,5 +33,6 @@ export interface EvaluationCategoryMetrics {
 export interface EvaluationSummaryData {
   jailbreak?: EvaluationCategoryMetrics;
   compliance?: EvaluationCategoryMetrics;
+  hallucination?: EvaluationCategoryMetrics;
   hasData: boolean;
 }

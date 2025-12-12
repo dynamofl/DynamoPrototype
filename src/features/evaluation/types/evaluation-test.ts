@@ -1,7 +1,7 @@
 import type { EvaluationConfig, EvaluationInput, EvaluationResult } from './evaluation';
 
 export type EvaluationTestStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
-export type EvaluationTestType = 'compliance' | 'jailbreak';
+export type EvaluationTestType = 'compliance' | 'jailbreak' | 'hallucination';
 
 // Metrics structure for jailbreak evaluations
 export interface JailbreakMetrics {

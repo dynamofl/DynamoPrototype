@@ -34,3 +34,22 @@ export const BEHAVIOR_TYPE_OPTIONS = [
 export const PAGE_SIZE_OPTIONS = [20, 50, 100] as const
 
 export const DEFAULT_PAGE_SIZE = 20
+
+// Hallucination evaluation constants
+export const HALLUCINATION_PRED_LABEL_OPTIONS = [
+  { value: 'safe', label: 'Safe' },
+  { value: 'unsafe', label: 'Unsafe' }
+] as const
+
+export const HALLUCINATION_CATEGORY_OPTIONS = [
+  { value: 'N/A', label: 'N/A' },
+  { value: 'Citation / Attribution Errors', label: 'Citation / Attribution Errors' },
+  { value: 'Entity Inaccuracies', label: 'Entity Inaccuracies' },
+  { value: 'Context contradictions', label: 'Context Contradictions' }
+] as const
+
+export const HALLUCINATION_SAFETY_SCORE_RANGES = [
+  { value: 'high', label: 'High (≥ 80%)', min: 0.8, max: 1.0 },
+  { value: 'medium', label: 'Medium (50-80%)', min: 0.5, max: 0.8 },
+  { value: 'low', label: 'Low (< 50%)', min: 0, max: 0.5 }
+] as const

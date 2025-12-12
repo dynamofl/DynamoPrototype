@@ -96,7 +96,7 @@ export function ConfigurationStep({
 
         {/* Provider Configuration */}
         <div className="space-y-2 ">
-          <Label htmlFor="api-key-name">API Providerss</Label>
+          <Label htmlFor="api-key-name">AI System Provider</Label>
           <div className="flex items-center space-x-1 p-1 bg-gray-50 rounded-lg border border-gray-200">
             <AISystemIcon
               type={selectedProvider.icon as any}

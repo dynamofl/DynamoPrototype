@@ -161,7 +161,7 @@ export interface GuardrailDetail {
 /**
  * Test type enum
  */
-export type TestType = 'jailbreak' | 'compliance' | 'quality' | 'bias'
+export type TestType = 'jailbreak' | 'compliance' | 'hallucination' | 'quality' | 'bias'
 
 /**
  * Evaluation type enum (more specific variants)
@@ -170,6 +170,7 @@ export type EvaluationType =
   | 'jailbreak'
   | 'compliance'
   | 'compliance_with_perturbations'
+  | 'hallucination'
   | 'quality'
   | 'bias'
 

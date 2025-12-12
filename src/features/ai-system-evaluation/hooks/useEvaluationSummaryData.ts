@@ -38,10 +38,11 @@ export function useEvaluationSummaryData(
         }
 
         // Fetch globally unique topics and attack areas across ALL evaluations
-        // Separated by test type (jailbreak/compliance)
+        // Separated by test type (jailbreak/compliance/hallucination)
         let uniqueMetrics = {
           jailbreak: { uniqueTopics: 0, uniqueAttackAreas: 0 },
-          compliance: { uniqueTopics: 0, uniqueAttackAreas: 0 }
+          compliance: { uniqueTopics: 0, uniqueAttackAreas: 0 },
+          hallucination: { uniqueTopics: 0, uniqueCategories: 0 }
         };
         if (aiSystemName) {
           uniqueMetrics = await EvaluationService.getUniqueTopicsAndAttackAreas(aiSystemName);

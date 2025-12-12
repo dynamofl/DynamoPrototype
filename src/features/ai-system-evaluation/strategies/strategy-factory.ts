@@ -4,9 +4,11 @@
 import type { EvaluationStrategy } from './base-strategy'
 import { JailbreakStrategy } from './jailbreak-strategy.tsx'
 import { ComplianceStrategy } from './compliance-strategy.tsx'
+import { HallucinationStrategy } from './hallucination-strategy.tsx'
 import type { BaseEvaluationResult } from '../types/base-evaluation'
 import type { JailbreakEvaluationResult } from '../types/jailbreak-evaluation'
 import type { ComplianceEvaluationResult } from '../types/compliance-evaluation'
+import type { HallucinationEvaluationResult } from '../types/hallucination-evaluation'
 
 /**
  * Registry of all available evaluation strategies
@@ -17,7 +19,8 @@ import type { ComplianceEvaluationResult } from '../types/compliance-evaluation'
  */
 const STRATEGY_REGISTRY: Record<string, EvaluationStrategy> = {
   'jailbreak': new JailbreakStrategy() as EvaluationStrategy,
-  'compliance': new ComplianceStrategy() as EvaluationStrategy
+  'compliance': new ComplianceStrategy() as EvaluationStrategy,
+  'hallucination': new HallucinationStrategy() as EvaluationStrategy
   // Future test types can be added here:
   // 'quality': new QualityStrategy(),
   // 'bias': new BiasStrategy(),
@@ -79,12 +82,23 @@ export function isComplianceResult(result: BaseEvaluationResult): result is Comp
 }
 
 /**
+ * Type guard to check if a result is a hallucination result
+ */
+export function isHallucinationResult(result: BaseEvaluationResult): result is HallucinationEvaluationResult {
+  return 'context' in result &&
+         'pred_label' in result &&
+         'violated_category' in result &&
+         'safety_score' in result
+}
+
+/**
  * Detect test type from a result record
  * Useful when test type is not explicitly available
  */
 export function detectTestTypeFromResult(result: BaseEvaluationResult): string {
   if (isJailbreakResult(result)) return 'jailbreak'
   if (isComplianceResult(result)) return 'compliance'
+  if (isHallucinationResult(result)) return 'hallucination'
 
   // Default to jailbreak for backward compatibility
   return 'jailbreak'

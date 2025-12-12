@@ -100,7 +100,11 @@ export function SummaryMetricCardDetailed({
   isEmpty = false,
   emptyMessage = 'No Evaluation Data to Display',
 }: SummaryMetricCardDetailedProps) {
-  const hasGuardrails = chartData?.some(d => d.withGuardrails !== undefined && d.withGuardrails !== null);
+  // Check if chart data has guardrails (for chart line rendering)
+  const hasGuardrailsInChart = chartData?.some(d => d.withGuardrails !== undefined && d.withGuardrails !== null);
+
+  // Check if guardrail metric should be shown (only if we have a guardrail value to display)
+  const showGuardrailMetric = aiSystemGuardrailAvg !== undefined && aiSystemGuardrailAvg !== null;
 
   // Prepare chart data - single dataset with both solid and dotted lines
   const processedChartData = chartData ? prepareChartData(chartData) : undefined;
@@ -151,10 +155,10 @@ export function SummaryMetricCardDetailed({
             {/* AI System metric */}
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-[--chart-1]" />
                 <p className="text-xs font-425 text-gray-600 leading-5">
                   {aiSystemLabel}
                 </p>
+                <div className="w-2 h-2 rounded-full bg-[--chart-1]" />
               </div>
               <p className="text-xl font-550 text-gray-900 leading-6 tracking-[-0.3px]">
                 --
@@ -199,32 +203,34 @@ export function SummaryMetricCardDetailed({
           {/* Metrics Row */}
           <div className="flex items-center justify-between h-12">
             {/* AI System metric */}
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-0.5">
               <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-[--chart-1]" />
                 <p className="text-xs font-425 text-gray-600 leading-5">
                   {aiSystemLabel}
                 </p>
                 <span className="text-[10px] font-500 text-gray-500 leading-4">(Latest)</span>
+                <div className="w-2 h-2 rounded-full bg-[--chart-1]" />
               </div>
               <p className="text-xl font-550 text-gray-900 leading-6 tracking-[-0.3px]">
                 {aiSystemAvg ?? '--'}
               </p>
             </div>
 
-            {/* AI System + Guardrail metric */}
-            <div className="flex flex-col gap-1 text-right">
-              <div className="flex items-center gap-1.5 justify-end">
-                <div className="w-2 h-2 rounded-full bg-[--chart-2]" />
-                <p className="text-xs font-425 text-gray-600 leading-5 whitespace-nowrap">
-                  {aiSystemGuardrailLabel}
+            {/* AI System + Guardrail metric - only show if there's a guardrail value */}
+            {showGuardrailMetric && (
+              <div className="flex flex-col gap-0.5 text-right">
+                <div className="flex items-center gap-1.5 justify-end">
+                  <div className="w-2 h-2 rounded-full bg-[--chart-2]" />
+                  <p className="text-xs font-425 text-gray-600 leading-5 whitespace-nowrap">
+                    {aiSystemGuardrailLabel}
+                  </p>
+                  <span className="text-[10px] font-500 text-gray-500 leading-4">(Latest)</span>
+                </div>
+                <p className="text-xl font-550 text-gray-900 leading-6 tracking-[-0.3px] whitespace-nowrap">
+                  {aiSystemGuardrailAvg ?? '--'}
                 </p>
-                <span className="text-[10px] font-500 text-gray-500 leading-4">(Latest)</span>
               </div>
-              <p className="text-xl font-550 text-gray-900 leading-6 tracking-[-0.3px] whitespace-nowrap">
-                {aiSystemGuardrailAvg ?? '--'}
-              </p>
-            </div>
+            )}
           </div>
 
           {/* Chart Section */}
@@ -286,7 +292,7 @@ export function SummaryMetricCardDetailed({
                   </defs>
 
                   {/* Leading dotted line (from start to first guardrail) - render first (behind) */}
-                  {hasGuardrails && (
+                  {hasGuardrailsInChart && (
                     <Area
                       dataKey="withGuardrailsLeadingDotted"
                       fill="url(#fillWithGuardrailsLight)"
@@ -299,7 +305,7 @@ export function SummaryMetricCardDetailed({
                   )}
 
                   {/* Trailing dotted line (from last guardrail to end) - render second */}
-                  {hasGuardrails && (
+                  {hasGuardrailsInChart && (
                     <Area
                       dataKey="withGuardrailsTrailingDotted"
                       fill="url(#fillWithGuardrailsLight)"
@@ -312,7 +318,7 @@ export function SummaryMetricCardDetailed({
                   )}
 
                   {/* Solid guardrail line (actual data) - render third */}
-                  {hasGuardrails && (
+                  {hasGuardrailsInChart && (
                     <Area
                       dataKey="withGuardrailsSolid"
                       fill="url(#fillWithGuardrails)"
