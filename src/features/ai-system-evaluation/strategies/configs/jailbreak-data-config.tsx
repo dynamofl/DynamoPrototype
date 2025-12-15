@@ -536,8 +536,29 @@ export function getJailbreakConversationSections(): ConversationSectionConfig[] 
       title: 'AI System Response',
       order: 3,
       render: (record: BaseEvaluationResult, ctx?: HighlightingContext) => {
-        // Get system response - it might be a string or AISystemResponse object
+        // Check if prompt is still pending/running
         const recordAny = record as any
+        const isPending = recordAny.status === 'pending' || recordAny.status === 'running'
+
+        // Show skeleton loader if pending
+        if (isPending) {
+          return (
+            <div className="space-y-2">
+              <h3 className="px-2 text-[0.8125rem] font-450 leading-4 text-gray-600">
+                AI System Response
+              </h3>
+              <div className="px-2 space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-4 w-4/5" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+              </div>
+            </div>
+          )
+        }
+
+        // Get system response - it might be a string or AISystemResponse object
         const systemResponseRaw = record.system_response || recordAny.systemResponse
 
         // Extract content string from response

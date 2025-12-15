@@ -9,6 +9,33 @@ import type { BaseEvaluationOutput } from '@/features/ai-system-evaluation/types
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
 
+// Checkpoint-based progress tracking types
+export interface CheckpointStatus {
+  status: 'pending' | 'in_progress' | 'completed';
+  started_at?: string;
+  completed_at?: string;
+  data?: Record<string, any>;
+}
+
+export interface PolicyProgress {
+  id: string;
+  name: string;
+  current: number;
+  total: number;
+  status: 'pending' | 'in_progress' | 'completed';
+}
+
+export interface CheckpointState {
+  current_checkpoint: 'topics' | 'prompts' | 'evaluation' | 'summary' | null;
+  checkpoints: {
+    topics: CheckpointStatus;
+    prompts: CheckpointStatus;
+    evaluation: CheckpointStatus;
+    summary: CheckpointStatus;
+  };
+  policies: PolicyProgress[];
+}
+
 export interface EvaluationProgress {
   total: number;
   completed: number;
@@ -16,6 +43,57 @@ export interface EvaluationProgress {
   currentStage?: string;
   currentPrompt?: string;
   status: string;
+  // New checkpoint-based fields
+  currentCheckpoint?: string | null;
+  checkpoints?: CheckpointState['checkpoints'];
+  policies?: PolicyProgress[];
+}
+
+/**
+ * Calculate overall progress percentage across all checkpoints
+ * Weights: Topics (5%), Prompts (5%), Evaluation (85%), Summary (5%)
+ */
+function calculateCheckpointPercentage(checkpointState: CheckpointState | null | undefined): number {
+  if (!checkpointState?.checkpoints) {
+    return 0;
+  }
+
+  const { checkpoints } = checkpointState;
+  let totalProgress = 0;
+
+  // Topics checkpoint: 5% weight
+  if (checkpoints.topics?.status === 'completed') {
+    totalProgress += 5;
+  } else if (checkpoints.topics?.status === 'in_progress') {
+    totalProgress += 2.5; // Half of 5%
+  }
+
+  // Prompts checkpoint: 5% weight
+  if (checkpoints.prompts?.status === 'completed') {
+    totalProgress += 5;
+  } else if (checkpoints.prompts?.status === 'in_progress') {
+    totalProgress += 2.5; // Half of 5%
+  }
+
+  // Evaluation checkpoint: 85% weight (main phase)
+  if (checkpoints.evaluation?.status === 'completed') {
+    totalProgress += 85;
+  } else if (checkpoints.evaluation?.status === 'in_progress') {
+    const evalData = checkpoints.evaluation.data;
+    const evalPercentage = evalData?.total_prompts && evalData.total_prompts > 0
+      ? (evalData.completed_prompts || 0) / evalData.total_prompts
+      : 0;
+    totalProgress += 85 * evalPercentage;
+  }
+
+  // Summary checkpoint: 5% weight
+  if (checkpoints.summary?.status === 'completed') {
+    totalProgress += 5;
+  } else if (checkpoints.summary?.status === 'in_progress') {
+    totalProgress += 2.5; // Half of 5%
+  }
+
+  return Math.round(totalProgress);
 }
 
 export interface EvaluationSummary {
@@ -486,15 +564,33 @@ export class EvaluationService {
         },
         (payload) => {
           const evaluation = payload.new;
-          const progressData = {
-            total: evaluation.total_prompts || 0,
-            completed: evaluation.completed_prompts || 0,
-            percentage: evaluation.total_prompts > 0
-              ? (evaluation.completed_prompts / evaluation.total_prompts) * 100
-              : 0,
+          const checkpointState = evaluation.checkpoint_state || {};
+
+          // Use checkpoint data as primary source, fallback to legacy fields
+          const total = checkpointState.checkpoints?.evaluation?.data?.total_prompts
+            || evaluation.total_prompts
+            || 0;
+          const completed = checkpointState.checkpoints?.evaluation?.data?.completed_prompts
+            || evaluation.completed_prompts
+            || 0;
+
+          // Calculate percentage using checkpoint-aware function if checkpoint state exists
+          // This includes all phases: Topics (5%), Prompts (5%), Evaluation (85%), Summary (5%)
+          const percentage = checkpointState.checkpoints
+            ? calculateCheckpointPercentage(checkpointState)
+            : (total > 0 ? Math.round((completed / total) * 100) : 0);
+
+          const progressData: EvaluationProgress = {
+            total,
+            completed,
+            percentage,
             currentStage: evaluation.current_stage,
             currentPrompt: evaluation.current_prompt_text,
-            status: evaluation.status
+            status: evaluation.status,
+            // Checkpoint-based fields
+            currentCheckpoint: checkpointState.current_checkpoint,
+            checkpoints: checkpointState.checkpoints,
+            policies: checkpointState.policies || []
           };
 
           onProgress(progressData);

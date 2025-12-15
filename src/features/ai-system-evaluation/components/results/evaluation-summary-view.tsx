@@ -7,6 +7,7 @@ import { SummaryViewRenderer } from "./summary/summary-view-renderer";
 import { SummaryNavigation, type NavigationSection } from "./summary/summary-navigation";
 import { Badge } from "@/components/ui/badge";
 import { ChatComposer } from "./summary/chat-composer";
+import { ProgressCheckpointsSection } from "./summary/progress-checkpoints-section";
 
 interface EvaluationSummaryViewProps {
   summary: BaseEvaluationSummary;
@@ -41,6 +42,16 @@ interface EvaluationSummaryViewProps {
     stage: string;
     message?: string;
     startedAt?: string;
+    policies?: Array<{
+      id: string;
+      name: string;
+      current: number;
+      total: number;
+      stage: string;
+    }>;
+    // New checkpoint-based fields
+    currentCheckpoint?: string | null;
+    checkpoints?: any; // CheckpointState['checkpoints']
   };
 }
 
@@ -104,8 +115,9 @@ export function EvaluationSummaryView({
     evaluationProgress
   };
 
+  // Filter out progress-checkpoints from navigation - it's rendered separately
   const navigationSections: NavigationSection[] = viewConfig
-    .filter(section => section.label) // Only show sections with labels
+    .filter(section => section.label && section.key !== 'progress-checkpoints') // Exclude progress checkpoints
     .map(section => ({
       key: section.key,
       label: section.label!,
@@ -179,21 +191,26 @@ export function EvaluationSummaryView({
     };
   }, [navigationSections]);
 
+  // Check if evaluation is in progress
+  const isInProgress = evaluationStatus === 'running' || evaluationStatus === 'pending';
+
   return (
     <div
 
       className="relative w-full py-6"
     >
-      {/* Left Sidebar Navigation - Fixed Position */}
-      <motion.div  initial={{ opacity: 0,scale: 0.95 }}
-      animate={{ opacity: 1,scale: 1 }}
-      exit={{ opacity: 0,scale: 0.95 }} className="fixed left-16 top-32 z-10">
-        <SummaryNavigation
-          sections={navigationSections}
-          activeSection={activeSection}
-          onSectionClick={handleSectionClick}
-        />
-      </motion.div>
+      {/* Left Sidebar Navigation - Only show when completed */}
+      {!isInProgress && (
+        <motion.div  initial={{ opacity: 0,scale: 0.95 }}
+        animate={{ opacity: 1,scale: 1 }}
+        exit={{ opacity: 0,scale: 0.95 }} className="fixed left-16 top-32 z-10">
+          <SummaryNavigation
+            sections={navigationSections}
+            activeSection={activeSection}
+            onSectionClick={handleSectionClick}
+          />
+        </motion.div>
+      )}
 
       {/* Main Content - Centered */}
       <motion.div  initial={{ opacity: 0,scale: 0.99 }}
@@ -226,20 +243,52 @@ export function EvaluationSummaryView({
         </div>
         </div>
 
+        {/* Progress Checkpoints - Only show when running/pending */}
+        {isInProgress && evaluationProgress && (
+          <div className="max-w-4xl mx-auto">
+            <ProgressCheckpointsSection
+              current={evaluationProgress.current}
+              total={evaluationProgress.total}
+              stage={evaluationProgress.stage}
+              startedAt={evaluationProgress.startedAt}
+              policies={evaluationProgress.policies}
+              checkpointState={
+                evaluationProgress.checkpoints
+                  ? {
+                      current_checkpoint: evaluationProgress.currentCheckpoint as any,
+                      checkpoints: evaluationProgress.checkpoints,
+                      policies: (evaluationProgress.policies || []).map(p => ({
+                        id: p.id,
+                        name: p.name,
+                        current: p.current,
+                        total: p.total,
+                        status: p.current === p.total
+                          ? 'completed' as const
+                          : p.current > 0
+                          ? 'in_progress' as const
+                          : 'pending' as const
+                      }))
+                    }
+                  : undefined
+              }
+            />
+          </div>
+        )}
 
-
-        {/* Config-driven summary view rendering */}
-        <SummaryViewRenderer
-          strategy={strategy}
-          summary={summary}
-          testType={testType}
-          hasGuardrails={hasGuardrails}
-          topicAnalysis={topicAnalysis}
-          evaluationResults={evaluationResults}
-          config={config}
-          evaluationStatus={evaluationStatus}
-          evaluationProgress={evaluationProgress}
-        />
+        {/* Summary Sections - Only show when completed/failed */}
+        {!isInProgress && (
+          <SummaryViewRenderer
+            strategy={strategy}
+            summary={summary}
+            testType={testType}
+            hasGuardrails={hasGuardrails}
+            topicAnalysis={topicAnalysis}
+            evaluationResults={evaluationResults}
+            config={config}
+            evaluationStatus={evaluationStatus}
+            evaluationProgress={evaluationProgress}
+          />
+        )}
 
         {/* Chat Composer at bottom */}
         <div className="mt-12 mb-8">

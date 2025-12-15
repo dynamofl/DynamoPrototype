@@ -250,38 +250,49 @@ export function EvaluationResults({
         actions={
           <div className="flex gap-2 align-center items-center">
             {/* Show circular progress badge only in Data view when evaluation is running */}
-            {(evaluationStatus === 'running' || evaluationStatus === 'pending') && selectedTab === 'data' && evaluationProgress && (
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-full">
-                <div className="relative w-5 h-5">
-                  <svg className="w-5 h-5 -rotate-90" viewBox="0 0 20 20">
-                    {/* Background circle */}
-                    <circle
-                      cx="10"
-                      cy="10"
-                      r="8"
-                      fill="none"
-                      stroke="#FEF3C7"
-                      strokeWidth="2"
-                    />
-                    {/* Progress circle */}
-                    <circle
-                      cx="10"
-                      cy="10"
-                      r="8"
-                      fill="none"
-                      stroke="#F59E0B"
-                      strokeWidth="2"
-                      strokeDasharray={`${2 * Math.PI * 8}`}
-                      strokeDashoffset={`${2 * Math.PI * 8 * (1 - (evaluationProgress.current / evaluationProgress.total))}`}
-                      className="transition-all duration-300"
-                    />
-                  </svg>
+            {(evaluationStatus === 'running' || evaluationStatus === 'pending') && selectedTab === 'data' && evaluationProgress && (() => {
+              const stageLower = evaluationProgress.stage.toLowerCase();
+              const isPreparingStage = stageLower.includes('generating topics') ||
+                                       stageLower.includes('topic generation') ||
+                                       stageLower.includes('generating test prompts') ||
+                                       stageLower.includes('generating prompts') ||
+                                       stageLower.includes('prompt generation');
+              const statusText = isPreparingStage ? 'Preparing' : 'In Progress';
+              const progressPercentage = Math.round((evaluationProgress.current / evaluationProgress.total) * 100);
+
+              return (
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-full">
+                  <div className="relative w-5 h-5">
+                    <svg className="w-5 h-5 -rotate-90" viewBox="0 0 20 20">
+                      {/* Background circle */}
+                      <circle
+                        cx="10"
+                        cy="10"
+                        r="8"
+                        fill="none"
+                        stroke="#FEF3C7"
+                        strokeWidth="2"
+                      />
+                      {/* Progress circle */}
+                      <circle
+                        cx="10"
+                        cy="10"
+                        r="8"
+                        fill="none"
+                        stroke="#F59E0B"
+                        strokeWidth="2"
+                        strokeDasharray={`${2 * Math.PI * 8}`}
+                        strokeDashoffset={`${2 * Math.PI * 8 * (1 - (evaluationProgress.current / evaluationProgress.total))}`}
+                        className="transition-all duration-300"
+                      />
+                    </svg>
+                  </div>
+                  <span className="text-xs font-450 text-amber-700">
+                    {statusText} {progressPercentage}%
+                  </span>
                 </div>
-                <span className="text-xs font-450 text-amber-700">
-                  {Math.round((evaluationProgress.current / evaluationProgress.total) * 100)}% ({evaluationProgress.current}/{evaluationProgress.total})
-                </span>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Show Stop Evaluation button when running */}
             {(evaluationStatus === 'running' || evaluationStatus === 'pending') && (

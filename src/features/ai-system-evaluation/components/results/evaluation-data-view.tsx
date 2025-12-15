@@ -440,19 +440,21 @@ export function EvaluationDataView({
       className="flex flex-col h-full py-2"
       onWheel={(e) => e.stopPropagation()}
     >
-      {/* Filters */}
-      <GenericEvaluationFilters
-        strategy={strategy}
-        filters={filters}
-        onFiltersChange={handleFiltersChange}
-        currentView={currentView}
-        onViewChange={handleViewChange}
-        hasGuardrails={hasGuardrails}
-        data={allData}
-        isAnnotationModeEnabled={isAnnotationModeEnabled}
-        onAnnotationModeChange={setIsAnnotationModeEnabled}
-        canEnableAnnotation={canEnableAnnotation}
-      />
+      {/* Filters - Hide when preparing data */}
+      {!(isRunning && allData.length === 0) && (
+        <GenericEvaluationFilters
+          strategy={strategy}
+          filters={filters}
+          onFiltersChange={handleFiltersChange}
+          currentView={currentView}
+          onViewChange={handleViewChange}
+          hasGuardrails={hasGuardrails}
+          data={allData}
+          isAnnotationModeEnabled={isAnnotationModeEnabled}
+          onAnnotationModeChange={setIsAnnotationModeEnabled}
+          canEnableAnnotation={canEnableAnnotation}
+        />
+      )}
 
       {/* Content Area */}
       <AnimatePresence mode="wait">
@@ -465,84 +467,114 @@ export function EvaluationDataView({
           className="flex flex-1 overflow-hidden min-h-0"
           onWheel={(e) => e.stopPropagation()}
         >
-          {/* Table/Conversation View */}
-          <div
-            className={`${
-              currentView === "conversation" ? "max-w-[400px]" : "flex-1"
-            } ${
-              currentView === "table"
-                ? "overflow-auto"
-                : "flex flex-col overflow-hidden"
-            }`}
-            onWheel={(e) => e.stopPropagation()}
-          >
-            <div className="h-full">
-              {currentView === "table" ? (
-                <GenericEvaluationTable
-                  data={displayData}
-                  strategy={strategy}
-                  selectedRows={selectedRows}
-                  onRowSelect={handleRowSelect}
-                  onSelectAll={handleSelectAll}
-                  onRowClick={handleRowClick}
-                  hasGuardrails={hasGuardrails}
-                />
-              ) : (
-                <EvaluationDataConversationView
-                  data={displayData}
-                  strategy={strategy}
-                  totalCount={filteredData.length}
-                  hasMore={displayData.length < filteredData.length}
-                  onLoadMore={handleLoadMore}
-                  selectedConversationId={selectedConversationId}
-                  onConversationSelect={handleConversationSelect}
-                />
-              )}
-            </div>
-          </div>
-
-          {/* Right Detail Area for Conversation View */}
-          {currentView === "conversation" && (
-            <div
-              className="flex-1 overflow-hidden"
-              onWheel={(e) => e.stopPropagation()}
-            >
-              <div className="h-full" onWheel={(e) => e.stopPropagation()}>
-                {selectedConversationId &&
-                  displayData.length > 0 &&
-                  (() => {
-                    const selectedRecord = displayData.find(
-                      (record) => (record as any).id === selectedConversationId
-                    );
-                    return selectedRecord ? (
-                      <div className="h-full">
-                        <GenericConversationView
-                          key={selectedConversationId}
-                          record={selectedRecord}
-                          strategy={strategy}
-                          aiSystemName={aiSystemName}
-                          testType={testType as 'jailbreak' | 'compliance'}
-                          isAnnotationModeEnabled={isAnnotationModeEnabled}
-                          onRecordUpdate={handleRecordUpdate}
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center h-64 animate-in fade-in-0 duration-300">
-                        <div className="text-lg text-gray-500">
-                          No conversation selected
-                        </div>
-                      </div>
-                    );
-                  })()}
-                {(!selectedConversationId || displayData.length === 0) && (
-                  <div className="flex items-center justify-center h-64 animate-in fade-in-0 duration-300">
-                    <div className="text-lg text-gray-500">
-                      Select a conversation to view details
-                    </div>
-                  </div>
-                )}
+          {/* Show preparing state when running and no data - Full width, centered */}
+          {isRunning && allData.length === 0 ? (
+            <div className="flex flex-col items-center justify-center w-full h-full gap-4">
+              <div className="relative w-16 h-16">
+                <svg className="w-16 h-16 animate-spin" viewBox="0 0 24 24">
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    fill="none"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-450 text-gray-900">Preparing Data</p>
+                <p className="text-xs text-gray-500 mt-1">Generating test prompts...</p>
               </div>
             </div>
+          ) : (
+            <>
+              {/* Table/Conversation View */}
+              <div
+                className={`${
+                  currentView === "conversation" ? "max-w-[400px]" : "flex-1"
+                } ${
+                  currentView === "table"
+                    ? "overflow-auto"
+                    : "flex flex-col overflow-hidden"
+                }`}
+                onWheel={(e) => e.stopPropagation()}
+              >
+                <div className="h-full">
+                  {currentView === "table" ? (
+                    <GenericEvaluationTable
+                      data={displayData}
+                      strategy={strategy}
+                      selectedRows={selectedRows}
+                      onRowSelect={handleRowSelect}
+                      onSelectAll={handleSelectAll}
+                      onRowClick={handleRowClick}
+                      hasGuardrails={hasGuardrails}
+                    />
+                  ) : (
+                    <EvaluationDataConversationView
+                      data={displayData}
+                      strategy={strategy}
+                      totalCount={filteredData.length}
+                      hasMore={displayData.length < filteredData.length}
+                      onLoadMore={handleLoadMore}
+                      selectedConversationId={selectedConversationId}
+                      onConversationSelect={handleConversationSelect}
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* Right Detail Area for Conversation View */}
+              {currentView === "conversation" && (
+                <div
+                  className="flex-1 overflow-hidden"
+                  onWheel={(e) => e.stopPropagation()}
+                >
+                  <div className="h-full" onWheel={(e) => e.stopPropagation()}>
+                    {selectedConversationId &&
+                      displayData.length > 0 &&
+                      (() => {
+                        const selectedRecord = displayData.find(
+                          (record) => (record as any).id === selectedConversationId
+                        );
+                        return selectedRecord ? (
+                          <div className="h-full">
+                            <GenericConversationView
+                              key={selectedConversationId}
+                              record={selectedRecord}
+                              strategy={strategy}
+                              aiSystemName={aiSystemName}
+                              testType={testType as 'jailbreak' | 'compliance'}
+                              isAnnotationModeEnabled={isAnnotationModeEnabled}
+                              onRecordUpdate={handleRecordUpdate}
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center h-64 animate-in fade-in-0 duration-300">
+                            <div className="text-lg text-gray-500">
+                              No conversation selected
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    {!isRunning && (!selectedConversationId || displayData.length === 0) && (
+                      <div className="flex items-center justify-center h-64 animate-in fade-in-0 duration-300">
+                        <div className="text-lg text-gray-500">
+                          Select a conversation to view details
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </motion.div>
       </AnimatePresence>

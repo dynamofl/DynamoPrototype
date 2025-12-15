@@ -13,11 +13,70 @@ import {
 } from '../_shared/guardrail-evaluator.ts';
 import type { EvaluationPrompt, SummaryMetrics, ModelExecutionConfig } from '../_shared/types.ts';
 
-// OPTIMIZED: Increased from 5 to 15 for better throughput
-// With parallel processing, we can handle larger batches efficiently
-// This reduces total Edge Function invocations by 66%
-const BATCH_SIZE = 15; // Process 15 prompts per invocation
+// BATCH SIZE: Process 10 prompts per invocation as specified
+// With checkpoint-based progress and batch updates, this provides optimal balance
+const BATCH_SIZE = 10; // Process 10 prompts per invocation
 const MAX_RETRIES = 3;
+
+/**
+ * Update checkpoint state with batch progress
+ * This is called once per batch to minimize database writes
+ */
+async function updateBatchCheckpoint(
+  supabase: any,
+  evaluationId: string,
+  completedInBatch: number,
+  policyProgressMap: Map<string, number>
+) {
+  // Get current checkpoint state
+  const { data: evaluation } = await supabase
+    .from('evaluations')
+    .select('checkpoint_state, completed_prompts')
+    .eq('id', evaluationId)
+    .single();
+
+  if (!evaluation) return;
+
+  const checkpointState = evaluation.checkpoint_state || {};
+  const currentCompleted = (evaluation.completed_prompts || 0) + completedInBatch;
+
+  // Update policy progress in-memory
+  if (checkpointState.policies && Array.isArray(checkpointState.policies)) {
+    for (const policy of checkpointState.policies) {
+      const progress = policyProgressMap.get(policy.id) || 0;
+      policy.current = Math.min((policy.current || 0) + progress, policy.total);
+      policy.status = policy.current === policy.total ? 'completed' : 'in_progress';
+    }
+  }
+
+  // Update evaluation checkpoint data
+  const totalPrompts = checkpointState.policies?.reduce((sum: number, p: any) => sum + (p.total || 0), 0) || 0;
+
+  checkpointState.checkpoints = checkpointState.checkpoints || {};
+  checkpointState.checkpoints.evaluation = {
+    status: currentCompleted >= totalPrompts ? 'completed' : 'in_progress',
+    ...(checkpointState.checkpoints.evaluation?.started_at ? { started_at: checkpointState.checkpoints.evaluation.started_at } : { started_at: new Date().toISOString() }),
+    ...(currentCompleted >= totalPrompts ? { completed_at: new Date().toISOString() } : {}),
+    data: {
+      completed_prompts: currentCompleted,
+      total_prompts: totalPrompts
+    }
+  };
+
+  // If evaluation is complete, move to summary checkpoint
+  if (currentCompleted >= totalPrompts && totalPrompts > 0) {
+    checkpointState.current_checkpoint = 'summary';
+  }
+
+  // SINGLE UPDATE - triggers real-time subscription
+  await supabase
+    .from('evaluations')
+    .update({
+      checkpoint_state: checkpointState,
+      completed_prompts: currentCompleted
+    })
+    .eq('id', evaluationId);
+}
 
 serve(async (req: Request) => {
   // Handle CORS
@@ -134,11 +193,30 @@ serve(async (req: Request) => {
 
     // Process all prompts in the batch IN PARALLEL for better performance
     // This reduces evaluation time by ~60% compared to sequential processing
-    await Promise.all(
+    const results = await Promise.all(
       prompts.map(prompt =>
         processPrompt(supabase, evaluation, prompt, guardrails || [], evaluationApiKey, promptTable)
       )
     );
+
+    // CHECKPOINT UPDATE: Aggregate policy progress from batch results
+    const policyProgressMap = new Map<string, number>();
+    let completedCount = 0;
+
+    for (const result of results) {
+      if (result.success && result.policyId) {
+        completedCount++;
+        policyProgressMap.set(
+          result.policyId,
+          (policyProgressMap.get(result.policyId) || 0) + 1
+        );
+      }
+    }
+
+    // Single checkpoint update for the entire batch (reduces DB calls)
+    if (completedCount > 0) {
+      await updateBatchCheckpoint(supabase, evaluationId, completedCount, policyProgressMap);
+    }
 
     // Check if more prompts remain from the correct table
     const { count: remainingCount } = await supabase
@@ -235,7 +313,7 @@ async function processPrompt(
   guardrails: any[],
   evaluationApiKey?: string,
   promptTable: string = 'jailbreak_prompts'
-) {
+): Promise<{ success: boolean; policyId?: string }> {
   // Determine prompt type for logging
   const promptType = promptTable === 'compliance_prompts' ? 'compliance' as const : 'jailbreak' as const;
 
@@ -516,13 +594,11 @@ async function processPrompt(
         .update(updateData)
         .eq('id', prompt.id);
 
-      // Increment completed count
-      await supabase.rpc('increment_completed_prompts', {
-        eval_id: evaluation.id
-      });
+      // REMOVED: Individual increment_completed_prompts call
+      // Now handled by batch checkpoint update for better performance
 
-      // Success - break retry loop
-      break;
+      // Success - return policy ID for batch progress tracking
+      return { success: true, policyId: prompt.policy_id };
 
     } catch (error) {
       retries++;
@@ -541,10 +617,9 @@ async function processPrompt(
 
         await logError(supabase, evaluation.id, prompt.id!, `Prompt failed after ${MAX_RETRIES} retries: ${errorMessage}`, promptType);
 
-        // Still increment completed count to avoid stuck evaluations
-        await supabase.rpc('increment_completed_prompts', {
-          eval_id: evaluation.id
-        });
+        // REMOVED: Individual increment_completed_prompts call
+        // Failed prompts still count as "processed" in batch update
+        return { success: true, policyId: prompt.policy_id }; // Count as completed to avoid stuck evaluations
       } else {
         // Log retry attempt
         await logInfo(supabase, evaluation.id, `Retrying prompt ${prompt.prompt_index} (attempt ${retries}/${MAX_RETRIES})`);
@@ -554,6 +629,9 @@ async function processPrompt(
       }
     }
   }
+
+  // If all retries exhausted without returning, return failure
+  return { success: false };
 }
 
 // ============================================================================
@@ -1995,6 +2073,30 @@ async function finalizeEvaluation(
       evaluationId,
       `Evaluation updated successfully. Result has topic_analysis: ${updateResult?.[0]?.topic_analysis ? 'YES' : 'NO'}`
     );
+
+    // CHECKPOINT: Mark summary as completed
+    const { data: checkpointEval } = await supabase
+      .from('evaluations')
+      .select('checkpoint_state')
+      .eq('id', evaluationId)
+      .single();
+
+    if (checkpointEval?.checkpoint_state) {
+      const checkpointState = checkpointEval.checkpoint_state;
+      checkpointState.checkpoints = checkpointState.checkpoints || {};
+      checkpointState.checkpoints.summary = {
+        status: 'completed',
+        completed_at: new Date().toISOString()
+      };
+      checkpointState.current_checkpoint = 'summary';
+
+      await supabase
+        .from('evaluations')
+        .update({ checkpoint_state: checkpointState })
+        .eq('id', evaluationId);
+
+      await logInfo(supabase, evaluationId, 'Summary checkpoint marked as completed');
+    }
 
     await logInfo(supabase, evaluationId, 'Evaluation Successful');
   } catch (error) {

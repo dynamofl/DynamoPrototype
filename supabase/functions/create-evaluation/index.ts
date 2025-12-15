@@ -7,6 +7,85 @@ import { corsHeaders, handleCors } from '../_shared/cors.ts';
 import { generatePromptsFromPolicies } from '../_shared/prompt-generator.ts';
 import type { CreateEvaluationRequest, CreateEvaluationResponse } from '../_shared/types.ts';
 
+/**
+ * Helper function to update checkpoint state
+ */
+async function updateCheckpoint(
+  supabase: any,
+  evaluationId: string,
+  checkpointName: 'topics' | 'prompts' | 'evaluation' | 'summary',
+  status: 'in_progress' | 'completed',
+  data?: Record<string, any>
+) {
+  // Get current checkpoint state
+  const { data: evaluation } = await supabase
+    .from('evaluations')
+    .select('checkpoint_state')
+    .eq('id', evaluationId)
+    .single();
+
+  if (!evaluation) return;
+
+  const checkpointState = evaluation.checkpoint_state || {};
+
+  // Update the specific checkpoint
+  checkpointState.checkpoints = checkpointState.checkpoints || {};
+  checkpointState.checkpoints[checkpointName] = {
+    status,
+    ...(status === 'in_progress' ? { started_at: new Date().toISOString() } : {}),
+    ...(status === 'completed' ? { completed_at: new Date().toISOString() } : {}),
+    ...(data ? { data } : {})
+  };
+
+  // Update current_checkpoint if transitioning to next phase
+  if (status === 'completed') {
+    const checkpointOrder = ['topics', 'prompts', 'evaluation', 'summary'];
+    const currentIndex = checkpointOrder.indexOf(checkpointName);
+    if (currentIndex < checkpointOrder.length - 1) {
+      checkpointState.current_checkpoint = checkpointOrder[currentIndex + 1];
+    }
+  }
+
+  await supabase
+    .from('evaluations')
+    .update({ checkpoint_state: checkpointState })
+    .eq('id', evaluationId);
+}
+
+/**
+ * Helper function to update per-policy totals in checkpoint state
+ */
+async function updatePolicyTotals(
+  supabase: any,
+  evaluationId: string,
+  policyPromptCounts: Record<string, number>
+) {
+  // Get current checkpoint state
+  const { data: evaluation } = await supabase
+    .from('evaluations')
+    .select('checkpoint_state')
+    .eq('id', evaluationId)
+    .single();
+
+  if (!evaluation) return;
+
+  const checkpointState = evaluation.checkpoint_state || {};
+
+  // Update policy totals
+  if (checkpointState.policies && Array.isArray(checkpointState.policies)) {
+    for (const policy of checkpointState.policies) {
+      const count = policyPromptCounts[policy.id] || 0;
+      policy.total = count;
+      policy.status = count > 0 ? 'pending' : 'completed';
+    }
+  }
+
+  await supabase
+    .from('evaluations')
+    .update({ checkpoint_state: checkpointState })
+    .eq('id', evaluationId);
+}
+
 serve(async (req: Request) => {
   // Handle CORS
   const corsResponse = handleCors(req);
@@ -106,6 +185,30 @@ serve(async (req: Request) => {
     // PHASE 1: Create evaluation record IMMEDIATELY with total_prompts: 0
     // This allows the frontend to navigate to the evaluation page right away
     // Set started_at NOW to track total runtime including prompt generation
+
+    // Initialize checkpoint state for the new checkpoint-based progress system
+    // Extract policy names for progress tracking
+    const policies = guardrails
+      .filter(g => policyIds.includes(g.id))
+      .map(g => ({
+        id: g.id,
+        name: g.name,
+        current: 0,
+        total: 0,  // Will be updated after prompt generation
+        status: 'pending' as const
+      }));
+
+    const initialCheckpointState = {
+      current_checkpoint: 'topics',
+      checkpoints: {
+        topics: { status: 'in_progress', started_at: new Date().toISOString() },
+        prompts: { status: 'pending' },
+        evaluation: { status: 'pending' },
+        summary: { status: 'pending' }
+      },
+      policies
+    };
+
     const { data: evaluation, error: evalError } = await supabase
       .from('evaluations')
       .insert({
@@ -123,7 +226,8 @@ serve(async (req: Request) => {
         },
         total_prompts: 0, // Will be updated after prompt generation
         completed_prompts: 0,
-        created_by: user.id
+        created_by: user.id,
+        checkpoint_state: initialCheckpointState
       })
       .select()
       .single();
@@ -206,6 +310,27 @@ serve(async (req: Request) => {
 
         console.log(`✅ [BACKGROUND] Generated ${prompts.length} prompts for evaluation ${evaluation.id}`);
 
+        // CHECKPOINT: Mark topics and prompts as completed
+        // Calculate per-policy prompt counts
+        const policyPromptCounts: Record<string, number> = {};
+        for (const prompt of prompts) {
+          const policyId = (prompt as any).policy_id;
+          if (policyId) {
+            policyPromptCounts[policyId] = (policyPromptCounts[policyId] || 0) + 1;
+          }
+        }
+
+        // Update checkpoint: Topics completed (implicit since prompts are generated from topics)
+        await updateCheckpoint(supabase, evaluation.id, 'topics', 'completed', {
+          topic_count: Object.keys(policyPromptCounts).length * 5  // Approximate based on TOPICS_PER_POLICY
+        });
+
+        // Update checkpoint: Prompts generation in progress
+        await updateCheckpoint(supabase, evaluation.id, 'prompts', 'in_progress');
+
+        // Update policy totals in checkpoint state
+        await updatePolicyTotals(supabase, evaluation.id, policyPromptCounts);
+
         // Determine which table to insert into based on test type
         const testType = evaluation.config?.testType || 'jailbreak';
         const tableName = testType === 'compliance' ? 'compliance_prompts' : 'jailbreak_prompts';
@@ -241,6 +366,14 @@ serve(async (req: Request) => {
           });
           return;
         }
+
+        // CHECKPOINT: Mark prompts as completed
+        await updateCheckpoint(supabase, evaluation.id, 'prompts', 'completed', {
+          prompt_count: prompts.length
+        });
+
+        // CHECKPOINT: Mark evaluation as in_progress (will be started by run-evaluation)
+        await updateCheckpoint(supabase, evaluation.id, 'evaluation', 'in_progress');
 
         // Update total_prompts - this will trigger real-time subscription on frontend
         await supabase

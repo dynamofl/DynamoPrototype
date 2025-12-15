@@ -20,6 +20,7 @@ import { useUpdateAttackOutcome } from '../../../hooks/use-update-attack-outcome
 import { Button } from '@/components/ui/button'
 import { Info } from 'lucide-react'
 import { JudgementItemCard, type JudgementListItem } from './judgement-item-card'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface GenericJudgementsSidebarProps {
   record: BaseEvaluationResult
@@ -440,6 +441,10 @@ export function GenericJudgementsSidebar({
     }
   }
 
+  // Check if prompt is pending/running
+  const recordAny = record as any
+  const isPending = recordAny.status === 'pending' || recordAny.status === 'running'
+
   return (
     <div className="h-full overflow-y-auto bg-gray-0" onWheel={(e) => e.stopPropagation()}>
       <div className="flex flex-col gap-6 items-start py-5 px-4">
@@ -490,52 +495,71 @@ export function GenericJudgementsSidebar({
               })()
             )}
 
-            {/* Guardrails Card (if present) */}
-            {(jbRecord.inputGuardrailJudgement || jbRecord.outputGuardrailJudgement ||
-              jbRecord.inputGuardrailDetails?.length || jbRecord.outputGuardrailDetails?.length) && (
+            {/* Guardrails Card (if present) - show skeleton if pending */}
+            {isPending ? (
               <div className="flex-1 bg-gray-100 rounded-lg p-2 flex flex-col gap-1">
                 <div className="flex gap-0.5 items-start">
                   <span className="text-xs font-400 leading-4 text-gray-900">Guardrails</span>
                 </div>
                 <div className="flex gap-1 items-center">
-                  {(jbRecord.inputGuardrailJudgement || jbRecord.outputGuardrailJudgement) === 'Blocked' ? (
-                    <ShieldBan className="w-3.5 h-3.5 text-red-600" />
-                  ) : (
-                    <ShieldCheck className="w-3.5 h-3.5 text-green-600" />
-                  )}
-                  <span className="text-[0.8125rem] font-450 leading-5 text-gray-900">
-                    {jbRecord.inputGuardrailJudgement || jbRecord.outputGuardrailJudgement}
-                  </span>
+                  <Skeleton className="h-3.5 w-3.5 rounded-full" />
+                  <Skeleton className="h-4 w-16" />
                 </div>
               </div>
+            ) : (
+              (jbRecord.inputGuardrailJudgement || jbRecord.outputGuardrailJudgement ||
+                jbRecord.inputGuardrailDetails?.length || jbRecord.outputGuardrailDetails?.length) && (
+                <div className="flex-1 bg-gray-100 rounded-lg p-2 flex flex-col gap-1">
+                  <div className="flex gap-0.5 items-start">
+                    <span className="text-xs font-400 leading-4 text-gray-900">Guardrails</span>
+                  </div>
+                  <div className="flex gap-1 items-center">
+                    {(jbRecord.inputGuardrailJudgement || jbRecord.outputGuardrailJudgement) === 'Blocked' ? (
+                      <ShieldBan className="w-3.5 h-3.5 text-red-600" />
+                    ) : (
+                      <ShieldCheck className="w-3.5 h-3.5 text-green-600" />
+                    )}
+                    <span className="text-[0.8125rem] font-450 leading-5 text-gray-900">
+                      {jbRecord.inputGuardrailJudgement || jbRecord.outputGuardrailJudgement}
+                    </span>
+                  </div>
+                </div>
+              )
             )}
 
-            {/* AI System Card (ALWAYS shown for both test types) */}
+            {/* AI System Card (ALWAYS shown for both test types) - show skeleton if pending */}
             <div className="flex-1 bg-gray-100 rounded-lg p-2 flex flex-col gap-1">
               <div className="flex gap-0.5 items-start">
                 <span className="text-xs font-400 leading-4 text-gray-900">AI System</span>
               </div>
               <div className="flex gap-1 items-center">
-                {(() => {
-                  const judgement = hasAttackType
-                    ? (jbRecord.judgeModelJudgement || jbRecord.modelJudgement)
-                    : ((record as ComplianceEvaluationResult).compliance_judgement || 'Answered')
+                {isPending ? (
+                  <>
+                    <Skeleton className="h-3.5 w-3.5 rounded-full" />
+                    <Skeleton className="h-4 w-16" />
+                  </>
+                ) : (
+                  (() => {
+                    const judgement = hasAttackType
+                      ? (jbRecord.judgeModelJudgement || jbRecord.modelJudgement)
+                      : ((record as ComplianceEvaluationResult).compliance_judgement || 'Answered')
 
-                  const isRefused = judgement === 'Blocked' || judgement === 'Refused'
+                    const isRefused = judgement === 'Blocked' || judgement === 'Refused'
 
-                  return (
-                    <>
-                      {isRefused ? (
-                        <MessageCircleOff className="w-3.5 h-3.5 text-red-600" />
-                      ) : (
-                        <CircleCheckBig className="w-3.5 h-3.5 text-green-600" />
-                      )}
-                      <span className="text-[0.8125rem] font-450 leading-5 text-gray-900">
-                        {judgement}
-                      </span>
-                    </>
-                  )
-                })()}
+                    return (
+                      <>
+                        {isRefused ? (
+                          <MessageCircleOff className="w-3.5 h-3.5 text-red-600" />
+                        ) : (
+                          <CircleCheckBig className="w-3.5 h-3.5 text-green-600" />
+                        )}
+                        <span className="text-[0.8125rem] font-450 leading-5 text-gray-900">
+                          {judgement}
+                        </span>
+                      </>
+                    )
+                  })()
+                )}
               </div>
             </div>
           </div>

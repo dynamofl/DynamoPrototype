@@ -12,27 +12,6 @@ import type { HallucinationEvaluationSummary } from '../../types/hallucination-e
  */
 export function getHallucinationSummaryConfig(): SummarySectionConfig[] {
   return [
-    // Section 0: Progress Checkpoints (shown only when evaluation is running)
-    {
-      key: 'progress-checkpoints',
-      order: 0,
-      label: 'Progress',
-      componentKey: 'ProgressCheckpointsSection',
-      layout: {
-        container: 'constrained',
-        className: 'max-w-4xl mx-auto',
-        padding: ''
-      },
-      condition: (ctx: SummaryViewContext) =>
-        ctx.evaluationStatus === 'running' || ctx.evaluationStatus === 'pending',
-      props: {
-        current: (ctx: SummaryViewContext) => ctx.evaluationProgress?.current ?? 0,
-        total: (ctx: SummaryViewContext) => ctx.evaluationProgress?.total ?? 0,
-        stage: (ctx: SummaryViewContext) => ctx.evaluationProgress?.stage ?? '',
-        startedAt: (ctx: SummaryViewContext) => ctx.evaluationProgress?.startedAt
-      }
-    },
-
     // Section 1: Overview with gauge and description
     {
       key: 'overview',
