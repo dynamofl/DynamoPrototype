@@ -720,17 +720,25 @@ function calculateLogisticRegression(
 /**
  * Calculate topic-level analysis from evaluation prompts
  * Groups by policy → topic and calculates statistical metrics
+ * Supports different evaluation types with type-specific primary metrics
  */
-function calculateTopicAnalysis(prompts: EvaluationPrompt[]): any {
+function calculateTopicAnalysis(prompts: EvaluationPrompt[], evaluationType: string = 'jailbreak'): any {
   // Filter prompts with topics
   const promptsWithTopics = prompts.filter(p => p.topic);
   if (promptsWithTopics.length === 0) {
     return null;
   }
 
-  // Calculate baseline success rate for logistic regression
-  const baselineSuccessCount = prompts.filter(p => p.attack_outcome === 'Attack Success').length;
+  // Calculate baseline metrics for logistic regression based on evaluation type
+  let baselineSuccessCount = 0;
   const baselineTotalCount = prompts.length;
+
+  if (evaluationType === 'jailbreak') {
+    baselineSuccessCount = prompts.filter(p => p.attack_outcome === 'Attack Success').length;
+  } else if (evaluationType === 'compliance') {
+    // For compliance: "success" means correct prediction (TP or TN)
+    baselineSuccessCount = prompts.filter(p => (p as any).final_outcome === 'TP' || (p as any).final_outcome === 'TN').length;
+  }
 
   // Group prompts by policy → topic
   const policyTopicMap: Map<string, Map<string, EvaluationPrompt[]>> = new Map();
@@ -757,10 +765,7 @@ function calculateTopicAnalysis(prompts: EvaluationPrompt[]): any {
     const topics: any[] = [];
 
     for (const [topicName, topicPrompts] of topicMap.entries()) {
-      // Extract values for statistical calculations
-      const attackSuccessRates = topicPrompts.map(p =>
-        p.attack_outcome === 'Attack Success' ? 100 : 0
-      );
+      // Common metrics for all evaluation types
       const confidenceScores = topicPrompts.map(p =>
         p.ai_system_response?.confidenceScore || 0
       );
@@ -772,10 +777,188 @@ function calculateTopicAnalysis(prompts: EvaluationPrompt[]): any {
         p.ai_system_response?.outputTokens || 0
       );
 
-      // Calculate statistics
-      const topicSuccessCount = topicPrompts.filter(p => p.attack_outcome === 'Attack Success').length;
+      // Type-specific primary metric and logistic regression
+      let primaryMetric: any;
+      let topicSuccessCount = 0;
       const topicTotalCount = topicPrompts.length;
 
+      if (evaluationType === 'jailbreak') {
+        // Jailbreak: Attack Success Rate
+        const attackSuccessRates = topicPrompts.map(p =>
+          p.attack_outcome === 'Attack Success' ? 100 : 0
+        );
+        topicSuccessCount = topicPrompts.filter(p => p.attack_outcome === 'Attack Success').length;
+        const attackSuccessRange = calculateRange(attackSuccessRates);
+
+        primaryMetric = {
+          attack_success_rate: {
+            mean: Math.round(calculateMean(attackSuccessRates) * 100) / 100,
+            median: Math.round(calculateMedian(attackSuccessRates) * 100) / 100,
+            mode: Math.round(calculateMode(attackSuccessRates, 0)),
+            std_dev: Math.round(calculateStdDev(attackSuccessRates) * 100) / 100,
+            variance: Math.round(calculateVariance(attackSuccessRates) * 100) / 100,
+            iqr: Math.round(calculateIQR(attackSuccessRates) * 100) / 100,
+            range: {
+              min: Math.round(attackSuccessRange.min),
+              max: Math.round(attackSuccessRange.max)
+            }
+          }
+        };
+      } else if (evaluationType === 'compliance') {
+        // Compliance: Accuracy, Precision, Recall, F1, TP, TN, FP, FN
+        // Calculate per-prompt metrics
+        const accuracyValues: number[] = [];
+        const precisionValues: number[] = [];
+        const recallValues: number[] = [];
+        const f1Values: number[] = [];
+        const tpValues: number[] = [];
+        const tnValues: number[] = [];
+        const fpValues: number[] = [];
+        const fnValues: number[] = [];
+
+        for (const p of topicPrompts) {
+          const outcome = (p as any).final_outcome;
+          const tp = outcome === 'TP' ? 1 : 0;
+          const tn = outcome === 'TN' ? 1 : 0;
+          const fp = outcome === 'FP' ? 1 : 0;
+          const fn = outcome === 'FN' ? 1 : 0;
+
+          tpValues.push(tp);
+          tnValues.push(tn);
+          fpValues.push(fp);
+          fnValues.push(fn);
+
+          // Accuracy for this prompt: 1 if correct (TP or TN), 0 otherwise
+          const accuracy = (tp + tn) * 100;
+          accuracyValues.push(accuracy);
+
+          // Precision: TP / (TP + FP) - for individual prompt, either 100% or 0%
+          const precision = (tp + fp) > 0 ? (tp / (tp + fp)) * 100 : 0;
+          precisionValues.push(precision);
+
+          // Recall: TP / (TP + FN) - for individual prompt, either 100% or 0%
+          const recall = (tp + fn) > 0 ? (tp / (tp + fn)) * 100 : 0;
+          recallValues.push(recall);
+
+          // F1: 2 * (Precision * Recall) / (Precision + Recall)
+          const f1 = (precision + recall) > 0 ? (2 * precision * recall) / (precision + recall) : 0;
+          f1Values.push(f1);
+        }
+
+        // For logistic regression: count correct predictions (TP + TN)
+        topicSuccessCount = topicPrompts.filter(p => (p as any).final_outcome === 'TP' || (p as any).final_outcome === 'TN').length;
+
+        // Calculate ranges
+        const accuracyRange = calculateRange(accuracyValues);
+        const precisionRange = calculateRange(precisionValues);
+        const recallRange = calculateRange(recallValues);
+        const f1Range = calculateRange(f1Values);
+        const tpRange = calculateRange(tpValues);
+        const tnRange = calculateRange(tnValues);
+        const fpRange = calculateRange(fpValues);
+        const fnRange = calculateRange(fnValues);
+
+        primaryMetric = {
+          accuracy: {
+            mean: Math.round(calculateMean(accuracyValues) * 100) / 100,
+            median: Math.round(calculateMedian(accuracyValues) * 100) / 100,
+            mode: Math.round(calculateMode(accuracyValues, 0)),
+            std_dev: Math.round(calculateStdDev(accuracyValues) * 100) / 100,
+            variance: Math.round(calculateVariance(accuracyValues) * 100) / 100,
+            iqr: Math.round(calculateIQR(accuracyValues) * 100) / 100,
+            range: {
+              min: Math.round(accuracyRange.min),
+              max: Math.round(accuracyRange.max)
+            }
+          },
+          precision: {
+            mean: Math.round(calculateMean(precisionValues) * 100) / 100,
+            median: Math.round(calculateMedian(precisionValues) * 100) / 100,
+            mode: Math.round(calculateMode(precisionValues, 0)),
+            std_dev: Math.round(calculateStdDev(precisionValues) * 100) / 100,
+            variance: Math.round(calculateVariance(precisionValues) * 100) / 100,
+            iqr: Math.round(calculateIQR(precisionValues) * 100) / 100,
+            range: {
+              min: Math.round(precisionRange.min),
+              max: Math.round(precisionRange.max)
+            }
+          },
+          recall: {
+            mean: Math.round(calculateMean(recallValues) * 100) / 100,
+            median: Math.round(calculateMedian(recallValues) * 100) / 100,
+            mode: Math.round(calculateMode(recallValues, 0)),
+            std_dev: Math.round(calculateStdDev(recallValues) * 100) / 100,
+            variance: Math.round(calculateVariance(recallValues) * 100) / 100,
+            iqr: Math.round(calculateIQR(recallValues) * 100) / 100,
+            range: {
+              min: Math.round(recallRange.min),
+              max: Math.round(recallRange.max)
+            }
+          },
+          f1_score: {
+            mean: Math.round(calculateMean(f1Values) * 100) / 100,
+            median: Math.round(calculateMedian(f1Values) * 100) / 100,
+            mode: Math.round(calculateMode(f1Values, 0)),
+            std_dev: Math.round(calculateStdDev(f1Values) * 100) / 100,
+            variance: Math.round(calculateVariance(f1Values) * 100) / 100,
+            iqr: Math.round(calculateIQR(f1Values) * 100) / 100,
+            range: {
+              min: Math.round(f1Range.min),
+              max: Math.round(f1Range.max)
+            }
+          },
+          true_positive: {
+            mean: Math.round(calculateMean(tpValues) * 100) / 100,
+            median: Math.round(calculateMedian(tpValues) * 100) / 100,
+            mode: Math.round(calculateMode(tpValues, 0)),
+            std_dev: Math.round(calculateStdDev(tpValues) * 100) / 100,
+            variance: Math.round(calculateVariance(tpValues) * 100) / 100,
+            iqr: Math.round(calculateIQR(tpValues) * 100) / 100,
+            range: {
+              min: Math.round(tpRange.min),
+              max: Math.round(tpRange.max)
+            }
+          },
+          true_negative: {
+            mean: Math.round(calculateMean(tnValues) * 100) / 100,
+            median: Math.round(calculateMedian(tnValues) * 100) / 100,
+            mode: Math.round(calculateMode(tnValues, 0)),
+            std_dev: Math.round(calculateStdDev(tnValues) * 100) / 100,
+            variance: Math.round(calculateVariance(tnValues) * 100) / 100,
+            iqr: Math.round(calculateIQR(tnValues) * 100) / 100,
+            range: {
+              min: Math.round(tnRange.min),
+              max: Math.round(tnRange.max)
+            }
+          },
+          false_positive: {
+            mean: Math.round(calculateMean(fpValues) * 100) / 100,
+            median: Math.round(calculateMedian(fpValues) * 100) / 100,
+            mode: Math.round(calculateMode(fpValues, 0)),
+            std_dev: Math.round(calculateStdDev(fpValues) * 100) / 100,
+            variance: Math.round(calculateVariance(fpValues) * 100) / 100,
+            iqr: Math.round(calculateIQR(fpValues) * 100) / 100,
+            range: {
+              min: Math.round(fpRange.min),
+              max: Math.round(fpRange.max)
+            }
+          },
+          false_negative: {
+            mean: Math.round(calculateMean(fnValues) * 100) / 100,
+            median: Math.round(calculateMedian(fnValues) * 100) / 100,
+            mode: Math.round(calculateMode(fnValues, 0)),
+            std_dev: Math.round(calculateStdDev(fnValues) * 100) / 100,
+            variance: Math.round(calculateVariance(fnValues) * 100) / 100,
+            iqr: Math.round(calculateIQR(fnValues) * 100) / 100,
+            range: {
+              min: Math.round(fnRange.min),
+              max: Math.round(fnRange.max)
+            }
+          }
+        };
+      }
+
+      // Calculate logistic regression
       const logisticRegression = calculateLogisticRegression(
         topicSuccessCount,
         topicTotalCount,
@@ -783,27 +966,16 @@ function calculateTopicAnalysis(prompts: EvaluationPrompt[]): any {
         baselineTotalCount
       );
 
-      // Calculate range for each metric
-      const attackSuccessRange = calculateRange(attackSuccessRates);
+      // Calculate range for common metrics
       const confidenceRange = calculateRange(confidenceScores);
       const runtimeRange = calculateRange(runtimeSeconds);
       const inputTokensRange = calculateRange(inputTokens);
       const outputTokensRange = calculateRange(outputTokens);
 
-      topics.push({
+      // Build topic object with type-specific primary metric + common metrics
+      const topicData: any = {
         topic_name: topicName,
-        attack_success_rate: {
-          mean: Math.round(calculateMean(attackSuccessRates) * 100) / 100,
-          median: Math.round(calculateMedian(attackSuccessRates) * 100) / 100,
-          mode: Math.round(calculateMode(attackSuccessRates, 0)),
-          std_dev: Math.round(calculateStdDev(attackSuccessRates) * 100) / 100,
-          variance: Math.round(calculateVariance(attackSuccessRates) * 100) / 100,
-          iqr: Math.round(calculateIQR(attackSuccessRates) * 100) / 100,
-          range: {
-            min: Math.round(attackSuccessRange.min),
-            max: Math.round(attackSuccessRange.max)
-          }
-        },
+        ...primaryMetric, // Spread type-specific metrics (attack_success_rate OR accuracy/precision/recall/f1/tp/tn/fp/fn)
         confidence: {
           mean: Math.round(calculateMean(confidenceScores) * 10000) / 10000,
           median: Math.round(calculateMedian(confidenceScores) * 10000) / 10000,
@@ -854,7 +1026,9 @@ function calculateTopicAnalysis(prompts: EvaluationPrompt[]): any {
         },
         occurrence: topicPrompts.length,
         logistic_regression: logisticRegression
-      });
+      };
+
+      topics.push(topicData);
     }
 
     // Get policy name from first prompt in this policy
@@ -1437,7 +1611,8 @@ async function runAllCalculations(
   supabase: any,
   evaluationId: string,
   prompts: any[],
-  topicInsightModelConfig: { provider: string; modelId: string; apiKey: string } | null
+  topicInsightModelConfig: { provider: string; modelId: string; apiKey: string } | null,
+  evaluationType: string = 'jailbreak'
 ): Promise<CalculationResults> {
   const results: CalculationResults = {
     summary: null,
@@ -1471,9 +1646,9 @@ async function runAllCalculations(
   // ========================================
   // CALCULATION 2: Topic Analysis
   // ========================================
-  await logInfo(supabase, evaluationId, 'Calculating topic analysis...');
+  await logInfo(supabase, evaluationId, `Calculating topic analysis for ${evaluationType}...`);
   try {
-    results.topicAnalysis = calculateTopicAnalysis(prompts);
+    results.topicAnalysis = calculateTopicAnalysis(prompts, evaluationType);
     if (results.topicAnalysis) {
       await logInfo(
         supabase,
@@ -1610,7 +1785,7 @@ function buildUpdateData(
   calculations: CalculationResults,
   guardrailsCount: number,
   prompts: any[],
-  evaluationType: 'jailbreak' | 'compliance' = 'jailbreak'
+  evaluationType: 'jailbreak' | 'compliance' | 'hallucination' = 'jailbreak'
 ): any {
   const summary = calculations.summary;
 
@@ -1731,11 +1906,16 @@ async function finalizeEvaluation(
   // ========================================
   // RUN ALL CALCULATIONS
   // ========================================
+  // Determine evaluation type from prompt table
+  const evalType = promptTable === 'compliance_prompts' ? 'compliance' :
+                   promptTable === 'hallucination_prompts' ? 'hallucination' : 'jailbreak';
+
   const calculations = await runAllCalculations(
     supabase,
     evaluationId,
     prompts,
-    topicInsightModelConfig
+    topicInsightModelConfig,
+    evalType
   );
 
   await logInfo(
@@ -1747,9 +1927,7 @@ async function finalizeEvaluation(
   // ========================================
   // BUILD UPDATE DATA
   // ========================================
-  // Determine evaluation type from prompt table
-  const evaluationType = promptTable === 'compliance_prompts' ? 'compliance' : 'jailbreak';
-  const updateData = buildUpdateData(calculations, guardrailsCount, prompts, evaluationType);
+  const updateData = buildUpdateData(calculations, guardrailsCount, prompts, evalType);
 
   await logInfo(
     supabase,

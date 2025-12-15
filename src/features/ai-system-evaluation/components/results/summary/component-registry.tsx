@@ -20,6 +20,8 @@ import { RiskStatsSection } from './risk-stats-section'
 import { CategoryResultsSection } from './category-results-section'
 import { HallucinationOverviewSection } from './hallucination-overview-section'
 import { CategoryBreakdownTableSection } from './category-breakdown-table-section'
+import { ComplianceOverviewSection } from './compliance-overview-section'
+import { ComplianceTopicAnalysisSection } from './compliance-topic-analysis-section'
 
 // Template components
 import {
@@ -46,6 +48,8 @@ export const componentRegistry: Record<string, ComponentType<any>> = {
   CategoryResultsSection,
   HallucinationOverviewSection,
   CategoryBreakdownTableSection,
+  ComplianceOverviewSection,
+  ComplianceTopicAnalysisSection,
   TopicAnalysisSection,
   ViolatingBehaviorsSection,
   AttackTypePerformanceSection,

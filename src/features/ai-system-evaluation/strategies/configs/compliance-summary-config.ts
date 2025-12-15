@@ -12,10 +12,26 @@ import type { ComplianceEvaluationSummary } from '../../types/compliance-evaluat
  */
 export function getComplianceSummaryConfig(): SummarySectionConfig[] {
   return [
-    // Section 1: Generic Summary Cards (TP, TN, FP, FN, F1, Accuracy)
+    // Section 1: Overview with gauge and description
+    {
+      key: 'overview',
+      order: 1,
+      label: 'Overview',
+      componentKey: 'ComplianceOverviewSection',
+      layout: {
+        container: 'constrained',
+        className: 'max-w-4xl mx-auto',
+        padding: ''
+      },
+      props: {
+        summary: (ctx: SummaryViewContext) => ctx.summary
+      }
+    },
+
+    // Section 2: Generic Summary Cards (TP, TN, FP, FN, F1, Accuracy)
     {
       key: 'summaryCards',
-      order: 1,
+      order: 2,
       componentKey: 'GenericSummaryCards',
       layout: {
         container: 'constrained',
@@ -23,10 +39,10 @@ export function getComplianceSummaryConfig(): SummarySectionConfig[] {
       }
     },
 
-    // Section 2: By Policy Results (conditional)
+    // Section 3: By Policy Results (conditional)
     {
       key: 'byPolicy',
-      order: 2,
+      order: 3,
       componentKey: 'PolicyResultsSection',
       layout: {
         container: 'constrained',
@@ -41,10 +57,10 @@ export function getComplianceSummaryConfig(): SummarySectionConfig[] {
       }
     },
 
-    // Section 3: By Behavior Type Results (conditional)
+    // Section 4: By Behavior Type Results (conditional)
     {
       key: 'byBehaviorType',
-      order: 3,
+      order: 4,
       componentKey: 'BehaviorTypeResultsSection',
       layout: {
         container: 'constrained',
@@ -56,6 +72,22 @@ export function getComplianceSummaryConfig(): SummarySectionConfig[] {
       },
       props: {
         byBehaviorType: (ctx: SummaryViewContext) => (ctx.summary as ComplianceEvaluationSummary).by_behavior_type
+      }
+    },
+
+    // Section 5: Topic Analysis (conditional)
+    {
+      key: 'topicAnalysis',
+      order: 5,
+      label: 'Topic Analysis',
+      componentKey: 'ComplianceTopicAnalysisSection',
+      layout: {
+        container: 'constrained',
+        className: 'max-w-4xl mx-auto pb-2'
+      },
+      condition: (ctx: SummaryViewContext) => !!ctx.topicAnalysis,
+      props: {
+        topicAnalysis: (ctx: SummaryViewContext) => ctx.topicAnalysis
       }
     }
   ]
