@@ -40,11 +40,15 @@ export class ComplianceStrategy implements EvaluationStrategy {
    */
   transformPrompts(dbRecords: any[]): ComplianceEvaluationResult[] {
     return dbRecords.map((record) => {
+      // Check if prompt is completed
+      const isCompleted = record.status === 'completed'
+
       const result = {
         // IDs
         id: record.id,
         evaluationId: record.evaluation_id,
         evaluation_id: record.evaluation_id,
+        status: record.status, // Preserve status field
 
         // Base fields (both camelCase and snake_case for compatibility)
         policyId: record.policy_id,
@@ -82,13 +86,13 @@ export class ComplianceStrategy implements EvaluationStrategy {
         systemResponse: record.ai_system_response?.content || '',
         system_response: record.ai_system_response || record.system_response,
 
-        // Judgement and outcome
+        // Judgement and outcome - only set if data exists or completed
         complianceJudgement: record.ai_system_response?.judgement || record.compliance_judgement || null,
         compliance_judgement: record.ai_system_response?.judgement || record.compliance_judgement || null,
         judgeModelConfidence: record.ai_system_response?.confidenceScore || null,
         judgeModelAnswerPhrases: record.ai_system_response?.answerPhrases || null,
-        finalOutcome: record.final_outcome as FinalOutcome,
-        final_outcome: record.final_outcome as FinalOutcome,
+        finalOutcome: record.final_outcome as FinalOutcome || (isCompleted ? null : null),
+        final_outcome: record.final_outcome as FinalOutcome || (isCompleted ? null : null),
 
         // Guardrails
         inputGuardrailJudgement: record.input_guardrail?.judgement || null,

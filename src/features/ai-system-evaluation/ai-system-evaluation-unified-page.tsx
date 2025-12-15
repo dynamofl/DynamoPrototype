@@ -54,9 +54,11 @@ import { toUrlSlug } from "@/lib/utils";
 import { exportEvaluationsToCSV } from "./lib/export-utils";
 import { getEvaluationStrategy } from "./strategies/strategy-factory";
 
-// Progress view variant: 'bar' | 'table'
-// Change this constant to switch between progress bar view and table view
-const PROGRESS_VIEW_VARIANT: 'bar' | 'table' = 'table';
+// Progress view variant: 'bar' | 'table' | 'unified'
+// 'bar' - Original progress bar with attack cards
+// 'table' - Table-based progress view
+// 'unified' - Same UI as results (Summary/Data tabs) with progress checkpoints
+const PROGRESS_VIEW_VARIANT: 'bar' | 'table' | 'unified' = 'unified';
 
 export function AISystemEvaluationUnifiedPage() {
   const { systemName, evaluationId, view } = useParams<{
@@ -799,84 +801,135 @@ export function AISystemEvaluationUnifiedPage() {
             transition={{ duration: 0.15, ease: "easeInOut" }}
             onWheel={(e) => e.stopPropagation()}
           >
-            <OverlayHeader
-              title={selectedTest.name}
-              breadcrumbs={aiSystem?.name ? [{ label: aiSystem.name }] : undefined}
-              titleDropdownOptions={evaluationHistory.length > 1 ? evaluationHistory.map(test => ({
-                id: test.id,
-                label: test.name,
-                isActive: test.id === selectedTest.id,
-              })) : undefined}
-              onTitleDropdownSelect={(evaluationId) => {
-                const evaluation = evaluationHistory.find(e => e.id === evaluationId);
-                if (evaluation && aiSystem) {
-                  navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation/${evaluationId}`);
-                }
-              }}
-              onMinimize={handleMinimize}
-            />
-            <div className="flex-1 overflow-auto">
-              {PROGRESS_VIEW_VARIANT === 'table' ? (
-                <EvaluationTableProgress
-                  evaluationId={selectedTest.id}
-                  evaluationType={selectedTest.type as 'jailbreak' | 'compliance' | 'hallucination'}
-                  aiSystemName={aiSystem?.name}
-                  aiSystemIcon={aiSystem?.icon}
-                  evaluationName={selectedTest.name}
-                  startedAt={selectedTest.startedAt}
-                  stage={evaluationProgress.stage}
-                  current={evaluationProgress.current}
-                  total={evaluationProgress.total}
-                  message={evaluationProgress.message}
-                />
-              ) : (
-                <EvaluationInProgress
-                  stage={evaluationProgress.stage}
-                  current={evaluationProgress.current}
-                  total={evaluationProgress.total}
-                  message={evaluationProgress.message}
-                  aiSystemName={aiSystem?.name}
-                  aiSystemIcon={aiSystem?.icon}
-                  evaluationName={selectedTest.name}
-                  evaluationType={selectedTest.type === 'compliance' ? 'Compliance Evaluation' : 'Jailbreak Evaluation'}
-                  startedAt={selectedTest.startedAt}
-                  attacks={[
-                    {
-                      id: '1',
-                      name: 'Attack 1',
-                      temperature: 1,
-                      status: 'in-progress',
-                      progress: 50,
-                      currentStage: 'Evaluate Output Guardrails',
-                      substages: [
-                        { id: '1-1', name: 'Evaluate Input Guardrails', status: 'completed' },
-                        { id: '1-2', name: 'Call AI System', status: 'completed' },
-                        { id: '1-3', name: 'Evaluate Output Guardrails', status: 'in-progress' },
-                        { id: '1-4', name: 'Judge Model Evaluation', status: 'pending' },
-                        { id: '1-5', name: 'Determine Attack Outcome', status: 'pending' },
-                        { id: '1-6', name: 'Save Results', status: 'pending' }
-                      ]
-                    },
-                    {
-                      id: '2',
-                      name: 'Attack 2',
-                      temperature: 0.50,
-                      status: 'in-progress',
-                      progress: 33,
-                      currentStage: 'Call AI System',
-                      substages: [
-                        { id: '2-1', name: 'Evaluate Input Guardrails', status: 'completed' },
-                        { id: '2-2', name: 'Call AI System', status: 'in-progress' },
-                        { id: '2-3', name: 'Evaluate Output Guardrails', status: 'pending' },
-                        { id: '2-4', name: 'Judge Model Evaluation', status: 'pending' },
-                        { id: '2-5', name: 'Determine Attack Outcome', status: 'pending' },
-                        { id: '2-6', name: 'Save Results', status: 'pending' }
-                      ]
+            {PROGRESS_VIEW_VARIANT === 'unified' ? (
+              /* Unified view - Same UI as results with Summary/Data tabs */
+              <EvaluationResults
+                results={{
+                  evaluation_id: selectedTest.id,
+                  test_type: selectedTest.type as 'jailbreak' | 'compliance' | 'hallucination',
+                  timestamp: selectedTest.createdAt,
+                  summary: {} as any, // Empty summary during progress
+                  results: [], // Empty results during progress (will be populated via real-time)
+                  config: {} as any,
+                  topic_analysis: undefined
+                }}
+                evaluationName={selectedTest.name}
+                evaluationType={selectedTest.type === 'compliance' ? 'Compliance' : selectedTest.type === 'hallucination' ? 'Hallucination' : 'Jailbreak'}
+                aiSystemName={aiSystem?.name}
+                aiSystemIcon={aiSystem?.icon}
+                startedAt={selectedTest.startedAt}
+                completedAt={undefined}
+                onClose={handleMinimize}
+                currentTab={view || 'summary'}
+                onExport={handleExport}
+                availableTests={evaluationHistory}
+                availableAISystems={aiSystems}
+                currentTestId={selectedTest.id}
+                currentAISystemId={aiSystem?.id}
+                onTestChange={(testId) => {
+                  const test = evaluationHistory.find(t => t.id === testId);
+                  if (test && aiSystem) {
+                    navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation/${testId}/${view || 'summary'}`);
+                  }
+                }}
+                onAISystemChange={(systemId) => {
+                  const system = aiSystems.find(s => s.id === systemId);
+                  if (system && selectedTest) {
+                    navigate(`/ai-systems/${toUrlSlug(system.name)}/evaluation/${selectedTest.id}/${view || 'summary'}`);
+                  }
+                }}
+                evaluationStatus={selectedTest.status as 'pending' | 'running'}
+                evaluationProgress={{
+                  current: evaluationProgress.current,
+                  total: evaluationProgress.total,
+                  stage: evaluationProgress.stage,
+                  message: evaluationProgress.message,
+                  startedAt: selectedTest.startedAt
+                }}
+              />
+            ) : (
+              /* Old progress views */
+              <>
+                <OverlayHeader
+                  title={selectedTest.name}
+                  breadcrumbs={aiSystem?.name ? [{ label: aiSystem.name }] : undefined}
+                  titleDropdownOptions={evaluationHistory.length > 1 ? evaluationHistory.map(test => ({
+                    id: test.id,
+                    label: test.name,
+                    isActive: test.id === selectedTest.id,
+                  })) : undefined}
+                  onTitleDropdownSelect={(evaluationId) => {
+                    const evaluation = evaluationHistory.find(e => e.id === evaluationId);
+                    if (evaluation && aiSystem) {
+                      navigate(`/ai-systems/${toUrlSlug(aiSystem.name)}/evaluation/${evaluationId}`);
                     }
-                  ]}
+                  }}
+                  onMinimize={handleMinimize}
                 />
-              )}
-            </div>
+                <div className="flex-1 overflow-auto">
+                  {PROGRESS_VIEW_VARIANT === 'table' ? (
+                    <EvaluationTableProgress
+                      evaluationId={selectedTest.id}
+                      evaluationType={selectedTest.type as 'jailbreak' | 'compliance' | 'hallucination'}
+                      aiSystemName={aiSystem?.name}
+                      aiSystemIcon={aiSystem?.icon}
+                      evaluationName={selectedTest.name}
+                      startedAt={selectedTest.startedAt}
+                      stage={evaluationProgress.stage}
+                      current={evaluationProgress.current}
+                      total={evaluationProgress.total}
+                      message={evaluationProgress.message}
+                    />
+                  ) : (
+                    <EvaluationInProgress
+                      stage={evaluationProgress.stage}
+                      current={evaluationProgress.current}
+                      total={evaluationProgress.total}
+                      message={evaluationProgress.message}
+                      aiSystemName={aiSystem?.name}
+                      aiSystemIcon={aiSystem?.icon}
+                      evaluationName={selectedTest.name}
+                      evaluationType={selectedTest.type === 'compliance' ? 'Compliance Evaluation' : 'Jailbreak Evaluation'}
+                      startedAt={selectedTest.startedAt}
+                      attacks={[
+                        {
+                          id: '1',
+                          name: 'Attack 1',
+                          temperature: 1,
+                          status: 'in-progress',
+                          progress: 50,
+                          currentStage: 'Evaluate Output Guardrails',
+                          substages: [
+                            { id: '1-1', name: 'Evaluate Input Guardrails', status: 'completed' },
+                            { id: '1-2', name: 'Call AI System', status: 'completed' },
+                            { id: '1-3', name: 'Evaluate Output Guardrails', status: 'in-progress' },
+                            { id: '1-4', name: 'Judge Model Evaluation', status: 'pending' },
+                            { id: '1-5', name: 'Determine Attack Outcome', status: 'pending' },
+                            { id: '1-6', name: 'Save Results', status: 'pending' }
+                          ]
+                        },
+                        {
+                          id: '2',
+                          name: 'Attack 2',
+                          temperature: 0.50,
+                          status: 'in-progress',
+                          progress: 33,
+                          currentStage: 'Call AI System',
+                          substages: [
+                            { id: '2-1', name: 'Evaluate Input Guardrails', status: 'completed' },
+                            { id: '2-2', name: 'Call AI System', status: 'in-progress' },
+                            { id: '2-3', name: 'Evaluate Output Guardrails', status: 'pending' },
+                            { id: '2-4', name: 'Judge Model Evaluation', status: 'pending' },
+                            { id: '2-5', name: 'Determine Attack Outcome', status: 'pending' },
+                            { id: '2-6', name: 'Save Results', status: 'pending' }
+                          ]
+                        }
+                      ]}
+                    />
+                  )}
+                </div>
+              </>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -1033,6 +1086,14 @@ export function AISystemEvaluationUnifiedPage() {
                     navigate(`/ai-systems/${toUrlSlug(system.name)}/evaluation/${selectedTest.id}/${view || 'summary'}`);
                   }
                 }}
+                evaluationStatus={selectedTest?.status as 'completed' | 'failed'}
+                evaluationProgress={selectedTest?.progress ? {
+                  current: selectedTest.progress.total,
+                  total: selectedTest.progress.total,
+                  stage: 'Completed',
+                  message: '',
+                  startedAt: selectedTest.startedAt
+                } : undefined}
               />
             ) : null}
           </motion.div>

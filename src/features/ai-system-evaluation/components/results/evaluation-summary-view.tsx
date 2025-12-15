@@ -34,6 +34,14 @@ interface EvaluationSummaryViewProps {
   topicAnalysis?: any; // Topic analysis with AI insights
   evaluationResults?: BaseEvaluationResult[]; // Evaluation prompts for behavior extraction
   config?: any; // Evaluation config with full policy definitions
+  evaluationStatus?: 'pending' | 'running' | 'completed' | 'failed';
+  evaluationProgress?: {
+    current: number;
+    total: number;
+    stage: string;
+    message?: string;
+    startedAt?: string;
+  };
 }
 
 export function EvaluationSummaryView({
@@ -52,6 +60,8 @@ export function EvaluationSummaryView({
   topicAnalysis,
   evaluationResults,
   config,
+  evaluationStatus,
+  evaluationProgress,
 }: EvaluationSummaryViewProps) {
   const [activeSection, setActiveSection] = useState<string>('overview');
   const isScrollingProgrammatically = useRef(false);
@@ -83,7 +93,16 @@ export function EvaluationSummaryView({
 
   // Build navigation sections from strategy config
   const viewConfig = strategy.getSummaryViewConfig();
-  const context = { summary, testType, hasGuardrails, topicAnalysis, evaluationResults, config };
+  const context = {
+    summary,
+    testType,
+    hasGuardrails,
+    topicAnalysis,
+    evaluationResults,
+    config,
+    evaluationStatus,
+    evaluationProgress
+  };
 
   const navigationSections: NavigationSection[] = viewConfig
     .filter(section => section.label) // Only show sections with labels
@@ -218,6 +237,8 @@ export function EvaluationSummaryView({
           topicAnalysis={topicAnalysis}
           evaluationResults={evaluationResults}
           config={config}
+          evaluationStatus={evaluationStatus}
+          evaluationProgress={evaluationProgress}
         />
 
         {/* Chat Composer at bottom */}

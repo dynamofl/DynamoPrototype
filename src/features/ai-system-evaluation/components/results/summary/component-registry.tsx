@@ -22,6 +22,7 @@ import { HallucinationOverviewSection } from './hallucination-overview-section'
 import { CategoryBreakdownTableSection } from './category-breakdown-table-section'
 import { ComplianceOverviewSection } from './compliance-overview-section'
 import { ComplianceTopicAnalysisSection } from './compliance-topic-analysis-section'
+import { ProgressCheckpointsSection } from './progress-checkpoints-section'
 
 // Template components
 import {
@@ -50,6 +51,7 @@ export const componentRegistry: Record<string, ComponentType<any>> = {
   CategoryBreakdownTableSection,
   ComplianceOverviewSection,
   ComplianceTopicAnalysisSection,
+  ProgressCheckpointsSection,
   TopicAnalysisSection,
   ViolatingBehaviorsSection,
   AttackTypePerformanceSection,

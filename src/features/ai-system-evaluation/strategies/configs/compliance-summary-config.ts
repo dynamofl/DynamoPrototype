@@ -12,12 +12,35 @@ import type { ComplianceEvaluationSummary } from '../../types/compliance-evaluat
  */
 export function getComplianceSummaryConfig(): SummarySectionConfig[] {
   return [
+    // Section 0: Progress Checkpoints (shown only when evaluation is running)
+    {
+      key: 'progress-checkpoints',
+      order: 0,
+      label: 'Progress',
+      componentKey: 'ProgressCheckpointsSection',
+      layout: {
+        container: 'constrained',
+        className: 'max-w-4xl mx-auto',
+        padding: ''
+      },
+      condition: (ctx: SummaryViewContext) =>
+        ctx.evaluationStatus === 'running' || ctx.evaluationStatus === 'pending',
+      props: {
+        current: (ctx: SummaryViewContext) => ctx.evaluationProgress?.current ?? 0,
+        total: (ctx: SummaryViewContext) => ctx.evaluationProgress?.total ?? 0,
+        stage: (ctx: SummaryViewContext) => ctx.evaluationProgress?.stage ?? '',
+        startedAt: (ctx: SummaryViewContext) => ctx.evaluationProgress?.startedAt
+      }
+    },
+
     // Section 1: Overview with gauge and description
     {
       key: 'overview',
       order: 1,
       label: 'Overview',
       componentKey: 'ComplianceOverviewSection',
+      condition: (ctx: SummaryViewContext) =>
+        ctx.evaluationStatus === 'completed' || ctx.evaluationStatus === 'failed',
       layout: {
         container: 'constrained',
         className: 'max-w-4xl mx-auto',
@@ -36,7 +59,9 @@ export function getComplianceSummaryConfig(): SummarySectionConfig[] {
       layout: {
         container: 'constrained',
         className: 'max-w-4xl mx-auto'
-      }
+      },
+      condition: (ctx: SummaryViewContext) =>
+        ctx.evaluationStatus === 'completed' || ctx.evaluationStatus === 'failed'
     },
 
     // Section 3: By Policy Results (conditional)
@@ -50,7 +75,8 @@ export function getComplianceSummaryConfig(): SummarySectionConfig[] {
       },
       condition: (ctx: SummaryViewContext) => {
         const complianceSummary = ctx.summary as ComplianceEvaluationSummary
-        return !!complianceSummary.by_policy && Object.keys(complianceSummary.by_policy).length > 0
+        return (ctx.evaluationStatus === 'completed' || ctx.evaluationStatus === 'failed') &&
+          !!complianceSummary.by_policy && Object.keys(complianceSummary.by_policy).length > 0
       },
       props: {
         byPolicy: (ctx: SummaryViewContext) => (ctx.summary as ComplianceEvaluationSummary).by_policy
@@ -68,7 +94,8 @@ export function getComplianceSummaryConfig(): SummarySectionConfig[] {
       },
       condition: (ctx: SummaryViewContext) => {
         const complianceSummary = ctx.summary as ComplianceEvaluationSummary
-        return !!complianceSummary.by_behavior_type && Object.keys(complianceSummary.by_behavior_type).length > 0
+        return (ctx.evaluationStatus === 'completed' || ctx.evaluationStatus === 'failed') &&
+          !!complianceSummary.by_behavior_type && Object.keys(complianceSummary.by_behavior_type).length > 0
       },
       props: {
         byBehaviorType: (ctx: SummaryViewContext) => (ctx.summary as ComplianceEvaluationSummary).by_behavior_type
@@ -85,7 +112,9 @@ export function getComplianceSummaryConfig(): SummarySectionConfig[] {
         container: 'constrained',
         className: 'max-w-4xl mx-auto pb-2'
       },
-      condition: (ctx: SummaryViewContext) => !!ctx.topicAnalysis,
+      condition: (ctx: SummaryViewContext) =>
+        (ctx.evaluationStatus === 'completed' || ctx.evaluationStatus === 'failed') &&
+        !!ctx.topicAnalysis,
       props: {
         topicAnalysis: (ctx: SummaryViewContext) => ctx.topicAnalysis
       }

@@ -12,6 +12,7 @@ import { GenericConversationView } from "./conversation-view-components/generic-
 import { DEFAULT_PAGE_SIZE } from "../../constants/evaluation-data-constants";
 import type { BaseEvaluationResult } from "../../types/base-evaluation";
 import type { EvaluationStrategy } from "../../strategies/base-strategy";
+import { usePromptSubscription } from "../../hooks/usePromptSubscription";
 
 type ViewType = "table" | "conversation";
 
@@ -29,6 +30,7 @@ interface EvaluationDataViewProps {
   hasGuardrails?: boolean;
   systemName?: string;
   evaluationId?: string;
+  evaluationStatus?: 'pending' | 'running' | 'completed' | 'failed';
 }
 
 export function EvaluationDataView({
@@ -39,6 +41,7 @@ export function EvaluationDataView({
   hasGuardrails = true,
   systemName,
   evaluationId,
+  evaluationStatus,
 }: EvaluationDataViewProps) {
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -76,12 +79,22 @@ export function EvaluationDataView({
   });
 
   // Annotation mode state (page-level)
+  // Disable annotation mode when evaluation is running or pending
+  const canEnableAnnotation = evaluationStatus === 'completed' || evaluationStatus === 'failed' || !evaluationStatus;
   const [isAnnotationModeEnabled, setIsAnnotationModeEnabled] = useState(false);
 
   const [pagination, setPagination] = useState<PaginationState>({
     page: 1,
     pageSize: DEFAULT_PAGE_SIZE,
     total: 0,
+  });
+
+  // Use real-time subscription when evaluation is running
+  const isRunning = evaluationStatus === 'running' || evaluationStatus === 'pending';
+  const { prompts: subscriptionPrompts } = usePromptSubscription({
+    evaluationId: evaluationId || '',
+    testType: testType as 'jailbreak' | 'compliance' | 'hallucination',
+    enabled: isRunning && !!evaluationId
   });
 
   // Update URL when view mode or selected item changes
@@ -173,10 +186,20 @@ export function EvaluationDataView({
 
   // Load initial data
   useEffect(() => {
-    // Results are already transformed by the service layer (evaluation-service.ts)
-    // Don't transform again - just add unique keys for React rendering
+    let dataSource: BaseEvaluationResult[];
+
+    if (isRunning) {
+      // Transform subscription prompts from snake_case (database) to camelCase (application)
+      // using the strategy's transformPrompts method
+      dataSource = strategy.transformPrompts(subscriptionPrompts);
+    } else {
+      // Results are already transformed by the service layer (evaluation-service.ts)
+      dataSource = results;
+    }
+
+    // Add unique keys for React rendering
     // Keep the original 'id' field (database UUID) intact for database operations
-    const dataWithIds = results.map((result, index) => ({
+    const dataWithIds = dataSource.map((result, index) => ({
       ...result,
       uniqueKey: `${(result as any).policyId || (result as any).policy_id}-${index}`,
     }));
@@ -185,7 +208,7 @@ export function EvaluationDataView({
     setFilteredData(dataWithIds as any);
     setPagination((prev) => ({ ...prev, total: dataWithIds.length }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [results.length]);
+  }, [results.length, subscriptionPrompts, isRunning]);
 
   // Apply filters when data or filters change
   useEffect(() => {
@@ -428,6 +451,7 @@ export function EvaluationDataView({
         data={allData}
         isAnnotationModeEnabled={isAnnotationModeEnabled}
         onAnnotationModeChange={setIsAnnotationModeEnabled}
+        canEnableAnnotation={canEnableAnnotation}
       />
 
       {/* Content Area */}

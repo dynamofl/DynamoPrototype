@@ -15,6 +15,7 @@ import type {
 import type { BaseEvaluationResult } from '../../types/base-evaluation'
 import type { JailbreakEvaluationResult } from '../../types/jailbreak-evaluation'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import { SeverityIcon } from '../../components/results/severity-icon'
 import { getAttackSeverityLevel } from '../../lib/attack-severity'
 import { ConversationFeedItem } from '../../components/results/conversation-view-components/conversation-feed-item'
@@ -72,6 +73,20 @@ export function getJailbreakTableColumns(options?: { hasInputGuardrails?: boolea
       label: 'Input Guardrail',
       render: (record) => {
         const jailbreakRecord = record as unknown as JailbreakEvaluationResult
+        const recordAny = record as any
+
+        // Check if prompt is still pending/running
+        const isPending = recordAny.status === 'pending' || recordAny.status === 'running'
+
+        if (isPending) {
+          return (
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-4 w-4 rounded-full" />
+              <Skeleton className="h-4 w-20" />
+            </div>
+          )
+        }
+
         if (!jailbreakRecord.inputGuardrailJudgement) {
           return <span className="text-gray-400">—</span>
         }
@@ -117,6 +132,20 @@ export function getJailbreakTableColumns(options?: { hasInputGuardrails?: boolea
       label: 'Output Guardrail',
       render: (record) => {
         const jailbreakRecord = record as unknown as JailbreakEvaluationResult
+        const recordAny = record as any
+
+        // Check if prompt is still pending/running
+        const isPending = recordAny.status === 'pending' || recordAny.status === 'running'
+
+        if (isPending) {
+          return (
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-4 w-4 rounded-full" />
+              <Skeleton className="h-4 w-20" />
+            </div>
+          )
+        }
+
         if (!jailbreakRecord.outputGuardrailJudgement) {
           return <span className="text-gray-400">—</span>
         }
@@ -161,6 +190,20 @@ export function getJailbreakTableColumns(options?: { hasInputGuardrails?: boolea
     label: 'Judge Model',
     render: (record) => {
       const jailbreakRecord = record as unknown as JailbreakEvaluationResult
+      const recordAny = record as any
+
+      // Check if prompt is still pending/running
+      const isPending = recordAny.status === 'pending' || recordAny.status === 'running'
+
+      if (isPending) {
+        return (
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-4 w-4 rounded-full" />
+            <Skeleton className="h-4 w-20" />
+          </div>
+        )
+      }
+
       const judgement = jailbreakRecord.judgeModelJudgement || jailbreakRecord.modelJudgement
       const isRefused = judgement === 'Refused' || judgement === 'Blocked'
       return (
@@ -182,6 +225,15 @@ export function getJailbreakTableColumns(options?: { hasInputGuardrails?: boolea
     label: hasAnyGuardrails ? 'Attack Outcome' : 'AI System Attack Outcome',
     render: (record) => {
       const jailbreakRecord = record as unknown as JailbreakEvaluationResult
+      const recordAny = record as any
+
+      // Check if prompt is still pending/running
+      const isPending = recordAny.status === 'pending' || recordAny.status === 'running'
+
+      if (isPending) {
+        return <Skeleton className="h-6 w-28 rounded-full" />
+      }
+
       const outcome = hasAnyGuardrails
         ? jailbreakRecord.attackOutcome
         : (jailbreakRecord.aiSystemAttackOutcome || jailbreakRecord.attackOutcome)

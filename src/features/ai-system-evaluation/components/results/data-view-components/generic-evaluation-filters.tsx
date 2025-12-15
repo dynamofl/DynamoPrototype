@@ -20,6 +20,7 @@ interface GenericEvaluationFiltersProps {
   data?: BaseEvaluationResult[]  // For dynamic filter options
   isAnnotationModeEnabled?: boolean
   onAnnotationModeChange?: (enabled: boolean) => void
+  canEnableAnnotation?: boolean
 }
 
 export function GenericEvaluationFilters({
@@ -31,7 +32,8 @@ export function GenericEvaluationFilters({
   hasGuardrails = true,
   data = [],
   isAnnotationModeEnabled = false,
-  onAnnotationModeChange
+  onAnnotationModeChange,
+  canEnableAnnotation = true
 }: GenericEvaluationFiltersProps) {
   // Check if any records have input/output guardrail judgements
   const hasInputGuardrails = useMemo(() =>
@@ -157,7 +159,9 @@ export function GenericEvaluationFilters({
         <div className="flex items-center gap-2 pl-3">
           <label
             htmlFor="annotation-mode-toggle"
-            className="text-xs font-400 text-gray-700 cursor-pointer select-none flex items-center gap-1.5"
+            className={`text-xs font-400 select-none flex items-center gap-1.5 ${
+              canEnableAnnotation ? 'text-gray-700 cursor-pointer' : 'text-gray-400 cursor-not-allowed'
+            }`}
           >
             Enable Human Judgement
           </label>
@@ -165,6 +169,7 @@ export function GenericEvaluationFilters({
             id="annotation-mode-toggle"
             checked={isAnnotationModeEnabled}
             onCheckedChange={onAnnotationModeChange}
+            disabled={!canEnableAnnotation}
           />
         </div>
       )}

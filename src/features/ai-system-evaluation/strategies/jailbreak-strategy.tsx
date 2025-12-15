@@ -60,6 +60,9 @@ export class JailbreakStrategy implements EvaluationStrategy {
         ? adversarialPrompt.map((turn: any) => `${turn.role}: ${turn.content}`).join('\n\n')
         : adversarialPrompt?.text || ''
 
+      // Check if prompt is completed
+      const isCompleted = record.status === 'completed'
+
       return {
         id: record.id,
         evaluationId: record.evaluation_id,
@@ -76,6 +79,7 @@ export class JailbreakStrategy implements EvaluationStrategy {
         jailbreakPrompt,
         systemResponse: record.ai_system_response?.content || record.system_response || '',
         system_response: record.ai_system_response || record.system_response,
+        status: record.status, // Preserve status field
 
         // Input guardrail
         inputGuardrailJudgement: record.input_guardrail?.judgement || null,
@@ -92,13 +96,13 @@ export class JailbreakStrategy implements EvaluationStrategy {
         judgeModelReason: record.ai_system_response?.reason || record.judge_model?.reason || null,
         judgeModelAnswerPhrases: record.ai_system_response?.answerPhrases || null,
 
-        // Legacy fields for backward compatibility
-        guardrailJudgement: record.input_guardrail?.judgement || record.output_guardrail?.judgement || 'Allowed',
-        modelJudgement: record.ai_system_response?.judgement || 'Answered',
+        // Legacy fields for backward compatibility - only set defaults if completed
+        guardrailJudgement: record.input_guardrail?.judgement || record.output_guardrail?.judgement || (isCompleted ? 'Allowed' : null),
+        modelJudgement: record.ai_system_response?.judgement || (isCompleted ? 'Answered' : null),
 
-        // Attack outcomes
-        attackOutcome: record.attack_outcome || 'Attack Failure',
-        aiSystemAttackOutcome: record.ai_system_attack_outcome || record.attack_outcome || 'Attack Failure',
+        // Attack outcomes - only set defaults if completed
+        attackOutcome: record.attack_outcome || (isCompleted ? 'Attack Failure' : null),
+        aiSystemAttackOutcome: record.ai_system_attack_outcome || record.attack_outcome || (isCompleted ? 'Attack Failure' : null),
 
         // Metrics
         runtimeMs: record.runtime_ms,

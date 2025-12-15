@@ -12,12 +12,35 @@ import type { HallucinationEvaluationSummary } from '../../types/hallucination-e
  */
 export function getHallucinationSummaryConfig(): SummarySectionConfig[] {
   return [
+    // Section 0: Progress Checkpoints (shown only when evaluation is running)
+    {
+      key: 'progress-checkpoints',
+      order: 0,
+      label: 'Progress',
+      componentKey: 'ProgressCheckpointsSection',
+      layout: {
+        container: 'constrained',
+        className: 'max-w-4xl mx-auto',
+        padding: ''
+      },
+      condition: (ctx: SummaryViewContext) =>
+        ctx.evaluationStatus === 'running' || ctx.evaluationStatus === 'pending',
+      props: {
+        current: (ctx: SummaryViewContext) => ctx.evaluationProgress?.current ?? 0,
+        total: (ctx: SummaryViewContext) => ctx.evaluationProgress?.total ?? 0,
+        stage: (ctx: SummaryViewContext) => ctx.evaluationProgress?.stage ?? '',
+        startedAt: (ctx: SummaryViewContext) => ctx.evaluationProgress?.startedAt
+      }
+    },
+
     // Section 1: Overview with gauge and description
     {
       key: 'overview',
       order: 1,
       label: 'Overview',
       componentKey: 'HallucinationOverviewSection',
+      condition: (ctx: SummaryViewContext) =>
+        ctx.evaluationStatus === 'completed' || ctx.evaluationStatus === 'failed',
       layout: {
         container: 'constrained',
         className: 'max-w-4xl mx-auto',
@@ -44,7 +67,8 @@ export function getHallucinationSummaryConfig(): SummarySectionConfig[] {
         const categories = hallucinationSummary.by_category
           ? Object.entries(hallucinationSummary.by_category).filter(([cat]) => cat !== 'N/A')
           : []
-        return categories.length > 0
+        return (ctx.evaluationStatus === 'completed' || ctx.evaluationStatus === 'failed') &&
+          categories.length > 0
       },
       props: {
         summary: (ctx: SummaryViewContext) => ctx.summary
@@ -63,7 +87,8 @@ export function getHallucinationSummaryConfig(): SummarySectionConfig[] {
       },
       condition: (ctx: SummaryViewContext) => {
         const hallucinationSummary = ctx.summary as HallucinationEvaluationSummary
-        return !!hallucinationSummary.by_category && Object.keys(hallucinationSummary.by_category).length > 0
+        return (ctx.evaluationStatus === 'completed' || ctx.evaluationStatus === 'failed') &&
+          !!hallucinationSummary.by_category && Object.keys(hallucinationSummary.by_category).length > 0
       },
       props: {
         byCategory: (ctx: SummaryViewContext) => (ctx.summary as HallucinationEvaluationSummary).by_category
@@ -81,7 +106,8 @@ export function getHallucinationSummaryConfig(): SummarySectionConfig[] {
       },
       condition: (ctx: SummaryViewContext) => {
         const hallucinationSummary = ctx.summary as HallucinationEvaluationSummary
-        return !!hallucinationSummary.by_policy && Object.keys(hallucinationSummary.by_policy).length > 0
+        return (ctx.evaluationStatus === 'completed' || ctx.evaluationStatus === 'failed') &&
+          !!hallucinationSummary.by_policy && Object.keys(hallucinationSummary.by_policy).length > 0
       },
       props: {
         byPolicy: (ctx: SummaryViewContext) => (ctx.summary as HallucinationEvaluationSummary).by_policy
@@ -99,7 +125,8 @@ export function getHallucinationSummaryConfig(): SummarySectionConfig[] {
       },
       condition: (ctx: SummaryViewContext) => {
         const hallucinationSummary = ctx.summary as HallucinationEvaluationSummary
-        return !!hallucinationSummary.by_behavior_type && Object.keys(hallucinationSummary.by_behavior_type).length > 0
+        return (ctx.evaluationStatus === 'completed' || ctx.evaluationStatus === 'failed') &&
+          !!hallucinationSummary.by_behavior_type && Object.keys(hallucinationSummary.by_behavior_type).length > 0
       },
       props: {
         byBehaviorType: (ctx: SummaryViewContext) => (ctx.summary as HallucinationEvaluationSummary).by_behavior_type

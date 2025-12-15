@@ -40,6 +40,15 @@ interface EvaluationResultsProps {
   currentAISystemId?: string;
   onTestChange?: (testId: string) => void;
   onAISystemChange?: (systemId: string) => void;
+  // New props for progress state
+  evaluationStatus?: 'pending' | 'running' | 'completed' | 'failed';
+  evaluationProgress?: {
+    current: number;
+    total: number;
+    stage: string;
+    message?: string;
+    startedAt?: string;
+  };
 }
 
 export function EvaluationResults({
@@ -59,7 +68,9 @@ export function EvaluationResults({
   currentTestId,
   currentAISystemId,
   onTestChange,
-  onAISystemChange
+  onAISystemChange,
+  evaluationStatus,
+  evaluationProgress
 }: EvaluationResultsProps) {
   const navigate = useNavigate();
   const { systemName, evaluationId, view } = useParams<{ systemName: string; evaluationId?: string; view?: string }>();
@@ -238,24 +249,70 @@ export function EvaluationResults({
         onClose={onClose}
         actions={
           <div className="flex gap-2 align-center items-center">
-            <Button variant="secondary" size="default" className="gap-1">
-              <ArrowDownToLine className="w-4 h-4"/>
-               Download Report</Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="default" className="">
-                Export Result
+            {/* Show circular progress badge only in Data view when evaluation is running */}
+            {(evaluationStatus === 'running' || evaluationStatus === 'pending') && selectedTab === 'data' && evaluationProgress && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-full">
+                <div className="relative w-5 h-5">
+                  <svg className="w-5 h-5 -rotate-90" viewBox="0 0 20 20">
+                    {/* Background circle */}
+                    <circle
+                      cx="10"
+                      cy="10"
+                      r="8"
+                      fill="none"
+                      stroke="#FEF3C7"
+                      strokeWidth="2"
+                    />
+                    {/* Progress circle */}
+                    <circle
+                      cx="10"
+                      cy="10"
+                      r="8"
+                      fill="none"
+                      stroke="#F59E0B"
+                      strokeWidth="2"
+                      strokeDasharray={`${2 * Math.PI * 8}`}
+                      strokeDashoffset={`${2 * Math.PI * 8 * (1 - (evaluationProgress.current / evaluationProgress.total))}`}
+                      className="transition-all duration-300"
+                    />
+                  </svg>
+                </div>
+                <span className="text-xs font-450 text-amber-700">
+                  {Math.round((evaluationProgress.current / evaluationProgress.total) * 100)}% ({evaluationProgress.current}/{evaluationProgress.total})
+                </span>
+              </div>
+            )}
+
+            {/* Show Stop Evaluation button when running */}
+            {(evaluationStatus === 'running' || evaluationStatus === 'pending') && (
+              <Button variant="outline" size="default" className="gap-1.5">
+                Stop Evaluation
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onExport?.('json')}>
-                Export as JSON
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onExport?.('csv')}>
-                Export as CSV
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            )}
+
+            {/* Show Download/Export buttons only when evaluation is completed */}
+            {(evaluationStatus === 'completed' || evaluationStatus === 'failed' || !evaluationStatus) && (
+              <>
+                <Button variant="secondary" size="default" className="gap-1">
+                  <ArrowDownToLine className="w-4 h-4"/>
+                   Download Report</Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="default" className="">
+                    Export Result
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => onExport?.('json')}>
+                    Export as JSON
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onExport?.('csv')}>
+                    Export as CSV
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              </>
+            )}
           </div>
 
         }
@@ -281,6 +338,8 @@ export function EvaluationResults({
               topicAnalysis={results.topic_analysis}
               evaluationResults={results.results}
               config={results.config}
+              evaluationStatus={evaluationStatus}
+              evaluationProgress={evaluationProgress}
             />
           )}
 
@@ -293,6 +352,7 @@ export function EvaluationResults({
               hasGuardrails={results.config.guardrail_ids && results.config.guardrail_ids.length > 0}
               systemName={systemName}
               evaluationId={evaluationId}
+              evaluationStatus={evaluationStatus}
             />
           )}
         </div>

@@ -15,6 +15,7 @@ import type {
 import type { BaseEvaluationResult } from '../../types/base-evaluation'
 import type { ComplianceEvaluationResult } from '../../types/compliance-evaluation'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import { ConversationFeedItem } from '../../components/results/conversation-view-components/conversation-feed-item'
 
 /**
@@ -160,6 +161,20 @@ export function getComplianceTableColumns(options?: { hasInputGuardrails?: boole
     label: 'AI System Judgement',
     render: (record) => {
       const complianceRecord = record as ComplianceEvaluationResult
+      const recordAny = record as any
+
+      // Check if prompt is still pending/running
+      const isPending = recordAny.status === 'pending' || recordAny.status === 'running'
+
+      if (isPending) {
+        return (
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-4 w-4 rounded-full" />
+            <Skeleton className="h-4 w-20" />
+          </div>
+        )
+      }
+
       const judgement = complianceRecord.compliance_judgement || 'Answered'
       const isRefused = judgement === 'Refused' || judgement === 'Blocked'
       return (
@@ -180,6 +195,15 @@ export function getComplianceTableColumns(options?: { hasInputGuardrails?: boole
     label: 'Final Outcome',
     render: (record) => {
       const complianceRecord = record as ComplianceEvaluationResult
+      const recordAny = record as any
+
+      // Check if prompt is still pending/running
+      const isPending = recordAny.status === 'pending' || recordAny.status === 'running'
+
+      if (isPending) {
+        return <Skeleton className="h-6 w-32 rounded-full" />
+      }
+
       const outcome = complianceRecord.final_outcome
 
       const outcomeConfig = {
