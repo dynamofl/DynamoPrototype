@@ -21,6 +21,7 @@ import type { BulkAction } from "@/components/patterns/ui-patterns/bulk-action-b
 import {
   EvaluationCreationFlow,
   EvaluationInProgress,
+  EvaluationTableProgress,
   EvaluationResults,
   EvaluationHistoryTableDirect,
   EvaluationHistoryHeader,
@@ -52,6 +53,10 @@ import { EvaluationService } from "@/lib/supabase/evaluation-service";
 import { toUrlSlug } from "@/lib/utils";
 import { exportEvaluationsToCSV } from "./lib/export-utils";
 import { getEvaluationStrategy } from "./strategies/strategy-factory";
+
+// Progress view variant: 'bar' | 'table'
+// Change this constant to switch between progress bar view and table view
+const PROGRESS_VIEW_VARIANT: 'bar' | 'table' = 'table';
 
 export function AISystemEvaluationUnifiedPage() {
   const { systemName, evaluationId, view } = useParams<{
@@ -811,51 +816,66 @@ export function AISystemEvaluationUnifiedPage() {
               onMinimize={handleMinimize}
             />
             <div className="flex-1 overflow-auto">
-              <EvaluationInProgress
-                stage={evaluationProgress.stage}
-                current={evaluationProgress.current}
-                total={evaluationProgress.total}
-                message={evaluationProgress.message}
-                aiSystemName={aiSystem?.name}
-                aiSystemIcon={aiSystem?.icon}
-                evaluationName={selectedTest.name}
-                evaluationType={selectedTest.type === 'compliance' ? 'Compliance Evaluation' : 'Jailbreak Evaluation'}
-                startedAt={selectedTest.startedAt}
-                attacks={[
-                  {
-                    id: '1',
-                    name: 'Attack 1',
-                    temperature: 1,
-                    status: 'in-progress',
-                    progress: 50,
-                    currentStage: 'Evaluate Output Guardrails',
-                    substages: [
-                      { id: '1-1', name: 'Evaluate Input Guardrails', status: 'completed' },
-                      { id: '1-2', name: 'Call AI System', status: 'completed' },
-                      { id: '1-3', name: 'Evaluate Output Guardrails', status: 'in-progress' },
-                      { id: '1-4', name: 'Judge Model Evaluation', status: 'pending' },
-                      { id: '1-5', name: 'Determine Attack Outcome', status: 'pending' },
-                      { id: '1-6', name: 'Save Results', status: 'pending' }
-                    ]
-                  },
-                  {
-                    id: '2',
-                    name: 'Attack 2',
-                    temperature: 0.50,
-                    status: 'in-progress',
-                    progress: 33,
-                    currentStage: 'Call AI System',
-                    substages: [
-                      { id: '2-1', name: 'Evaluate Input Guardrails', status: 'completed' },
-                      { id: '2-2', name: 'Call AI System', status: 'in-progress' },
-                      { id: '2-3', name: 'Evaluate Output Guardrails', status: 'pending' },
-                      { id: '2-4', name: 'Judge Model Evaluation', status: 'pending' },
-                      { id: '2-5', name: 'Determine Attack Outcome', status: 'pending' },
-                      { id: '2-6', name: 'Save Results', status: 'pending' }
-                    ]
-                  }
-                ]}
-              />
+              {PROGRESS_VIEW_VARIANT === 'table' ? (
+                <EvaluationTableProgress
+                  evaluationId={selectedTest.id}
+                  evaluationType={selectedTest.type as 'jailbreak' | 'compliance' | 'hallucination'}
+                  aiSystemName={aiSystem?.name}
+                  aiSystemIcon={aiSystem?.icon}
+                  evaluationName={selectedTest.name}
+                  startedAt={selectedTest.startedAt}
+                  stage={evaluationProgress.stage}
+                  current={evaluationProgress.current}
+                  total={evaluationProgress.total}
+                  message={evaluationProgress.message}
+                />
+              ) : (
+                <EvaluationInProgress
+                  stage={evaluationProgress.stage}
+                  current={evaluationProgress.current}
+                  total={evaluationProgress.total}
+                  message={evaluationProgress.message}
+                  aiSystemName={aiSystem?.name}
+                  aiSystemIcon={aiSystem?.icon}
+                  evaluationName={selectedTest.name}
+                  evaluationType={selectedTest.type === 'compliance' ? 'Compliance Evaluation' : 'Jailbreak Evaluation'}
+                  startedAt={selectedTest.startedAt}
+                  attacks={[
+                    {
+                      id: '1',
+                      name: 'Attack 1',
+                      temperature: 1,
+                      status: 'in-progress',
+                      progress: 50,
+                      currentStage: 'Evaluate Output Guardrails',
+                      substages: [
+                        { id: '1-1', name: 'Evaluate Input Guardrails', status: 'completed' },
+                        { id: '1-2', name: 'Call AI System', status: 'completed' },
+                        { id: '1-3', name: 'Evaluate Output Guardrails', status: 'in-progress' },
+                        { id: '1-4', name: 'Judge Model Evaluation', status: 'pending' },
+                        { id: '1-5', name: 'Determine Attack Outcome', status: 'pending' },
+                        { id: '1-6', name: 'Save Results', status: 'pending' }
+                      ]
+                    },
+                    {
+                      id: '2',
+                      name: 'Attack 2',
+                      temperature: 0.50,
+                      status: 'in-progress',
+                      progress: 33,
+                      currentStage: 'Call AI System',
+                      substages: [
+                        { id: '2-1', name: 'Evaluate Input Guardrails', status: 'completed' },
+                        { id: '2-2', name: 'Call AI System', status: 'in-progress' },
+                        { id: '2-3', name: 'Evaluate Output Guardrails', status: 'pending' },
+                        { id: '2-4', name: 'Judge Model Evaluation', status: 'pending' },
+                        { id: '2-5', name: 'Determine Attack Outcome', status: 'pending' },
+                        { id: '2-6', name: 'Save Results', status: 'pending' }
+                      ]
+                    }
+                  ]}
+                />
+              )}
             </div>
           </motion.div>
         )}

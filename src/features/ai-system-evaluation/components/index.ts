@@ -11,6 +11,7 @@ export { UploadPromptsSheet } from './creation/upload-prompts-sheet';
 
 // Progress components
 export { EvaluationInProgress } from './progress/evaluation-in-progress';
+export { EvaluationTableProgress } from './progress/evaluation-table-progress';
 
 // Results components
 export { EvaluationResults } from './results/evaluation-results';
