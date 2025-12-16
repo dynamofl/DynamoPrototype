@@ -25,6 +25,7 @@ interface EvaluationProgressProps {
   current: number;
   total: number;
   message: string;
+  percentage?: number;
   aiSystemName?: string;
   aiSystemIcon?: "OpenAI" | "Azure" | "Mistral" | "Databricks" | "HuggingFace" | "Anthropic" | "Custom" | "AWS" | "DynamoAI" | "Gemini";
   evaluationName?: string;
@@ -102,6 +103,7 @@ export function EvaluationInProgress({
   current,
   total,
   message,
+  percentage,
   aiSystemName,
   aiSystemIcon,
   evaluationName = "Evaluation Test",
@@ -109,7 +111,10 @@ export function EvaluationInProgress({
   startedAt,
   attacks = []
 }: EvaluationProgressProps) {
-  const progress = total > 0 ? (current / total) * 100 : 0;
+  // Use checkpoint-aware percentage if available, otherwise calculate from current/total
+  const progress = percentage !== undefined
+    ? percentage
+    : (total > 0 ? (current / total) * 100 : 0);
   const isPreparing = progress === 0;
 
   // Time elapsed tracker

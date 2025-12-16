@@ -1,4 +1,5 @@
 import type { EvaluationConfig, EvaluationInput, EvaluationResult } from './evaluation';
+import type { CheckpointState } from '@/lib/supabase/evaluation-service';
 
 export type EvaluationTestStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
 export type EvaluationTestType = 'compliance' | 'jailbreak' | 'hallucination';
@@ -35,6 +36,7 @@ export interface EvaluationTest {
     current: number;
     total: number;
     currentPrompt?: string;
+    percentage?: number;
   };
   currentStage?: string; // Current stage of the evaluation (for progress tracking)
   metadata?: {
@@ -46,6 +48,8 @@ export interface EvaluationTest {
   completedAt?: string;
   // Evaluation metrics - stored as JSONB, structure varies by evaluation type
   metrics?: EvaluationMetrics;
+  // Checkpoint state for progress tracking (topics, prompts, evaluation, summary)
+  checkpointState?: CheckpointState;
 }
 
 export interface EvaluationTestSummary {

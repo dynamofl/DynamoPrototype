@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowDownToLine, ChevronsUpDown, Search } from "lucide-react";
+import { ArrowDownToLine, ChevronsUpDown, Search, Square } from "lucide-react";
 import type { BaseEvaluationOutput } from "../../types/base-evaluation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -48,6 +48,10 @@ interface EvaluationResultsProps {
     stage: string;
     message?: string;
     startedAt?: string;
+    percentage?: number;
+    currentCheckpoint?: string | null;
+    checkpoints?: any;
+    policies?: any[];
   };
 }
 
@@ -257,11 +261,14 @@ export function EvaluationResults({
                                        stageLower.includes('generating test prompts') ||
                                        stageLower.includes('generating prompts') ||
                                        stageLower.includes('prompt generation');
-              const statusText = isPreparingStage ? 'Preparing' : 'In Progress';
-              const progressPercentage = Math.round((evaluationProgress.current / evaluationProgress.total) * 100);
+              const statusText = isPreparingStage ? 'Preparing' : 'Running';
+              // Use checkpoint-aware percentage from subscription handler if available
+              const progressPercentage = evaluationProgress.percentage !== undefined
+                ? evaluationProgress.percentage
+                : (evaluationProgress.total > 0 ? Math.round((evaluationProgress.current / evaluationProgress.total) * 100) : 0);
 
               return (
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-full">
+                <div className="flex items-center gap-1 p-1.5 pr-2 bg-blue-50  rounded-full">
                   <div className="relative w-5 h-5">
                     <svg className="w-5 h-5 -rotate-90" viewBox="0 0 20 20">
                       {/* Background circle */}
@@ -270,8 +277,9 @@ export function EvaluationResults({
                         cy="10"
                         r="8"
                         fill="none"
-                        stroke="#FEF3C7"
+                        
                         strokeWidth="2"
+                        className="stroke-blue-200"
                       />
                       {/* Progress circle */}
                       <circle
@@ -279,15 +287,15 @@ export function EvaluationResults({
                         cy="10"
                         r="8"
                         fill="none"
-                        stroke="#F59E0B"
+                        
                         strokeWidth="2"
                         strokeDasharray={`${2 * Math.PI * 8}`}
                         strokeDashoffset={`${2 * Math.PI * 8 * (1 - (evaluationProgress.current / evaluationProgress.total))}`}
-                        className="transition-all duration-300"
+                        className="transition-all duration-300 stroke-blue-600"
                       />
                     </svg>
                   </div>
-                  <span className="text-xs font-450 text-amber-700">
+                  <span className="text-[0.8125rem] font-450 text-blue-700">
                     {statusText} {progressPercentage}%
                   </span>
                 </div>
@@ -297,6 +305,8 @@ export function EvaluationResults({
             {/* Show Stop Evaluation button when running */}
             {(evaluationStatus === 'running' || evaluationStatus === 'pending') && (
               <Button variant="outline" size="default" className="gap-1.5">
+                                        <Square className="h-3 w-3 fill-red-500 text-red-500" />
+
                 Stop Evaluation
               </Button>
             )}

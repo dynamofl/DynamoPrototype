@@ -167,9 +167,10 @@ export function EvaluationHistoryTableDirect({
   const renderStatus = (test: EvaluationTest) => {
     // For running status, show circular progress if progress data is available
     if (test.status === 'running' && test.progress) {
-      const progressValue = test.progress.total > 0
-        ? (test.progress.current / test.progress.total) * 100
-        : 0
+      // Use checkpoint-aware percentage if available, otherwise calculate from current/total
+      const progressValue = test.progress.percentage !== undefined
+        ? test.progress.percentage
+        : (test.progress.total > 0 ? (test.progress.current / test.progress.total) * 100 : 0)
 
       return (
         <div className="flex items-center gap-2">

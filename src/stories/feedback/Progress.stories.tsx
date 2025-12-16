@@ -367,6 +367,205 @@ export const AnimatedUpload: Story = {
 };
 
 /**
+ * ### Checkpoint-Based Progress
+ *
+ * Progress bars using checkpoint-based calculation with weighted phases.
+ *
+ * Topics phase (5% weight) - Generating evaluation topics.
+ */
+export const CheckpointTopics: Story = {
+  tags: ['!dev'],
+  render: () => (
+    <div className="space-y-2 w-96">
+      <div className="flex justify-between text-[0.8125rem]">
+        <span className="text-gray-900">Generating Topics</span>
+        <span className="text-gray-600">3%</span>
+      </div>
+      <Progress value={3} />
+      <p className="text-xs text-gray-500">Topics: 5% of total evaluation (currently at 60% of topics phase)</p>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Progress during topic generation phase. Topics contribute 5% to overall progress.',
+      },
+    },
+  },
+};
+
+/**
+ * Prompts phase (5% weight) - Generating test prompts.
+ */
+export const CheckpointPrompts: Story = {
+  tags: ['!dev'],
+  render: () => (
+    <div className="space-y-2 w-96">
+      <div className="flex justify-between text-[0.8125rem]">
+        <span className="text-gray-900">Generating Prompts</span>
+        <span className="text-gray-600">8%</span>
+      </div>
+      <Progress value={8} />
+      <p className="text-xs text-gray-500">Topics complete (5%), Prompts: 5% of total (currently at 60% of prompts phase)</p>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Progress during prompt generation phase. Prompts contribute 5% to overall progress.',
+      },
+    },
+  },
+};
+
+/**
+ * Evaluation phase (85% weight) - Running evaluation on prompts.
+ */
+export const CheckpointEvaluation: Story = {
+  tags: ['!dev'],
+  render: () => (
+    <div className="space-y-4 w-96">
+      <div className="space-y-2">
+        <div className="flex justify-between text-[0.8125rem]">
+          <span className="text-gray-900">Running Evaluation (25% complete)</span>
+          <span className="text-gray-600">31%</span>
+        </div>
+        <Progress value={31} />
+        <p className="text-xs text-gray-500">Topics (5%) + Prompts (5%) + Evaluation (21% of 85%) = 31%</p>
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex justify-between text-[0.8125rem]">
+          <span className="text-gray-900">Running Evaluation (50% complete)</span>
+          <span className="text-gray-600">52%</span>
+        </div>
+        <Progress value={52} />
+        <p className="text-xs text-gray-500">Topics (5%) + Prompts (5%) + Evaluation (42% of 85%) = 52%</p>
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex justify-between text-[0.8125rem]">
+          <span className="text-gray-900">Running Evaluation (75% complete)</span>
+          <span className="text-gray-600">74%</span>
+        </div>
+        <Progress value={74} />
+        <p className="text-xs text-gray-500">Topics (5%) + Prompts (5%) + Evaluation (64% of 85%) = 74%</p>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Progress during evaluation phase. Evaluation contributes 85% to overall progress, making it the dominant phase.',
+      },
+    },
+  },
+};
+
+/**
+ * Summary phase (5% weight) - Structuring final summary.
+ */
+export const CheckpointSummary: Story = {
+  tags: ['!dev'],
+  render: () => (
+    <div className="space-y-2 w-96">
+      <div className="flex justify-between text-[0.8125rem]">
+        <span className="text-gray-900">Structuring Summary</span>
+        <span className="text-gray-600">97%</span>
+      </div>
+      <Progress value={97} />
+      <p className="text-xs text-gray-500">Topics (5%) + Prompts (5%) + Evaluation (85%) + Summary (2% of 5%) = 97%</p>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Progress during summary structuring phase. Summary contributes final 5% to overall progress.',
+      },
+    },
+  },
+};
+
+/**
+ * Complete checkpoint flow from 0% to 100%.
+ */
+export const CheckpointFlow: Story = {
+  tags: ['!dev'],
+  render: () => (
+    <div className="space-y-4 w-96">
+      <h3 className="text-sm font-medium text-gray-900">Checkpoint-Based Progress Flow</h3>
+
+      <div className="space-y-3">
+        <div className="space-y-1">
+          <div className="flex justify-between text-[0.625rem]">
+            <span className="text-gray-700">Topics Generated</span>
+            <span className="text-gray-600 font-medium">5%</span>
+          </div>
+          <Progress value={5} />
+        </div>
+
+        <div className="space-y-1">
+          <div className="flex justify-between text-[0.625rem]">
+            <span className="text-gray-700">Prompts Generated</span>
+            <span className="text-gray-600 font-medium">10%</span>
+          </div>
+          <Progress value={10} />
+        </div>
+
+        <div className="space-y-1">
+          <div className="flex justify-between text-[0.625rem]">
+            <span className="text-gray-700">Evaluation 25% (21/100 prompts)</span>
+            <span className="text-gray-600 font-medium">31%</span>
+          </div>
+          <Progress value={31} />
+        </div>
+
+        <div className="space-y-1">
+          <div className="flex justify-between text-[0.625rem]">
+            <span className="text-gray-700">Evaluation 50% (50/100 prompts)</span>
+            <span className="text-gray-600 font-medium">52%</span>
+          </div>
+          <Progress value={52} />
+        </div>
+
+        <div className="space-y-1">
+          <div className="flex justify-between text-[0.625rem]">
+            <span className="text-gray-700">Evaluation 100% (100/100 prompts)</span>
+            <span className="text-gray-600 font-medium">95%</span>
+          </div>
+          <Progress value={95} />
+        </div>
+
+        <div className="space-y-1">
+          <div className="flex justify-between text-[0.625rem]">
+            <span className="text-gray-700">Summary Complete</span>
+            <span className="text-gray-600 font-medium">100%</span>
+          </div>
+          <Progress value={100} />
+        </div>
+      </div>
+
+      <div className="text-xs text-gray-500 space-y-1 pt-2 border-t border-gray-200">
+        <p className="font-medium">Phase Weights:</p>
+        <ul className="space-y-0.5 pl-3">
+          <li>• Topics: 5%</li>
+          <li>• Prompts: 5%</li>
+          <li>• Evaluation: 85%</li>
+          <li>• Summary: 5%</li>
+        </ul>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Complete flow showing how progress is calculated across all checkpoints with their respective weights.',
+      },
+    },
+  },
+};
+
+/**
  * Simulated data processing with slow incremental progress.
  */
 export const SlowProgress: Story = {

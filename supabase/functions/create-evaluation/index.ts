@@ -310,8 +310,7 @@ serve(async (req: Request) => {
 
         console.log(`✅ [BACKGROUND] Generated ${prompts.length} prompts for evaluation ${evaluation.id}`);
 
-        // CHECKPOINT: Mark topics and prompts as completed
-        // Calculate per-policy prompt counts
+        // Calculate per-policy prompt counts for checkpoint state
         const policyPromptCounts: Record<string, number> = {};
         for (const prompt of prompts) {
           const policyId = (prompt as any).policy_id;
@@ -319,14 +318,6 @@ serve(async (req: Request) => {
             policyPromptCounts[policyId] = (policyPromptCounts[policyId] || 0) + 1;
           }
         }
-
-        // Update checkpoint: Topics completed (implicit since prompts are generated from topics)
-        await updateCheckpoint(supabase, evaluation.id, 'topics', 'completed', {
-          topic_count: Object.keys(policyPromptCounts).length * 5  // Approximate based on TOPICS_PER_POLICY
-        });
-
-        // Update checkpoint: Prompts generation in progress
-        await updateCheckpoint(supabase, evaluation.id, 'prompts', 'in_progress');
 
         // Update policy totals in checkpoint state
         await updatePolicyTotals(supabase, evaluation.id, policyPromptCounts);

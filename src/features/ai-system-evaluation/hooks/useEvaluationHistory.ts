@@ -12,7 +12,13 @@ export function mapSupabaseToEvaluationTests(
   supabaseHistory: EvaluationSummary[],
   aiSystem: AISystem
 ): EvaluationTest[] {
-  return supabaseHistory.map(evaluation => ({
+  return supabaseHistory.map(evaluation => {
+    console.log('[mapSupabaseToEvaluationTests] Mapping evaluation:', evaluation.id, {
+      hasCheckpointState: !!evaluation.checkpointState,
+      checkpointState: evaluation.checkpointState,
+      policies: evaluation.checkpointState?.policies
+    });
+    return {
     id: evaluation.id,
     name: evaluation.name,
     type: evaluation.evaluationType as 'compliance' | 'jailbreak' | undefined,
@@ -42,8 +48,11 @@ export function mapSupabaseToEvaluationTests(
       currentPrompt: ''
     },
     // CRITICAL: Map metrics JSONB column (this is the source of truth)
-    metrics: evaluation.metrics || {}
-  } as any));
+    metrics: evaluation.metrics || {},
+    // Checkpoint state for progress tracking
+    checkpointState: evaluation.checkpointState
+  } as any;
+  });
 }
 
 export function useEvaluationHistory(aiSystem: AISystem | null) {
@@ -55,6 +64,11 @@ export function useEvaluationHistory(aiSystem: AISystem | null) {
 
   // Memoized function to update a single evaluation in the list
   const updateEvaluationInList = useCallback((updatedEvaluation: any) => {
+    console.log('[updateEvaluationInList] Received update for evaluation:', updatedEvaluation.id, {
+      hasCheckpointState: !!updatedEvaluation.checkpoint_state,
+      checkpointState: updatedEvaluation.checkpoint_state,
+      policies: updatedEvaluation.checkpoint_state?.policies
+    });
     setEvaluationHistory(prev => {
       const index = prev.findIndex(e => e.id === updatedEvaluation.id);
       if (index === -1) {
@@ -73,8 +87,11 @@ export function useEvaluationHistory(aiSystem: AISystem | null) {
       // Check if metrics changed
       const metricsChanged = JSON.stringify(existing.metrics) !== JSON.stringify(updatedEvaluation.metrics);
 
+      // Check if checkpoint state changed
+      const checkpointStateChanged = JSON.stringify(existing.checkpointState) !== JSON.stringify(updatedEvaluation.checkpoint_state);
+
       const hasChanges = statusChanged || progressCurrentChanged || progressTotalChanged ||
-        currentStageChanged || completedAtChanged || metricsChanged;
+        currentStageChanged || completedAtChanged || metricsChanged || checkpointStateChanged;
 
       if (!hasChanges) {
         return prev; // No changes, return same reference to prevent re-render
@@ -98,7 +115,9 @@ export function useEvaluationHistory(aiSystem: AISystem | null) {
           promptResults: existing.result?.promptResults || []
         } as any : existing.result,
         // Metrics JSONB column
-        metrics: updatedEvaluation.metrics || {}
+        metrics: updatedEvaluation.metrics || {},
+        // Checkpoint state for progress tracking
+        checkpointState: updatedEvaluation.checkpoint_state
       };
 
       // Return new array with updated evaluation

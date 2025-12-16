@@ -49,7 +49,8 @@ import type { EvaluationCreationData } from "./types/evaluation-creation";
 import type { BaseEvaluationOutput } from "./types/base-evaluation";
 import type { EvaluationTest } from "@/features/evaluation/types/evaluation-test";
 import { validateModelAssignments } from "@/features/settings/lib/model-assignment-helper";
-import { EvaluationService } from "@/lib/supabase/evaluation-service";
+import { EvaluationService, calculateCheckpointPercentage } from "@/lib/supabase/evaluation-service";
+import { supabase } from "@/lib/supabase/client";
 import { toUrlSlug } from "@/lib/utils";
 import { exportEvaluationsToCSV } from "./lib/export-utils";
 import { getEvaluationStrategy } from "./strategies/strategy-factory";
@@ -104,7 +105,11 @@ export function AISystemEvaluationUnifiedPage() {
     stage: '',
     current: 0,
     total: 0,
-    message: ''
+    message: '',
+    percentage: 0,
+    currentCheckpoint: null as string | null,
+    checkpoints: undefined as any,
+    policies: [] as any[]
   });
 
   // Delete confirmation dialog state
@@ -226,11 +231,62 @@ export function AISystemEvaluationUnifiedPage() {
       // For now, we'll use the test data we already have
       await new Promise(resolve => setTimeout(resolve, 300)); // Small delay to show loading state
 
+      // Calculate checkpoint-aware percentage if checkpoint state exists
+      const percentage = test.checkpointState
+        ? calculateCheckpointPercentage(test.checkpointState)
+        : (test.progress?.percentage || 0);
+
+      console.log('[loadEvaluationDetails] Setting progress for test:', test.id, {
+        hasCheckpointState: !!test.checkpointState,
+        checkpointState: test.checkpointState,
+        policies: test.checkpointState?.policies,
+        percentage
+      });
+
+      // WORKAROUND: If checkpoint_state doesn't have policies, fetch from evaluation config
+      let policies = test.checkpointState?.policies || [];
+
+      if (policies.length === 0 && test.config) {
+        // Extract guardrail IDs from config
+        const guardrailIds = (test.config as any).guardrailIds || (test.config as any).policyIds || [];
+
+        if (guardrailIds.length > 0) {
+          console.log('[loadEvaluationDetails] Fetching guardrails as workaround:', guardrailIds);
+
+          try {
+            // Fetch guardrails from database
+            const { data: guardrails, error } = await supabase
+              .from('guardrails')
+              .select('id, name')
+              .in('id', guardrailIds);
+
+            if (!error && guardrails) {
+              // Construct temporary policy objects
+              policies = guardrails.map((g: { id: string; name: string }) => ({
+                id: g.id,
+                name: g.name,
+                current: test.progress?.current || 0,
+                total: test.progress?.total || 0,
+                status: (test.status === 'pending' ? 'pending' : 'in_progress') as 'pending' | 'in_progress' | 'completed'
+              }));
+
+              console.log('[loadEvaluationDetails] Created temporary policies:', policies);
+            }
+          } catch (error) {
+            console.error('[loadEvaluationDetails] Failed to fetch guardrails:', error);
+          }
+        }
+      }
+
       setEvaluationProgress({
         stage: test.currentStage || (test.status === 'pending' ? 'Setting up test environment and preparing the prompts' : 'Running Evaluation'),
         current: test.progress?.current || 0,
         total: test.progress?.total || 100,
-        message: test.progress?.currentPrompt || ''
+        message: test.progress?.currentPrompt || '',
+        percentage,
+        currentCheckpoint: test.checkpointState?.current_checkpoint || null,
+        checkpoints: test.checkpointState?.checkpoints,
+        policies
       });
       setLoadingProgress(false);
     } else if (test.status === 'completed') {
@@ -310,7 +366,11 @@ export function AISystemEvaluationUnifiedPage() {
           stage: progress.currentStage || 'Running evaluation',
           current: progress.completed,
           total: progress.total,
-          message: progress.currentPrompt || ''
+          message: progress.currentPrompt || '',
+          percentage: progress.percentage || 0,
+          currentCheckpoint: progress.currentCheckpoint || null,
+          checkpoints: progress.checkpoints,
+          policies: progress.policies || []
         });
 
         setSelectedTest(prev => prev ? {
@@ -844,7 +904,11 @@ export function AISystemEvaluationUnifiedPage() {
                   total: evaluationProgress.total,
                   stage: evaluationProgress.stage,
                   message: evaluationProgress.message,
-                  startedAt: selectedTest.startedAt
+                  startedAt: selectedTest.startedAt,
+                  percentage: evaluationProgress.percentage,
+                  currentCheckpoint: evaluationProgress.currentCheckpoint,
+                  checkpoints: evaluationProgress.checkpoints,
+                  policies: evaluationProgress.policies
                 }}
               />
             ) : (
@@ -886,6 +950,7 @@ export function AISystemEvaluationUnifiedPage() {
                       current={evaluationProgress.current}
                       total={evaluationProgress.total}
                       message={evaluationProgress.message}
+                      percentage={evaluationProgress.percentage}
                       aiSystemName={aiSystem?.name}
                       aiSystemIcon={aiSystem?.icon}
                       evaluationName={selectedTest.name}
@@ -1092,7 +1157,11 @@ export function AISystemEvaluationUnifiedPage() {
                   total: selectedTest.progress.total,
                   stage: 'Completed',
                   message: '',
-                  startedAt: selectedTest.startedAt
+                  startedAt: selectedTest.startedAt,
+                  percentage: 100,
+                  currentCheckpoint: 'summary',
+                  checkpoints: undefined,
+                  policies: []
                 } : undefined}
               />
             ) : null}

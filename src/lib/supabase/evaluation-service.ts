@@ -53,7 +53,7 @@ export interface EvaluationProgress {
  * Calculate overall progress percentage across all checkpoints
  * Weights: Topics (5%), Prompts (5%), Evaluation (85%), Summary (5%)
  */
-function calculateCheckpointPercentage(checkpointState: CheckpointState | null | undefined): number {
+export function calculateCheckpointPercentage(checkpointState: CheckpointState | null | undefined): number {
   if (!checkpointState?.checkpoints) {
     return 0;
   }
@@ -111,6 +111,8 @@ export interface EvaluationSummary {
   // Metrics JSONB column - structure varies by evaluation type
   metrics?: Record<string, any>;
   guardrailsCount?: number;
+  // Checkpoint state for progress tracking
+  checkpointState?: CheckpointState;
 }
 
 export class EvaluationService {
@@ -347,7 +349,9 @@ export class EvaluationService {
       summaryMetrics: evaluation.summary_metrics,
       // Metrics JSONB column
       metrics: evaluation.metrics || {},
-      guardrailsCount: evaluation.guardrails_count
+      guardrailsCount: evaluation.guardrails_count,
+      // Checkpoint state for progress tracking
+      checkpointState: evaluation.checkpoint_state
     }));
   }
 

@@ -540,6 +540,47 @@ async function generateJailbreakPrompts(
       })
   );
 
+  // CHECKPOINT UPDATE: Topics completed, prompts generation starting
+  if (evaluationId && supabase) {
+    try {
+      // Get current checkpoint state
+      const { data: evaluation } = await supabase
+        .from('evaluations')
+        .select('checkpoint_state')
+        .eq('id', evaluationId)
+        .single();
+
+      if (evaluation) {
+        const checkpointState = evaluation.checkpoint_state || {};
+
+        // Update topics checkpoint to completed
+        checkpointState.checkpoints = checkpointState.checkpoints || {};
+        checkpointState.checkpoints.topics = {
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          data: { topic_count: totalPolicies * 5 } // TOPICS_PER_POLICY = 5
+        };
+
+        // Update prompts checkpoint to in_progress
+        checkpointState.checkpoints.prompts = {
+          status: 'in_progress',
+          started_at: new Date().toISOString()
+        };
+
+        checkpointState.current_checkpoint = 'prompts';
+
+        await supabase
+          .from('evaluations')
+          .update({ checkpoint_state: checkpointState })
+          .eq('id', evaluationId);
+
+        console.log('✅ Checkpoint updated: Topics completed, Prompts in_progress');
+      }
+    } catch (error) {
+      console.warn('Failed to update checkpoint state:', error);
+    }
+  }
+
   // Process all scenarios and create prompts
   // LAYER 2: Apply evaluation-specific transformations
   for (const { guardrail, scenarios } of policiesWithScenarios) {
@@ -704,6 +745,47 @@ async function generateCompliancePrompts(
         };
       })
   );
+
+  // CHECKPOINT UPDATE: Topics completed, prompts generation starting
+  if (evaluationId && supabase) {
+    try {
+      // Get current checkpoint state
+      const { data: evaluation } = await supabase
+        .from('evaluations')
+        .select('checkpoint_state')
+        .eq('id', evaluationId)
+        .single();
+
+      if (evaluation) {
+        const checkpointState = evaluation.checkpoint_state || {};
+
+        // Update topics checkpoint to completed
+        checkpointState.checkpoints = checkpointState.checkpoints || {};
+        checkpointState.checkpoints.topics = {
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          data: { topic_count: totalPolicies * 5 } // TOPICS_PER_POLICY = 5
+        };
+
+        // Update prompts checkpoint to in_progress
+        checkpointState.checkpoints.prompts = {
+          status: 'in_progress',
+          started_at: new Date().toISOString()
+        };
+
+        checkpointState.current_checkpoint = 'prompts';
+
+        await supabase
+          .from('evaluations')
+          .update({ checkpoint_state: checkpointState })
+          .eq('id', evaluationId);
+
+        console.log('✅ Checkpoint updated: Topics completed, Prompts in_progress (compliance)');
+      }
+    } catch (error) {
+      console.warn('Failed to update checkpoint state:', error);
+    }
+  }
 
   // Process all scenarios and create compliance prompts
   // LAYER 2: Apply perturbation transformations if specified
