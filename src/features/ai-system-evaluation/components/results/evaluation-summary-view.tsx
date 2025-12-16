@@ -89,7 +89,7 @@ export function EvaluationSummaryView({
     minute: "2-digit",
   });
 
-  // Calculate duration
+  // Calculate duration (for completed evaluations)
   let formattedDuration = "--";
   if (startedAt && completedAt) {
     const start = new Date(startedAt).getTime();
@@ -101,6 +101,9 @@ export function EvaluationSummaryView({
       seconds
     ).padStart(2, "0")}`;
   }
+
+  // Check if evaluation is in progress
+  const isInProgress = evaluationStatus === 'running' || evaluationStatus === 'pending';
 
   // Build navigation sections from strategy config
   const viewConfig = strategy.getSummaryViewConfig();
@@ -191,9 +194,6 @@ export function EvaluationSummaryView({
     };
   }, [navigationSections]);
 
-  // Check if evaluation is in progress
-  const isInProgress = evaluationStatus === 'running' || evaluationStatus === 'pending';
-
   return (
     <div
 
@@ -237,8 +237,14 @@ export function EvaluationSummaryView({
         <div className="flex flex-wrap text-[0.8125rem] font-400 gap-1">
 
             <span className="text-gray-400">{strategy.displayName} Evaluation</span>
-            <span className="text-gray-400">• Runtime: {formattedDuration}</span>
-            <span className="text-gray-400">• Evaluated On:  {formattedDate}, {formattedTime}</span>
+            {isInProgress ? (
+              <span className="text-gray-400">• Started On: {formattedDate}, {formattedTime}</span>
+            ) : (
+              <>
+                <span className="text-gray-400">• Runtime: {formattedDuration}</span>
+                <span className="text-gray-400">• Evaluated On: {formattedDate}, {formattedTime}</span>
+              </>
+            )}
 
         </div>
         </div>
@@ -290,10 +296,12 @@ export function EvaluationSummaryView({
           />
         )}
 
-        {/* Chat Composer at bottom */}
-        <div className="mt-12 mb-8">
-          <ChatComposer evaluationId={evaluationId} evaluationType={testType} />
-        </div>
+        {/* Chat Composer at bottom - Only show when completed */}
+        {!isInProgress && (
+          <div className="mt-12 mb-8">
+            <ChatComposer evaluationId={evaluationId} evaluationType={testType} />
+          </div>
+        )}
       </motion.div>
     </div>
   )
