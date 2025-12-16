@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { ChevronsUpDown, ChevronsDownUp } from "lucide-react";
 import { CheckpointDisplay } from "./checkpoint-display";
 import type { CheckpointState, PolicyProgress } from "@/lib/supabase/evaluation-service";
@@ -273,18 +274,28 @@ export function PolicyProgressCard({ policy, index, checkpointState, isSinglePol
       </button>
 
       {/* Expanded Content - Detailed Checkpoints */}
-      {isExpanded && (
-        <div className="px-3 pt-1 pb-3 space-y-3">
-          {checkpoints.map((checkpoint) => (
-            <CheckpointDisplay
-              key={checkpoint.id}
-              label={checkpoint.label}
-              status={checkpoint.status}
-              detail={checkpoint.detail}
-            />
-          ))}
-        </div>
-      )}
+      <AnimatePresence initial={false}>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+            className="overflow-hidden"
+          >
+            <div className="px-3 pt-1 pb-3 space-y-3">
+              {checkpoints.map((checkpoint) => (
+                <CheckpointDisplay
+                  key={checkpoint.id}
+                  label={checkpoint.label}
+                  status={checkpoint.status}
+                  detail={checkpoint.detail}
+                />
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
