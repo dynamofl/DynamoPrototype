@@ -2,12 +2,22 @@ import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
 import { CheckpointDisplay } from "./checkpoint-display";
 import { PolicyProgressCard } from "./policy-progress-card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { CheckpointState, PolicyProgress } from "@/lib/supabase/evaluation-service";
 
 interface ProgressCheckpoint {
   id: string;
   label: string;
-  status: 'pending' | 'in_progress' | 'completed';
+  status: 'pending' | 'in_progress' | 'completed' | 'stopped';
   detail?: string;
 }
 
@@ -20,33 +30,41 @@ interface ProgressCheckpointsSectionProps {
   policies?: PolicyProgress[];
   // New checkpoint-based prop
   checkpointState?: CheckpointState;
+  // Evaluation status to determine if stopped
+  evaluationStatus?: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+  // Restart functionality
+  onRestartFromCheckpoint?: (checkpointId: 'topics' | 'prompts' | 'evaluation' | 'summary') => void;
 }
 
 // Helper function to get label based on checkpoint status
 function getCheckpointLabel(
   checkpointId: 'topics' | 'prompts' | 'evaluation' | 'summary',
-  status: 'pending' | 'in_progress' | 'completed'
+  status: 'pending' | 'in_progress' | 'completed' | 'stopped'
 ): string {
   const labels = {
     topics: {
       pending: 'Generate Topics',
       in_progress: 'Generating Topics',
-      completed: 'Topics Generated'
+      completed: 'Topics Generated',
+      stopped: 'Topic Generation Stopped'
     },
     prompts: {
       pending: 'Generate Prompts',
       in_progress: 'Generating Prompts',
-      completed: 'Prompts Generated'
+      completed: 'Prompts Generated',
+      stopped: 'Prompt Generation Stopped'
     },
     evaluation: {
       pending: 'Run Evaluation',
       in_progress: 'Running Evaluation',
-      completed: 'Evaluation Complete'
+      completed: 'Evaluation Complete',
+      stopped: 'Evaluation Stopped'
     },
     summary: {
       pending: 'Structure Summary',
       in_progress: 'Structuring Summary',
-      completed: 'Summary Structured'
+      completed: 'Summary Structured',
+      stopped: 'Summary Generation Stopped'
     }
   };
 
@@ -55,8 +73,19 @@ function getCheckpointLabel(
 
 function getCheckpoints(
   progress: { current?: number; total?: number; stage?: string },
-  checkpointState?: CheckpointState
+  checkpointState?: CheckpointState,
+  evaluationStatus?: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
 ): ProgressCheckpoint[] {
+  const isStopped = evaluationStatus === 'cancelled';
+
+  // Helper to convert in_progress to stopped if evaluation is cancelled
+  const resolveStatus = (status: 'pending' | 'in_progress' | 'completed'): 'pending' | 'in_progress' | 'completed' | 'stopped' => {
+    if (isStopped && status === 'in_progress') {
+      return 'stopped';
+    }
+    return status;
+  };
+
   // Use checkpoint state if available, otherwise fall back to legacy parsing
   if (checkpointState?.checkpoints) {
     const { checkpoints } = checkpointState;
@@ -64,17 +93,17 @@ function getCheckpoints(
     const promptData = checkpoints.prompts?.data;
     const evaluationData = checkpoints.evaluation?.data;
 
-    const topicsStatus = checkpoints.topics?.status || 'pending';
-    const promptsStatus = checkpoints.prompts?.status || 'pending';
-    const evaluationStatus = checkpoints.evaluation?.status || 'pending';
-    const summaryStatus = checkpoints.summary?.status || 'pending';
+    const topicsStatus = resolveStatus(checkpoints.topics?.status || 'pending');
+    const promptsStatus = resolveStatus(checkpoints.prompts?.status || 'pending');
+    const evalStatus = resolveStatus(checkpoints.evaluation?.status || 'pending');
+    const summaryStatus = resolveStatus(checkpoints.summary?.status || 'pending');
 
     return [
       {
         id: 'topics',
         label: getCheckpointLabel('topics', topicsStatus),
         status: topicsStatus,
-        detail: topicsStatus === 'completed' && topicData?.topic_count
+        detail: (topicsStatus === 'completed' || topicsStatus === 'stopped') && topicData?.topic_count
           ? `${topicData.topic_count} topics`
           : undefined
       },
@@ -82,14 +111,14 @@ function getCheckpoints(
         id: 'prompts',
         label: getCheckpointLabel('prompts', promptsStatus),
         status: promptsStatus,
-        detail: promptsStatus === 'completed' && promptData?.prompt_count
+        detail: (promptsStatus === 'completed' || promptsStatus === 'stopped') && promptData?.prompt_count
           ? `${promptData.prompt_count} prompts`
           : undefined
       },
       {
         id: 'evaluation',
-        label: getCheckpointLabel('evaluation', evaluationStatus),
-        status: evaluationStatus,
+        label: getCheckpointLabel('evaluation', evalStatus),
+        status: evalStatus,
         detail: evaluationData?.total_prompts
           ? `${evaluationData.completed_prompts || 0}/${evaluationData.total_prompts} completed`
           : undefined
@@ -111,50 +140,54 @@ function getCheckpoints(
   const isEvaluating = stageLower.includes('evaluating') || (current > 0 && current < total);
   const isStructuring = stageLower.includes('structuring') || stageLower.includes('structure') || (current === total && total > 0);
 
-  const topicsStatus: 'pending' | 'in_progress' | 'completed' =
+  const topicsStatusLegacy = resolveStatus(
     isGeneratingTopics ? 'in_progress' :
     (isGeneratingPrompts || isEvaluating || isStructuring) ? 'completed' :
-    'pending';
+    'pending'
+  );
 
-  const promptsStatus: 'pending' | 'in_progress' | 'completed' =
+  const promptsStatusLegacy = resolveStatus(
     isGeneratingPrompts ? 'in_progress' :
     (isEvaluating || isStructuring) ? 'completed' :
-    topicsStatus === 'completed' ? 'pending' :
-    'pending';
+    topicsStatusLegacy === 'completed' ? 'pending' :
+    'pending'
+  );
 
-  const evaluationStatus: 'pending' | 'in_progress' | 'completed' =
+  const evalStatusLegacy = resolveStatus(
     isEvaluating ? 'in_progress' :
     isStructuring ? 'completed' :
-    (promptsStatus === 'completed' && total > 0) ? 'pending' :
-    'pending';
+    (promptsStatusLegacy === 'completed' && total > 0) ? 'pending' :
+    'pending'
+  );
 
-  const summaryStatus: 'pending' | 'in_progress' | 'completed' =
+  const summaryStatusLegacy = resolveStatus(
     isStructuring ? 'in_progress' :
-    'pending';
+    'pending'
+  );
 
   return [
     {
       id: 'topics',
-      label: getCheckpointLabel('topics', topicsStatus),
-      status: topicsStatus,
-      detail: topicsStatus === 'completed' ? `${total} topics` : undefined
+      label: getCheckpointLabel('topics', topicsStatusLegacy),
+      status: topicsStatusLegacy,
+      detail: topicsStatusLegacy === 'completed' ? `${total} topics` : undefined
     },
     {
       id: 'prompts',
-      label: getCheckpointLabel('prompts', promptsStatus),
-      status: promptsStatus,
-      detail: promptsStatus === 'completed' ? `${total} prompts` : undefined
+      label: getCheckpointLabel('prompts', promptsStatusLegacy),
+      status: promptsStatusLegacy,
+      detail: promptsStatusLegacy === 'completed' ? `${total} prompts` : undefined
     },
     {
       id: 'evaluation',
-      label: getCheckpointLabel('evaluation', evaluationStatus),
-      status: evaluationStatus,
+      label: getCheckpointLabel('evaluation', evalStatusLegacy),
+      status: evalStatusLegacy,
       detail: total > 0 ? `${current}/${total} completed` : undefined
     },
     {
       id: 'summary',
-      label: getCheckpointLabel('summary', summaryStatus),
-      status: summaryStatus
+      label: getCheckpointLabel('summary', summaryStatusLegacy),
+      status: summaryStatusLegacy
     }
   ];
 }
@@ -226,16 +259,48 @@ export function ProgressCheckpointsSection({
   stage,
   startedAt,
   policies,
-  checkpointState
+  checkpointState,
+  evaluationStatus,
+  onRestartFromCheckpoint
 }: ProgressCheckpointsSectionProps) {
   const [timeElapsed, setTimeElapsed] = useState(formatTimeElapsed(startedAt));
+  const [showRestartDialog, setShowRestartDialog] = useState(false);
+  const [selectedCheckpoint, setSelectedCheckpoint] = useState<'topics' | 'prompts' | 'evaluation' | 'summary' | null>(null);
+
+  // Handler for restart button click
+  const handleRestartClick = (checkpointId: 'topics' | 'prompts' | 'evaluation' | 'summary') => {
+    setSelectedCheckpoint(checkpointId);
+    setShowRestartDialog(true);
+  };
+
+  // Handler for confirming restart
+  const handleConfirmRestart = () => {
+    if (selectedCheckpoint && onRestartFromCheckpoint) {
+      onRestartFromCheckpoint(selectedCheckpoint);
+    }
+    setShowRestartDialog(false);
+    setSelectedCheckpoint(null);
+  };
+
+  // Get checkpoint name for display
+  const getCheckpointName = (checkpointId: 'topics' | 'prompts' | 'evaluation' | 'summary' | null): string => {
+    if (!checkpointId) return '';
+    const names = {
+      topics: 'Topics',
+      prompts: 'Prompts',
+      evaluation: 'Evaluation',
+      summary: 'Summary'
+    };
+    return names[checkpointId];
+  };
 
   // Use checkpoint state for progress data when available
   const effectiveTotal = checkpointState?.checkpoints?.evaluation?.data?.total_prompts ?? total ?? 0;
   const effectiveCurrent = checkpointState?.checkpoints?.evaluation?.data?.completed_prompts ?? current ?? 0;
   const effectivePolicies = checkpointState?.policies ?? policies ?? [];
 
-  const checkpoints = getCheckpoints({ current, total, stage }, checkpointState);
+  const isStopped = evaluationStatus === 'cancelled';
+  const checkpoints = getCheckpoints({ current, total, stage }, checkpointState, evaluationStatus);
 
   // Calculate percentage using checkpoint-aware function if checkpoint state exists
   // This includes all phases: Topics (5%), Prompts (5%), Evaluation (85%), Summary (5%)
@@ -260,7 +325,11 @@ export function ProgressCheckpointsSection({
       <div className="max-w-3xl">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-450 text-gray-900">Evaluation Status</h2>
-          <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-450 rounded-full ">Running</span>
+          {isStopped ? (
+            <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-450 rounded-full">Stopped</span>
+          ) : (
+            <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-450 rounded-full">Running</span>
+          )}
         </div>
 
         <div className="space-y-6">
@@ -286,9 +355,11 @@ export function ProgressCheckpointsSection({
                   checkpointState={checkpointState}
                   isSinglePolicy={effectivePolicies.length === 1}
                   isLastItem={index === effectivePolicies.length - 1}
+                  evaluationStatus={evaluationStatus}
+                  onRestartFromCheckpoint={onRestartFromCheckpoint ? handleRestartClick : undefined}
                 />
               ))
-              
+
             ) : (
               // Fallback: Show checkpoints list if no policies available
               <div className="border border-gray-200 rounded-lg overflow-hidden">
@@ -299,6 +370,9 @@ export function ProgressCheckpointsSection({
                       label={checkpoint.label}
                       status={checkpoint.status}
                       detail={checkpoint.detail}
+                      checkpointId={checkpoint.id as 'topics' | 'prompts' | 'evaluation' | 'summary'}
+                      evaluationStatus={evaluationStatus}
+                      onRestart={onRestartFromCheckpoint ? handleRestartClick : undefined}
                     />
                   ))}
                 </div>
@@ -316,6 +390,27 @@ export function ProgressCheckpointsSection({
           )} */}
         </div>
       </div>
+
+      {/* Restart Confirmation Dialog */}
+      <AlertDialog open={showRestartDialog} onOpenChange={setShowRestartDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Restart from {getCheckpointName(selectedCheckpoint)}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Restart after this stage
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmRestart}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Restart
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

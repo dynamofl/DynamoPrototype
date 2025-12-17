@@ -208,8 +208,8 @@ export function EvaluationHistoryTableDirect({
       },
       cancelled: {
         icon: XCircle,
-        color: 'text-gray-500',
-        label: 'Cancelled'
+        color: 'text-amber-600',
+        label: 'Stopped'
       }
     }
 
@@ -325,7 +325,7 @@ export function EvaluationHistoryTableDirect({
                     // Trigger appropriate action based on status
                     if (test.status === 'completed') {
                       onViewReport(test)
-                    } else if (test.status === 'pending' || test.status === 'running') {
+                    } else if (test.status === 'pending' || test.status === 'running' || test.status === 'cancelled') {
                       onShowProgress(test)
                     } else if (test.status === 'failed') {
                       onTestDetails(test)
@@ -382,6 +382,19 @@ export function EvaluationHistoryTableDirect({
                       </Button>
                     )}
                     {test.status === 'running' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onShowProgress(test)
+                        }}
+                        className=""
+                      >
+                        View Progress
+                      </Button>
+                    )}
+                    {test.status === 'cancelled' && (
                       <Button
                         variant="outline"
                         size="sm"

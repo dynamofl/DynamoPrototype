@@ -12,6 +12,7 @@ import {
   evaluateWithJudgeModel
 } from '../_shared/guardrail-evaluator.ts';
 import type { EvaluationPrompt, SummaryMetrics, ModelExecutionConfig } from '../_shared/types.ts';
+import { CheckpointManager } from '../_shared/checkpoint-manager.ts';
 
 // BATCH SIZE: Process 10 prompts per invocation as specified
 // With checkpoint-based progress and batch updates, this provides optimal balance
@@ -40,42 +41,60 @@ async function updateBatchCheckpoint(
   const checkpointState = evaluation.checkpoint_state || {};
   const currentCompleted = (evaluation.completed_prompts || 0) + completedInBatch;
 
-  // Update policy progress in-memory
-  if (checkpointState.policies && Array.isArray(checkpointState.policies)) {
-    for (const policy of checkpointState.policies) {
-      const progress = policyProgressMap.get(policy.id) || 0;
-      policy.current = Math.min((policy.current || 0) + progress, policy.total);
-      policy.status = policy.current === policy.total ? 'completed' : 'in_progress';
-    }
-  }
-
-  // Update evaluation checkpoint data
+  // Calculate total prompts for checkpoint completion check
   const totalPrompts = checkpointState.policies?.reduce((sum: number, p: any) => sum + (p.total || 0), 0) || 0;
+  const isComplete = currentCompleted >= totalPrompts && totalPrompts > 0;
 
-  checkpointState.checkpoints = checkpointState.checkpoints || {};
-  checkpointState.checkpoints.evaluation = {
-    status: currentCompleted >= totalPrompts ? 'completed' : 'in_progress',
-    ...(checkpointState.checkpoints.evaluation?.started_at ? { started_at: checkpointState.checkpoints.evaluation.started_at } : { started_at: new Date().toISOString() }),
-    ...(currentCompleted >= totalPrompts ? { completed_at: new Date().toISOString() } : {}),
-    data: {
+  // Use CheckpointManager to update evaluation checkpoint
+  const checkpointManager = new CheckpointManager();
+
+  if (isComplete) {
+    // Mark evaluation as completed and move to summary
+    await checkpointManager.moveToNextCheckpoint(evaluationId, 'evaluation', 'summary', {
       completed_prompts: currentCompleted,
       total_prompts: totalPrompts
+    });
+  } else {
+    // Update evaluation checkpoint progress (ensure it's started)
+    const evalStatus = await checkpointManager.getCheckpointStatus(evaluationId, 'evaluation');
+    if (evalStatus === 'pending') {
+      await checkpointManager.markCheckpointStarted(evaluationId, 'evaluation');
     }
-  };
 
-  // If evaluation is complete, move to summary checkpoint
-  if (currentCompleted >= totalPrompts && totalPrompts > 0) {
-    checkpointState.current_checkpoint = 'summary';
+    // Update with current progress data
+    await checkpointManager.updateCheckpoint(evaluationId, 'evaluation', 'in_progress', {
+      completed_prompts: currentCompleted,
+      total_prompts: totalPrompts
+    });
   }
 
-  // SINGLE UPDATE - triggers real-time subscription
-  await supabase
+  // Get the updated checkpoint state after CheckpointManager updates
+  const { data: updatedEval } = await supabase
     .from('evaluations')
-    .update({
-      checkpoint_state: checkpointState,
-      completed_prompts: currentCompleted
-    })
-    .eq('id', evaluationId);
+    .select('checkpoint_state')
+    .eq('id', evaluationId)
+    .single();
+
+  if (updatedEval?.checkpoint_state) {
+    // Update policy progress in the updated checkpoint state
+    const updatedCheckpointState = updatedEval.checkpoint_state;
+    if (updatedCheckpointState.policies && Array.isArray(updatedCheckpointState.policies)) {
+      for (const policy of updatedCheckpointState.policies) {
+        const progress = policyProgressMap.get(policy.id) || 0;
+        policy.current = Math.min((policy.current || 0) + progress, policy.total);
+        policy.status = policy.current === policy.total ? 'completed' : 'in_progress';
+      }
+    }
+
+    // Write back with updated policy progress
+    await supabase
+      .from('evaluations')
+      .update({
+        checkpoint_state: updatedCheckpointState,
+        completed_prompts: currentCompleted
+      })
+      .eq('id', evaluationId);
+  }
 }
 
 serve(async (req: Request) => {
@@ -111,6 +130,18 @@ serve(async (req: Request) => {
 
     if (evalError || !evaluation) {
       throw new Error(`Evaluation not found: ${evaluationId}`);
+    }
+
+    // Check if evaluation has been cancelled
+    if (evaluation.status === 'cancelled') {
+      console.log('Evaluation cancelled, stopping execution');
+      return new Response(
+        JSON.stringify({
+          status: 'cancelled',
+          message: 'Evaluation was stopped by user'
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Determine which table to use based on test type (early check before loading evaluation)
@@ -1952,6 +1983,11 @@ async function finalizeEvaluation(
 ) {
   await logInfo(supabase, evaluationId, `Starting finalization process for table: ${promptTable}`);
 
+  // CRITICAL: Mark summary checkpoint as started NOW (when it actually begins)
+  const checkpointManager = new CheckpointManager();
+  await checkpointManager.markCheckpointStarted(evaluationId, 'summary');
+  await logInfo(supabase, evaluationId, 'Summary checkpoint marked as started');
+
   // Get evaluation to check guardrails config
   const { data: evaluation } = await supabase
     .from('evaluations')
@@ -2074,29 +2110,9 @@ async function finalizeEvaluation(
       `Evaluation updated successfully. Result has topic_analysis: ${updateResult?.[0]?.topic_analysis ? 'YES' : 'NO'}`
     );
 
-    // CHECKPOINT: Mark summary as completed
-    const { data: checkpointEval } = await supabase
-      .from('evaluations')
-      .select('checkpoint_state')
-      .eq('id', evaluationId)
-      .single();
-
-    if (checkpointEval?.checkpoint_state) {
-      const checkpointState = checkpointEval.checkpoint_state;
-      checkpointState.checkpoints = checkpointState.checkpoints || {};
-      checkpointState.checkpoints.summary = {
-        status: 'completed',
-        completed_at: new Date().toISOString()
-      };
-      checkpointState.current_checkpoint = 'summary';
-
-      await supabase
-        .from('evaluations')
-        .update({ checkpoint_state: checkpointState })
-        .eq('id', evaluationId);
-
-      await logInfo(supabase, evaluationId, 'Summary checkpoint marked as completed');
-    }
+    // CHECKPOINT: Mark summary as completed using CheckpointManager
+    await checkpointManager.markCheckpointCompleted(evaluationId, 'summary');
+    await logInfo(supabase, evaluationId, 'Summary checkpoint marked as completed');
 
     await logInfo(supabase, evaluationId, 'Evaluation Successful');
   } catch (error) {

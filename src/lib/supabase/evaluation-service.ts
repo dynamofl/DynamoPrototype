@@ -640,6 +640,73 @@ export class EvaluationService {
   }
 
   /**
+   * Resume a stopped/cancelled evaluation from its last checkpoint
+   */
+  static async resumeEvaluation(evaluationId: string): Promise<{
+    success: boolean;
+    message: string;
+    resumePoint?: string;
+  }> {
+    await ensureAuthenticated();
+    const token = await getAuthToken();
+
+    if (!token) {
+      throw new Error('Authentication required');
+    }
+
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/resume-evaluation`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ evaluationId })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to resume evaluation');
+    }
+
+    return await response.json();
+  }
+
+  /**
+   * Restart evaluation from a specific checkpoint
+   * This will clear all data from that checkpoint onwards and restart from there
+   */
+  static async restartFromCheckpoint(
+    evaluationId: string,
+    checkpointId: 'topics' | 'prompts' | 'evaluation' | 'summary'
+  ): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    await ensureAuthenticated();
+    const token = await getAuthToken();
+
+    if (!token) {
+      throw new Error('Authentication required');
+    }
+
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/restart-from-checkpoint`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ evaluationId, checkpointId })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to restart from checkpoint');
+    }
+
+    return await response.json();
+  }
+
+  /**
    * Get unique topics and attack areas across all evaluations for an AI system
    * Separated by test type (jailbreak/compliance/hallucination)
    */

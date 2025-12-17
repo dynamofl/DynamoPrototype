@@ -104,7 +104,7 @@ export interface SummaryViewContext {
   hasGuardrails?: boolean
   topicAnalysis?: any
   evaluationResults?: BaseEvaluationResult[]
-  evaluationStatus?: 'pending' | 'running' | 'completed' | 'failed'
+  evaluationStatus?: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
   evaluationProgress?: {
     current: number
     total: number

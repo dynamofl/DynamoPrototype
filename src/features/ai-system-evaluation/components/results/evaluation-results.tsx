@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowDownToLine, ChevronsUpDown, Search, Square } from "lucide-react";
+import { ArrowDownToLine, ChevronsUpDown, Search, Square, Play } from "lucide-react";
 import type { BaseEvaluationOutput } from "../../types/base-evaluation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,16 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { OverlayHeader } from "@/components/patterns";
 import { toUrlSlug } from "@/lib/utils";
 import { EvaluationDataView } from "./evaluation-data-view";
@@ -41,7 +51,7 @@ interface EvaluationResultsProps {
   onTestChange?: (testId: string) => void;
   onAISystemChange?: (systemId: string) => void;
   // New props for progress state
-  evaluationStatus?: 'pending' | 'running' | 'completed' | 'failed';
+  evaluationStatus?: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
   evaluationProgress?: {
     current: number;
     total: number;
@@ -53,6 +63,11 @@ interface EvaluationResultsProps {
     checkpoints?: any;
     policies?: any[];
   };
+  // Props for stop and resume functionality
+  onStopEvaluation?: () => void;
+  onResumeEvaluation?: () => void;
+  // Props for restart from checkpoint functionality
+  onRestartFromCheckpoint?: (checkpointId: 'topics' | 'prompts' | 'evaluation' | 'summary') => void;
 }
 
 export function EvaluationResults({
@@ -74,12 +89,16 @@ export function EvaluationResults({
   onTestChange,
   onAISystemChange,
   evaluationStatus,
-  evaluationProgress
+  evaluationProgress,
+  onStopEvaluation,
+  onResumeEvaluation,
+  onRestartFromCheckpoint
 }: EvaluationResultsProps) {
   const navigate = useNavigate();
   const { systemName, evaluationId, view } = useParams<{ systemName: string; evaluationId?: string; view?: string }>();
   const [selectedTab, setSelectedTab] = useState<'summary' | 'data'>((view as 'summary' | 'data') || (propTab as 'summary' | 'data') || 'summary');
   const [searchQuery, setSearchQuery] = useState("");
+  const [showStopDialog, setShowStopDialog] = useState(false);
 
   // Get strategy based on test type
   const testType = results.test_type || 'jailbreak';
@@ -304,14 +323,39 @@ export function EvaluationResults({
 
             {/* Show Stop Evaluation button when running */}
             {(evaluationStatus === 'running' || evaluationStatus === 'pending') && (
-              <Button variant="outline" size="default" className="gap-1.5">
-                                        <Square className="h-3 w-3 fill-red-500 text-red-500" />
-
+              <Button
+                variant="outline"
+                size="default"
+                className="gap-1.5"
+                onClick={() => setShowStopDialog(true)}
+              >
+                <Square className="h-3 w-3 fill-red-500 text-red-500" />
                 Stop Evaluation
               </Button>
             )}
 
-            {/* Show Download/Export buttons only when evaluation is completed */}
+            {/* Show Stopped badge and Resume button when cancelled */}
+            {evaluationStatus === 'cancelled' && (
+              <>
+                <div className="flex items-center gap-1 p-1.5 pr-2 bg-amber-50 rounded-full">
+                  <Square className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                  <span className="text-[0.8125rem] font-450 text-amber-700">
+                    Stopped at {evaluationProgress?.percentage ?? 0}%
+                  </span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="default"
+                  className="gap-1.5"
+                  onClick={onResumeEvaluation}
+                >
+                  <Play className="h-3 w-3 fill-green-500 text-green-500" />
+                  Resume Evaluation
+                </Button>
+              </>
+            )}
+
+            {/* Show Download/Export buttons only when evaluation is completed or failed */}
             {(evaluationStatus === 'completed' || evaluationStatus === 'failed' || !evaluationStatus) && (
               <>
                 <Button variant="secondary" size="default" className="gap-1">
@@ -361,6 +405,7 @@ export function EvaluationResults({
               config={results.config}
               evaluationStatus={evaluationStatus}
               evaluationProgress={evaluationProgress}
+              onRestartFromCheckpoint={onRestartFromCheckpoint}
             />
           )}
 
@@ -379,6 +424,29 @@ export function EvaluationResults({
         </div>
       </div>
 
+      {/* Stop Evaluation Confirmation Dialog */}
+      <AlertDialog open={showStopDialog} onOpenChange={setShowStopDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Stop Evaluation?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will stop the evaluation at its current checkpoint. You can resume it later from where it stopped.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                onStopEvaluation?.();
+                setShowStopDialog(false);
+              }}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Stop Evaluation
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

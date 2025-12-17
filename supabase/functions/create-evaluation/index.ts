@@ -6,51 +6,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders, handleCors } from '../_shared/cors.ts';
 import { generatePromptsFromPolicies } from '../_shared/prompt-generator.ts';
 import type { CreateEvaluationRequest, CreateEvaluationResponse } from '../_shared/types.ts';
-
-/**
- * Helper function to update checkpoint state
- */
-async function updateCheckpoint(
-  supabase: any,
-  evaluationId: string,
-  checkpointName: 'topics' | 'prompts' | 'evaluation' | 'summary',
-  status: 'in_progress' | 'completed',
-  data?: Record<string, any>
-) {
-  // Get current checkpoint state
-  const { data: evaluation } = await supabase
-    .from('evaluations')
-    .select('checkpoint_state')
-    .eq('id', evaluationId)
-    .single();
-
-  if (!evaluation) return;
-
-  const checkpointState = evaluation.checkpoint_state || {};
-
-  // Update the specific checkpoint
-  checkpointState.checkpoints = checkpointState.checkpoints || {};
-  checkpointState.checkpoints[checkpointName] = {
-    status,
-    ...(status === 'in_progress' ? { started_at: new Date().toISOString() } : {}),
-    ...(status === 'completed' ? { completed_at: new Date().toISOString() } : {}),
-    ...(data ? { data } : {})
-  };
-
-  // Update current_checkpoint if transitioning to next phase
-  if (status === 'completed') {
-    const checkpointOrder = ['topics', 'prompts', 'evaluation', 'summary'];
-    const currentIndex = checkpointOrder.indexOf(checkpointName);
-    if (currentIndex < checkpointOrder.length - 1) {
-      checkpointState.current_checkpoint = checkpointOrder[currentIndex + 1];
-    }
-  }
-
-  await supabase
-    .from('evaluations')
-    .update({ checkpoint_state: checkpointState })
-    .eq('id', evaluationId);
-}
+import { CheckpointManager } from '../_shared/checkpoint-manager.ts';
 
 /**
  * Helper function to update per-policy totals in checkpoint state
@@ -186,7 +142,6 @@ serve(async (req: Request) => {
     // This allows the frontend to navigate to the evaluation page right away
     // Set started_at NOW to track total runtime including prompt generation
 
-    // Initialize checkpoint state for the new checkpoint-based progress system
     // Extract policy names for progress tracking
     const policies = guardrails
       .filter(g => policyIds.includes(g.id))
@@ -197,17 +152,6 @@ serve(async (req: Request) => {
         total: 0,  // Will be updated after prompt generation
         status: 'pending' as const
       }));
-
-    const initialCheckpointState = {
-      current_checkpoint: 'topics',
-      checkpoints: {
-        topics: { status: 'in_progress', started_at: new Date().toISOString() },
-        prompts: { status: 'pending' },
-        evaluation: { status: 'pending' },
-        summary: { status: 'pending' }
-      },
-      policies
-    };
 
     const { data: evaluation, error: evalError } = await supabase
       .from('evaluations')
@@ -227,7 +171,7 @@ serve(async (req: Request) => {
         total_prompts: 0, // Will be updated after prompt generation
         completed_prompts: 0,
         created_by: user.id,
-        checkpoint_state: initialCheckpointState
+        checkpoint_state: null // Will be initialized by CheckpointManager
       })
       .select()
       .single();
@@ -237,6 +181,11 @@ serve(async (req: Request) => {
     }
 
     console.log(`✅ Evaluation ${evaluation.id} created at ${evaluation.started_at}, starting background prompt generation`);
+
+    // Initialize checkpoint state using shared CheckpointManager
+    const checkpointManager = new CheckpointManager();
+    await checkpointManager.initializeCheckpointState(evaluation.id, policies);
+    console.log(`✅ Checkpoint state initialized for evaluation ${evaluation.id}`);
 
     // PHASE 2: Generate prompts in BACKGROUND (fire-and-forget)
     // This runs asynchronously without blocking the response
@@ -358,13 +307,17 @@ serve(async (req: Request) => {
           return;
         }
 
-        // CHECKPOINT: Mark prompts as completed
-        await updateCheckpoint(supabase, evaluation.id, 'prompts', 'completed', {
+        // CHECKPOINT: Mark topics as completed
+        await checkpointManager.markCheckpointCompleted(evaluation.id, 'topics');
+
+        // CHECKPOINT: Mark prompts as started then completed
+        await checkpointManager.markCheckpointStarted(evaluation.id, 'prompts');
+        await checkpointManager.markCheckpointCompleted(evaluation.id, 'prompts', {
           prompt_count: prompts.length
         });
 
-        // CHECKPOINT: Mark evaluation as in_progress (will be started by run-evaluation)
-        await updateCheckpoint(supabase, evaluation.id, 'evaluation', 'in_progress');
+        // CHECKPOINT: Move to evaluation checkpoint (but keep as pending - will be started by run-evaluation)
+        await checkpointManager.moveToNextCheckpoint(evaluation.id, 'prompts', 'evaluation');
 
         // Update total_prompts - this will trigger real-time subscription on frontend
         await supabase

@@ -30,7 +30,7 @@ interface EvaluationDataViewProps {
   hasGuardrails?: boolean;
   systemName?: string;
   evaluationId?: string;
-  evaluationStatus?: 'pending' | 'running' | 'completed' | 'failed';
+  evaluationStatus?: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
 }
 
 export function EvaluationDataView({

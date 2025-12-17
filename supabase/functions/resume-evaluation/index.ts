@@ -4,6 +4,7 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders, handleCors } from '../_shared/cors.ts';
+import { CheckpointManager } from '../_shared/checkpoint-manager.ts';
 
 interface ResumeEvaluationRequest {
   evaluationId: string;
@@ -87,38 +88,6 @@ async function triggerRunEvaluation(supabase: any, evaluationId: string) {
   }
 
   return await response.json();
-}
-
-/**
- * Update checkpoint to mark it as in_progress
- */
-async function updateCheckpointStatus(
-  supabase: any,
-  evaluationId: string,
-  checkpointName: 'topics' | 'prompts' | 'evaluation' | 'summary',
-  status: 'in_progress'
-) {
-  const { data: evaluation } = await supabase
-    .from('evaluations')
-    .select('checkpoint_state')
-    .eq('id', evaluationId)
-    .single();
-
-  if (!evaluation) return;
-
-  const checkpointState = evaluation.checkpoint_state || {};
-  checkpointState.checkpoints = checkpointState.checkpoints || {};
-  checkpointState.checkpoints[checkpointName] = {
-    ...checkpointState.checkpoints[checkpointName],
-    status,
-    started_at: new Date().toISOString()
-  };
-  checkpointState.current_checkpoint = checkpointName;
-
-  await supabase
-    .from('evaluations')
-    .update({ checkpoint_state: checkpointState })
-    .eq('id', evaluationId);
 }
 
 serve(async (req: Request) => {
@@ -209,7 +178,40 @@ serve(async (req: Request) => {
       case 'evaluation':
         // Resume evaluation - process pending prompts
         console.log(`▶️ Triggering run-evaluation for pending prompts...`);
-        await updateCheckpointStatus(supabase, evaluationId, 'evaluation', 'in_progress');
+
+        // Determine which table to use based on test type
+        const testType = evaluation.config?.testType || 'jailbreak';
+        const promptTable = testType === 'compliance' ? 'compliance_prompts' : 'jailbreak_prompts';
+
+        // Reset stuck prompts (status='running') back to 'pending'
+        // These are prompts that were being evaluated when the evaluation was stopped
+        // Do NOT touch 'completed' prompts - we want to keep partial results
+        console.log(`🔄 Resetting stuck prompts in ${promptTable}...`);
+        const { data: resetData, error: resetError } = await supabase
+          .from(promptTable)
+          .update({
+            status: 'pending',
+            output: null,
+            input_guard_rails_triggered: null,
+            output_guard_rails_triggered: null,
+            judge_evaluation: null,
+            outcome: null
+          })
+          .eq('evaluation_id', evaluationId)
+          .eq('status', 'running');
+
+        if (resetError) {
+          console.error(`❌ Error resetting stuck prompts:`, resetError);
+        } else {
+          console.log(`✅ Reset stuck prompts successfully`);
+        }
+
+        // Use CheckpointManager to mark evaluation as in_progress
+        const checkpointManager = new CheckpointManager();
+        const evalStatus = await checkpointManager.getCheckpointStatus(evaluationId, 'evaluation');
+        if (evalStatus === 'pending') {
+          await checkpointManager.markCheckpointStarted(evaluationId, 'evaluation');
+        }
 
         // Trigger run-evaluation in the background
         triggerRunEvaluation(supabase, evaluationId).catch(error => {
@@ -229,7 +231,9 @@ serve(async (req: Request) => {
       case 'summary':
         // Recalculate summary - trigger run-evaluation which will finalize
         console.log(`▶️ Triggering summary generation...`);
-        await updateCheckpointStatus(supabase, evaluationId, 'summary', 'in_progress');
+
+        // Note: CheckpointManager will mark summary as 'in_progress' when finalizeEvaluation actually starts
+        // We don't need to mark it here - just trigger run-evaluation
 
         // Trigger run-evaluation which will detect all prompts are done and finalize
         triggerRunEvaluation(supabase, evaluationId).catch(error => {

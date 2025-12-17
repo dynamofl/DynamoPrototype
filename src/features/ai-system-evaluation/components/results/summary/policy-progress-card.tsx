@@ -10,40 +10,46 @@ export interface PolicyProgressCardProps {
   checkpointState?: CheckpointState;
   isSinglePolicy?: boolean;
   isLastItem?: boolean;
+  evaluationStatus?: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+  onRestartFromCheckpoint?: (checkpointId: 'topics' | 'prompts' | 'evaluation' | 'summary') => void;
 }
 
 interface ProgressCheckpoint {
   id: string;
   label: string;
-  status: 'pending' | 'in_progress' | 'completed';
+  status: 'pending' | 'in_progress' | 'completed' | 'stopped';
   detail?: string;
 }
 
 // Helper function to get label based on checkpoint status
 function getCheckpointLabel(
   checkpointId: 'topics' | 'prompts' | 'evaluation' | 'summary',
-  status: 'pending' | 'in_progress' | 'completed'
+  status: 'pending' | 'in_progress' | 'completed' | 'stopped'
 ): string {
   const labels = {
     topics: {
       pending: 'Generate Topics',
       in_progress: 'Generating Topics',
-      completed: 'Topics Generated'
+      completed: 'Topics Generated',
+      stopped: 'Topic Generation Stopped'
     },
     prompts: {
       pending: 'Generate Prompts',
       in_progress: 'Generating Prompts',
-      completed: 'Prompts Generated'
+      completed: 'Prompts Generated',
+      stopped: 'Prompt Generation Stopped'
     },
     evaluation: {
       pending: 'Run Evaluation',
       in_progress: 'Running Evaluation',
-      completed: 'Evaluation Complete'
+      completed: 'Evaluation Complete',
+      stopped: 'Evaluation Stopped'
     },
     summary: {
       pending: 'Structure Summary',
       in_progress: 'Structuring Summary',
-      completed: 'Summary Structured'
+      completed: 'Summary Structured',
+      stopped: 'Summary Generation Stopped'
     }
   };
 
@@ -52,8 +58,19 @@ function getCheckpointLabel(
 
 function getCheckpoints(
   progress: { current?: number; total?: number },
-  checkpointState?: CheckpointState
+  checkpointState?: CheckpointState,
+  evaluationStatus?: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
 ): ProgressCheckpoint[] {
+  const isStopped = evaluationStatus === 'cancelled';
+
+  // Helper to convert in_progress to stopped if evaluation is cancelled
+  const resolveStatus = (status: 'pending' | 'in_progress' | 'completed'): 'pending' | 'in_progress' | 'completed' | 'stopped' => {
+    if (isStopped && status === 'in_progress') {
+      return 'stopped';
+    }
+    return status;
+  };
+
   // Use checkpoint state if available
   if (checkpointState?.checkpoints) {
     const { checkpoints } = checkpointState;
@@ -61,17 +78,17 @@ function getCheckpoints(
     const promptData = checkpoints.prompts?.data;
     const evaluationData = checkpoints.evaluation?.data;
 
-    const topicsStatus = checkpoints.topics?.status || 'pending';
-    const promptsStatus = checkpoints.prompts?.status || 'pending';
-    const evaluationStatus = checkpoints.evaluation?.status || 'pending';
-    const summaryStatus = checkpoints.summary?.status || 'pending';
+    const topicsStatus = resolveStatus(checkpoints.topics?.status || 'pending');
+    const promptsStatus = resolveStatus(checkpoints.prompts?.status || 'pending');
+    const evalStatus = resolveStatus(checkpoints.evaluation?.status || 'pending');
+    const summaryStatus = resolveStatus(checkpoints.summary?.status || 'pending');
 
     return [
       {
         id: 'topics',
         label: getCheckpointLabel('topics', topicsStatus),
         status: topicsStatus,
-        detail: topicsStatus === 'completed' && topicData?.topic_count
+        detail: (topicsStatus === 'completed' || topicsStatus === 'stopped') && topicData?.topic_count
           ? `${topicData.topic_count} topics`
           : undefined
       },
@@ -79,14 +96,14 @@ function getCheckpoints(
         id: 'prompts',
         label: getCheckpointLabel('prompts', promptsStatus),
         status: promptsStatus,
-        detail: promptsStatus === 'completed' && promptData?.prompt_count
+        detail: (promptsStatus === 'completed' || promptsStatus === 'stopped') && promptData?.prompt_count
           ? `${promptData.prompt_count} prompts`
           : undefined
       },
       {
         id: 'evaluation',
-        label: getCheckpointLabel('evaluation', evaluationStatus),
-        status: evaluationStatus,
+        label: getCheckpointLabel('evaluation', evalStatus),
+        status: evalStatus,
         detail: evaluationData?.total_prompts
           ? `${evaluationData.completed_prompts || 0}/${evaluationData.total_prompts} completed`
           : undefined
@@ -101,6 +118,8 @@ function getCheckpoints(
 
   // Legacy fallback: simple evaluation progress
   const { current = 0, total = 0 } = progress;
+  const legacyEvalStatus = resolveStatus('in_progress');
+
   return [
     {
       id: 'topics',
@@ -114,8 +133,8 @@ function getCheckpoints(
     },
     {
       id: 'evaluation',
-      label: 'Running Evaluation',
-      status: 'in_progress',
+      label: isStopped ? 'Evaluation Stopped' : 'Running Evaluation',
+      status: legacyEvalStatus,
       detail: total > 0 ? `${current}/${total} completed` : undefined
     },
     {
@@ -177,9 +196,9 @@ function calculateCheckpointPercentage(checkpointState: CheckpointState | null |
  * PolicyProgressCard component displays progress for a single policy evaluation.
  * Shows circular progress indicator, policy name, and expandable checkpoint details.
  */
-export function PolicyProgressCard({ policy, index, checkpointState, isSinglePolicy, isLastItem }: PolicyProgressCardProps) {
+export function PolicyProgressCard({ policy, index, checkpointState, isSinglePolicy, isLastItem, evaluationStatus, onRestartFromCheckpoint }: PolicyProgressCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const checkpoints = getCheckpoints({ current: policy.current, total: policy.total }, checkpointState);
+  const checkpoints = getCheckpoints({ current: policy.current, total: policy.total }, checkpointState, evaluationStatus);
 
   // For single policy evaluations, use checkpoint-aware percentage
   // For multi-policy evaluations, show just the evaluation phase progress per policy
@@ -202,6 +221,9 @@ export function PolicyProgressCard({ policy, index, checkpointState, isSinglePol
             label={checkpoint.label}
             status={checkpoint.status}
             detail={checkpoint.detail}
+            checkpointId={checkpoint.id as 'topics' | 'prompts' | 'evaluation' | 'summary'}
+            evaluationStatus={evaluationStatus}
+            onRestart={onRestartFromCheckpoint}
           />
         ))}
       </div>
@@ -290,6 +312,9 @@ export function PolicyProgressCard({ policy, index, checkpointState, isSinglePol
                   label={checkpoint.label}
                   status={checkpoint.status}
                   detail={checkpoint.detail}
+                  checkpointId={checkpoint.id as 'topics' | 'prompts' | 'evaluation' | 'summary'}
+                  evaluationStatus={evaluationStatus}
+                  onRestart={onRestartFromCheckpoint}
                 />
               ))}
             </div>

@@ -35,7 +35,7 @@ interface EvaluationSummaryViewProps {
   topicAnalysis?: any; // Topic analysis with AI insights
   evaluationResults?: BaseEvaluationResult[]; // Evaluation prompts for behavior extraction
   config?: any; // Evaluation config with full policy definitions
-  evaluationStatus?: 'pending' | 'running' | 'completed' | 'failed';
+  evaluationStatus?: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
   evaluationProgress?: {
     current: number;
     total: number;
@@ -53,6 +53,7 @@ interface EvaluationSummaryViewProps {
     currentCheckpoint?: string | null;
     checkpoints?: any; // CheckpointState['checkpoints']
   };
+  onRestartFromCheckpoint?: (checkpointId: 'topics' | 'prompts' | 'evaluation' | 'summary') => void;
 }
 
 export function EvaluationSummaryView({
@@ -73,6 +74,7 @@ export function EvaluationSummaryView({
   config,
   evaluationStatus,
   evaluationProgress,
+  onRestartFromCheckpoint,
 }: EvaluationSummaryViewProps) {
   const [activeSection, setActiveSection] = useState<string>('overview');
   const isScrollingProgrammatically = useRef(false);
@@ -102,8 +104,8 @@ export function EvaluationSummaryView({
     ).padStart(2, "0")}`;
   }
 
-  // Check if evaluation is in progress
-  const isInProgress = evaluationStatus === 'running' || evaluationStatus === 'pending';
+  // Check if evaluation is in progress or stopped
+  const isInProgress = evaluationStatus === 'running' || evaluationStatus === 'pending' || evaluationStatus === 'cancelled';
 
   // Build navigation sections from strategy config
   const viewConfig = strategy.getSummaryViewConfig();
@@ -249,7 +251,7 @@ export function EvaluationSummaryView({
         </div>
         </div>
 
-        {/* Progress Checkpoints - Only show when running/pending */}
+        {/* Progress Checkpoints - Only show when running/pending/cancelled */}
         {isInProgress && evaluationProgress && (
           <div className="max-w-4xl mx-auto">
             <ProgressCheckpointsSection
@@ -277,6 +279,8 @@ export function EvaluationSummaryView({
                     }
                   : undefined
               }
+              evaluationStatus={evaluationStatus}
+              onRestartFromCheckpoint={onRestartFromCheckpoint}
             />
           </div>
         )}

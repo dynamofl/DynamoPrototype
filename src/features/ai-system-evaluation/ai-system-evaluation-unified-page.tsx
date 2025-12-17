@@ -221,7 +221,7 @@ export function AISystemEvaluationUnifiedPage() {
     setSelectedTest(test);
     setShowCreationFlow(false);
 
-    if (test.status === 'running' || test.status === 'pending') {
+    if (test.status === 'running' || test.status === 'pending' || test.status === 'cancelled') {
       // Set loading state for progress
       setLoadingProgress(true);
       setLoadingResults(false);
@@ -354,8 +354,8 @@ export function AISystemEvaluationUnifiedPage() {
       return;
     }
 
-    // Subscribe for both running and pending status
-    if (selectedTest.status !== 'running' && selectedTest.status !== 'pending') {
+    // Subscribe for running, pending, and cancelled status
+    if (selectedTest.status !== 'running' && selectedTest.status !== 'pending' && selectedTest.status !== 'cancelled') {
       return;
     }
 
@@ -670,6 +670,72 @@ export function AISystemEvaluationUnifiedPage() {
     }
   };
 
+  // Handle stop evaluation
+  const handleStopEvaluation = async () => {
+    if (!selectedTest) return;
+
+    try {
+      await EvaluationService.cancelEvaluation(selectedTest.id);
+      // Update the local state to reflect the cancellation
+      setEvaluationHistory(prev =>
+        prev.map(test =>
+          test.id === selectedTest.id
+            ? { ...test, status: 'cancelled' as const }
+            : test
+        )
+      );
+      setSelectedTest(prev =>
+        prev ? { ...prev, status: 'cancelled' as const } : null
+      );
+    } catch (error) {
+      console.error('Failed to stop evaluation:', error);
+    }
+  };
+
+  // Handle resume evaluation
+  const handleResumeEvaluation = async () => {
+    if (!selectedTest) return;
+
+    try {
+      await EvaluationService.resumeEvaluation(selectedTest.id);
+      // Update the local state to reflect resumption
+      setEvaluationHistory(prev =>
+        prev.map(test =>
+          test.id === selectedTest.id
+            ? { ...test, status: 'running' as const }
+            : test
+        )
+      );
+      setSelectedTest(prev =>
+        prev ? { ...prev, status: 'running' as const } : null
+      );
+    } catch (error) {
+      console.error('Failed to resume evaluation:', error);
+    }
+  };
+
+  // Handle restart from checkpoint
+  const handleRestartFromCheckpoint = async (checkpointId: 'topics' | 'prompts' | 'evaluation' | 'summary') => {
+    if (!selectedTest) return;
+
+    try {
+      await EvaluationService.restartFromCheckpoint(selectedTest.id, checkpointId);
+      // Update the local state to reflect the restart
+      setEvaluationHistory(prev =>
+        prev.map(test =>
+          test.id === selectedTest.id
+            ? { ...test, status: 'running' as const }
+            : test
+        )
+      );
+      setSelectedTest(prev =>
+        prev ? { ...prev, status: 'running' as const } : null
+      );
+    } catch (error) {
+      console.error('Failed to restart from checkpoint:', error);
+    }
+  };
+
   // Breadcrumb configuration
   const breadcrumbs: BreadcrumbItem[] = [
     { name: "AI Systems", path: "/ai-systems" },
@@ -850,9 +916,9 @@ export function AISystemEvaluationUnifiedPage() {
         )}
       </AnimatePresence>
 
-      {/* Running evaluation progress overlay - shown for pending/running tests or temp test */}
+      {/* Running evaluation progress overlay - shown for pending/running/cancelled tests */}
       <AnimatePresence>
-        {!loadingProgress && selectedTest && (selectedTest.status === 'running' || selectedTest.status === 'pending') && (
+        {!loadingProgress && selectedTest && (selectedTest.status === 'running' || selectedTest.status === 'pending' || selectedTest.status === 'cancelled') && (
           <motion.div
             className="fixed inset-0 z-50 bg-gray-0 flex flex-col m-1.5 rounded-lg border shadow-sm overflow-hidden"
             initial={{ opacity: 0.8, scaleY: 0.98 }}
@@ -898,7 +964,7 @@ export function AISystemEvaluationUnifiedPage() {
                     navigate(`/ai-systems/${toUrlSlug(system.name)}/evaluation/${selectedTest.id}/${view || 'summary'}`);
                   }
                 }}
-                evaluationStatus={selectedTest.status as 'pending' | 'running'}
+                evaluationStatus={selectedTest.status as 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'}
                 evaluationProgress={{
                   current: evaluationProgress.current,
                   total: evaluationProgress.total,
@@ -910,6 +976,9 @@ export function AISystemEvaluationUnifiedPage() {
                   checkpoints: evaluationProgress.checkpoints,
                   policies: evaluationProgress.policies
                 }}
+                onStopEvaluation={handleStopEvaluation}
+                onResumeEvaluation={handleResumeEvaluation}
+                onRestartFromCheckpoint={handleRestartFromCheckpoint}
               />
             ) : (
               /* Old progress views */
@@ -999,9 +1068,9 @@ export function AISystemEvaluationUnifiedPage() {
         )}
       </AnimatePresence>
 
-      {/* Evaluation results overlay - shows loading or results */}
+      {/* Evaluation results overlay - shows loading or results for completed/failed evaluations only */}
       <AnimatePresence mode="wait">
-        {(loadingResults || evaluationResults) && selectedTest?.status !== 'running' && selectedTest?.status !== 'pending' && selectedTest && (
+        {(loadingResults || evaluationResults) && selectedTest?.status !== 'running' && selectedTest?.status !== 'pending' && selectedTest?.status !== 'cancelled' && selectedTest && (
           <motion.div
             key="results-overlay"
             className="fixed inset-0 z-50 bg-gray-0 flex flex-col m-1.5 rounded-lg border shadow-sm overflow-hidden"
@@ -1151,7 +1220,7 @@ export function AISystemEvaluationUnifiedPage() {
                     navigate(`/ai-systems/${toUrlSlug(system.name)}/evaluation/${selectedTest.id}/${view || 'summary'}`);
                   }
                 }}
-                evaluationStatus={selectedTest?.status as 'completed' | 'failed'}
+                evaluationStatus={selectedTest?.status as 'completed' | 'failed' | 'cancelled'}
                 evaluationProgress={selectedTest?.progress ? {
                   current: selectedTest.progress.total,
                   total: selectedTest.progress.total,
@@ -1163,6 +1232,9 @@ export function AISystemEvaluationUnifiedPage() {
                   checkpoints: undefined,
                   policies: []
                 } : undefined}
+                onStopEvaluation={handleStopEvaluation}
+                onResumeEvaluation={handleResumeEvaluation}
+                onRestartFromCheckpoint={handleRestartFromCheckpoint}
               />
             ) : null}
           </motion.div>
