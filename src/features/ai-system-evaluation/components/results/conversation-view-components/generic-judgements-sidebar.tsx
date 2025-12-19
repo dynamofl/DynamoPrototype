@@ -2,13 +2,15 @@
 // Uses strategy pattern to render different test types (jailbreak, compliance, etc.)
 
 import { useState, useEffect } from 'react'
-import { ArrowUpRight, ShieldBan, ShieldCheck, MessageCircleOff, CircleCheckBig, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react'
+import { ArrowUpRight, ShieldBan, ShieldCheck, MessageCircleOff, CircleCheckBig, CheckCircle2, XCircle, AlertTriangle, AlertCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { BaseEvaluationResult, AISystemResponse } from '../../../types/base-evaluation'
 import type { EvaluationStrategy } from '../../../strategies/base-strategy'
 import type { GuardrailEvaluationDetail } from '../../../types/jailbreak-evaluation'
 import type { ComplianceEvaluationResult } from '../../../types/compliance-evaluation'
+import type { HallucinationEvaluationResult } from '../../../types/hallucination-evaluation'
 import type { HoveredBehaviorContext } from '@/components/patterns/ui-patterns/phrase-highlighter'
+import { Progress } from '@/components/ui/progress'
 import { GuardrailViewSheet } from '@/features/guardrails/components'
 import { useGuardrailsSupabase } from '@/features/guardrails/lib/useGuardrailsSupabase'
 import { SeverityIcon } from '../severity-icon'
@@ -33,7 +35,7 @@ interface GenericJudgementsSidebarProps {
   onBehaviorClick?: (behavior: HoveredBehaviorContext) => void
   selectedBehaviors?: Set<string> | null
   isAnnotationModeEnabled?: boolean
-  testType?: 'jailbreak' | 'compliance'
+  testType?: 'jailbreak' | 'compliance' | 'hallucination'
   onRecordUpdate?: (record: BaseEvaluationResult) => void
 }
 
@@ -66,7 +68,7 @@ interface ResponseJudgementCardProps {
   onBehaviorClick?: (behavior: HoveredBehaviorContext) => void
   selectedBehaviors?: Set<string> | null
   isAnnotationMode?: boolean
-  testType?: 'jailbreak' | 'compliance'
+  testType?: 'jailbreak' | 'compliance' | 'hallucination'
   onRecordUpdate?: (record: BaseEvaluationResult) => void
 }
 
@@ -306,10 +308,10 @@ export function GenericJudgementsSidebar({
 
   const { guardrails } = useGuardrailsSupabase()
 
-  // Initialize hook for updating attack outcome
+  // Initialize hook for updating attack outcome (only for jailbreak/compliance)
   const { updateOutcome, isLoading: isUpdatingOutcome } = useUpdateAttackOutcome({
     promptId: (record as any).id || '',
-    testType: testType || 'jailbreak'
+    testType: (testType === 'hallucination' ? 'jailbreak' : testType) as 'jailbreak' | 'compliance'
   })
 
   const expandedKeys = externalExpandedKeys !== undefined ? externalExpandedKeys : internalExpandedKeys
@@ -454,8 +456,38 @@ export function GenericJudgementsSidebar({
 
           {/* Summary Cards */}
           <div className="flex gap-2 items-center w-full">
-            {/* First Card: Attack Type (Jailbreak) or Base Prompt (Compliance) */}
-            {hasAttackType ? (
+            {/* First Card: Attack Type (Jailbreak) or Ground Truth (Compliance) or Prediction (Hallucination) */}
+            {testType === 'hallucination' ? (
+              // Hallucination: Prediction Card
+              (() => {
+                const hallucinationRecord = record as HallucinationEvaluationResult
+                const isSafe = hallucinationRecord.pred_label === 'safe'
+
+                // Extract category title (part before colon)
+                const violatedCategory = hallucinationRecord.violated_category || 'N/A'
+                const categoryTitle = violatedCategory.split(':')[0].trim()
+
+                const displayText = isSafe ? 'No Hallucination' : categoryTitle
+
+                return (
+                  <div className="flex-1 min-w-36 bg-gray-100 rounded-lg p-2 flex flex-col gap-1">
+                    <div className="flex gap-0.5 items-start">
+                      <span className="text-xs font-400 leading-4 text-gray-900">Prediction</span>
+                    </div>
+                    <div className="flex gap-1 items-center">
+                      {isSafe ? (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
+                      ) : (
+                        <AlertCircle className="w-3.5 h-3.5 text-red-600" />
+                      )}
+                      <span className="text-[0.8125rem] font-450 text-gray-900">
+                        {displayText}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })()
+            ) : hasAttackType ? (
               // Jailbreak: Attack Type Card
               <div className="flex-1 min-w-36 bg-gray-100 rounded-lg p-2 flex flex-col gap-1">
                 <div className="flex gap-0.5 items-start">
@@ -495,6 +527,27 @@ export function GenericJudgementsSidebar({
               })()
             )}
 
+            {/* Second Card: Safety Score (Hallucination only) */}
+            {testType === 'hallucination' && (() => {
+              const hallucinationRecord = record as HallucinationEvaluationResult
+              const safetyScore = hallucinationRecord.safety_score ?? 0
+              const percentage = safetyScore * 100
+
+              return (
+                <div className="flex-1 min-w-36 bg-gray-100 rounded-lg p-2 flex flex-col gap-1">
+                  <div className="flex gap-0.5 items-start">
+                    <span className="text-xs font-400 leading-4 text-gray-900">Safety Score</span>
+                  </div>
+                  <div className="flex gap-2 items-center">
+                    <Progress value={percentage} className="h-1.5 flex-1" />
+                    <span className="text-[0.8125rem] font-450 text-gray-900">
+                      {percentage.toFixed(0)}%
+                    </span>
+                  </div>
+                </div>
+              )
+            })()}
+
             {/* Guardrails Card (if present) - show skeleton if pending */}
             {isPending ? (
               <div className="flex-1 bg-gray-100 rounded-lg p-2 flex flex-col gap-1">
@@ -527,41 +580,43 @@ export function GenericJudgementsSidebar({
               )
             )}
 
-            {/* AI System Card (ALWAYS shown for both test types) - show skeleton if pending */}
-            <div className="flex-1 bg-gray-100 rounded-lg p-2 flex flex-col gap-1">
-              <div className="flex gap-0.5 items-start">
-                <span className="text-xs font-400 leading-4 text-gray-900">AI System</span>
-              </div>
-              <div className="flex gap-1 items-center">
-                {isPending ? (
-                  <>
-                    <Skeleton className="h-3.5 w-3.5 rounded-full" />
-                    <Skeleton className="h-4 w-16" />
-                  </>
-                ) : (
-                  (() => {
-                    const judgement = hasAttackType
-                      ? (jbRecord.judgeModelJudgement || jbRecord.modelJudgement)
-                      : ((record as ComplianceEvaluationResult).compliance_judgement || 'Answered')
+            {/* AI System Card (shown for jailbreak and compliance only) - show skeleton if pending */}
+            {testType !== 'hallucination' && (
+              <div className="flex-1 bg-gray-100 rounded-lg p-2 flex flex-col gap-1">
+                <div className="flex gap-0.5 items-start">
+                  <span className="text-xs font-400 leading-4 text-gray-900">AI System</span>
+                </div>
+                <div className="flex gap-1 items-center">
+                  {isPending ? (
+                    <>
+                      <Skeleton className="h-3.5 w-3.5 rounded-full" />
+                      <Skeleton className="h-4 w-16" />
+                    </>
+                  ) : (
+                    (() => {
+                      const judgement = hasAttackType
+                        ? (jbRecord.judgeModelJudgement || jbRecord.modelJudgement)
+                        : ((record as ComplianceEvaluationResult).compliance_judgement || 'Answered')
 
-                    const isRefused = judgement === 'Blocked' || judgement === 'Refused'
+                      const isRefused = judgement === 'Blocked' || judgement === 'Refused'
 
-                    return (
-                      <>
-                        {isRefused ? (
-                          <MessageCircleOff className="w-3.5 h-3.5 text-red-600" />
-                        ) : (
-                          <CircleCheckBig className="w-3.5 h-3.5 text-green-600" />
-                        )}
-                        <span className="text-[0.8125rem] font-450 leading-5 text-gray-900">
-                          {judgement}
-                        </span>
-                      </>
-                    )
-                  })()
-                )}
+                      return (
+                        <>
+                          {isRefused ? (
+                            <MessageCircleOff className="w-3.5 h-3.5 text-red-600" />
+                          ) : (
+                            <CircleCheckBig className="w-3.5 h-3.5 text-green-600" />
+                          )}
+                          <span className="text-[0.8125rem] font-450 leading-5 text-gray-900">
+                            {judgement}
+                          </span>
+                        </>
+                      )
+                    })()
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 

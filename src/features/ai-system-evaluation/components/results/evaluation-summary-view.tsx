@@ -53,6 +53,7 @@ interface EvaluationSummaryViewProps {
     currentCheckpoint?: string | null;
     checkpoints?: any; // CheckpointState['checkpoints']
   };
+  enableRestartFromCheckpoint?: boolean;
   onRestartFromCheckpoint?: (checkpointId: 'topics' | 'prompts' | 'evaluation' | 'summary') => void;
 }
 
@@ -74,6 +75,7 @@ export function EvaluationSummaryView({
   config,
   evaluationStatus,
   evaluationProgress,
+  enableRestartFromCheckpoint = false,
   onRestartFromCheckpoint,
 }: EvaluationSummaryViewProps) {
   const [activeSection, setActiveSection] = useState<string>('overview');
@@ -280,6 +282,7 @@ export function EvaluationSummaryView({
                   : undefined
               }
               evaluationStatus={evaluationStatus}
+              enableRestartFromCheckpoint={enableRestartFromCheckpoint}
               onRestartFromCheckpoint={onRestartFromCheckpoint}
             />
           </div>

@@ -7,7 +7,7 @@ import type { JudgementType } from '../types/base-evaluation'
 
 interface UseHumanJudgementProps {
   promptId: string
-  testType: 'jailbreak' | 'compliance'
+  testType: 'jailbreak' | 'compliance' | 'hallucination'
   judgementType: JudgementType
 }
 

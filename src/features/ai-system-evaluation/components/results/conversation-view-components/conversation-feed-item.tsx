@@ -3,7 +3,7 @@
  * Reusable component for rendering conversation sections with configurable features
  */
 
-import React from 'react'
+import React, { useState } from 'react'
 import { HighlightedText } from '@/components/patterns/ui-patterns/phrase-highlighter'
 import { HighlightedMarkdownRenderer } from './shared-components'
 import { MarkdownRenderer } from '@/components/patterns/ui-patterns/markdown-renderer'
@@ -23,6 +23,7 @@ export interface ConversationFeedItemProps {
   // Feature toggles
   enableMarkdown?: boolean
   enableHighlight?: boolean
+  enableReadMore?: boolean
 
   // Highlighting configuration (required when enableHighlight is true)
   highlightingContext?: HighlightingContext
@@ -39,11 +40,14 @@ export function ConversationFeedItem({
   content,
   enableMarkdown = false,
   enableHighlight = false,
+  enableReadMore = false,
   highlightingContext,
   highlightType = 'input',
   showHighlightByDefault = true,
   className
 }: ConversationFeedItemProps) {
+  const [isExpanded, setIsExpanded] = useState(false)
+
   // Validate that highlighting context is provided when highlighting is enabled
   if (enableHighlight && !highlightingContext) {
     console.warn('ConversationFeedItem: enableHighlight is true but highlightingContext is not provided')
@@ -91,14 +95,26 @@ export function ConversationFeedItem({
         {title}
         {subtitle && <span className="text-gray-500"> {subtitle}</span>}
       </h3>
-      <div className="px-2 text-sm font-425 leading-5 text-gray-900">
-        {renderContent(
-          textContent,
-          enableMarkdown,
-          enableHighlight,
-          highlightingContext,
-          highlightType,
-          showHighlightByDefault
+      <div className="px-2">
+        <div className={enableReadMore && !isExpanded ? 'line-clamp-3' : ''}>
+          <div className="text-sm font-425 leading-5 text-gray-900">
+            {renderContent(
+              textContent,
+              enableMarkdown,
+              enableHighlight,
+              highlightingContext,
+              highlightType,
+              showHighlightByDefault
+            )}
+          </div>
+        </div>
+        {enableReadMore && (
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="mt-2 text-[0.8125rem] font-450 text-blue-600 hover:text-amber-700 transition-colors"
+          >
+            {isExpanded ? 'Read Less' : 'Read More'}
+          </button>
         )}
       </div>
     </div>

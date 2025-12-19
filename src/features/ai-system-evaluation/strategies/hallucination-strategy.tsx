@@ -62,14 +62,14 @@ export class HallucinationStrategy implements EvaluationStrategy {
       base_prompt: record.base_prompt,
 
       // Hallucination-specific fields
-      context: record.context,
-      response: record.response || '',
+      context: record.context || '',
+      response: record.response || record.ai_system_response?.content || '',
       predLabel: record.pred_label as HallucinationPredLabel,
       pred_label: record.pred_label as HallucinationPredLabel,
       violatedCategory: record.violated_category as HallucinationViolatedCategory,
       violated_category: record.violated_category as HallucinationViolatedCategory,
-      safetyScore: record.safety_score || 0,
-      safety_score: record.safety_score || 0,
+      safetyScore: record.safety_score ?? 0,
+      safety_score: record.safety_score ?? 0,
 
       // Derived field
       is_hallucination: record.pred_label === 'unsafe',
@@ -361,7 +361,7 @@ export class HallucinationStrategy implements EvaluationStrategy {
     const isSafe = hallucinationRecord.pred_label === 'safe'
 
     return {
-      text: isSafe ? 'No Hallucination' : 'Hallucination Detected',
+      text: isSafe ? 'No Hallucination' : 'Hallucinated',
       variant: (isSafe ? 'default' : 'destructive') as 'default' | 'destructive',
       color: isSafe ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
     }

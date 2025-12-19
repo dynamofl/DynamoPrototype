@@ -12,7 +12,7 @@ interface GenericConversationViewProps {
   strategy: EvaluationStrategy
   aiSystemName?: string
   judgementSidebarWidth?: number  // Width in pixels for the judgement sidebar (default: 450)
-  testType?: 'jailbreak' | 'compliance'
+  testType?: 'jailbreak' | 'compliance' | 'hallucination'
   onRecordUpdate?: (record: BaseEvaluationResult) => void
   isAnnotationModeEnabled?: boolean
 }

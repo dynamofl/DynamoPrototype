@@ -551,7 +551,7 @@ export function EvaluationDataView({
                               record={selectedRecord}
                               strategy={strategy}
                               aiSystemName={aiSystemName}
-                              testType={testType as 'jailbreak' | 'compliance'}
+                              testType={testType as 'jailbreak' | 'compliance' | 'hallucination'}
                               isAnnotationModeEnabled={isAnnotationModeEnabled}
                               onRecordUpdate={handleRecordUpdate}
                             />

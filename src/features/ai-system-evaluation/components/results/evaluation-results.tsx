@@ -334,8 +334,8 @@ export function EvaluationResults({
               </Button>
             )}
 
-            {/* Show Stopped badge and Resume button when cancelled */}
-            {evaluationStatus === 'cancelled' && (
+            {/* Show Stopped badge and Resume button when cancelled - only in data view */}
+            {evaluationStatus === 'cancelled' && selectedTab !== 'summary' && (
               <>
                 <div className="flex items-center gap-1 p-1.5 pr-2 bg-amber-50 rounded-full">
                   <Square className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />

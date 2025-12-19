@@ -11,7 +11,7 @@ interface GenericConversationContentProps {
   strategy: EvaluationStrategy
   highlightingContext: HighlightingContext
   className?: string
-  testType?: 'jailbreak' | 'compliance'
+  testType?: 'jailbreak' | 'compliance' | 'hallucination'
 }
 
 export function GenericConversationContent({

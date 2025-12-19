@@ -1023,7 +1023,7 @@ export function AISystemEvaluationUnifiedPage() {
                       aiSystemName={aiSystem?.name}
                       aiSystemIcon={aiSystem?.icon}
                       evaluationName={selectedTest.name}
-                      evaluationType={selectedTest.type === 'compliance' ? 'Compliance Evaluation' : 'Jailbreak Evaluation'}
+                      evaluationType={selectedTest.type === 'compliance' ? 'Compliance Evaluation' : selectedTest.type === 'hallucination' ? 'Hallucination Evaluation' : 'Jailbreak Evaluation'}
                       startedAt={selectedTest.startedAt}
                       attacks={[
                         {
@@ -1112,7 +1112,7 @@ export function AISystemEvaluationUnifiedPage() {
                               {selectedTest.name}
                             </span>
                             <Badge variant="secondary" className="text-xs ml-1">
-                              {selectedTest.type === 'compliance' ? 'Compliance' : 'Jailbreak'}
+                              {selectedTest.type === 'compliance' ? 'Compliance' : selectedTest.type === 'hallucination' ? 'Hallucination' : 'Jailbreak'}
                             </Badge>
                             <button className="p-0.5 hover:bg-gray-100 rounded transition-colors">
                                   <ChevronsUpDown className="h-3.5 w-3.5 text-gray-500" />
@@ -1195,7 +1195,7 @@ export function AISystemEvaluationUnifiedPage() {
               <EvaluationResults
                 results={evaluationResults}
                 evaluationName={selectedTest?.name}
-                evaluationType={selectedTest?.type === 'compliance' ? 'Compliance' : 'Jailbreak'}
+                evaluationType={selectedTest?.type === 'compliance' ? 'Compliance' : selectedTest?.type === 'hallucination' ? 'Hallucination' : 'Jailbreak'}
                 aiSystemName={aiSystem?.name}
                 aiSystemIcon={aiSystem?.icon}
                 startedAt={selectedTest?.startedAt}

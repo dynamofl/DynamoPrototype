@@ -4,6 +4,8 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders, handleCors } from '../_shared/cors.ts';
+import { generatePromptsFromPolicies } from '../_shared/prompt-generator.ts';
+import { CheckpointManager } from '../_shared/checkpoint-manager.ts';
 
 interface RestartFromCheckpointRequest {
   evaluationId: string;
@@ -11,27 +13,98 @@ interface RestartFromCheckpointRequest {
 }
 
 /**
- * Trigger create-evaluation to restart from beginning
+ * Regenerate prompts for an existing evaluation
+ * This uses the shared prompt generation logic from create-evaluation
  */
-async function triggerCreateEvaluation(supabase: any, evaluationId: string) {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+async function regeneratePrompts(supabase: any, evaluationId: string, evaluation: any) {
+  console.log(`🔄 Regenerating prompts for evaluation ${evaluationId}`);
 
-  const response = await fetch(`${supabaseUrl}/functions/v1/create-evaluation`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${serviceRoleKey}`,
-    },
-    body: JSON.stringify({ evaluationId }),
-  });
+  const config = evaluation.config;
+  const policyIds = config.policyIds || [];
+  const internalModels = config.internalModels;
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to trigger create-evaluation: ${error}`);
+  if (!policyIds || policyIds.length === 0) {
+    throw new Error('No policies configured for this evaluation');
   }
 
-  return await response.json();
+  // Fetch guardrails (policies)
+  const { data: guardrails, error: guardrailsError } = await supabase
+    .from('guardrails')
+    .select('*')
+    .in('id', policyIds);
+
+  if (guardrailsError) {
+    throw new Error(`Failed to fetch guardrails: ${guardrailsError.message}`);
+  }
+
+  // Update evaluation status
+  await supabase
+    .from('evaluations')
+    .update({
+      status: 'running',
+      current_stage: 'Preparing to generate test prompts...'
+    })
+    .eq('id', evaluationId);
+
+  // Generate prompts using shared logic
+  const prompts = await generatePromptsFromPolicies(
+    policyIds,
+    guardrails,
+    internalModels,
+    evaluationId,
+    supabase,
+    config
+  );
+
+  if (prompts.length === 0) {
+    throw new Error('No prompts generated from selected policies');
+  }
+
+  console.log(`✅ Generated ${prompts.length} prompts`);
+
+  // Determine which table to insert into
+  const testType = config?.testType || 'jailbreak';
+  const tableName = testType === 'compliance' ? 'compliance_prompts' : 'jailbreak_prompts';
+
+  // Create prompt records
+  const promptRecords = prompts.map((prompt) => ({
+    evaluation_id: evaluationId,
+    ...prompt
+  }));
+
+  const { error: promptsError } = await supabase
+    .from(tableName)
+    .insert(promptRecords);
+
+  if (promptsError) {
+    throw new Error(`Failed to insert prompts into ${tableName}: ${promptsError.message}`);
+  }
+
+  // Update checkpoint state using CheckpointManager
+  const checkpointManager = new CheckpointManager();
+
+  // Mark topics as completed (for topics restart)
+  await checkpointManager.markCheckpointCompleted(evaluationId, 'topics');
+
+  // Mark prompts as started then completed
+  await checkpointManager.markCheckpointStarted(evaluationId, 'prompts');
+  await checkpointManager.markCheckpointCompleted(evaluationId, 'prompts', {
+    prompt_count: prompts.length
+  });
+
+  // Move to evaluation checkpoint
+  await checkpointManager.moveToNextCheckpoint(evaluationId, 'prompts', 'evaluation');
+
+  // Update total_prompts
+  await supabase
+    .from('evaluations')
+    .update({
+      total_prompts: prompts.length,
+      current_stage: 'Prompts generated, starting execution...'
+    })
+    .eq('id', evaluationId);
+
+  return { promptCount: prompts.length };
 }
 
 /**
@@ -122,32 +195,53 @@ serve(async (req: Request) => {
           throw new Error(`Failed to delete prompts: ${deletePromptsError.message}`);
         }
 
+        // Get policy info from config for checkpoint state
+        const policyIds = evaluation.config?.policyIds || [];
+        const { data: policiesData } = await supabase
+          .from('guardrails')
+          .select('id, name')
+          .in('id', policyIds);
+
+        const policies = (policiesData || []).map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          current: 0,
+          total: 0,
+          status: 'pending' as const
+        }));
+
+        // Initialize checkpoint state using CheckpointManager
+        const checkpointManager = new CheckpointManager();
+        await checkpointManager.initializeCheckpointState(evaluationId, policies);
+
         // Reset evaluation to initial state
         await supabase
           .from('evaluations')
           .update({
-            status: 'pending',
+            status: 'running',
             current_stage: 'Starting evaluation...',
             completed_prompts: 0,
             total_prompts: 0,
-            topic_analysis: null,
-            checkpoint_state: {
-              current_checkpoint: null,
-              checkpoints: {
-                topics: { status: 'pending' },
-                prompts: { status: 'pending' },
-                evaluation: { status: 'pending' },
-                summary: { status: 'pending' }
-              },
-              policies: []
-            }
+            topic_analysis: null
           })
           .eq('id', evaluationId);
 
-        // Trigger create-evaluation to restart from beginning
-        triggerCreateEvaluation(supabase, evaluationId).catch(error => {
-          console.error(`❌ Error triggering create-evaluation:`, error);
-        });
+        // Regenerate prompts in background
+        regeneratePrompts(supabase, evaluationId, evaluation)
+          .then(() => {
+            // After prompts are generated, trigger run-evaluation
+            return triggerRunEvaluation(supabase, evaluationId);
+          })
+          .catch(error => {
+            console.error(`❌ Error regenerating prompts:`, error);
+            supabase
+              .from('evaluations')
+              .update({
+                status: 'failed',
+                current_stage: `Failed: ${error.message}`
+              })
+              .eq('id', evaluationId);
+          });
 
         return new Response(
           JSON.stringify({
@@ -173,35 +267,63 @@ serve(async (req: Request) => {
           throw new Error(`Failed to delete prompts: ${deletePromptsError.message}`);
         }
 
-        // Update checkpoint state - keep topics data but reset other checkpoints
+        // Get policy info from config for checkpoint state
+        const policyIds = evaluation.config?.policyIds || [];
+        const { data: policiesData } = await supabase
+          .from('guardrails')
+          .select('id, name')
+          .in('id', policyIds);
+
+        const policies = (policiesData || []).map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          current: 0,
+          total: 0,
+          status: 'pending' as const
+        }));
+
+        // Update checkpoint state using CheckpointManager - keep topics, reset others
+        const checkpointManager = new CheckpointManager();
         const checkpointState = evaluation.checkpoint_state || {};
         const topicsCheckpoint = checkpointState.checkpoints?.topics || { status: 'completed' };
 
         await supabase
           .from('evaluations')
           .update({
-            status: 'pending',
+            status: 'running',
             current_stage: 'Generating prompts...',
             completed_prompts: 0,
             total_prompts: 0,
-            topic_analysis: null, // Clear summary
+            topic_analysis: null,
             checkpoint_state: {
               current_checkpoint: 'prompts',
               checkpoints: {
                 topics: topicsCheckpoint, // Keep topics
-                prompts: { status: 'pending' },
+                prompts: { status: 'in_progress', started_at: new Date().toISOString() },
                 evaluation: { status: 'pending' },
                 summary: { status: 'pending' }
               },
-              policies: []
+              policies
             }
           })
           .eq('id', evaluationId);
 
-        // Trigger create-evaluation to regenerate prompts
-        triggerCreateEvaluation(supabase, evaluationId).catch(error => {
-          console.error(`❌ Error triggering create-evaluation:`, error);
-        });
+        // Regenerate prompts in background
+        regeneratePrompts(supabase, evaluationId, evaluation)
+          .then(() => {
+            // After prompts are generated, trigger run-evaluation
+            return triggerRunEvaluation(supabase, evaluationId);
+          })
+          .catch(error => {
+            console.error(`❌ Error regenerating prompts:`, error);
+            supabase
+              .from('evaluations')
+              .update({
+                status: 'failed',
+                current_stage: `Failed: ${error.message}`
+              })
+              .eq('id', evaluationId);
+          });
 
         return new Response(
           JSON.stringify({
@@ -221,7 +343,7 @@ serve(async (req: Request) => {
         const checkpointState = evaluation.checkpoint_state || {};
         const topicsCheckpoint = checkpointState.checkpoints?.topics || { status: 'completed' };
         const promptsCheckpoint = checkpointState.checkpoints?.prompts || { status: 'completed' };
-        const totalPrompts = checkpointState.checkpoints?.prompts?.data?.prompt_count || 0;
+        const totalPrompts = checkpointState.checkpoints?.prompts?.data?.prompt_count || evaluation.total_prompts || 0;
 
         // Reset all prompts to pending (clear evaluation results)
         const { error: resetPromptsError } = await supabase
@@ -240,11 +362,11 @@ serve(async (req: Request) => {
           throw new Error(`Failed to reset prompts: ${resetPromptsError.message}`);
         }
 
-        // Update checkpoint state - keep topics and prompts, reset evaluation and summary
+        // First, reset the checkpoint state to preserve topics/prompts but reset evaluation/summary
         await supabase
           .from('evaluations')
           .update({
-            status: 'pending',
+            status: 'running',
             current_stage: 'Starting evaluation...',
             completed_prompts: 0,
             total_prompts: totalPrompts,
@@ -254,13 +376,7 @@ serve(async (req: Request) => {
               checkpoints: {
                 topics: topicsCheckpoint, // Keep topics
                 prompts: promptsCheckpoint, // Keep prompts
-                evaluation: {
-                  status: 'pending',
-                  data: {
-                    completed_prompts: 0,
-                    total_prompts: totalPrompts
-                  }
-                },
+                evaluation: { status: 'pending' }, // Reset to pending - will be started by CheckpointManager
                 summary: { status: 'pending' }
               },
               policies: checkpointState.policies?.map((p: any) => ({
@@ -272,9 +388,23 @@ serve(async (req: Request) => {
           })
           .eq('id', evaluationId);
 
+        // Now use CheckpointManager to properly mark evaluation as started
+        // This ensures consistent checkpoint state management
+        const checkpointManager = new CheckpointManager();
+        await checkpointManager.markCheckpointStarted(evaluationId, 'evaluation');
+
+        console.log('✅ Evaluation checkpoint marked as started via CheckpointManager');
+
         // Trigger run-evaluation to start evaluation
         triggerRunEvaluation(supabase, evaluationId).catch(error => {
           console.error(`❌ Error triggering run-evaluation:`, error);
+          supabase
+            .from('evaluations')
+            .update({
+              status: 'failed',
+              current_stage: `Failed: ${error.message}`
+            })
+            .eq('id', evaluationId);
         });
 
         return new Response(
@@ -297,11 +427,11 @@ serve(async (req: Request) => {
         const promptsCheckpoint = checkpointState.checkpoints?.prompts || { status: 'completed' };
         const evaluationCheckpoint = checkpointState.checkpoints?.evaluation || { status: 'completed' };
 
-        // Update checkpoint state - keep everything except summary
+        // First, reset checkpoint state with summary as pending
         await supabase
           .from('evaluations')
           .update({
-            status: 'pending',
+            status: 'running',
             current_stage: 'Generating summary...',
             topic_analysis: null, // Clear existing summary
             checkpoint_state: {
@@ -311,15 +441,29 @@ serve(async (req: Request) => {
                 topics: topicsCheckpoint,
                 prompts: promptsCheckpoint,
                 evaluation: evaluationCheckpoint,
-                summary: { status: 'pending' }
+                summary: { status: 'pending' } // Reset to pending - will be started by CheckpointManager
               }
             }
           })
           .eq('id', evaluationId);
 
+        // Now use CheckpointManager to properly mark summary as started
+        // This ensures consistent checkpoint state management
+        const checkpointManager = new CheckpointManager();
+        await checkpointManager.markCheckpointStarted(evaluationId, 'summary');
+
+        console.log('✅ Summary checkpoint marked as started via CheckpointManager');
+
         // Trigger run-evaluation to regenerate summary
         triggerRunEvaluation(supabase, evaluationId).catch(error => {
           console.error(`❌ Error triggering run-evaluation:`, error);
+          supabase
+            .from('evaluations')
+            .update({
+              status: 'failed',
+              current_stage: `Failed: ${error.message}`
+            })
+            .eq('id', evaluationId);
         });
 
         return new Response(

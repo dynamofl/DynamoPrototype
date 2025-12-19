@@ -33,6 +33,7 @@ interface ProgressCheckpointsSectionProps {
   // Evaluation status to determine if stopped
   evaluationStatus?: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
   // Restart functionality
+  enableRestartFromCheckpoint?: boolean;
   onRestartFromCheckpoint?: (checkpointId: 'topics' | 'prompts' | 'evaluation' | 'summary') => void;
 }
 
@@ -261,6 +262,7 @@ export function ProgressCheckpointsSection({
   policies,
   checkpointState,
   evaluationStatus,
+  enableRestartFromCheckpoint = false,
   onRestartFromCheckpoint
 }: ProgressCheckpointsSectionProps) {
   const [timeElapsed, setTimeElapsed] = useState(formatTimeElapsed(startedAt));
@@ -356,7 +358,7 @@ export function ProgressCheckpointsSection({
                   isSinglePolicy={effectivePolicies.length === 1}
                   isLastItem={index === effectivePolicies.length - 1}
                   evaluationStatus={evaluationStatus}
-                  onRestartFromCheckpoint={onRestartFromCheckpoint ? handleRestartClick : undefined}
+                  onRestartFromCheckpoint={enableRestartFromCheckpoint && onRestartFromCheckpoint ? handleRestartClick : undefined}
                 />
               ))
 
@@ -372,7 +374,7 @@ export function ProgressCheckpointsSection({
                       detail={checkpoint.detail}
                       checkpointId={checkpoint.id as 'topics' | 'prompts' | 'evaluation' | 'summary'}
                       evaluationStatus={evaluationStatus}
-                      onRestart={onRestartFromCheckpoint ? handleRestartClick : undefined}
+                      onRestart={enableRestartFromCheckpoint && onRestartFromCheckpoint ? handleRestartClick : undefined}
                     />
                   ))}
                 </div>
