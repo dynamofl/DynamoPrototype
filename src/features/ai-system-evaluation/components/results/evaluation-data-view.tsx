@@ -31,6 +31,7 @@ interface EvaluationDataViewProps {
   systemName?: string;
   evaluationId?: string;
   evaluationStatus?: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+  isReviewModeEnabled?: boolean;
 }
 
 export function EvaluationDataView({
@@ -42,6 +43,7 @@ export function EvaluationDataView({
   systemName,
   evaluationId,
   evaluationStatus,
+  isReviewModeEnabled = false,
 }: EvaluationDataViewProps) {
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -51,27 +53,19 @@ export function EvaluationDataView({
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
 
   // Initialize state from URL params
-  const modeFromUrl = searchParams.get("mode") as ViewType | null;
   const itemFromUrl = searchParams.get("item");
+  const modeFromUrl = searchParams.get("mode") as ViewType | null;
 
+  // Conversation view state (only when Review Mode is disabled)
   const [currentView, setCurrentView] = useState<ViewType>(
-    modeFromUrl || "conversation"
+    !isReviewModeEnabled && modeFromUrl === "conversation" ? "conversation" : "table"
   );
   const [conversationDisplayCount, setConversationDisplayCount] = useState(25);
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
 
-  // In conversation view, initialize selectedConversationId from URL
-  // In table view, it will be set by the auto-select logic
-  const [selectedConversationId, setSelectedConversationId] = useState<
-    string | null
-  >(modeFromUrl === "conversation" ? itemFromUrl : null);
-
-  // In table view with item param, initialize side sheet as open
-  const [sideSheetOpen, setSideSheetOpen] = useState(
-    modeFromUrl === "table" && !!itemFromUrl
-  );
-  const [sideSheetRecordId, setSideSheetRecordId] = useState<string | null>(
-    modeFromUrl === "table" ? itemFromUrl : null
-  );
+  // Side sheet state for table view
+  const [sideSheetOpen, setSideSheetOpen] = useState(!!itemFromUrl);
+  const [sideSheetRecordId, setSideSheetRecordId] = useState<string | null>(itemFromUrl);
 
   // Generic filter state (works for all test types)
   const [filters, setFilters] = useState<Record<string, any>>({
@@ -89,42 +83,40 @@ export function EvaluationDataView({
     total: 0,
   });
 
-  // Use real-time subscription when evaluation is running
+  // Use real-time subscription when evaluation is running or cancelled (to keep partial data visible)
   const isRunning = evaluationStatus === 'running' || evaluationStatus === 'pending';
+  const isCancelled = evaluationStatus === 'cancelled';
   const { prompts: subscriptionPrompts } = usePromptSubscription({
     evaluationId: evaluationId || '',
     testType: testType as 'jailbreak' | 'compliance' | 'hallucination',
-    enabled: isRunning && !!evaluationId
+    enabled: (isRunning || isCancelled) && !!evaluationId
   });
 
-  // Update URL when view mode or selected item changes
+  // Update URL when view mode or side sheet item changes
   useEffect(() => {
     if (!systemName || !evaluationId) return;
 
     const newParams = new URLSearchParams(searchParams);
 
-    // Handle mode parameter - conversation is default, so only set mode for table
-    if (currentView !== "conversation") {
-      newParams.set("mode", currentView);
+    // Handle mode parameter for conversation view (only when Review Mode is disabled)
+    if (!isReviewModeEnabled) {
+      if (currentView === "conversation") {
+        newParams.set("mode", "conversation");
+      } else {
+        newParams.delete("mode");
+      }
     } else {
+      // Remove mode parameter if Review Mode is enabled
       newParams.delete("mode");
     }
 
-    // Handle item parameter based on view mode
-    if (currentView === "conversation") {
-      // Conversation view: item is mandatory (always a selected conversation)
-      if (selectedConversationId) {
-        newParams.set("item", selectedConversationId);
-      } else {
-        newParams.delete("item");
-      }
-    } else if (currentView === "table") {
-      // Table view: item only exists when side sheet is open
-      if (sideSheetOpen && sideSheetRecordId) {
-        newParams.set("item", sideSheetRecordId);
-      } else {
-        newParams.delete("item");
-      }
+    // Handle item parameter for side sheet (table view) or conversation selection
+    if (currentView === "table" && sideSheetOpen && sideSheetRecordId) {
+      newParams.set("item", sideSheetRecordId);
+    } else if (currentView === "conversation" && selectedConversationId) {
+      newParams.set("item", selectedConversationId);
+    } else {
+      newParams.delete("item");
     }
 
     // Only update if params changed
@@ -133,64 +125,53 @@ export function EvaluationDataView({
     }
   }, [
     currentView,
-    selectedConversationId,
     sideSheetOpen,
     sideSheetRecordId,
+    selectedConversationId,
     systemName,
     evaluationId,
     searchParams,
     setSearchParams,
+    isReviewModeEnabled,
   ]);
 
-  // Sync state with URL params when they change externally (e.g., browser back/forward)
+  // Sync view state with URL params
   useEffect(() => {
     const mode = searchParams.get("mode") as ViewType | null;
     const item = searchParams.get("item");
 
-    // Determine the target view (default to conversation if no mode param)
-    const targetView = mode === "table" ? "table" : "conversation";
-
-    // Only sync if view actually needs to change
-    if (targetView !== currentView) {
-      setCurrentView(targetView);
-      // When changing views, clear conflicting state
-      if (targetView === "table") {
-        setSelectedConversationId(null);
-        setSideSheetOpen(false);
-        setSideSheetRecordId(null);
-      } else {
-        setSideSheetOpen(false);
-        setSideSheetRecordId(null);
-      }
-      return;
+    // Update view mode (only when Review Mode is disabled)
+    if (!isReviewModeEnabled && mode && mode !== currentView) {
+      setCurrentView(mode);
+    } else if (isReviewModeEnabled && currentView === "conversation") {
+      // Force table view if Review Mode is enabled
+      setCurrentView("table");
     }
 
-    // Sync item based on current view
-    if (currentView === "conversation") {
-      // In conversation view, sync selected conversation from URL
-      if (item && item !== selectedConversationId) {
-        setSelectedConversationId(item);
-      }
-    } else if (currentView === "table") {
-      // In table view, sync side sheet from URL
+    // Update side sheet or conversation selection based on current view
+    if (currentView === "table") {
       if (item && item !== sideSheetRecordId) {
         setSideSheetRecordId(item);
         setSideSheetOpen(true);
       } else if (!item && sideSheetOpen) {
-        // If no item in URL but side sheet is open, close it
         setSideSheetOpen(false);
         setSideSheetRecordId(null);
       }
+    } else if (currentView === "conversation") {
+      if (item && item !== selectedConversationId) {
+        setSelectedConversationId(item);
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, isReviewModeEnabled]);
 
   // Load initial data
   useEffect(() => {
     let dataSource: BaseEvaluationResult[];
 
-    if (isRunning) {
+    if (isRunning || isCancelled) {
       // Transform subscription prompts from snake_case (database) to camelCase (application)
       // using the strategy's transformPrompts method
+      // Use subscription data for running and cancelled states to show partial results
       dataSource = strategy.transformPrompts(subscriptionPrompts);
     } else {
       // Results are already transformed by the service layer (evaluation-service.ts)
@@ -208,7 +189,7 @@ export function EvaluationDataView({
     setFilteredData(dataWithIds as any);
     setPagination((prev) => ({ ...prev, total: dataWithIds.length }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [results.length, subscriptionPrompts, isRunning]);
+  }, [results.length, subscriptionPrompts, isRunning, isCancelled]);
 
   // Apply filters when data or filters change
   useEffect(() => {
@@ -272,23 +253,13 @@ export function EvaluationDataView({
       const paginatedData = filteredData.slice(start, end);
       setDisplayData(paginatedData);
     } else {
-      // For conversation view, show the first N items based on conversationDisplayCount
+      // For conversation view, show limited items with load more
       const conversationData = filteredData.slice(0, conversationDisplayCount);
       setDisplayData(conversationData);
 
-      // Auto-select first conversation if none selected or current selection not in data
-      if (conversationData.length > 0) {
-        const currentSelectionExists =
-          selectedConversationId &&
-          conversationData.some(
-            (record) => (record as any).id === selectedConversationId
-          );
-
-        if (!currentSelectionExists) {
-          setSelectedConversationId((conversationData[0] as any).id);
-        }
-      } else {
-        setSelectedConversationId(null);
+      // Auto-select first conversation if none selected
+      if (!selectedConversationId && filteredData.length > 0) {
+        setSelectedConversationId((filteredData[0] as any).id);
       }
     }
   }, [
@@ -302,8 +273,6 @@ export function EvaluationDataView({
 
   const handleFiltersChange = (newFilters: Record<string, any>) => {
     setFilters(newFilters);
-    // Reset conversation display count when filters change
-    setConversationDisplayCount(25);
   };
 
   const handlePaginationChange = (newPagination: PaginationState) => {
@@ -324,33 +293,6 @@ export function EvaluationDataView({
     } else {
       setSelectedRows([]);
     }
-  };
-
-  const handleViewChange = (view: ViewType) => {
-    if (view === currentView) return;
-
-    // Update view and clear related state
-    setCurrentView(view);
-
-    if (view === "conversation") {
-      // Clear side sheet state when switching to conversation view
-      setSideSheetOpen(false);
-      setSideSheetRecordId(null);
-      setConversationDisplayCount(25);
-    } else if (view === "table") {
-      // Clear conversation selection when switching to table view
-      setSelectedConversationId(null);
-      setSideSheetOpen(false);
-      setSideSheetRecordId(null);
-    }
-  };
-
-  const handleLoadMore = () => {
-    setConversationDisplayCount((prev) => prev + 25);
-  };
-
-  const handleConversationSelect = (id: string) => {
-    setSelectedConversationId(id);
   };
 
   const handleRowClick = (record: BaseEvaluationResult) => {
@@ -379,13 +321,9 @@ export function EvaluationDataView({
   };
 
   const handleSideSheetExpand = () => {
+    // Just close the side sheet
     if (!sideSheetRecordId) return;
-    // Close side sheet
     setSideSheetOpen(false);
-    // Switch to conversation view
-    handleViewChange("conversation");
-    // Set the selected conversation
-    setSelectedConversationId(sideSheetRecordId);
   };
 
   const handleSideSheetClose = (open: boolean) => {
@@ -394,6 +332,25 @@ export function EvaluationDataView({
     if (!open) {
       setSideSheetRecordId(null);
     }
+  };
+
+  const handleViewChange = (view: ViewType) => {
+    setCurrentView(view);
+    // Reset selection when changing views
+    if (view === "conversation") {
+      setSideSheetOpen(false);
+      setSideSheetRecordId(null);
+    } else {
+      setSelectedConversationId(null);
+    }
+  };
+
+  const handleLoadMore = () => {
+    setConversationDisplayCount((prev) => prev + 25);
+  };
+
+  const handleConversationSelect = (id: string) => {
+    setSelectedConversationId(id);
   };
 
   const handleRecordUpdate = (updatedRecord: BaseEvaluationResult) => {
@@ -446,78 +403,91 @@ export function EvaluationDataView({
           strategy={strategy}
           filters={filters}
           onFiltersChange={handleFiltersChange}
-          currentView={currentView}
-          onViewChange={handleViewChange}
           hasGuardrails={hasGuardrails}
           data={allData}
-          isAnnotationModeEnabled={isAnnotationModeEnabled}
-          onAnnotationModeChange={setIsAnnotationModeEnabled}
+          isAnnotationModeEnabled={!isReviewModeEnabled ? isAnnotationModeEnabled : undefined}
+          onAnnotationModeChange={!isReviewModeEnabled ? setIsAnnotationModeEnabled : undefined}
           canEnableAnnotation={canEnableAnnotation}
+          currentView={!isReviewModeEnabled ? currentView : undefined}
+          onViewChange={!isReviewModeEnabled ? handleViewChange : undefined}
         />
       )}
 
       {/* Content Area */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentView}
-          initial={{ opacity: 0, scale: 0.995 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.995 }}
-          transition={{ duration: 0.2, ease: "easeInOut" }}
-          className="flex flex-1 overflow-hidden min-h-0"
-          onWheel={(e) => e.stopPropagation()}
-        >
-          {/* Show preparing state when running and no data - Full width, centered */}
-          {isRunning && allData.length === 0 ? (
-            <div className="flex flex-col items-center justify-center w-full h-full gap-4">
-              <div className="relative w-16 h-16">
-                <svg className="w-16 h-16 animate-spin" viewBox="0 0 24 24">
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    fill="none"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-450 text-gray-900">Preparing Data</p>
-                <p className="text-xs text-gray-500 mt-1">Generating test prompts...</p>
-              </div>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2, ease: "easeInOut" }}
+        className="flex flex-1 overflow-hidden min-h-0"
+        onWheel={(e) => e.stopPropagation()}
+      >
+        {/* Show preparing state when running and no data - Full width, centered */}
+        {isRunning && allData.length === 0 ? (
+          <div className="flex flex-col items-center justify-center w-full h-full gap-4">
+            <div className="relative w-16 h-16">
+              <svg className="w-16 h-16 animate-spin" viewBox="0 0 24 24">
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  fill="none"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
             </div>
-          ) : (
-            <>
-              {/* Table/Conversation View */}
-              <div
-                className={`${
-                  currentView === "conversation" ? "max-w-[400px]" : "flex-1"
-                } ${
-                  currentView === "table"
-                    ? "overflow-auto"
-                    : "flex flex-col overflow-hidden"
-                }`}
+            <div className="text-center">
+              <p className="text-sm font-450 text-gray-900">Preparing Data</p>
+              <p className="text-xs text-gray-500 mt-1">Generating test prompts...</p>
+            </div>
+          </div>
+        ) : (
+          <AnimatePresence mode="wait">
+            {currentView === "table" ? (
+              <motion.div
+                key="table"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex-1 overflow-auto"
                 onWheel={(e) => e.stopPropagation()}
               >
                 <div className="h-full">
-                  {currentView === "table" ? (
-                    <GenericEvaluationTable
-                      data={displayData}
-                      strategy={strategy}
-                      selectedRows={selectedRows}
-                      onRowSelect={handleRowSelect}
-                      onSelectAll={handleSelectAll}
-                      onRowClick={handleRowClick}
-                      hasGuardrails={hasGuardrails}
-                    />
-                  ) : (
+                  <GenericEvaluationTable
+                    data={displayData}
+                    strategy={strategy}
+                    selectedRows={selectedRows}
+                    onRowSelect={handleRowSelect}
+                    onSelectAll={handleSelectAll}
+                    onRowClick={handleRowClick}
+                    hasGuardrails={hasGuardrails}
+                  />
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="conversation"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex flex-1 h-full w-full"
+                onWheel={(e) => e.stopPropagation()}
+              >
+                {/* Conversation List - Left Side */}
+                <div
+                  className="w-[400px] flex flex-col overflow-hidden"
+                  onWheel={(e) => e.stopPropagation()}
+                >
+                  <div className="h-full">
                     <EvaluationDataConversationView
                       data={displayData}
                       strategy={strategy}
@@ -527,59 +497,64 @@ export function EvaluationDataView({
                       selectedConversationId={selectedConversationId}
                       onConversationSelect={handleConversationSelect}
                     />
-                  )}
+                  </div>
                 </div>
-              </div>
 
-              {/* Right Detail Area for Conversation View */}
-              {currentView === "conversation" && (
+                {/* Conversation Detail - Right Side */}
                 <div
-                  className="flex-1 overflow-hidden"
+                  className="flex-1 overflow-hidden w-full"
                   onWheel={(e) => e.stopPropagation()}
                 >
                   <div className="h-full" onWheel={(e) => e.stopPropagation()}>
-                    {selectedConversationId &&
-                      displayData.length > 0 &&
-                      (() => {
-                        const selectedRecord = displayData.find(
-                          (record) => (record as any).id === selectedConversationId
-                        );
-                        return selectedRecord ? (
-                          <div className="h-full">
-                            <GenericConversationView
-                              key={selectedConversationId}
-                              record={selectedRecord}
-                              strategy={strategy}
-                              aiSystemName={aiSystemName}
-                              testType={testType as 'jailbreak' | 'compliance' | 'hallucination'}
-                              isAnnotationModeEnabled={isAnnotationModeEnabled}
-                              onRecordUpdate={handleRecordUpdate}
-                            />
+                    {selectedConversationId && displayData.length > 0 && (() => {
+                      const selectedRecord = displayData.find(
+                        (record) => (record as any).id === selectedConversationId
+                      );
+                      return selectedRecord ? (
+                        <div className="h-full">
+                          <GenericConversationView
+                            key={selectedConversationId}
+                            record={selectedRecord}
+                            strategy={strategy}
+                            aiSystemName={aiSystemName}
+                            testType={testType as 'jailbreak' | 'compliance' | 'hallucination'}
+                            isAnnotationModeEnabled={isAnnotationModeEnabled}
+                            onRecordUpdate={handleRecordUpdate}
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center h-full">
+                          <div className="text-lg text-gray-500">
+                            No conversation selected
                           </div>
-                        ) : (
-                          <div className="flex items-center justify-center h-64 animate-in fade-in-0 duration-300">
-                            <div className="text-lg text-gray-500">
-                              No conversation selected
+                        </div>
+                      );
+                    })()}
+                    {(!selectedConversationId || displayData.length === 0) && (
+                      <div className="flex items-center justify-center h-full">
+                        <div className="text-center">
+                          <div className="text-lg text-gray-500 mb-2">
+                            {filteredData.length === 0
+                              ? "No Conversations Available"
+                              : "Select a Conversation to View Details"}
+                          </div>
+                          {filteredData.length === 0 && (
+                            <div className="text-sm text-gray-400">
+                              Run an evaluation to see conversations here
                             </div>
-                          </div>
-                        );
-                      })()}
-                    {!isRunning && (!selectedConversationId || displayData.length === 0) && (
-                      <div className="flex items-center justify-center h-64 animate-in fade-in-0 duration-300">
-                        <div className="text-lg text-gray-500">
-                          Select a conversation to view details
+                          )}
                         </div>
                       </div>
                     )}
                   </div>
                 </div>
-              )}
-            </>
-          )}
-        </motion.div>
-      </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )}
+      </motion.div>
 
-      {/* Pagination - Only show for table view and when there are more than 20 items */}
+      {/* Pagination - Only show in table view when there are more than 20 items */}
       {currentView === "table" && pagination.total > 20 && (
         <EvaluationDataPagination
           pagination={pagination}
@@ -587,21 +562,23 @@ export function EvaluationDataView({
         />
       )}
 
-      {/* Side Sheet */}
-      <EvaluationDataSideSheet
-        open={sideSheetOpen}
-        onOpenChange={handleSideSheetClose}
-        record={
-          sideSheetRecordId
-            ? (allData.find((r) => (r as any).id === sideSheetRecordId) as any) || null
-            : null
-        }
-        allRecords={allData as any}
-        onNavigateNext={handleSideSheetNavigateNext}
-        onNavigatePrevious={handleSideSheetNavigatePrevious}
-        onExpand={handleSideSheetExpand}
-        hasGuardrails={hasGuardrails}
-      />
+      {/* Side Sheet - Only show in table view */}
+      {currentView === "table" && (
+        <EvaluationDataSideSheet
+          open={sideSheetOpen}
+          onOpenChange={handleSideSheetClose}
+          record={
+            sideSheetRecordId
+              ? (allData.find((r) => (r as any).id === sideSheetRecordId) as any) || null
+              : null
+          }
+          allRecords={allData as any}
+          onNavigateNext={handleSideSheetNavigateNext}
+          onNavigatePrevious={handleSideSheetNavigatePrevious}
+          onExpand={handleSideSheetExpand}
+          hasGuardrails={hasGuardrails}
+        />
+      )}
     </motion.div>
   );
 }

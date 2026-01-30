@@ -24,6 +24,7 @@ class NotificationService {
    * Called by features when an evaluation completes
    */
   triggerEvaluationCompletion(notification: EvaluationCompletionNotification) {
+    console.log('🔔 NotificationService: Triggering evaluation completion', notification);
     const event = new CustomEvent<NotificationEvent>('notification', {
       detail: {
         type: 'evaluation-completed',
@@ -31,6 +32,7 @@ class NotificationService {
       },
     });
     this.eventTarget.dispatchEvent(event);
+    console.log('✅ NotificationService: Event dispatched');
   }
 
   /**

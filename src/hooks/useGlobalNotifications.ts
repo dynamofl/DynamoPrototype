@@ -10,10 +10,17 @@ import { toUrlSlug } from '@/lib/utils';
  * Used only in App.tsx to handle UI rendering
  */
 export function useGlobalNotifications() {
+  console.log('🚀🚀🚀 useGlobalNotifications HOOK CALLED 🚀🚀🚀');
+
   useEffect(() => {
+    console.log('🎧 useGlobalNotifications: Setting up listener effect');
+
     const unsubscribe = notificationService.subscribe((event) => {
+      console.log('🎉 useGlobalNotifications: Received event', event);
       if (event.type === 'evaluation-completed') {
         const { payload } = event;
+
+        console.log('🎊 useGlobalNotifications: Showing toast for evaluation:', payload.evaluationName);
 
         // Show toast notification
         toast.success('Evaluation Completed', {
@@ -39,7 +46,12 @@ export function useGlobalNotifications() {
         });
 
         // Play notification sound
-        playNotificationSound();
+        console.log('🔊 useGlobalNotifications: Playing notification sound');
+        playNotificationSound().then(() => {
+          console.log('✅ useGlobalNotifications: Sound played successfully');
+        }).catch((error) => {
+          console.warn('⚠️ useGlobalNotifications: Sound playback failed:', error);
+        });
 
         console.log('📢 Global notification displayed:', payload);
       }

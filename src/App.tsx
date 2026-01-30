@@ -6,6 +6,8 @@ import { AIProvidersPage } from '@/features/ai-providers'
 import { AISystemsPage } from '@/features/ai-systems'
 import { AISystemEvaluationUnifiedPage } from '@/features/ai-system-evaluation'
 import { BetaFeaturesPage } from '@/features/beta-features'
+import { ProjectOverviewPage } from '@/features/project-overview'
+import { ResultTypesPage } from '@/features/result-types'
 import { EvaluationCreatePage, EvaluationListPage, EvaluationDetailPage } from '@/features/evaluation'
 import { EvaluationResultsPage } from '@/features/evaluation-results'
 import { GuardrailsPage } from '@/features/guardrails'
@@ -17,17 +19,23 @@ import { useGlobalNotifications } from '@/hooks/useGlobalNotifications'
 import { useGlobalEvaluationMonitor } from '@/features/ai-system-evaluation/hooks/useGlobalEvaluationMonitor'
 
 function App() {
+  console.log('🚀🚀🚀 APP COMPONENT RENDERING 🚀🚀🚀');
+
   usePageTitle()
 
+  console.log('📞 App: About to call useGlobalEvaluationMonitor');
   // Global evaluation monitor - watches all evaluations and triggers notification events
   useGlobalEvaluationMonitor()
+  console.log('✅ App: useGlobalEvaluationMonitor called');
 
+  console.log('📞 App: About to call useGlobalNotifications');
   // Listen for notification events and display toast UI
   useGlobalNotifications()
+  console.log('✅ App: useGlobalNotifications called');
 
   return (
     <>
-      <Toaster />
+      <Toaster position="top-right" richColors />
     <Routes>
       {/* Settings Route - Separate layout without AppBar */}
       <Route path="/settings" element={<SettingsPage />} />
@@ -67,7 +75,13 @@ function App() {
               
               {/* Evaluation Results Route */}
               <Route path="/evaluation-results" element={<EvaluationResultsPage />} />
-              
+
+              {/* Project Overview Route */}
+              <Route path="/project-overview" element={<ProjectOverviewPage />} />
+
+              {/* Result Types Route */}
+              <Route path="/result-types" element={<ResultTypesPage />} />
+
               {/* AI Providers Route */}
               <Route path="/ai-providers" element={<AIProvidersPage />} />
               

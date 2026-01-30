@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Play, Edit2 } from "lucide-react";
+import { Play, Edit2, Squircle } from "lucide-react";
 import { useGuardrailsSupabase } from "@/features/guardrails/lib/useGuardrailsSupabase";
 import { useAISystemsSupabase } from "@/features/ai-systems/lib/useAISystemsSupabase";
 import { AISystemIcon } from "@/components/patterns/ui-patterns/ai-system-icon";
@@ -21,6 +21,21 @@ export function EvaluationReview({
 }: EvaluationReviewProps) {
   const { guardrails: allGuardrails } = useGuardrailsSupabase();
   const { aiSystems: allAISystems } = useAISystemsSupabase();
+
+  // Format the last checked time
+  const formatLastChecked = (timestamp: number) => {
+    const now = Date.now();
+    const diff = now - timestamp;
+    const seconds = Math.floor(diff / 1000);
+
+    if (seconds < 60) return 'just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  };
 
   // Get selected policies/guardrails/systems
   const selectedPolicies = allGuardrails.filter((g) =>
@@ -95,17 +110,32 @@ export function EvaluationReview({
             {evaluatingSystem && (
               <div>
                 <p className="text-[0.8125rem]  font-450 text-gray-600 my-2">Evaluating AI System</p>
-                <div className="flex items-center gap-2 py-1.5">
+                <div className="flex items-center justify-between py-1.5">
                   <div className="flex items-center gap-2">
-                  <AISystemIcon
-                    type={evaluatingSystem.icon}
-                    className="h-4 w-4"
-                  />
-                  <span className="text-[0.8125rem]  text-gray-900">{evaluatingSystem.name}</span>
+                    <AISystemIcon
+                      type={evaluatingSystem.icon}
+                      className="h-4 w-4"
+                    />
+                    <span className="text-[0.8125rem]  text-gray-900">{evaluatingSystem.name}</span>
+                    <span className="text-[0.8125rem]  text-gray-600">({evaluatingSystem.providerName} • {evaluatingSystem.selectedModel})</span>
                   </div>
 
-                  <p className="text-[0.8125rem]  text-gray-600"> ({evaluatingSystem.providerName} • {evaluatingSystem.selectedModel})</p>
-           
+                  {/* Connection Status */}
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <Squircle className={`w-2.5 h-2.5 ${
+                        evaluatingSystem.status === 'connected'
+                          ? 'fill-green-600 text-green-600'
+                          : 'fill-gray-400 text-gray-400'
+                      }`} />
+                      <span className="text-[0.8125rem] text-gray-900">
+                        {evaluatingSystem.status === 'connected' ? 'Connected' : 'Disconnected'}
+                      </span>
+                    </div>
+                    <span className="text-[0.8125rem] text-gray-500">
+                      • Last checked {formatLastChecked(evaluatingSystem.lastValidated)}
+                    </span>
+                  </div>
                 </div>
               </div>
             )}

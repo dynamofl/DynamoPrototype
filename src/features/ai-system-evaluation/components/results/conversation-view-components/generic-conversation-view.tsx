@@ -15,6 +15,7 @@ interface GenericConversationViewProps {
   testType?: 'jailbreak' | 'compliance' | 'hallucination'
   onRecordUpdate?: (record: BaseEvaluationResult) => void
   isAnnotationModeEnabled?: boolean
+  useReviewMode?: boolean
 }
 
 export function GenericConversationView({
@@ -24,7 +25,8 @@ export function GenericConversationView({
   judgementSidebarWidth = 450,
   testType,
   onRecordUpdate,
-  isAnnotationModeEnabled = false
+  isAnnotationModeEnabled = false,
+  useReviewMode = false
 }: GenericConversationViewProps) {
   // Use highlighting hook for state management
   const {
@@ -64,6 +66,7 @@ export function GenericConversationView({
         isAnnotationModeEnabled={isAnnotationModeEnabled}
         testType={testType}
         onRecordUpdate={onRecordUpdate}
+        useReviewMode={useReviewMode}
       />
     </div>
   )

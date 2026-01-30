@@ -240,8 +240,8 @@ export function getJailbreakTableColumns(options?: { hasInputGuardrails?: boolea
 
       return (
         <Badge
-          variant={outcome === 'Attack Success' ? 'destructive' : 'secondary'}
-          className={outcome === 'Attack Success' ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}
+          variant="outline"
+          className={outcome === 'Attack Success' ? 'text-red-600 border-red-200' : 'text-green-600 border-green-200'}
         >
           {outcome}
         </Badge>

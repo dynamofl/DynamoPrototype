@@ -96,6 +96,19 @@ module.exports = {
   				'900': 'rgb(var(--blue-900) / <alpha-value>)',
   				'950': 'rgb(var(--blue-950) / <alpha-value>)'
   			},
+  			amber: {
+  				'50': 'rgb(var(--amber-50) / <alpha-value>)',
+  				'100': 'rgb(var(--amber-100) / <alpha-value>)',
+  				'200': 'rgb(var(--amber-200) / <alpha-value>)',
+  				'300': 'rgb(var(--amber-300) / <alpha-value>)',
+  				'400': 'rgb(var(--amber-400) / <alpha-value>)',
+  				'500': 'rgb(var(--amber-500) / <alpha-value>)',
+  				'600': 'rgb(var(--amber-600) / <alpha-value>)',
+  				'700': 'rgb(var(--amber-700) / <alpha-value>)',
+  				'800': 'rgb(var(--amber-800) / <alpha-value>)',
+  				'900': 'rgb(var(--amber-900) / <alpha-value>)',
+  				'950': 'rgb(var(--amber-950) / <alpha-value>)'
+  			},
   			border: 'hsl(var(--border))',
   			input: 'hsl(var(--input))',
   			ring: 'hsl(var(--ring))',

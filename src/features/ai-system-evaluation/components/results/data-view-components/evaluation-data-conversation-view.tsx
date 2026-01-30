@@ -85,7 +85,7 @@ export function EvaluationDataConversationView({
     return (
       <Badge
         variant="secondary"
-        className={`text-xs ${badge.color} bg-transparent border-0 font-400 text-gray-500`}
+        className={`text-xs ${badge.color} bg-transparent border-0 font-400`}
       >
         {badge.text}
       </Badge>
@@ -144,19 +144,10 @@ export function EvaluationDataConversationView({
               // Check if record has human judgement
               const hasHumanJudgement = recordWithId.system_response?.human_judgement
 
-              // Check for judgement contradiction
+              // Get AI judgement to check if human judgment matches
               const aiJudgement = recordWithId.judgeModelJudgement || recordWithId.modelJudgement || recordWithId.compliance_judgement
               const humanJudgement = hasHumanJudgement?.judgement
-              const hasContradiction = humanJudgement && aiJudgement && (
-                (aiJudgement === 'Answered' && humanJudgement === 'Refused') ||
-                (aiJudgement === 'Refused' && humanJudgement === 'Answered') ||
-                (aiJudgement === 'Compliant' && humanJudgement === 'Non-Compliant') ||
-                (aiJudgement === 'Non-Compliant' && humanJudgement === 'Compliant')
-              )
-
-              // Check if outcome has been updated - only show amber if contradiction exists and not yet updated
-              const isOutcomeUpdated = hasHumanJudgement?.outcome_updated
-              const showAmberDot = hasContradiction && !isOutcomeUpdated
+              const humanMatchesAI = humanJudgement && aiJudgement && humanJudgement === aiJudgement
 
               // Access base prompt - check both snake_case and camelCase
               const basePromptText = record.base_prompt || recordWithId.basePrompt || 'No prompt'
@@ -169,7 +160,7 @@ export function EvaluationDataConversationView({
                   contentTitle={basePromptText}
                   indicator={hasHumanJudgement ? {
                     show: true,
-                    color: showAmberDot ? 'amber' : 'blue'
+                    color: humanMatchesAI ? 'blue' : 'amber'
                   } : undefined}
                   badge={renderOutcomeBadge(record)}
                   isSelected={isSelected}

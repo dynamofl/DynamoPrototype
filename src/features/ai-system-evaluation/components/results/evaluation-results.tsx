@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowDownToLine, ChevronsUpDown, Search, Square, Play } from "lucide-react";
-import type { BaseEvaluationOutput } from "../../types/base-evaluation";
+import type { BaseEvaluationOutput, BaseEvaluationResult } from "../../types/base-evaluation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -27,9 +27,11 @@ import { OverlayHeader } from "@/components/patterns";
 import { toUrlSlug } from "@/lib/utils";
 import { EvaluationDataView } from "./evaluation-data-view";
 import { EvaluationSummaryView } from "./evaluation-summary-view";
+import { EvaluationReviewView } from "./evaluation-review-view";
 import type { EvaluationTest } from "@/features/evaluation/types/evaluation-test";
 import type { AISystem } from "@/features/ai-systems/types/types";
 import { getEvaluationStrategy } from "../../strategies/strategy-factory";
+import { useBetaFeatures } from "@/hooks/useBetaFeatures";
 
 interface EvaluationResultsProps {
   results: BaseEvaluationOutput;
@@ -42,7 +44,7 @@ interface EvaluationResultsProps {
   onExport?: (format: 'json' | 'csv') => void;
   onClose?: () => void;
   currentTab?: string;
-  onTabChange?: (tab: 'summary' | 'data') => void;
+  onTabChange?: (tab: 'summary' | 'data' | 'review') => void;
   // New props for test and system selection
   availableTests?: EvaluationTest[];
   availableAISystems?: AISystem[];
@@ -96,9 +98,40 @@ export function EvaluationResults({
 }: EvaluationResultsProps) {
   const navigate = useNavigate();
   const { systemName, evaluationId, view } = useParams<{ systemName: string; evaluationId?: string; view?: string }>();
-  const [selectedTab, setSelectedTab] = useState<'summary' | 'data'>((view as 'summary' | 'data') || (propTab as 'summary' | 'data') || 'summary');
+  const [selectedTab, setSelectedTab] = useState<'summary' | 'data' | 'review'>((view as 'summary' | 'data' | 'review') || (propTab as 'summary' | 'data' | 'review') || 'summary');
   const [searchQuery, setSearchQuery] = useState("");
   const [showStopDialog, setShowStopDialog] = useState(false);
+
+  // Track results in state for reactivity
+  const [resultsData, setResultsData] = useState<BaseEvaluationResult[]>(results.results);
+
+  // Sync resultsData when results prop changes
+  useEffect(() => {
+    setResultsData(results.results);
+  }, [results.results]);
+
+  // Callback to update a single result record
+  const handleResultUpdate = (updatedRecord: BaseEvaluationResult) => {
+    const recordId = (updatedRecord as any).id;
+    setResultsData(prev => prev.map(record => {
+      if ((record as any).id === recordId) {
+        const dbRecord = updatedRecord as any;
+        return {
+          ...record,
+          system_response: dbRecord.ai_system_response || (record as any).system_response,
+          attack_outcome: dbRecord.attack_outcome || (record as any).attack_outcome,
+          attackOutcome: dbRecord.attack_outcome || dbRecord.final_outcome || (record as any).attackOutcome,
+          final_outcome: dbRecord.final_outcome || (record as any).final_outcome,
+          aiSystemAttackOutcome: dbRecord.ai_system_attack_outcome || (record as any).aiSystemAttackOutcome,
+        };
+      }
+      return record;
+    }));
+  };
+
+  // Check if Review Mode is enabled
+  const { getBetaFeature } = useBetaFeatures();
+  const isReviewModeEnabled = getBetaFeature('reviewMode');
 
   // Get strategy based on test type
   const testType = results.test_type || 'jailbreak';
@@ -116,13 +149,27 @@ export function EvaluationResults({
 
   // Update selectedTab when view or propTab changes
   useEffect(() => {
-    const effectiveTab = (view as 'summary' | 'data') || (propTab as 'summary' | 'data');
-    if (effectiveTab === 'summary' || effectiveTab === 'data') {
+    const effectiveTab = (view as 'summary' | 'data' | 'review') || (propTab as 'summary' | 'data' | 'review');
+
+    // If trying to access review tab but Review Mode is disabled, redirect to summary
+    if (effectiveTab === 'review' && !isReviewModeEnabled) {
+      setSelectedTab('summary');
+      return;
+    }
+
+    if (effectiveTab === 'summary' || effectiveTab === 'data' || effectiveTab === 'review') {
       setSelectedTab(effectiveTab);
     }
-  }, [view, propTab]);
+  }, [view, propTab, isReviewModeEnabled]);
 
-  const handleTabChange = (tab: 'summary' | 'data') => {
+  // Redirect from Review tab if Review Mode gets disabled
+  useEffect(() => {
+    if (selectedTab === 'review' && !isReviewModeEnabled) {
+      handleTabChange('summary');
+    }
+  }, [isReviewModeEnabled, selectedTab]);
+
+  const handleTabChange = (tab: 'summary' | 'data' | 'review') => {
     if (onTabChange) {
       onTabChange(tab);
     } else if (systemName && evaluationId) {
@@ -257,7 +304,7 @@ export function EvaluationResults({
             )}
 
             {/* View Switch Tabs */}
-            <Tabs value={selectedTab} onValueChange={(value) => handleTabChange(value as 'summary' | 'data')}>
+            <Tabs value={selectedTab} onValueChange={(value) => handleTabChange(value as 'summary' | 'data' | 'review')}>
               <TabsList className="h-8 px-0.5 rounded-full">
                 <TabsTrigger value="summary" className="text-[0.8125rem] py-1 px-3 rounded-full">
                   Summary
@@ -265,6 +312,11 @@ export function EvaluationResults({
                 <TabsTrigger value="data" className="text-[0.8125rem] py-1 px-3 rounded-full">
                   Data
                 </TabsTrigger>
+                {isReviewModeEnabled && (
+                  <TabsTrigger value="review" className="text-[0.8125rem] py-1 px-3 rounded-full">
+                    Review
+                  </TabsTrigger>
+                )}
               </TabsList>
             </Tabs>
           </div>
@@ -272,8 +324,8 @@ export function EvaluationResults({
         onClose={onClose}
         actions={
           <div className="flex gap-2 align-center items-center">
-            {/* Show circular progress badge only in Data view when evaluation is running */}
-            {(evaluationStatus === 'running' || evaluationStatus === 'pending') && selectedTab === 'data' && evaluationProgress && (() => {
+            {/* Show circular progress badge when evaluation is running */}
+            {(evaluationStatus === 'running' || evaluationStatus === 'pending') && evaluationProgress && (() => {
               const stageLower = evaluationProgress.stage.toLowerCase();
               const isPreparingStage = stageLower.includes('generating topics') ||
                                        stageLower.includes('topic generation') ||
@@ -334,37 +386,43 @@ export function EvaluationResults({
               </Button>
             )}
 
-            {/* Show Stopped badge and Resume button when cancelled - only in data view */}
-            {evaluationStatus === 'cancelled' && selectedTab !== 'summary' && (
-              <>
-                <div className="flex items-center gap-1 p-1.5 pr-2 bg-amber-50 rounded-full">
-                  <Square className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                  <span className="text-[0.8125rem] font-450 text-amber-700">
-                    Stopped at {evaluationProgress?.percentage ?? 0}%
-                  </span>
-                </div>
-                <Button
-                  variant="outline"
-                  size="default"
-                  className="gap-1.5"
-                  onClick={onResumeEvaluation}
-                >
-                  <Play className="h-3 w-3 fill-green-500 text-green-500" />
-                  Resume Evaluation
-                </Button>
-              </>
+            {/* Show Stopped badge when cancelled - only in data view */}
+            {evaluationStatus === 'cancelled' && selectedTab === 'data' && (
+              <div className="flex items-center gap-1 p-1.5 pr-2 bg-amber-50 rounded-full">
+                <Square className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                <span className="text-[0.8125rem] font-450 text-amber-700">
+                  Stopped at {evaluationProgress?.percentage ?? 0}%
+                </span>
+              </div>
             )}
 
-            {/* Show Download/Export buttons only when evaluation is completed or failed */}
-            {(evaluationStatus === 'completed' || evaluationStatus === 'failed' || !evaluationStatus) && (
-              <>
-                <Button variant="secondary" size="default" className="gap-1">
-                  <ArrowDownToLine className="w-4 h-4"/>
-                   Download Report</Button>
+            {/* Show Resume button when cancelled - in both views */}
+            {evaluationStatus === 'cancelled' && (
+              <Button
+                variant="outline"
+                size="default"
+                className="gap-1.5"
+                onClick={onResumeEvaluation}
+              >
+                <Play className="h-3 w-3 fill-green-500 text-green-500" />
+                Resume Evaluation
+              </Button>
+            )}
+
+            {/* Summary Tab: Show only Download Report button */}
+            {selectedTab === 'summary' && (evaluationStatus === 'completed' || evaluationStatus === 'failed' || !evaluationStatus) && (
+              <Button variant="secondary" size="default" className="gap-1">
+                <ArrowDownToLine className="w-4 h-4"/>
+                Download Report
+              </Button>
+            )}
+
+            {/* Data Tab: Show only Export Data button */}
+            {selectedTab === 'data' && (evaluationStatus === 'completed' || evaluationStatus === 'failed' || !evaluationStatus) && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="default" className="">
-                    Export Result
+                    Export Data
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -376,8 +434,23 @@ export function EvaluationResults({
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              </>
             )}
+
+            {/* Review Tab: Show reviewed datapoints badge */}
+            {selectedTab === 'review' && isReviewModeEnabled && (() => {
+              const reviewedCount = resultsData.filter(result =>
+                (result as any).system_response?.human_judgement
+              ).length;
+              const totalCount = resultsData.length;
+
+              return (
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full">
+                  <span className="text-[0.8125rem] font-450 text-gray-700">
+                    Datapoint Reviewed: {reviewedCount}/{totalCount}
+                  </span>
+                </div>
+              );
+            })()}
           </div>
 
         }
@@ -419,6 +492,23 @@ export function EvaluationResults({
               systemName={systemName}
               evaluationId={evaluationId}
               evaluationStatus={evaluationStatus}
+              isReviewModeEnabled={isReviewModeEnabled}
+            />
+          )}
+
+          {selectedTab === 'review' && isReviewModeEnabled && (
+            <EvaluationReviewView
+              results={results.results}
+              summary={results.summary}
+              strategy={strategy}
+              testType={testType}
+              evaluationName={evaluationName}
+              aiSystemName={aiSystemName}
+              evaluationId={evaluationId}
+              systemName={systemName}
+              hasGuardrails={results.config.guardrail_ids && results.config.guardrail_ids.length > 0}
+              evaluationStatus={evaluationStatus}
+              onResultUpdate={handleResultUpdate}
             />
           )}
         </div>

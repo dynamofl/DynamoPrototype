@@ -13,11 +13,11 @@ export function mapSupabaseToEvaluationTests(
   aiSystem: AISystem
 ): EvaluationTest[] {
   return supabaseHistory.map(evaluation => {
-    console.log('[mapSupabaseToEvaluationTests] Mapping evaluation:', evaluation.id, {
-      hasCheckpointState: !!evaluation.checkpointState,
-      checkpointState: evaluation.checkpointState,
-      policies: evaluation.checkpointState?.policies
-    });
+    // console.log('[mapSupabaseToEvaluationTests] Mapping evaluation:', evaluation.id, {
+    //   hasCheckpointState: !!evaluation.checkpointState,
+    //   checkpointState: evaluation.checkpointState,
+    //   policies: evaluation.checkpointState?.policies
+    // });
     return {
     id: evaluation.id,
     name: evaluation.name,

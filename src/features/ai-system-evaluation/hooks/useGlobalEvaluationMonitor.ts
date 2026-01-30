@@ -19,14 +19,19 @@ const SESSION_SHOWN_KEY = 'evaluation-session-shown';
  * Triggers notification events via NotificationService when evaluations complete
  */
 export function useGlobalEvaluationMonitor() {
+  console.log('🚀🚀🚀 useGlobalEvaluationMonitor HOOK CALLED 🚀🚀🚀');
+
   const channelRef = useRef<RealtimeChannel | null>(null);
   const lastSeenStatusRef = useRef<Map<string, string>>(new Map());
   const sessionShownRef = useRef<Set<string>>(new Set());
   const [isInitialized, setIsInitialized] = useState(false);
   const isMountedRef = useRef(true);
 
+  console.log('🚀 useGlobalEvaluationMonitor: Hook body executing, isInitialized =', isInitialized);
+
   // Load persisted data on mount
   useEffect(() => {
+    console.log('🚀 useGlobalEvaluationMonitor: Load persisted data effect running');
     try {
       const storedStatus = localStorage.getItem(LAST_SEEN_STATUS_KEY);
       if (storedStatus) {
@@ -66,9 +71,17 @@ export function useGlobalEvaluationMonitor() {
 
   // Check for evaluations that completed while app was closed
   useEffect(() => {
-    if (isInitialized) return;
+    console.log('🎯 useGlobalEvaluationMonitor: First effect (checkCompletedWhileAway) running, isInitialized =', isInitialized);
+    if (isInitialized) {
+      console.log('⏭️ useGlobalEvaluationMonitor: Already initialized, skipping');
+      return;
+    }
+
+    // Use effect-specific cancellation flag to handle React StrictMode double-mounting
+    let cancelled = false;
 
     const checkCompletedWhileAway = async () => {
+      console.log('🔎 useGlobalEvaluationMonitor: Checking for completed evaluations...');
       try {
         const { data: evaluations, error } = await supabase
           .from('evaluations')
@@ -84,14 +97,21 @@ export function useGlobalEvaluationMonitor() {
           .order('created_at', { ascending: false });
 
         if (error) {
-          console.error('Error loading evaluations:', error);
-          if (isMountedRef.current) setIsInitialized(true);
+          console.error('❌ useGlobalEvaluationMonitor: Error loading evaluations:', error);
+          if (!cancelled) setIsInitialized(true);
           return;
         }
 
-        // Check if component is still mounted before processing
-        if (!isMountedRef.current) return;
+        console.log(`📋 useGlobalEvaluationMonitor: Found ${evaluations?.length || 0} evaluations`);
 
+        // Check if this effect has been cancelled (component unmounted or re-run)
+        console.log('🔍 useGlobalEvaluationMonitor: Checking if cancelled =', cancelled);
+        if (cancelled) {
+          console.warn('⚠️ useGlobalEvaluationMonitor: Effect cancelled, stopping evaluation processing');
+          return;
+        }
+
+        console.log('🔄 useGlobalEvaluationMonitor: Processing evaluations...');
         evaluations?.forEach((evaluation: any) => {
           const lastSeenStatus = lastSeenStatusRef.current.get(evaluation.id);
           const currentStatus = evaluation.status;
@@ -118,24 +138,47 @@ export function useGlobalEvaluationMonitor() {
           lastSeenStatusRef.current.set(evaluation.id, currentStatus);
         });
 
+        console.log('✅ useGlobalEvaluationMonitor: Finished processing all evaluations');
+        console.log('💾 useGlobalEvaluationMonitor: About to save last seen status');
         saveLastSeenStatus();
-        if (isMountedRef.current) setIsInitialized(true);
+        console.log('✅ useGlobalEvaluationMonitor: Last seen status saved');
+        console.log('✅ useGlobalEvaluationMonitor: About to set isInitialized = true, cancelled =', cancelled);
+        if (!cancelled) {
+          setIsInitialized(true);
+          console.log('✅ useGlobalEvaluationMonitor: setIsInitialized(true) called');
+        } else {
+          console.warn('⚠️ useGlobalEvaluationMonitor: Effect cancelled, NOT setting isInitialized');
+        }
       } catch (error) {
-        console.error('Failed to check completed evaluations:', error);
-        if (isMountedRef.current) setIsInitialized(true);
+        console.error('❌ Failed to check completed evaluations:', error);
+        if (!cancelled) {
+          setIsInitialized(true);
+          console.log('✅ useGlobalEvaluationMonitor: setIsInitialized(true) called after error');
+        }
       }
     };
 
     const timer = setTimeout(() => {
+      console.log('⏰ useGlobalEvaluationMonitor: Timer fired, calling checkCompletedWhileAway');
       checkCompletedWhileAway();
     }, 500);
 
-    return () => clearTimeout(timer);
+    return () => {
+      console.log('🧹 useGlobalEvaluationMonitor: Cleanup - cancelling effect and clearing timer');
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [isInitialized]);
 
   // Set up real-time subscription
   useEffect(() => {
-    if (!isInitialized) return;
+    console.log('🎯 useGlobalEvaluationMonitor: Second effect (subscription) running, isInitialized =', isInitialized);
+    if (!isInitialized) {
+      console.log('⏳ useGlobalEvaluationMonitor: Not initialized yet, skipping subscription setup');
+      return;
+    }
+
+    console.log('🎬 useGlobalEvaluationMonitor: Setting up real-time subscription');
 
     const channel = supabase
       .channel('global-evaluation-monitor')
@@ -147,17 +190,36 @@ export function useGlobalEvaluationMonitor() {
           table: 'evaluations'
         },
         async (payload) => {
+          console.log('📡 useGlobalEvaluationMonitor: Received database update', payload);
+
           const updatedEval = payload.new;
           const lastSeenStatus = lastSeenStatusRef.current.get(updatedEval.id);
           const currentStatus = updatedEval.status;
           const alreadyShownInSession = sessionShownRef.current.has(updatedEval.id);
+
+          console.log('🔍 useGlobalEvaluationMonitor: Checking completion status', {
+            evaluationId: updatedEval.id,
+            evaluationName: updatedEval.name,
+            lastSeenStatus,
+            currentStatus,
+            alreadyShownInSession,
+          });
 
           const justCompleted =
             (lastSeenStatus === 'running' || lastSeenStatus === 'pending') &&
             currentStatus === 'completed' &&
             !alreadyShownInSession;
 
+          console.log('✅ useGlobalEvaluationMonitor: justCompleted =', justCompleted);
+
           if (justCompleted) {
+            console.log('🎯 Evaluation just completed!', {
+              evaluationId: updatedEval.id,
+              evaluationName: updatedEval.name,
+              lastSeenStatus,
+              currentStatus
+            });
+
             const { data: aiSystem } = await supabase
               .from('ai_systems')
               .select('name')
@@ -166,6 +228,8 @@ export function useGlobalEvaluationMonitor() {
 
             // Check if component is still mounted before triggering notification
             if (!isMountedRef.current) return;
+
+            console.log('📢 Triggering notification for evaluation:', updatedEval.name);
 
             notificationService.triggerEvaluationCompletion({
               evaluationId: updatedEval.id,
@@ -185,11 +249,16 @@ export function useGlobalEvaluationMonitor() {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('🔌 useGlobalEvaluationMonitor: Subscription status changed:', status);
+      });
 
     channelRef.current = channel;
 
+    console.log('✅ useGlobalEvaluationMonitor: Subscription setup complete');
+
     return () => {
+      console.log('🔌 useGlobalEvaluationMonitor: Cleaning up subscription');
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;

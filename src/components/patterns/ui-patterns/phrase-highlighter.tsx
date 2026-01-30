@@ -157,26 +157,22 @@ export function PhraseHighlighter({
     const isPhraseSelected = selectedPhraseText !== null &&
       range.phraseInfo.phrase.toLowerCase() === selectedPhraseText.toLowerCase()
 
-    // Dynamic color classes based on highlightColor prop
-    // Base classes: show border only if showHighlightByDefault is true
-    const baseClasses = showHighlightByDefault
-      ? (highlightColor === 'green' ? 'border-b border-green-400' :
-         highlightColor === 'red' ? 'border-b border-red-400' :
-         'border-b-2 border-amber-400')
-      : ''
+    // Check if phrase is in hover/selected state
+    const isActive = isHovered || isBehaviorHovered || isBehaviorSelected || isPhraseSelected
 
-    // Background: show when hovered, behavior is hovered/selected, or specific phrase is selected
-    // Priority: isPhraseSelected OR isBehaviorSelected > hoveredBehavior
-    const backgroundClass = (isHovered || isBehaviorHovered || isBehaviorSelected || isPhraseSelected)
-      ? (highlightColor === 'green' ? 'bg-green-100' :
-         highlightColor === 'red' ? 'bg-red-100' :
-         'bg-amber-100')
-      : ''
+    // Dynamic color classes
+    // Default: grey underline
+    // Hover/Selected: blue background + blue underline
+    const highlightClasses = isActive
+      ? 'bg-blue-50 border-b border-blue-600'
+      : showHighlightByDefault
+        ? 'border-b border-gray-300'
+        : ''
 
     elements.push(
       <span
         key={`highlight-${idx}`}
-        className={`${baseClasses} ${backgroundClass}  px-0.5 cursor-pointer transition-all duration-200`}
+        className={`${highlightClasses} px-0.5 cursor-pointer transition-all duration-200`}
         title={tooltipContent}
         onMouseEnter={() => onPhraseHover?.(range.phraseIndex)}
         onMouseLeave={() => onPhraseHover?.(null)}

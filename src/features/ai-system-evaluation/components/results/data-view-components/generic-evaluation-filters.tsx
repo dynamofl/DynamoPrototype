@@ -3,37 +3,39 @@
 
 import { useMemo, useCallback } from 'react'
 import { ClipboardCheck } from 'lucide-react'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Switch } from '@/components/ui/switch'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { FilterSearch } from '@/components/patterns/ui-patterns'
 import type { FilterConfig as UIFilterConfig, FilterChip } from '@/components/patterns/ui-patterns'
 import type { EvaluationStrategy, FilterConfig as StrategyFilterConfig } from '../../../strategies/base-strategy'
 import type { BaseEvaluationResult } from '../../../types/base-evaluation'
 
+type ViewType = 'table' | 'conversation'
+
 interface GenericEvaluationFiltersProps {
   strategy: EvaluationStrategy
   filters: Record<string, any>
   onFiltersChange: (filters: Record<string, any>) => void
-  currentView: 'table' | 'conversation'
-  onViewChange: (view: 'table' | 'conversation') => void
   hasGuardrails?: boolean
   data?: BaseEvaluationResult[]  // For dynamic filter options
   isAnnotationModeEnabled?: boolean
   onAnnotationModeChange?: (enabled: boolean) => void
   canEnableAnnotation?: boolean
+  currentView?: ViewType
+  onViewChange?: (view: ViewType) => void
 }
 
 export function GenericEvaluationFilters({
   strategy,
   filters,
   onFiltersChange,
-  currentView,
-  onViewChange,
   hasGuardrails = true,
   data = [],
   isAnnotationModeEnabled = false,
   onAnnotationModeChange,
-  canEnableAnnotation = true
+  canEnableAnnotation = true,
+  currentView,
+  onViewChange
 }: GenericEvaluationFiltersProps) {
   // Check if any records have input/output guardrail judgements
   const hasInputGuardrails = useMemo(() =>
@@ -175,18 +177,20 @@ export function GenericEvaluationFilters({
       )}
 
 
-      <Tabs value={currentView} onValueChange={(value) => onViewChange(value as 'table' | 'conversation')}>
-        <TabsList className="px-0.5 rounded-full">
-          <TabsTrigger value="conversation" className="text-[0.8125rem] px-3 rounded-full">
-            Conversation View
-          </TabsTrigger>
-          <TabsTrigger value="table" className="text-[0.8125rem] px-3 rounded-full">
-            Table View
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+      {currentView !== undefined && onViewChange && (
+        <Tabs value={currentView} onValueChange={(value) => onViewChange(value as 'table' | 'conversation')}>
+          <TabsList className="px-0.5 rounded-full">
+            <TabsTrigger value="conversation" className="text-[0.8125rem] px-3 rounded-full">
+              Conversation View
+            </TabsTrigger>
+            <TabsTrigger value="table" className="text-[0.8125rem] px-3 rounded-full">
+              Table View
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      )}
 
-     
+
     </div>
   )
 

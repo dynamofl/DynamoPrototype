@@ -240,7 +240,7 @@ export class JailbreakStrategy implements EvaluationStrategy {
     return {
       text: jailbreakRecord.attackOutcome,
       variant: (isAttackSuccess ? 'destructive' : 'default') as 'default' | 'destructive',
-      color: isAttackSuccess ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'
+      color: isAttackSuccess ? 'text-red-600' : 'text-green-600'
     }
   }
 }

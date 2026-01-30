@@ -1,9 +1,20 @@
 import { NavLink } from 'react-router-dom'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { FlaskConical, BarChart3, Settings, Database, Zap, Shield } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
+import { FlaskConical, BarChart3, Settings, Database, Zap, Shield, LayoutDashboard, FileText, ClipboardCheck } from 'lucide-react'
+import { useBetaFeatures } from '@/hooks/useBetaFeatures'
 
 const betaFeatures = [
+    {
+    title: 'Project Overview',
+    description: 'View comprehensive project dashboard with metrics, activity, and insights.',
+    path: '/project-overview',
+    icon: LayoutDashboard,
+    category: 'Analytics & Reporting',
+    gradient: 'from-amber-400/20 to-amber-600/20',
+    image: '/src/assets/images/betafeatures/ProjectOverview.svg'
+  },
   {
     title: 'Evaluation Sandbox',
     description: 'Test and compare AI models with custom prompts and measure performance instantly.',
@@ -31,9 +42,31 @@ const betaFeatures = [
     gradient: 'from-orange-400/20 to-orange-600/20',
     image: '/src/assets/images/betafeatures/AISystemProviders.png'
   },
+  {
+    title: 'Result Types',
+    description: 'Explore different template components for displaying evaluation results including text, tables, and charts.',
+    path: '/result-types',
+    icon: FileText,
+    category: 'Analytics & Reporting',
+    gradient: 'from-red-400/20 to-red-600/20',
+    image: '/src/assets/images/betafeatures/ResultTypes.png'
+  },
+
+]
+
+const featureToggles = [
+  {
+    title: 'Review Mode',
+    description: 'Enable conversation review and human judgement annotations for evaluation results',
+    key: 'reviewMode' as const,
+    icon: ClipboardCheck,
+    category: 'Analytics & Reporting',
+    gradient: 'from-purple-400/20 to-purple-600/20',
+  }
 ]
 
 export function BetaFeaturesPage() {
+  const { getBetaFeature, toggleBetaFeature } = useBetaFeatures()
   return (
     <div className="min-h-screen bg-gray-0">
       <main className="mx-auto">
@@ -97,6 +130,50 @@ export function BetaFeaturesPage() {
                       </CardContent>
                     </Card>
                     </NavLink>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Feature Toggles Section */}
+          <div className="px-6 pb-12">
+            <div className="mx-auto max-w-7xl">
+              <div className="mb-6">
+                <h2 className="text-2xl font-450 text-gray-900">Feature Toggles</h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  Enable or disable experimental features
+                </p>
+              </div>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {featureToggles.map((feature) => {
+                  const Icon = feature.icon
+                  const isEnabled = getBetaFeature(feature.key)
+                  return (
+                    <Card key={feature.title} className="relative border-gray-200 bg-gray-0 shadow-sm">
+                      <CardHeader className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${feature.gradient}`}>
+                            <Icon className="h-5 w-5 text-gray-700" />
+                          </div>
+                          <Switch
+                            checked={isEnabled}
+                            onCheckedChange={() => toggleBetaFeature(feature.key)}
+                          />
+                        </div>
+                        <div className="text-[11px] font-450 uppercase tracking-wider text-gray-500">
+                          {feature.category}
+                        </div>
+                        <CardTitle className="text-xl font-450">
+                          {feature.title}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        <CardDescription className="text-[0.8125rem] leading-relaxed text-gray-600">
+                          {feature.description}
+                        </CardDescription>
+                      </CardContent>
+                    </Card>
                   )
                 })}
               </div>

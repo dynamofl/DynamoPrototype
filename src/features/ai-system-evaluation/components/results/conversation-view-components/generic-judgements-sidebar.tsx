@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button'
 import { Info } from 'lucide-react'
 import { JudgementItemCard, type JudgementListItem } from './judgement-item-card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { UnifiedJudgementReviewCard } from './unified-judgement-review-card'
 
 interface GenericJudgementsSidebarProps {
   record: BaseEvaluationResult
@@ -37,6 +38,7 @@ interface GenericJudgementsSidebarProps {
   isAnnotationModeEnabled?: boolean
   testType?: 'jailbreak' | 'compliance' | 'hallucination'
   onRecordUpdate?: (record: BaseEvaluationResult) => void
+  useReviewMode?: boolean
 }
 
 // Status icons using Lucide icons
@@ -299,7 +301,8 @@ export function GenericJudgementsSidebar({
   selectedBehaviors,
   isAnnotationModeEnabled = false,
   testType,
-  onRecordUpdate
+  onRecordUpdate,
+  useReviewMode = false
 }: GenericJudgementsSidebarProps) {
   const [internalExpandedKeys, setInternalExpandedKeys] = useState<Set<string>>(new Set())
   const [viewPolicySheetOpen, setViewPolicySheetOpen] = useState(false)
@@ -448,14 +451,15 @@ export function GenericJudgementsSidebar({
   const isPending = recordAny.status === 'pending' || recordAny.status === 'running'
 
   return (
-    <div className="h-full overflow-y-auto bg-gray-0" onWheel={(e) => e.stopPropagation()}>
+    <div className="" onWheel={(e) => e.stopPropagation()}>
       <div className="flex flex-col gap-6 items-start py-5 px-4">
-        {/* Title */}
-        <div className="flex flex-col gap-3 items-start w-full">
-          <h2 className="text-sm font-450 leading-5 text-gray-900">Evaluation Outcome</h2>
+        {/* Title and Content Section */}
+        {!useReviewMode ? (
+          <div className="flex flex-col gap-3 items-start w-full">
+            <h2 className="text-sm font-450 leading-5 text-gray-900">Evaluation Outcome</h2>
 
-          {/* Summary Cards */}
-          <div className="flex gap-2 items-center w-full">
+            {/* Summary Cards */}
+            <div className="flex gap-2 items-center w-full">
             {/* First Card: Attack Type (Jailbreak) or Ground Truth (Compliance) or Prediction (Hallucination) */}
             {testType === 'hallucination' ? (
               // Hallucination: Prediction Card
@@ -619,13 +623,57 @@ export function GenericJudgementsSidebar({
             )}
           </div>
         </div>
+        ) : (
+          // Review Mode UI
+          <div className="flex flex-col gap-3 items-start w-full">
+            <h2 className="text-sm font-450 leading-5 text-gray-900">Judgement Review</h2>
 
-        {/* Guardrail Judgement Section */}
-        {hasGuardrails && (
+            <div className="flex flex-col gap-3 w-full">
+              {/* Guardrail Judgement Card (Question 1) */}
+              {hasGuardrails && (
+                <div className="">
+                  <UnifiedJudgementReviewCard
+                    variant="guardrail"
+                    questionNumber={1}
+                    inputGuardrails={inputGuardrailDetails}
+                    outputGuardrails={outputGuardrailDetails}
+                    isAnnotationModeEnabled={isAnnotationModeEnabled}
+                    onPreviewPolicy={handlePreviewPolicy}
+                    hoveredBehavior={hoveredBehavior}
+                    onBehaviorHover={onBehaviorHover}
+                    onBehaviorClick={onBehaviorClick}
+                    selectedBehaviors={selectedBehaviors}
+                  />
+                </div>
+              )}
+
+              {/* Response Judgement Card (Question 1 or 2 depending on guardrails) */}
+              <div className="">
+                <UnifiedJudgementReviewCard
+                  variant="response"
+                  questionNumber={hasGuardrails ? 2 : 1}
+                  record={record}
+                  testType={testType || 'jailbreak'}
+                  isAnnotationModeEnabled={isAnnotationModeEnabled}
+                  onRecordUpdate={onRecordUpdate}
+                  hoveredBehavior={hoveredBehavior}
+                  onBehaviorHover={onBehaviorHover}
+                  onBehaviorClick={onBehaviorClick}
+                  selectedBehaviors={selectedBehaviors}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Guardrail Judgement Section (Normal Mode Only) */}
+        {hasGuardrails && !useReviewMode && (
           <div className="flex flex-col gap-2 items-start w-full">
             <h3 className="text-xs font-450 leading-4 text-gray-600">
               Guardrail Judgement
             </h3>
+
+            {/* Normal Mode: Show detail cards */}
             <div className="flex flex-col gap-2 w-full">
               {inputGuardrailDetails.length > 0 && (
                 <>
@@ -675,7 +723,7 @@ export function GenericJudgementsSidebar({
         )}
 
         {/* Response Judgement Section - For both Jailbreak and Compliance */}
-        {(() => {
+        {!useReviewMode && (() => {
           const hasResponseJudgement = hasAttackType
             ? (jbRecord.judgeModelJudgement || jbRecord.modelJudgement)
             : ((record as ComplianceEvaluationResult).compliance_judgement)
@@ -703,7 +751,7 @@ export function GenericJudgementsSidebar({
 
               {/* Attack Outcome Update Alert or Manual Update Info */}
               {needsOutcomeUpdate && !isOutcomeUpdated ? (
-                <div className="w-full bg-amber-100/80 rounded-lg p-3 flex flex-col gap-2">
+                <div className="w-full bg-gray-100 rounded-lg p-3 flex flex-col gap-2">
                   <div className="flex gap-2 items-start">
                     <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mx-1" />
                     <div className="flex flex-col gap-1 flex-1">
@@ -713,9 +761,10 @@ export function GenericJudgementsSidebar({
                       </p>
                       <Button
                       size="sm"
+                      variant="outline"
                     onClick={handleUpdateOutcome}
                     disabled={isUpdatingOutcome}
-                    className="w-fit text-xs h-6 bg-amber-200/80 hover:bg-amber-200 text-amber-800 my-1"
+                    className="w-fit text-xs h-6 text-amber-700 border-gray-200 hover:bg-gray-50 my-1"
                   >
                     {isUpdatingOutcome ? 'Updating...' : 'Update Attack Outcome'}
                   </Button>
