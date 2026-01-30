@@ -4,6 +4,7 @@ import type { BaseEvaluationResult, BaseEvaluationSummary } from "../../types/ba
 import type { EvaluationStrategy } from "../../strategies/base-strategy";
 import { EvaluationDataConversationView } from "./data-view-components/evaluation-data-conversation-view";
 import { GenericConversationView } from "./conversation-view-components/generic-conversation-view";
+import { GenericEvaluationFilters } from "./data-view-components/generic-evaluation-filters";
 
 interface EvaluationReviewViewProps {
   results: BaseEvaluationResult[];
@@ -33,19 +34,58 @@ export function EvaluationReviewView({
   onResultUpdate,
 }: EvaluationReviewViewProps) {
   const [displayData, setDisplayData] = useState<BaseEvaluationResult[]>([]);
+  const [filteredResults, setFilteredResults] = useState<BaseEvaluationResult[]>([]);
   const [conversationDisplayCount, setConversationDisplayCount] = useState(25);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [filters, setFilters] = useState<Record<string, any>>({ searchTerm: '' });
 
-  // Show all conversations
+  // Apply filters and show conversations
   useEffect(() => {
-    const filtered = results;
+    // Get filter configurations from strategy
+    const strategyFilters = strategy.getFilters({
+      hasInputGuardrails: hasGuardrails,
+      hasOutputGuardrails: hasGuardrails,
+    });
+
+    // Apply filters manually
+    const filtered = results.filter((record) => {
+      // Search term filter
+      if (filters.searchTerm && filters.searchTerm.length > 0) {
+        const searchLower = filters.searchTerm.toLowerCase();
+        const matchesSearch =
+          (record as any).basePrompt?.toLowerCase().includes(searchLower) ||
+          (record as any).base_prompt?.toLowerCase().includes(searchLower) ||
+          (record as any).policyName?.toLowerCase().includes(searchLower) ||
+          record.topic?.toLowerCase().includes(searchLower);
+
+        if (!matchesSearch) return false;
+      }
+
+      // Apply strategy-defined filters
+      return strategyFilters.every((filterConfig) => {
+        const filterValue = filters[filterConfig.key];
+        if (
+          !filterValue ||
+          (Array.isArray(filterValue) && filterValue.length === 0)
+        ) {
+          return true; // No filter applied
+        }
+        return filterConfig.filterFn(record, filterValue);
+      });
+    });
+
+    setFilteredResults(filtered);
     setDisplayData(filtered.slice(0, conversationDisplayCount));
 
-    // Auto-select first conversation if none selected
-    if (!selectedConversationId && filtered.length > 0) {
-      setSelectedConversationId((filtered[0] as any).id);
+    // Auto-select first conversation if none selected or if current selection is not in filtered results
+    if (!selectedConversationId || !filtered.find((r: any) => r.id === selectedConversationId)) {
+      if (filtered.length > 0) {
+        setSelectedConversationId((filtered[0] as any).id);
+      } else {
+        setSelectedConversationId(null);
+      }
     }
-  }, [results, conversationDisplayCount, selectedConversationId]);
+  }, [results, conversationDisplayCount, filters, strategy, hasGuardrails, selectedConversationId]);
 
   const handleLoadMore = () => {
     setConversationDisplayCount((prev) => prev + 25);
@@ -89,7 +129,11 @@ export function EvaluationReviewView({
     onResultUpdate?.(updatedRecord);
   };
 
-  const filteredResults = results;
+  const handleFiltersChange = (newFilters: Record<string, any>) => {
+    setFilters(newFilters);
+    // Reset to first page when filters change
+    setConversationDisplayCount(25);
+  };
 
   return (
     <motion.div
@@ -97,74 +141,90 @@ export function EvaluationReviewView({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2, ease: "easeInOut" }}
-      className="flex h-full"
+      className="flex flex-col h-full"
       onWheel={(e) => e.stopPropagation()}
     >
-      {/* Conversation List - Left Side */}
-      <div
-        className="max-w-[400px] flex flex-col overflow-hidden"
-        onWheel={(e) => e.stopPropagation()}
-      >
-        <div className="h-full">
-          <EvaluationDataConversationView
-            data={displayData}
-            strategy={strategy}
-            totalCount={filteredResults.length}
-            hasMore={displayData.length < filteredResults.length}
-            onLoadMore={handleLoadMore}
-            selectedConversationId={selectedConversationId}
-            onConversationSelect={handleConversationSelect}
-          />
-        </div>
+      {/* Filter Bar */}
+      <div className="flex-shrink-0 py-2">
+        <GenericEvaluationFilters
+          strategy={strategy}
+          filters={filters}
+          onFiltersChange={handleFiltersChange}
+          hasGuardrails={hasGuardrails}
+          data={results}
+        />
       </div>
 
-      {/* Conversation Detail - Right Side */}
-      <div
-        className="flex-1 overflow-hidden"
-        onWheel={(e) => e.stopPropagation()}
-      >
-        <div className="h-full" onWheel={(e) => e.stopPropagation()}>
-          {selectedConversationId && displayData.length > 0 && (() => {
-            const selectedRecord = displayData.find(
-              (record) => (record as any).id === selectedConversationId
-            );
-            return selectedRecord ? (
-              <div className="h-full">
-                <GenericConversationView
-                  key={selectedConversationId}
-                  record={selectedRecord}
-                  strategy={strategy}
-                  aiSystemName={aiSystemName}
-                  testType={testType as 'jailbreak' | 'compliance' | 'hallucination'}
-                  isAnnotationModeEnabled={true}
-                  onRecordUpdate={handleRecordUpdate}
-                  useReviewMode={true}
-                />
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-lg text-gray-500">
-                  No conversation selected
+      {/* Main Content Area */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Conversation List - Left Side */}
+        <div
+          className="max-w-[400px] flex flex-col overflow-hidden"
+          onWheel={(e) => e.stopPropagation()}
+        >
+          <div className="h-full">
+            <EvaluationDataConversationView
+              data={displayData}
+              strategy={strategy}
+              totalCount={filteredResults.length}
+              hasMore={displayData.length < filteredResults.length}
+              onLoadMore={handleLoadMore}
+              selectedConversationId={selectedConversationId}
+              onConversationSelect={handleConversationSelect}
+            />
+          </div>
+        </div>
+
+        {/* Conversation Detail - Right Side */}
+        <div
+          className="flex-1 overflow-hidden"
+          onWheel={(e) => e.stopPropagation()}
+        >
+          <div className="h-full" onWheel={(e) => e.stopPropagation()}>
+            {selectedConversationId && displayData.length > 0 && (() => {
+              const selectedRecord = displayData.find(
+                (record) => (record as any).id === selectedConversationId
+              );
+              return selectedRecord ? (
+                <div className="h-full">
+                  <GenericConversationView
+                    key={selectedConversationId}
+                    record={selectedRecord}
+                    strategy={strategy}
+                    aiSystemName={aiSystemName}
+                    testType={testType as 'jailbreak' | 'compliance' | 'hallucination'}
+                    isAnnotationModeEnabled={true}
+                    onRecordUpdate={handleRecordUpdate}
+                    useReviewMode={true}
+                  />
                 </div>
-              </div>
-            );
-          })()}
-          {(!selectedConversationId || displayData.length === 0) && (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <div className="text-lg text-gray-500 mb-2">
-                  {results.length === 0
-                    ? "No Conversations Available"
-                    : "Select a Conversation to View Details"}
-                </div>
-                {results.length === 0 && (
-                  <div className="text-sm text-gray-400">
-                    Run an evaluation to see conversations here
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-lg text-gray-500">
+                    No conversation selected
                   </div>
-                )}
+                </div>
+              );
+            })()}
+            {(!selectedConversationId || displayData.length === 0) && (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <div className="text-lg text-gray-500 mb-2">
+                    {results.length === 0
+                      ? "No Conversations Available"
+                      : filteredResults.length === 0
+                      ? "No conversations match your filters"
+                      : "Select a Conversation to View Details"}
+                  </div>
+                  {results.length === 0 && (
+                    <div className="text-sm text-gray-400">
+                      Run an evaluation to see conversations here
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </motion.div>
