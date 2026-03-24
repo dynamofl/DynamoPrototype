@@ -61,7 +61,7 @@ export function ConversationListItem({
       {/* Row Number Cell with Indicator */}
       <div className="w-8 flex items-center justify-center relative">
         {indicator?.show && (
-          <div className={`absolute left-0 w-1 h-1 rounded-full ${indicatorColorMap[indicator.color]}`} />
+          <div className={`absolute -left-1 w-1 h-1 rounded-full ${indicatorColorMap[indicator.color]}`} />
         )}
         <span className="text-[0.8125rem] text-gray-500">
           {rowNumber}

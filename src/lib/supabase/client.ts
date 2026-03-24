@@ -11,6 +11,24 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+/**
+ * Clear all auth data and restart with fresh session
+ * Call this when auth errors occur
+ */
+export async function clearAndResetSession(): Promise<void> {
+  try {
+    // Sign out to clear all auth state
+    await supabase.auth.signOut();
+
+    // Clear any cached auth data
+    localStorage.removeItem('supabase.auth.token');
+
+    console.log('✅ Session cleared successfully');
+  } catch (error) {
+    console.error('Failed to clear session:', error);
+  }
+}
+
 // Helper to get current user token
 export async function getAuthToken(): Promise<string | null> {
   const { data: { session } } = await supabase.auth.getSession();
@@ -19,19 +37,28 @@ export async function getAuthToken(): Promise<string | null> {
 
 // Helper to ensure user is authenticated
 export async function ensureAuthenticated(): Promise<void> {
-  const { data: { session } } = await supabase.auth.getSession();
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
 
-  if (!session) {
-    // For development, sign in anonymously
-    // In production, you'd redirect to login
-    console.warn('No active session. Creating anonymous session...');
+    if (!session) {
+      // For development, sign in anonymously
+      // In production, you'd redirect to login
+      console.warn('No active session. Creating anonymous session...');
 
-    const { data, error } = await supabase.auth.signInAnonymously();
+      const { data, error } = await supabase.auth.signInAnonymously();
 
-    if (error) {
-      throw new Error(`Authentication failed: ${error.message}`);
+      if (error) {
+        // If anonymous auth also fails, clear everything and throw
+        console.error('Anonymous auth failed:', error);
+        await clearAndResetSession();
+        throw new Error(`Authentication failed: ${error.message}`);
+      }
+
+      console.log('Anonymous session created:', data.session?.user.id);
     }
-
-    console.log('Anonymous session created:', data.session?.user.id);
+  } catch (error) {
+    console.error('ensureAuthenticated failed:', error);
+    // Don't throw - let the app continue without auth
+    // Individual services will handle missing tokens
   }
 }

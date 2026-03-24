@@ -1,10 +1,16 @@
 import { Navigate } from 'react-router-dom'
+import { getVersionPreference } from '@/v2/hooks/useVersionToggle'
 
 /**
- * Smart redirect component that redirects users to AI Systems page
- * regardless of experiments state, since AI Systems is now a main navigation item.
+ * Smart redirect component that redirects users based on version preference.
+ * V2 users go to /v2, V1 users go to /ai-systems.
  */
 export function SmartRedirect() {
-  // Always redirect to AI Systems as it's the main dashboard
+  const preference = getVersionPreference()
+
+  if (preference === 'v2') {
+    return <Navigate to="/v2/projects" replace />
+  }
+
   return <Navigate to="/ai-systems" replace />
 }

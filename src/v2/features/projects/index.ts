@@ -1,0 +1,7 @@
+export { ProjectsPage } from './projects-page'
+export { ProjectDetailContent } from './project-detail-page'
+export { OnboardingFlow } from './components/onboarding-flow'
+export { CreateProjectDialog } from './components/create-project-dialog'
+export { ProjectSidebar } from './components/project-sidebar'
+export { useProjects } from './lib/useProjects'
+export type { V2Project, ProjectVisibility } from './types/project'

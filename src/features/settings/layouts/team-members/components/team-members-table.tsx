@@ -3,7 +3,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { Edit, Send } from 'lucide-react'
+import { Edit, Send, UserRound } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -127,11 +127,17 @@ export function TeamMembersTable({
             >
               <TableCell>
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
-                    <span className="text-xs font-450 text-gray-600">
-                      {getInitials(member.name)}
-                    </span>
-                  </div>
+                  {member.name === 'Pending Member' ? (
+                    <div className="h-8 w-8 rounded-full bg-gray-50 border border-dashed border-gray-300 flex items-center justify-center">
+                      <UserRound className="h-4 w-4 text-gray-400" />
+                    </div>
+                  ) : (
+                    <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
+                      <span className="text-xs font-450 text-gray-600">
+                        {getInitials(member.name)}
+                      </span>
+                    </div>
+                  )}
                   <span className="text-[0.8125rem]  font-450 text-gray-900">
                     {member.name}
                   </span>

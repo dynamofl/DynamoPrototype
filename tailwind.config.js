@@ -152,6 +152,13 @@ module.exports = {
   				ring: 'hsl(var(--sidebar-ring))'
   			}
   		},
+  		transitionDuration: {
+  			'highlight-in': 'var(--speed-highlightFadeIn)',
+  			'highlight-out': 'var(--speed-highlightFadeOut)',
+  			'quick': 'var(--speed-quickTransition)',
+  			'regular': 'var(--speed-regularTransition)',
+  			'slow': 'var(--speed-slowTransition)',
+  		},
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',

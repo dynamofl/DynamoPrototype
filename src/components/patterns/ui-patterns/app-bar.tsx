@@ -29,6 +29,7 @@ import {
   Play,
   UserPlus,
   ChevronsUpDown,
+  ArrowLeftRight,
 } from "lucide-react"
 import { useTheme } from '@/components/patterns/theme-provider'
 import { NavLink, useNavigate, Link } from 'react-router-dom'
@@ -292,6 +293,17 @@ export function AppBar({
                 <DropdownMenuItem onClick={() => navigate('/settings')}>
                   <Settings className="mr-2 h-4 w-4" strokeWidth={2} />
                   Settings
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                {/* Switch to V2 */}
+                <DropdownMenuItem onClick={() => {
+                  localStorage.setItem('dynamo-version-preference', 'v2')
+                  navigate('/v2/projects')
+                }}>
+                  <ArrowLeftRight className="mr-2 h-4 w-4" strokeWidth={2} />
+                  Switch to V2
                 </DropdownMenuItem>
 
                 <DropdownMenuSeparator />

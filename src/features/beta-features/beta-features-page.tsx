@@ -2,8 +2,13 @@ import { NavLink } from 'react-router-dom'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { FlaskConical, BarChart3, Settings, Database, Zap, Shield, LayoutDashboard, FileText, ClipboardCheck } from 'lucide-react'
+import { FlaskConical, BarChart3, Settings, LayoutDashboard, FileText, ClipboardCheck, Table2 } from 'lucide-react'
 import { useBetaFeatures } from '@/hooks/useBetaFeatures'
+import ProjectOverviewImg from '@/assets/images/BetaFeatures/ProjectOverview.png'
+import EvaluationSandboxImg from '@/assets/images/BetaFeatures/EvaluationSandbox.png'
+import BetaConversationViewImg from '@/assets/images/BetaFeatures/BetaConversationView.png'
+import AISystemProvidersImg from '@/assets/images/BetaFeatures/AISystemProviders.png'
+import ResultTypesImg from '@/assets/images/BetaFeatures/ResultTypes.png'
 
 const betaFeatures = [
     {
@@ -13,7 +18,7 @@ const betaFeatures = [
     icon: LayoutDashboard,
     category: 'Analytics & Reporting',
     gradient: 'from-amber-400/20 to-amber-600/20',
-    image: '/src/assets/images/betafeatures/ProjectOverview.svg'
+    image: ProjectOverviewImg
   },
   {
     title: 'Evaluation Sandbox',
@@ -22,7 +27,7 @@ const betaFeatures = [
     icon: FlaskConical,
     category: 'Testing & Analysis',
     gradient: 'from-blue-400/20 to-blue-600/20',
-    image: '/src/assets/images/betafeatures/EvaluationSandbox.png'
+    image: EvaluationSandboxImg
   },
   {
     title: 'Evaluation Results',
@@ -31,7 +36,7 @@ const betaFeatures = [
     icon: BarChart3,
     category: 'Analytics & Reporting',
     gradient: 'from-green-400/20 to-green-600/20',
-    image: '/src/assets/images/betafeatures/BetaConversationView.png'
+    image: BetaConversationViewImg
   },
   {
     title: 'AI Providers',
@@ -40,7 +45,7 @@ const betaFeatures = [
     icon: Settings,
     category: 'Configuration',
     gradient: 'from-orange-400/20 to-orange-600/20',
-    image: '/src/assets/images/betafeatures/AISystemProviders.png'
+    image: AISystemProvidersImg
   },
   {
     title: 'Result Types',
@@ -49,7 +54,16 @@ const betaFeatures = [
     icon: FileText,
     category: 'Analytics & Reporting',
     gradient: 'from-red-400/20 to-red-600/20',
-    image: '/src/assets/images/betafeatures/ResultTypes.png'
+    image: ResultTypesImg
+  },
+  {
+    title: 'Datasets',
+    description: 'Browse and manage datasets used for evaluations, including format details, row counts, and status.',
+    path: '/datasets',
+    icon: Table2,
+    category: 'Data Management',
+    gradient: 'from-gray-400/20 to-gray-600/20',
+    image: ResultTypesImg
   },
 
 ]
@@ -151,24 +165,28 @@ export function BetaFeaturesPage() {
                   const isEnabled = getBetaFeature(feature.key)
                   return (
                     <Card key={feature.title} className="relative border-gray-200 bg-gray-0 shadow-sm">
-                      <CardHeader className="space-y-1">
-                        <div className="flex items-center justify-between">
-                          <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${feature.gradient}`}>
+                      <CardHeader className="space-y-1 p-4">
+                        <div className="flex items-start justify-between">
+                          {/* <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${feature.gradient}`}>
                             <Icon className="h-5 w-5 text-gray-700" />
-                          </div>
-                          <Switch
-                            checked={isEnabled}
-                            onCheckedChange={() => toggleBetaFeature(feature.key)}
-                          />
-                        </div>
-                        <div className="text-[11px] font-450 uppercase tracking-wider text-gray-500">
+                          </div> */}
+                           <div>
+   <div className="text-[11px] font-450 uppercase tracking-wider text-gray-500">
                           {feature.category}
                         </div>
                         <CardTitle className="text-xl font-450">
                           {feature.title}
                         </CardTitle>
+                        </div>
+                          <Switch
+                            checked={isEnabled}
+                            onCheckedChange={() => toggleBetaFeature(feature.key)}
+                          />
+                        </div>
+                       
+                     
                       </CardHeader>
-                      <CardContent className="space-y-2">
+                      <CardContent className="space-y-2 p-4">
                         <CardDescription className="text-[0.8125rem] leading-relaxed text-gray-600">
                           {feature.description}
                         </CardDescription>

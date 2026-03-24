@@ -11,7 +11,9 @@ import { ResultTypesPage } from '@/features/result-types'
 import { EvaluationCreatePage, EvaluationListPage, EvaluationDetailPage } from '@/features/evaluation'
 import { EvaluationResultsPage } from '@/features/evaluation-results'
 import { GuardrailsPage } from '@/features/guardrails'
+import { DatasetsPage } from '@/features/datasets'
 import { ProjectsPage } from '@/features/projects'
+import { V2App } from '@/v2'
 import { SettingsPage } from '@/features/settings'
 import { TablePatternDemo } from '@/components/table-pattern-demo'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -39,6 +41,9 @@ function App() {
     <Routes>
       {/* Settings Route - Separate layout without AppBar */}
       <Route path="/settings" element={<SettingsPage />} />
+
+      {/* V2 Routes */}
+      <Route path="/v2/*" element={<V2App />} />
 
       {/* AI System Evaluation Routes - Unified component with URL-based overlays */}
       {/* Route with view parameter (summary or data) and optional query params for mode and item */}
@@ -87,6 +92,9 @@ function App() {
               
               {/* Guardrails Route */}
               <Route path="/guardrails" element={<GuardrailsPage />} />
+
+              {/* Datasets Route */}
+              <Route path="/datasets" element={<DatasetsPage />} />
               
               {/* Table Pattern Demo Route */}
               <Route path="/table-demo" element={<TablePatternDemo />} />

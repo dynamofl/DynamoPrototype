@@ -6,6 +6,13 @@
 @layer base {
   :root {
 
+    /* Transition durations */
+    --speed-highlightFadeIn: 0s;
+    --speed-highlightFadeOut: .15s;
+    --speed-quickTransition: .1s;
+    --speed-regularTransition: .25s;
+    --speed-slowTransition: .35s;
+
     /* Semantic colors */
     --foreground: 222.2 84% 4.9%;
     --card: var(--gray-0);

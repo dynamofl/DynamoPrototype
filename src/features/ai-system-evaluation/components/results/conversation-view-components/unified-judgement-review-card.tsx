@@ -205,7 +205,7 @@ function GuardrailJudgementContent({
                 checked={isSelected}
                 onCheckedChange={() => handleGuardrailSelect(guardrail.guardrailId)}
                 disabled={!isAnnotationModeEnabled}
-                className="border-gray-400"
+                className="border-blue-500 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
               />
               <span className="flex-1 text-sm font-400 text-gray-900">
                 {guardrail.guardrailName}
@@ -252,7 +252,7 @@ function GuardrailJudgementContent({
             checked={selectedGuardrails.has('none')}
             onCheckedChange={() => handleGuardrailSelect('none')}
             disabled={!isAnnotationModeEnabled}
-            className="border-gray-400"
+            className="border-blue-500 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
           />
           <span className="flex-1 text-sm font-400 text-gray-900">
             None (Fully Compliant)
@@ -454,11 +454,11 @@ function ResponseJudgementContent({
           <div className={cn(
             'w-4 h-4 rounded-full border flex items-center justify-center transition-all',
             isYesSelected
-              ? 'border-gray-400'
-              : 'border-gray-400'
+              ? 'border-blue-600'
+              : 'border-blue-500'
           )}>
             {isYesSelected && (
-              <div className="w-2 h-2 rounded-full bg-gray-900" />
+              <div className="w-2 h-2 rounded-full bg-blue-600" />
             )}
           </div>
           <span className="flex-1 text-sm font-400 text-gray-900">Yes, it answered</span>
@@ -489,11 +489,11 @@ function ResponseJudgementContent({
           <div className={cn(
             'w-4 h-4 rounded-full border flex items-center justify-center transition-all',
             isNoSelected
-              ? 'border-gray-400'
-              : 'border-gray-400'
+              ? 'border-blue-600'
+              : 'border-blue-500'
           )}>
             {isNoSelected && (
-              <div className="w-2 h-2 rounded-full bg-gray-900" />
+              <div className="w-2 h-2 rounded-full bg-blue-600" />
             )}
           </div>
           <span className="flex-1 text-sm font-400 text-gray-900">No, it didn't answer</span>

@@ -98,6 +98,17 @@ export function useGlobalEvaluationMonitor() {
 
         if (error) {
           console.error('❌ useGlobalEvaluationMonitor: Error loading evaluations:', error);
+
+          // Clear session on auth errors
+          if (error.message?.includes('JWT') || error.code === 'PGRST301') {
+            console.warn('⚠️ Clearing potentially corrupted session');
+            try {
+              await supabase.auth.signOut();
+            } catch (signOutError) {
+              console.error('Failed to sign out:', signOutError);
+            }
+          }
+
           if (!cancelled) setIsInitialized(true);
           return;
         }
@@ -151,6 +162,23 @@ export function useGlobalEvaluationMonitor() {
         }
       } catch (error) {
         console.error('❌ Failed to check completed evaluations:', error);
+
+        // If it's an auth error, clear potentially corrupted session
+        if (error instanceof Error &&
+            (error.message.includes('Failed to fetch') ||
+             error.message.includes('JWT') ||
+             error.message.includes('token'))) {
+          console.warn('⚠️ Auth error detected - clearing session');
+          try {
+            await supabase.auth.signOut();
+            localStorage.removeItem('evaluation-last-seen-status');
+            sessionStorage.removeItem('evaluation-session-shown');
+          } catch (cleanupError) {
+            console.error('Failed to cleanup session:', cleanupError);
+          }
+        }
+
+        // Always set initialized to true so app continues
         if (!cancelled) {
           setIsInitialized(true);
           console.log('✅ useGlobalEvaluationMonitor: setIsInitialized(true) called after error');
