@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from 'react'
+import { type ReactNode, useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { LayoutGroup } from 'framer-motion'
 import { useProjects } from '@/v2/features/projects/lib/useProjects'
@@ -24,8 +24,15 @@ function useProjectIdFromPath(): string | null {
 export function V2Shell({ children, routeKey }: V2ShellProps) {
   const projectId = useProjectIdFromPath()
   const isProjectRoute = !!projectId
-  const { projects } = useProjects()
+  const { projects, refreshProjects } = useProjects()
   const project = isProjectRoute ? projects.find((p) => p.id === projectId) ?? null : null
+
+  // Refetch when navigating to a project not yet in the list
+  useEffect(() => {
+    if (isProjectRoute && !project && projects.length >= 0) {
+      refreshProjects()
+    }
+  }, [isProjectRoute, project, projectId, refreshProjects])
   const { header, setHeader } = usePageHeaderState()
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
 
@@ -37,7 +44,7 @@ export function V2Shell({ children, routeKey }: V2ShellProps) {
 
         <main className="flex-1 min-h-screen flex flex-col min-w-0">
           <div className="flex-1 bg-gray-0 overflow-hidden border rounded-xl shadow-sm m-2 flex flex-col">
-            <ShellHeader isProjectRoute={isProjectRoute} onToggleSidebar={() => setIsSidebarOpen(o => !o)} />
+            <ShellHeader isProjectRoute={isProjectRoute} isSidebarOpen={isSidebarOpen} projectName={project?.name} onToggleSidebar={() => setIsSidebarOpen(o => !o)} />
             <ShellContent routeKey={routeKey}>
               {children}
             </ShellContent>

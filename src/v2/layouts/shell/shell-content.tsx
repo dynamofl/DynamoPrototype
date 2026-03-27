@@ -9,7 +9,7 @@ interface ShellContentProps {
 
 export function ShellContent({ children, routeKey }: ShellContentProps) {
   return (
-    <div className="flex-1 overflow-auto">
+    <div className="flex-1 overflow-auto flex flex-col">
       <AnimatePresence mode="wait">
         <motion.div
           key={routeKey}
@@ -17,7 +17,7 @@ export function ShellContent({ children, routeKey }: ShellContentProps) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15, ease: CONTENT_EASE, delay: 0.05 }}
-          className="h-full"
+          className="flex-1 flex flex-col"
         >
           {children}
         </motion.div>

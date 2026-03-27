@@ -4,6 +4,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { useProjects } from './lib/useProjects'
 import { usePageHeader } from '@/v2/hooks/usePageHeader'
+import { ProjectOverview } from './components/project-overview'
 
 export function ProjectDetailContent() {
   const { projectId } = useParams<{ projectId: string }>()
@@ -38,14 +39,7 @@ export function ProjectDetailContent() {
 
   return (
     <Routes>
-      <Route path="/" element={
-        <PageShell
-          title="Overview"
-          action={
-            <Button variant="outline" size="default" className=''>Share Access</Button>
-          }
-        />
-      } />
+      <Route path="/" element={<ProjectOverview />} />
       <Route path="playground" element={<PageShell title="Playground" />} />
       <Route path="ai-systems" element={<PageShell title="AI Systems" />} />
       <Route path="policies" element={<PageShell title="Policies" />} />

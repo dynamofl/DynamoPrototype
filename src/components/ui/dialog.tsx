@@ -6,11 +6,8 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const Dialog = DialogPrimitive.Root
-
 const DialogTrigger = DialogPrimitive.Trigger
-
 const DialogPortal = DialogPrimitive.Portal
-
 const DialogClose = DialogPrimitive.Close
 
 const DialogOverlay = React.forwardRef<
@@ -20,7 +17,7 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-black/20 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "fixed inset-0 z-50 bg-gray-200/40 dark:bg-gray-900/10 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className
     )}
     {...props}
@@ -29,7 +26,7 @@ const DialogOverlay = React.forwardRef<
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
 const dialogContentVariants = cva(
-  "fixed left-[50%] top-[50%] z-50 flex flex-col translate-x-[-50%] translate-y-[-50%] bg-gray-0 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] rounded-xl overflow-hidden",
+  "fixed left-[50%] top-[50%] z-50 flex flex-col translate-x-[-50%] translate-y-[-50%] bg-gray-0 shadow-lg rounded-xl overflow-hidden pointer-events-auto data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] data-[state=open]:duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-98 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=closed]:duration-150 data-[state=closed]:[animation-timing-function:cubic-bezier(0.6,0.04,0.98,0.34)]",
   {
     variants: {
       size: {
@@ -68,13 +65,9 @@ const DialogContent = React.forwardRef<
 DialogContent.displayName = DialogPrimitive.Content.displayName
 
 interface DialogHeaderPropsBase extends React.HTMLAttributes<HTMLDivElement> {
-  /** Show close button in header */
   showCloseButton?: boolean
-  /** Show icon indicator */
   showIcon?: boolean
-  /** Icon element to display */
   icon?: React.ReactNode
-  /** Show subtitle below title */
   showSubtitle?: boolean
 }
 
@@ -115,9 +108,7 @@ const DialogHeader = React.forwardRef<
 DialogHeader.displayName = "DialogHeader"
 
 interface DialogBodyPropsBase extends React.HTMLAttributes<HTMLDivElement> {
-  /** Enable scrolling for long content */
   scrollable?: boolean
-  /** Dialog size to determine max height */
   size?: "sm" | "md" | "lg" | "xl" | "xxl"
 }
 
@@ -140,26 +131,10 @@ const dialogBodyVariants = cva(
       },
     },
     compoundVariants: [
-      {
-        scrollable: true,
-        size: "sm",
-        class: "max-h-[180px]",
-      },
-      {
-        scrollable: true,
-        size: "md",
-        class: "max-h-[300px]",
-      },
-      {
-        scrollable: true,
-        size: "lg",
-        class: "max-h-[400px]",
-      },
-      {
-        scrollable: true,
-        size: "xl",
-        class: "max-h-[500px]",
-      },
+      { scrollable: true, size: "sm", class: "max-h-[180px]" },
+      { scrollable: true, size: "md", class: "max-h-[300px]" },
+      { scrollable: true, size: "lg", class: "max-h-[400px]" },
+      { scrollable: true, size: "xl", class: "max-h-[500px]" },
     ],
     defaultVariants: {
       scrollable: false,
@@ -183,7 +158,6 @@ const DialogBody = React.forwardRef<
 DialogBody.displayName = "DialogBody"
 
 export interface DialogFooterProps extends React.HTMLAttributes<HTMLDivElement> {
-  /** Alignment of footer content */
   align?: "left" | "center" | "right"
 }
 
@@ -208,19 +182,12 @@ const DialogFooter = React.forwardRef<
 DialogFooter.displayName = "DialogFooter"
 
 export interface DialogFooterButtonSetProps extends React.HTMLAttributes<HTMLDivElement> {
-  /** Button type variant */
   variant?: "default" | "danger" | "success"
-  /** Primary button text */
   primaryText?: string
-  /** Secondary button text */
   secondaryText?: string
-  /** Primary button click handler */
   onPrimaryClick?: () => void
-  /** Secondary button click handler */
   onSecondaryClick?: () => void
-  /** Show only primary button */
   primaryOnly?: boolean
-  /** Disable primary button */
   primaryDisabled?: boolean
 }
 
@@ -247,7 +214,7 @@ const DialogFooterButtonSet = React.forwardRef<
       <button
         type="button"
         onClick={onSecondaryClick}
-        className="px-3 py-2 text-[0.8125rem]  font-medium text-gray-600 bg-transparent hover:bg-black/5 rounded-md transition-colors leading-4"
+        className="px-3 py-2 text-[0.8125rem] font-medium text-gray-600 bg-transparent hover:bg-black/5 rounded-md transition-colors leading-4"
       >
         {secondaryText}
       </button>
@@ -257,7 +224,7 @@ const DialogFooterButtonSet = React.forwardRef<
       onClick={onPrimaryClick}
       disabled={primaryDisabled}
       className={cn(
-        "px-3 py-2 text-[0.8125rem]  font-medium text-blue-50 rounded-md transition-colors leading-4",
+        "px-3 py-2 text-[0.8125rem] font-medium text-blue-50 rounded-md transition-colors leading-4",
         variant === "default" && "bg-gray-900 hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed",
         variant === "danger" && "bg-red-600 hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed",
         variant === "success" && "bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed"
@@ -276,7 +243,7 @@ const DialogTitle = React.forwardRef<
   <DialogPrimitive.Title
     ref={ref}
     className={cn(
-      "text-[0.875rem]  font-[550] leading-5 tracking-[0.07px] text-gray-800",
+      "text-[0.875rem] font-[550] leading-5 tracking-[0.07px] text-gray-800",
       className
     )}
     {...props}
@@ -290,7 +257,7 @@ const DialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn("text-[0.8125rem]  text-muted-foreground", className)}
+    className={cn("text-[0.8125rem] text-muted-foreground", className)}
     {...props}
   />
 ))
@@ -310,4 +277,3 @@ export {
   DialogTitle,
   DialogDescription,
 }
-

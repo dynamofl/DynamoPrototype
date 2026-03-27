@@ -11,11 +11,9 @@ import {
   Bot,
   BookOpen,
   ShieldCheck,
-  Shapes,
   ScanSearch,
   Database,
   Scale,
-  FileUser,
   ScanEye,
   ListCollapse,
 } from 'lucide-react'
@@ -42,33 +40,31 @@ const navSections: NavSection[] = [
   {
     items: [
       { name: 'Overview', path: '', icon: GalleryThumbnails },
-      { name: 'Playground', path: 'playground', icon: MessageCircleCode },
+      { name: 'Policies', path: 'policies', icon: BookOpen },
     ],
   },
   {
-    label: 'Dynamo Eval',
+    label: 'AI Stack',
+    items: [
+      { name: 'Models', path: 'ai-systems', icon: Box },
+      { name: 'Guardrails', path: 'guardrails', icon: ShieldCheck },
+    ],
+  },
+  {
+    label: 'Risk Assessment',
     items: [
       { name: 'Evaluations', path: 'evaluations', icon: ScanSearch },
       { name: 'Benchmark Datasets', path: 'datasets', icon: Database },
       { name: 'Evaluators', path: 'evaluators', icon: Scale },
-      { name: 'Human Review', path: 'human-review', icon: FileUser },
     ],
   },
   {
-    label: 'Dynamo Guard',
+    label: 'Governance',
     items: [
       { name: 'Observability', path: 'observability', icon: ScanEye },
-      { name: 'Guardrails', path: 'guardrails', icon: ShieldCheck },
       { name: 'Monitoring Logs', path: 'monitoring-logs', icon: ListCollapse },
-    ],
-  },
-  {
-    label: 'Resources',
-    items: [
-      { name: 'Agents', path: 'agents', icon: Bot },
-      { name: 'Models', path: 'ai-systems', icon: Box },
-      { name: 'Policies', path: 'policies', icon: BookOpen },
-      { name: 'Tools', path: 'tools', icon: Shapes },
+      { name: 'Fine Tuning', path: 'fine-tuning', icon: Bot },
+      { name: 'Playground', path: 'playground', icon: MessageCircleCode },
     ],
   },
 ]
@@ -80,7 +76,7 @@ export function ProjectSidebar({ project, isCollapsed = false }: ProjectSidebarP
       className="group w-full flex flex-col min-h-screen overflow-hidden"
     >
       {/* Logo — same height as main content header */}
-      <div className="px-6 py-6 flex-shrink-0">
+      <div className="px-5 py-6 flex-shrink-0">
         <Link to="/v2/projects" className="flex items-center">
           <div className="pt-0.5 flex items-center">
             <DynamoLogoIcon className="h-4 w-4 text-gray-800 shrink-0" />
@@ -90,7 +86,7 @@ export function ProjectSidebar({ project, isCollapsed = false }: ProjectSidebarP
       </div>
 
       {/* Project Selector */}
-      <div className="px-3 group-data-[collapsible=icon]:pl-3 group-data-[collapsible=icon]:pr-1 my-1.5">
+      <div className="pl-2.5 pr-1 group-data-[collapsible=icon]:pl-2.5 group-data-[collapsible=icon]:pr-0.5 my-1.5">
         <button className="w-full flex bg-gray-0 items-center justify-between px-3 py-1.5 rounded-lg ring-1 ring-inset ring-gray-200 hover:ring-gray-300 shadow-sm text-left overflow-hidden">
           <div className="flex items-center gap-2 min-w-0">
             <GalleryVerticalEnd className="h-4 w-4 text-gray-800 shrink-0" />
@@ -101,7 +97,7 @@ export function ProjectSidebar({ project, isCollapsed = false }: ProjectSidebarP
       </div>
 
       {/* Navigation Sections */}
-      <nav className="flex-1 px-3 group-data-[collapsible=icon]:pl-3 group-data-[collapsible=icon]:pr-1 py-2 space-y-4 group-data-[collapsible=icon]:space-y-1 overflow-y-auto">
+      <nav className="flex-1 pl-2.5 pr-1 group-data-[collapsible=icon]:pl-2.5 group-data-[collapsible=icon]:pr-0.5 py-2 space-y-4 group-data-[collapsible=icon]:space-y-1 overflow-y-auto">
         {navSections.map((section, sectionIdx) => (
           <div key={sectionIdx}>
             {section.label && (
