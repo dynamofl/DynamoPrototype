@@ -89,10 +89,10 @@ export function ProjectSidebar({ project, isCollapsed = false }: ProjectSidebarP
       <div className="pl-2.5 pr-1 group-data-[collapsible=icon]:pl-2.5 group-data-[collapsible=icon]:pr-0.5 my-1.5">
         <button className="w-full flex bg-gray-0 items-center justify-between px-3 py-1.5 rounded-lg ring-1 ring-inset ring-gray-200 hover:ring-gray-300 shadow-sm text-left overflow-hidden">
           <div className="flex items-center gap-2 min-w-0">
-            <GalleryVerticalEnd className="h-4 w-4 text-gray-800 shrink-0" />
+            <GalleryVerticalEnd className="h-[0.875rem] w-[0.875rem] text-gray-800 shrink-0" />
             <span className="pt-0.5 text-[0.8125rem] font-450 text-gray-800 truncate">{project.name}</span>
           </div>
-          <ChevronsUpDown className="h-3.5 w-3.5 text-gray-500 shrink-0 transition-opacity duration-200 ease-linear group-data-[collapsible=icon]:opacity-0" />
+          <ChevronsUpDown className="h-3 w-3 text-gray-500 shrink-0 transition-opacity duration-200 ease-linear group-data-[collapsible=icon]:opacity-0" />
         </button>
       </div>
 
@@ -125,7 +125,7 @@ export function ProjectSidebar({ project, isCollapsed = false }: ProjectSidebarP
                         : "text-gray-600 hover:text-gray-800 hover:bg-gray-200/40"
                     )}
                   >
-                    <Icon className="h-4 w-4 shrink-0" strokeWidth={2} />
+                    <Icon className="h-[0.875rem] w-[0.875rem] shrink-0" strokeWidth={2} />
                     <span className="truncate">{item.name}</span>
                   </NavLink>
                 )

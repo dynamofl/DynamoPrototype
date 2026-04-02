@@ -168,7 +168,7 @@ const DialogFooter = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "flex items-center gap-4 px-4 py-3 bg-white border-t border-gray-200 relative",
+      "flex items-center gap-4 px-4 py-3 bg-gray-0 border-t border-gray-200 relative",
       align === "left" && "justify-start",
       align === "center" && "justify-center",
       align === "right" && "justify-end",

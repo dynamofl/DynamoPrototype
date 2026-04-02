@@ -39,11 +39,11 @@ export function V2Shell({ children, routeKey }: V2ShellProps) {
   return (
     <PageHeaderContext.Provider value={{ header, setHeader }}>
       <LayoutGroup>
-      <div className="min-h-screen bg-gray-50 flex overflow-hidden">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-0 flex overflow-hidden">
         <ShellSidebar isProjectRoute={isProjectRoute} project={project} isSidebarOpen={isSidebarOpen} />
 
         <main className="flex-1 min-h-screen flex flex-col min-w-0">
-          <div className="flex-1 bg-gray-0 overflow-hidden border rounded-xl shadow-sm m-2 flex flex-col">
+          <div className="flex-1 bg-gray-0 dark:bg-gray-50 overflow-hidden border border-gray-100 rounded-xl shadow-sm m-2 flex flex-col">
             <ShellHeader isProjectRoute={isProjectRoute} isSidebarOpen={isSidebarOpen} projectName={project?.name} onToggleSidebar={() => setIsSidebarOpen(o => !o)} />
             <ShellContent routeKey={routeKey}>
               {children}

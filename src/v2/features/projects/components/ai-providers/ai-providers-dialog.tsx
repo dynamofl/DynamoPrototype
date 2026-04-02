@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion'
 import useMeasure from 'react-use-measure'
@@ -21,7 +21,8 @@ export function AiProvidersDialog({ open, onOpenChange }: Props) {
   )
   const [selectedProvider, setSelectedProvider] = useState<ProviderDef | null>(null)
   const [measureRef, bounds] = useMeasure()
-  const hasTransitioned = useRef(false)
+  const [snapshotHeight, setSnapshotHeight] = useState<number | null>(null)
+  const [ready, setReady] = useState(false)
 
   const openProviderDetail = (provider: ProviderDef) => {
     if (!state[provider.id]) {
@@ -30,7 +31,8 @@ export function AiProvidersDialog({ open, onOpenChange }: Props) {
         [provider.id]: { open: true, keys: [{ id: uid(), name: 'Default', value: '', validated: false, validating: false }] },
       }))
     }
-    hasTransitioned.current = true
+    setReady(true)
+    setSnapshotHeight(bounds.height || null)
     setSelectedProvider(provider)
   }
 
@@ -88,7 +90,7 @@ export function AiProvidersDialog({ open, onOpenChange }: Props) {
   }
 
   const handleBack = () => {
-    hasTransitioned.current = true
+    setSnapshotHeight(bounds.height || null)
     if (selectedProvider) {
       const s = state[selectedProvider.id]
       if (s && s.keys.every(k => !k.value)) {
@@ -114,9 +116,12 @@ export function AiProvidersDialog({ open, onOpenChange }: Props) {
       <DialogContent size="md" className="!p-0 !overflow-hidden">
         <MotionConfig transition={{ duration: 0.5, type: 'spring', bounce: 0 }}>
           <motion.div
-            animate={{ height: hasTransitioned.current && bounds.height ? bounds.height : 'auto' }}
-            initial={false}
-            className="overflow-hidden"
+            animate={{ height: ready && bounds.height ? bounds.height : 'auto' }}
+            transition={ready && snapshotHeight !== null
+              ? { duration: 0.5, type: 'spring', bounce: 0 }
+              : { duration: 0 }
+            }
+            className={ready ? 'overflow-hidden' : ''}
           >
             <div ref={measureRef}>
               <AnimatePresence mode="popLayout" initial={false}>

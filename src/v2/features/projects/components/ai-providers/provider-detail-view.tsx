@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { AISystemIcon } from '@/components/patterns/ui-patterns/ai-system-icon'
-import { Plus, Check, Loader2, AlertCircle, X, ArrowLeft } from 'lucide-react'
+import { Plus, Check, AlertCircle, X, ArrowLeft, ArrowRight, Pencil } from 'lucide-react'
+import { AILoader } from '@/components/ui/ai-loader'
 import { cn } from '@/lib/utils'
 import type { ProviderDef, ProviderKey, ProviderState } from './types'
 
@@ -26,6 +28,27 @@ export function ProviderDetailView({
 }: ProviderDetailViewProps) {
   const keys = state[provider.id]?.keys ?? []
   const isCustom = provider.id === 'custom'
+  // Track which keys are being edited and their original values
+  const [editing, setEditing] = useState<Record<string, string>>({})
+
+  const startEditing = (keyId: string, currentValue: string) => {
+    setEditing(prev => ({ ...prev, [keyId]: currentValue }))
+    onUpdateKey(provider.id, keyId, { validated: false })
+  }
+
+  const cancelEditing = (keyId: string) => {
+    const originalValue = editing[keyId]
+    if (originalValue !== undefined) {
+      onUpdateKey(provider.id, keyId, { value: originalValue, validated: true, error: undefined })
+    }
+    setEditing(prev => {
+      const next = { ...prev }
+      delete next[keyId]
+      return next
+    })
+  }
+
+  const isEditing = (keyId: string) => keyId in editing
 
   return (
     <>
@@ -73,7 +96,7 @@ export function ProviderDetailView({
           {/* Column headers */}
           <div className="flex items-center gap-2">
             {!isCustom && (
-              <span className="w-[160px] shrink-0 text-[0.8125rem] font-[500] text-gray-800">Name</span>
+              <span className="w-[120px] shrink-0 text-[0.8125rem] font-[500] text-gray-800">Name</span>
             )}
             <span className="flex-1 text-[0.8125rem] font-[500] text-gray-800">API Key</span>
             {!isCustom && <div className="w-9 shrink-0" />}
@@ -86,7 +109,7 @@ export function ProviderDetailView({
               <div key={key.id} className="flex items-center gap-2">
                 {/* Name field (non-custom only) */}
                 {!isCustom && (
-                  <div className="w-[160px] shrink-0">
+                  <div className="w-[120px] shrink-0">
                     <Input
                       value={isFirst && !key.name ? 'Default' : key.name}
                       onChange={e => onUpdateKey(provider.id, key.id, { name: e.target.value })}
@@ -105,12 +128,18 @@ export function ProviderDetailView({
                     onChange={e => onUpdateKey(provider.id, key.id, { value: e.target.value, validated: false, error: undefined })}
                     onKeyDown={e => { if (e.key === 'Enter' && key.value) onValidate(provider.id, key.id, key.value) }}
                     placeholder="Enter API Key"
+                    readOnly={key.validated}
                     className={cn(
                       'text-[0.8125rem]',
-                      key.validated && 'border-green-300',
+                      key.validated && 'pr-8',
                       key.error && 'border-red-300 pr-8'
                     )}
                   />
+                  {key.validated && (
+                    <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                      <Check className="h-4 w-4 text-green-500" strokeWidth={2.5} />
+                    </div>
+                  )}
                   {key.error && (
                     <div className="absolute right-2.5 top-1/2 -translate-y-1/2 group/error">
                       <AlertCircle className="h-4 w-4 text-red-500 cursor-pointer" />
@@ -123,16 +152,42 @@ export function ProviderDetailView({
                   )}
                 </div>
 
-                {/* Validate button (non-custom only) */}
+                {/* Action buttons — always two slots */}
                 {!isCustom && (
-                  <Button
-                    size="icon"
-                    onClick={() => onValidate(provider.id, key.id, key.value)}
-                    disabled={!key.value || key.validating}
-                    className={cn('shrink-0 h-9 w-9 rounded-full', key.validated && 'bg-green-600 hover:bg-green-700')}
-                  >
-                    {key.validating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" strokeWidth={2.5} />}
-                  </Button>
+                  key.validated && !isEditing(key.id) ? (
+                    <>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => startEditing(key.id, key.value)}
+                        className="shrink-0 h-7 w-7 rounded-full"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <div className="shrink-0 h-9 w-9" />
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        size="icon"
+                        onClick={() => onValidate(provider.id, key.id, key.value)}
+                        disabled={!key.value || key.validating}
+                        className="shrink-0 h-7 w-7 rounded-full"
+                      >
+                        {key.validating ? <AILoader size={14} /> : <ArrowRight className="h-3.5 w-3.5" />}
+                      </Button>
+                      {isEditing(key.id) ? (
+                        <button
+                          onClick={() => cancelEditing(key.id)}
+                          className="shrink-0 h-7 w-7 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      ) : (
+                        <div className="shrink-0 h-9 w-9" />
+                      )}
+                    </>
+                  )
                 )}
 
                 {/* Remove (non-first only) */}
@@ -159,7 +214,7 @@ export function ProviderDetailView({
               className="gap-1.5 mt-2"
             >
               {keys.some(k => k.validating) ? (
-                <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Validating...</>
+                <><AILoader size={14} /> Validating...</>
               ) : 'Validate'}
             </Button>
           )}
@@ -178,7 +233,7 @@ export function ProviderDetailView({
       </div>
 
       {/* Footer */}
-      <div className="flex items-center px-4 py-3 border-t border-gray-200">
+      <div className="flex items-center px-4 py-4">
         <Button variant="outline" size="default" onClick={onBack} className="gap-1.5">
           <ArrowLeft className="h-3.5 w-3.5" />
           Back to All Providers

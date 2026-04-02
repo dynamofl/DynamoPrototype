@@ -1,6 +1,7 @@
 import { DialogClose } from '@/components/ui/dialog'
 import { AISystemIcon } from '@/components/patterns/ui-patterns/ai-system-icon'
-import { Plus, Check, Rss, X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Plus, Check, Rss } from 'lucide-react'
 import { PROVIDERS, CUSTOM_PROVIDER } from './constants'
 import type { ProviderDef, ProviderState } from './types'
 
@@ -22,13 +23,10 @@ export function ProviderListView({ state, onSelectProvider }: ProviderListViewPr
 
   return (
     <>
-      <div className="flex items-center justify-between pl-6 pr-4 py-4">
+      <div className="flex items-center pl-6 pr-4 py-4">
         <div className="flex flex-col gap-0.5 py-1.5">
           <span className="text-[0.875rem] font-[550] text-gray-800">Connect AI Providers</span>
         </div>
-        <DialogClose className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-black/5 transition-colors">
-          <X className="h-4 w-4 text-gray-500" />
-        </DialogClose>
       </div>
 
       <div className="px-4 pb-4 max-h-[30rem] overflow-y-auto">
@@ -57,7 +55,9 @@ export function ProviderListView({ state, onSelectProvider }: ProviderListViewPr
                       Pending
                     </span>
                   )}
-                  <Plus className="h-3.5 w-3.5 text-gray-500" />
+                  <span className="flex items-center justify-center h-6 w-6 rounded-full shadow-sm border-[0.5px] border-gray-200 hover:bg-gray-50 transition-colors">
+                    <Plus className="h-3.5 w-3.5 text-gray-500" />
+                  </span>
                 </div>
               </button>
             )
@@ -73,9 +73,20 @@ export function ProviderListView({ state, onSelectProvider }: ProviderListViewPr
           >
             <Rss className="px-2 h-8 w-8 text-gray-500" strokeWidth={1.5} />
             <span className="text-[0.8125rem] font-[500] text-gray-800 flex-1">Custom API Endpoint</span>
+                              <span className="flex items-center justify-center h-6 w-6 rounded-full shadow-sm border-[0.5px] border-gray-200 hover:bg-gray-50 transition-colors">
+
             <Plus className="h-3.5 w-3.5 text-gray-500" />
+                              </span>
+
           </button>
         </div>
+      </div>
+
+      {/* Footer */}
+      <div className="flex items-center justify-end px-4 py-3 border-t border-gray-200">
+        <DialogClose asChild>
+          <Button variant="outline" size="default">Dismiss</Button>
+        </DialogClose>
       </div>
     </>
   )
