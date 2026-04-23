@@ -11,6 +11,7 @@ import { ResultTypesPage } from '@/features/result-types'
 import { EvaluationCreatePage, EvaluationListPage, EvaluationDetailPage } from '@/features/evaluation'
 import { EvaluationResultsPage } from '@/features/evaluation-results'
 import { GuardrailsPage } from '@/features/guardrails'
+import { PolicyManagerPage, PolicyEditorPage } from '@/features/policy-manager'
 import { DatasetsPage } from '@/features/datasets'
 import { ProjectsPage } from '@/features/projects'
 import { V2App } from '@/v2'
@@ -41,6 +42,10 @@ function App() {
     <Routes>
       {/* Settings Route - Separate layout without AppBar */}
       <Route path="/settings" element={<SettingsPage />} />
+
+      {/* Policy Editor Routes - Standalone layout without AppBar */}
+      <Route path="/policy-manager/new" element={<PolicyEditorPage />} />
+      <Route path="/policy-manager/:id/edit" element={<PolicyEditorPage />} />
 
       {/* V2 Routes */}
       <Route path="/v2/*" element={<V2App />} />
@@ -92,6 +97,9 @@ function App() {
               
               {/* Guardrails Route */}
               <Route path="/guardrails" element={<GuardrailsPage />} />
+
+              {/* Policy Manager Route */}
+              <Route path="/policy-manager" element={<PolicyManagerPage />} />
 
               {/* Datasets Route */}
               <Route path="/datasets" element={<DatasetsPage />} />

@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { FlaskConical, BarChart3, Settings, LayoutDashboard, FileText, ClipboardCheck, Table2 } from 'lucide-react'
+import { FlaskConical, BarChart3, Settings, LayoutDashboard, FileText, ClipboardCheck, Table2, ShieldCheck } from 'lucide-react'
 import { useBetaFeatures } from '@/hooks/useBetaFeatures'
 import ProjectOverviewImg from '@/assets/images/BetaFeatures/ProjectOverview.png'
 import EvaluationSandboxImg from '@/assets/images/BetaFeatures/EvaluationSandbox.png'
@@ -63,6 +63,15 @@ const betaFeatures = [
     icon: Table2,
     category: 'Data Management',
     gradient: 'from-gray-400/20 to-gray-600/20',
+    image: ResultTypesImg
+  },
+  {
+    title: 'Policy Manager',
+    description: 'Create, manage, and enforce organizational policies for AI governance across privacy, security, and compliance.',
+    path: '/policy-manager',
+    icon: ShieldCheck,
+    category: 'Governance',
+    gradient: 'from-green-400/20 to-green-600/20',
     image: ResultTypesImg
   },
 
