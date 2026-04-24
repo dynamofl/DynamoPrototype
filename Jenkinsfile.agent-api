@@ -1,0 +1,27 @@
+// Pipeline: builds DynamoPrototype/agent-api/Dockerfile (the FastAPI agent
+// image on Chainguard wolfi-base) and pushes it to ECR.
+//
+// Job parameters (configure in the Jenkins job UI):
+//   awsAccountId - target ECR account, e.g. 058264092984
+//   awsRegion    - target ECR region,  e.g. us-east-1
+//
+// Runtime configuration (OPENAI_API_KEY, SUPABASE_SERVICE_ROLE_KEY,
+// SUPABASE_MCP_TOKEN, CORS_ALLOW_ORIGINS, ROOT_PATH, etc.) is supplied by
+// the Helm chart at deploy time as Kubernetes Secret/ConfigMap values, so
+// no build args are needed here.
+//
+// Notes:
+//   - The image's FROM line pulls from ECR `dynamoai-base`, which must be
+//     populated first via chainguard-poc/push-dynamoprototype-bases-to-ecr.sh
+//   - buildContextPath is `agent-api` so the build only sees that subtree
+//     (smaller context, faster uploads, can't accidentally bake the React
+//     app or .env into this image).
+
+@Library("dynamolib") _
+
+internalToolsDockerBuild(
+    dockerFilePath:   'agent-api/Dockerfile',
+    repo_name:        'dynamoprototype-agent-api',
+    projectKey:       'dynamoprototype_agent_api',
+    buildContextPath: 'agent-api'
+)
