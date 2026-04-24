@@ -3,32 +3,37 @@
 
 image:
   # ECR registry URI for the UAT account/region.
-  registry: REPLACE_ME.dkr.ecr.us-east-1.amazonaws.com
-  # tag is set on the helm CLI: --set image.tag=uat-<git-sha>
-  tag: ""
+  registry: 058264092984.dkr.ecr.us-east-1.amazonaws.com
+  # Built by the staging Jenkins jobs (dynamoprototype-frontend-dockerbuild
+  # and dynamoprototype-agent-api-dockerbuild). Both component images use
+  # the same git-sha tag because they're built from the same commit.
+  # Override on the CLI for a different build:
+  #   helm upgrade --install ... --set image.tag=<sha>
+  tag: "8392bec"
   pullPolicy: IfNotPresent
 
 frontend:
-  replicaCount: 1
+  replicaCount: 2
 
 agentApi:
-  replicaCount: 1
-  rootPath: /agent
-  corsAllowOrigins: "https://REPLACE_ME-uat.example.com"
+  replicaCount: 2
+  # Served on its own dedicated hostname (proto-api.uat.internal.dynamo.ai)
+  # via dynamoai-ingress, so no path prefix is needed.
+  rootPath: ""
+  # Frontend hostname (Option A: separate hosts for FE and API).
+  corsAllowOrigins: "https://proto.uat.internal.dynamo.ai"
   bearerAuth:
     enabled: false
 
 config:
   logLevel: info
 
+# Ingress is managed externally by the dynamoai-ingress chart. Two entries
+# in env/internal-endpoints/dyanmoai-default-uat.yaml route:
+#   proto.uat.internal.dynamo.ai      -> dynamoprototype-frontend  :80
+#   proto-api.uat.internal.dynamo.ai  -> dynamoprototype-agent-api :80
 ingress:
-  enabled: true
-  className: alb
-  host: REPLACE_ME-uat.example.com
-  certificateArn: arn:aws:acm:us-east-1:REPLACE_ME:certificate/REPLACE_ME
-  scheme: internal
-  groupName: dynamoprototype-uat
-  agentApiPath: /agent
+  enabled: false
 
 # Create the secret out-of-band:
 #   kubectl create secret generic app-secrets -n dynamoprototype-uat \
