@@ -2,26 +2,31 @@
 // image) and pushes it to ECR.
 //
 // Job parameters (configure in the Jenkins job UI):
-//   awsAccountId          - target ECR account, e.g. 058264092984
-//   awsRegion             - target ECR region,  e.g. us-east-1
-//   VITE_SUPABASE_URL     - Supabase project URL for the target environment
-//   VITE_SUPABASE_ANON_KEY- Supabase anon key   for the target environment
-//   VITE_AGENT_API_URL    - Public URL the browser uses to reach agent-api,
-//                           e.g. https://dynamoprototype-uat.example.com/agent
+//   awsAccountId - target ECR account, e.g. 058264092984
+//   awsRegion    - target ECR region,  e.g. us-east-1
+//   gitBranch    - branch to build
 //
-// Notes:
-//   - VITE_* values are inlined into the JS bundle at build time. They are
-//     NOT secrets (the anon key is designed to be public, gated by RLS).
-//   - The image's FROM lines pull from ECR `dynamoai-base`, which must be
-//     populated first via chainguard-poc/push-dynamoprototype-bases-to-ecr.sh
-//   - dockerBuildArgs uses `~` as the separator (per the shared library).
+// VITE_* values below are inlined into the JS bundle at build time. They
+// are NOT secrets (the anon key is designed to be public, gated by RLS),
+// but they ARE per-environment - one Jenkinsfile per env. Update this
+// file (or fork it) when you wire up prod / other clusters.
+//
+// The image's FROM lines pull from ECR `dynamoai-base`, which must be
+// populated first via chainguard-poc/push-dynamoprototype-bases-to-ecr.sh
+//
+// dockerBuildArgs uses `~` as the separator (per the shared library).
 
 @Library("dynamolib") _
+
+// ----- staging build values -----
+def VITE_SUPABASE_URL      = "https://uabbbzzrwgfxiamvnunr.supabase.co"
+def VITE_SUPABASE_ANON_KEY = "yeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVhYmJienpyd2dmeGlhbXZudW5yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2MTAxODgsImV4cCI6MjA3NTE4NjE4OH0.VVp4swv7T6VGNCi32198m0vaqXViMB5fmXP548Zg5JQ"
+def VITE_AGENT_API_URL     = "https://dynamoprototype-uat.example.com/agent"
 
 internalToolsDockerBuild(
     dockerFilePath:   'Dockerfile',
     repo_name:        'dynamoprototype-frontend',
     projectKey:       'dynamoprototype_frontend',
-    dockerBuildArgs:  "VITE_SUPABASE_URL=${params.VITE_SUPABASE_URL}~VITE_SUPABASE_ANON_KEY=${params.VITE_SUPABASE_ANON_KEY}~VITE_AGENT_API_URL=${params.VITE_AGENT_API_URL}",
+    dockerBuildArgs:  "VITE_SUPABASE_URL=${VITE_SUPABASE_URL}~VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}~VITE_AGENT_API_URL=${VITE_AGENT_API_URL}",
     buildContextPath: '.'
 )
