@@ -1,0 +1,29 @@
+# Local virtualenv & caches
+venv
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+.pytest_cache
+.mypy_cache
+.ruff_cache
+
+# Local env / secrets
+.env
+.env.*
+!.env.example
+
+# VCS / editor / OS
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
+
+# Docs / tests we don't need at runtime
+README.md
+tests
+test
+*.md

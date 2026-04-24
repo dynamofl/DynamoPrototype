@@ -1,0 +1,89 @@
+{{- if .Values.agentApi.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "dynamoprototype.agentApi.fullname" . }}
+  labels:
+    {{- include "dynamoprototype.labels" . | nindent 4 }}
+    app.kubernetes.io/component: agent-api
+spec:
+  replicas: {{ .Values.agentApi.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      {{- include "dynamoprototype.agentApi.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "dynamoprototype.agentApi.selectorLabels" . | nindent 8 }}
+        {{- with .Values.agentApi.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        # Force a rollout when the ConfigMap or Secret content changes.
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- if not .Values.secrets.useExisting }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- end }}
+        {{- with .Values.agentApi.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      automountServiceAccountToken: false
+      securityContext:
+        {{- toYaml .Values.agentApi.podSecurityContext | nindent 8 }}
+      containers:
+        - name: agent-api
+          image: {{ include "dynamoprototype.image" (dict "root" . "component" .Values.agentApi) }}
+          imagePullPolicy: {{ default .Values.image.pullPolicy .Values.agentApi.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.agentApi.service.targetPort }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "dynamoprototype.configMapName" . }}
+            - secretRef:
+                name: {{ include "dynamoprototype.secretName" . }}
+          env:
+            - name: AGENT_API_BEARER_REQUIRED
+              value: {{ .Values.agentApi.bearerAuth.enabled | quote }}
+          livenessProbe:
+            {{- toYaml .Values.agentApi.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.agentApi.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.agentApi.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.agentApi.containerSecurityContext | nindent 12 }}
+          {{- if .Values.agentApi.containerSecurityContext.readOnlyRootFilesystem }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          {{- end }}
+      {{- if .Values.agentApi.containerSecurityContext.readOnlyRootFilesystem }}
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      {{- end }}
+      {{- with .Values.agentApi.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.agentApi.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.agentApi.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

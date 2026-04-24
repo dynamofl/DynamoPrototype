@@ -1,0 +1,54 @@
+# VCS
+.git
+.gitignore
+.gitattributes
+
+# Node
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build artifacts (rebuilt inside the image)
+dist
+build
+.vite
+*.tsbuildinfo
+storybook-static
+
+# Local env / secrets - NEVER copy into the image
+.env
+.env.*
+!.env.example
+
+# Editor / OS
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# Tests / e2e / stories - not needed at runtime
+e2e
+playwright-report
+test-results
+coverage
+.nyc_output
+
+# Python sidecar - built from its own Dockerfile
+agent-api
+
+# Supabase / docs - not needed in the frontend image
+# NOTE: `scripts/` is INTENTIONALLY NOT excluded - src/main.tsx imports
+# from `../scripts/...` so those files must be in the build context.
+supabase
+docs
+HandOff\ Specs
+Custom\ Rules\ Doc
+.storybook
+.claude
+.cursor
+
+# Misc heavy stuff
+*.log
+*.tgz
+*.tar.gz

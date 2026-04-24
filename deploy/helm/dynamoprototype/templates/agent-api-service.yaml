@@ -1,0 +1,18 @@
+{{- if .Values.agentApi.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "dynamoprototype.agentApi.fullname" . }}
+  labels:
+    {{- include "dynamoprototype.labels" . | nindent 4 }}
+    app.kubernetes.io/component: agent-api
+spec:
+  type: {{ .Values.agentApi.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.agentApi.service.port }}
+      targetPort: http
+      protocol: TCP
+  selector:
+    {{- include "dynamoprototype.agentApi.selectorLabels" . | nindent 4 }}
+{{- end }}

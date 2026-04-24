@@ -1,0 +1,40 @@
+# UAT environment overrides.
+# Replace placeholders before running `helm upgrade`.
+
+image:
+  # ECR registry URI for the UAT account/region.
+  registry: REPLACE_ME.dkr.ecr.us-east-1.amazonaws.com
+  # tag is set on the helm CLI: --set image.tag=uat-<git-sha>
+  tag: ""
+  pullPolicy: IfNotPresent
+
+frontend:
+  replicaCount: 1
+
+agentApi:
+  replicaCount: 1
+  rootPath: /agent
+  corsAllowOrigins: "https://REPLACE_ME-uat.example.com"
+  bearerAuth:
+    enabled: false
+
+config:
+  logLevel: info
+
+ingress:
+  enabled: true
+  className: alb
+  host: REPLACE_ME-uat.example.com
+  certificateArn: arn:aws:acm:us-east-1:REPLACE_ME:certificate/REPLACE_ME
+  scheme: internal
+  groupName: dynamoprototype-uat
+  agentApiPath: /agent
+
+# Create the secret out-of-band:
+#   kubectl create secret generic app-secrets -n dynamoprototype-uat \
+#     --from-literal=OPENAI_API_KEY=... \
+#     --from-literal=SUPABASE_SERVICE_ROLE_KEY=... \
+#     --from-literal=SUPABASE_MCP_TOKEN=...
+secrets:
+  useExisting: true
+  existingSecretName: app-secrets
