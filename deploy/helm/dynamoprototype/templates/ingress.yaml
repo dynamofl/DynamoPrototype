@@ -1,0 +1,46 @@
+{{- if .Values.ingress.enabled -}}
+{{- $host := required "ingress.host is required" .Values.ingress.host -}}
+{{- $certArn := required "ingress.certificateArn is required" .Values.ingress.certificateArn -}}
+{{- $agentPath := .Values.ingress.agentApiPath | default "/agent" -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "dynamoprototype.fullname" . }}
+  labels:
+    {{- include "dynamoprototype.labels" . | nindent 4 }}
+  annotations:
+    alb.ingress.kubernetes.io/scheme: {{ .Values.ingress.scheme | quote }}
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443},{"HTTP":80}]'
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    alb.ingress.kubernetes.io/certificate-arn: {{ $certArn | quote }}
+    alb.ingress.kubernetes.io/healthcheck-path: /healthz
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+    alb.ingress.kubernetes.io/group.name: {{ .Values.ingress.groupName | quote }}
+    alb.ingress.kubernetes.io/backend-protocol: HTTP
+    {{- with .Values.ingress.extraAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - host: {{ $host | quote }}
+      http:
+        paths:
+          # Agent API mounted at /agent (FastAPI knows via ROOT_PATH).
+          - path: {{ $agentPath }}
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "dynamoprototype.agentApi.fullname" . }}
+                port:
+                  number: {{ .Values.agentApi.service.port }}
+          # SPA catch-all - keep LAST so /agent matches first.
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "dynamoprototype.frontend.fullname" . }}
+                port:
+                  number: {{ .Values.frontend.service.port }}
+{{- end }}

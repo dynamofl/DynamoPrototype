@@ -1,0 +1,19 @@
+apiVersion: v2
+name: dynamoprototype
+description: |
+  DynamoPrototype - React frontend (nginx) and FastAPI agent-api,
+  fronted by a single AWS ALB ingress on EKS. Backend services
+  (Postgres, auth, edge functions, realtime, vault, storage) are
+  provided by managed Supabase Cloud.
+type: application
+version: 0.1.0
+appVersion: "0.0.0"
+kubeVersion: ">=1.27.0-0"
+maintainers:
+  - name: dynamoai
+home: https://github.com/dynamoai/DynamoPrototype
+keywords:
+  - dynamoprototype
+  - react
+  - fastapi
+  - eks

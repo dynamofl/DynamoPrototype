@@ -1,0 +1,208 @@
+# Default values for dynamoprototype.
+# Override per-env with values-<env>.yaml (e.g. values-uat.yaml).
+
+# -- Global container image registry. Each component's repository is
+# joined to this with a "/". Set to your ECR registry URI in values-*.yaml,
+# e.g. "123456789012.dkr.ecr.us-east-1.amazonaws.com".
+image:
+  registry: ""
+  pullPolicy: IfNotPresent
+  # -- Image tag applied to BOTH frontend and agent-api unless they set their
+  # own .image.tag. Typically set on the helm CLI: --set image.tag=uat-<sha>
+  tag: ""
+  pullSecrets: []
+
+# -- Common labels added to every rendered object.
+commonLabels: {}
+
+nameOverride: ""
+fullnameOverride: ""
+
+# -----------------------------------------------------------------------------
+# Frontend (React SPA served by nginx)
+# -----------------------------------------------------------------------------
+frontend:
+  enabled: true
+  replicaCount: 1
+
+  image:
+    repository: dynamoprototype-frontend
+    # tag: ""        # falls back to .Values.image.tag
+    # pullPolicy: "" # falls back to .Values.image.pullPolicy
+
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 8080
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+  podAnnotations: {}
+  podLabels: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+  podSecurityContext:
+    runAsNonRoot: true
+    # Chainguard's nginx image runs as user `nginx` uid 65532 by default.
+    runAsUser: 65532
+    runAsGroup: 65532
+    fsGroup: 65532
+    seccompProfile:
+      type: RuntimeDefault
+
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    # Distroless nginx writes its pid + temp files to /tmp (configured in
+    # deploy/nginx/nginx.conf), so the rootfs can be read-only with a
+    # tmpfs mount at /tmp.
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop: ["ALL"]
+
+  # Probes hit the SPA's /healthz served by nginx (see deploy/nginx/default.conf).
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 20
+    timeoutSeconds: 2
+    failureThreshold: 3
+  readinessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 2
+    periodSeconds: 10
+    timeoutSeconds: 2
+    failureThreshold: 3
+
+# -----------------------------------------------------------------------------
+# Agent API (FastAPI / uvicorn)
+# -----------------------------------------------------------------------------
+agentApi:
+  enabled: true
+  replicaCount: 1
+
+  image:
+    repository: dynamoprototype-agent-api
+
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 8000
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  # Path prefix the app is mounted under by the ingress. Must match
+  # ingress.agentApiPath. Set to "" when not behind a path-prefix proxy.
+  rootPath: /agent
+
+  # Comma-separated CORS origins permitted to call this API.
+  # Defaults to dev origins; override per env.
+  corsAllowOrigins: "http://localhost:5173,http://localhost:5174,http://localhost:3000"
+
+  # Optional shared-secret bearer token gate for the API. When enabled, all
+  # requests must include `Authorization: Bearer <token>`. The token is
+  # taken from the Secret key AGENT_API_BEARER. Currently a no-op flag
+  # surfaced via env var; wire it into a FastAPI dependency separately.
+  bearerAuth:
+    enabled: false
+
+  podAnnotations: {}
+  podLabels: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+  podSecurityContext:
+    runAsNonRoot: true
+    # Chainguard's python image runs as `nonroot` uid 65532 by default.
+    runAsUser: 65532
+    runAsGroup: 65532
+    fsGroup: 65532
+    seccompProfile:
+      type: RuntimeDefault
+
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop: ["ALL"]
+
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 15
+    periodSeconds: 20
+    timeoutSeconds: 3
+    failureThreshold: 3
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+# -----------------------------------------------------------------------------
+# Secrets
+# -----------------------------------------------------------------------------
+# Two modes:
+#   useExisting: true  -> reference a Secret you created out-of-band by name.
+#                         (Helm renders no Secret object.)
+#   useExisting: false -> Helm renders a Secret from `data` below. Pass values
+#                         via -f secrets-<env>.yaml (gitignored) or --set.
+secrets:
+  useExisting: true
+  existingSecretName: app-secrets
+  data:
+    OPENAI_API_KEY: ""
+    SUPABASE_SERVICE_ROLE_KEY: ""
+    SUPABASE_MCP_TOKEN: ""
+    # Only used when agentApi.bearerAuth.enabled is true.
+    AGENT_API_BEARER: ""
+
+# -----------------------------------------------------------------------------
+# Non-secret config
+# -----------------------------------------------------------------------------
+config:
+  logLevel: info
+  # Override the Supabase MCP server URL (rarely changed).
+  supabaseMcpServerUrl: ""
+
+# -----------------------------------------------------------------------------
+# Ingress (single ALB, path-based routing)
+# -----------------------------------------------------------------------------
+ingress:
+  enabled: true
+  className: alb
+  # Hostname the ALB rule matches. Required.
+  host: ""
+  # ACM certificate ARN in the same region as the cluster. Required when
+  # listening on HTTPS.
+  certificateArn: ""
+  # internet-facing or internal
+  scheme: internal
+  # ALB ingress group name (lets multiple ingresses share one ALB).
+  groupName: dynamoprototype-uat
+  # Path the agent-api is mounted under. Must match agentApi.rootPath.
+  agentApiPath: /agent
+  # Extra annotations merged into the rendered ingress.
+  extraAnnotations: {}

@@ -11,6 +11,20 @@ dist/
 build/
 *.tsbuildinfo
 
+# Python (agent-api)
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+pip-log.txt
+pip-delete-this-directory.txt
+
 # Environment variables
 .env
 .env.local
@@ -122,3 +136,10 @@ coverage/
 
 *storybook.log
 storybook-static
+
+# Deployment - never commit per-env secret value files
+deploy/helm/**/secrets-*.yaml
+deploy/helm/**/secret-values-*.yaml
+deploy/.env
+deploy/.env.*
+!deploy/.env.example

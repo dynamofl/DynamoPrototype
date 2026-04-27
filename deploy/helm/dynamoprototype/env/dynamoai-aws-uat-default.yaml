@@ -1,0 +1,49 @@
+# UAT environment overrides.
+# Replace placeholders before running `helm upgrade`.
+
+image:
+  # ECR registry URI for the UAT account/region.
+  registry: 058264092984.dkr.ecr.us-east-1.amazonaws.com
+  # Built by the staging Jenkins jobs (dynamoprototype-frontend-dockerbuild
+  # and dynamoprototype-agent-api-dockerbuild). Both component images use
+  # the same git-sha tag because they're built from the same commit.
+  # Override on the CLI for a different build:
+  #   helm upgrade --install ... --set image.tag=<sha>
+  tag: "8392bec"
+  pullPolicy: IfNotPresent
+
+frontend:
+  replicaCount: 2
+  image:
+    tag: "074c5f5"
+
+agentApi:
+  replicaCount: 2
+  image:
+    tag: "8392bec"
+  # Served on its own dedicated hostname (proto-api.uat.internal.dynamo.ai)
+  # via dynamoai-ingress, so no path prefix is needed.
+  rootPath: ""
+  # Frontend hostname (Option A: separate hosts for FE and API).
+  corsAllowOrigins: "https://proto.uat.internal.dynamo.ai"
+  bearerAuth:
+    enabled: false
+
+config:
+  logLevel: info
+
+# Ingress is managed externally by the dynamoai-ingress chart. Two entries
+# in env/internal-endpoints/dyanmoai-default-uat.yaml route:
+#   proto.uat.internal.dynamo.ai      -> dynamoprototype-frontend  :80
+#   proto-api.uat.internal.dynamo.ai  -> dynamoprototype-agent-api :80
+ingress:
+  enabled: false
+
+# Create the secret out-of-band:
+#   kubectl create secret generic app-secrets -n dynamoprototype-uat \
+#     --from-literal=OPENAI_API_KEY=... \
+#     --from-literal=SUPABASE_SERVICE_ROLE_KEY=... \
+#     --from-literal=SUPABASE_MCP_TOKEN=...
+secrets:
+  useExisting: true
+  existingSecretName: app-secrets

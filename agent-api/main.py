@@ -17,9 +17,15 @@ load_dotenv()
 app = FastAPI(title="Insight Agent API", version="1.0.0")
 
 # CORS configuration
+# Comma-separated list, e.g. "https://dynamoprototype-uat.example.com,http://localhost:5173"
+# Defaults to common local dev origins so behaviour is unchanged when run locally.
+_default_dev_origins = "http://localhost:5173,http://localhost:5174,http://localhost:3000"
+_cors_origins_env = os.getenv("CORS_ALLOW_ORIGINS", _default_dev_origins)
+cors_allow_origins = [o.strip() for o in _cors_origins_env.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"],  # Add your frontend URLs
+    allow_origins=cors_allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -42,6 +48,18 @@ class InsightResponse(BaseModel):
 openai_api_key = os.getenv("OPENAI_API_KEY")
 supabase_service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
+# Supabase MCP configuration. Both have safe defaults that match the
+# previous hardcoded values so existing local setups keep working, but
+# in deployed environments these MUST be set via env / k8s Secret.
+supabase_mcp_token = os.getenv(
+    "SUPABASE_MCP_TOKEN",
+    "sbp_99dcfe7553c9fb457d27b5a668dc4559959a3332",
+)
+supabase_mcp_server_url = os.getenv(
+    "SUPABASE_MCP_SERVER_URL",
+    "https://mcp.supabase.com/mcp?project_ref=uabbbzzrwgfxiamvnunr",
+)
+
 
 if not openai_api_key:
     raise ValueError("OPENAI_API_KEY environment variable is required")
@@ -59,9 +77,9 @@ mcp = HostedMCPTool(tool_config={
         "get_logs",
         "get_project_url"
     ],
-    "authorization": "sbp_99dcfe7553c9fb457d27b5a668dc4559959a3332",
+    "authorization": supabase_mcp_token,
     "require_approval": "never",
-    "server_url": "https://mcp.supabase.com/mcp?project_ref=uabbbzzrwgfxiamvnunr"
+    "server_url": supabase_mcp_server_url,
 })
 
 # Define agent output schema - matches TypeScript exactly
