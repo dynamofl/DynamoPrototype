@@ -15,7 +15,7 @@ image:
 frontend:
   replicaCount: 2
   image:
-    tag: "074c5f5"
+    tag: "03b452b"
 
 agentApi:
   replicaCount: 2
