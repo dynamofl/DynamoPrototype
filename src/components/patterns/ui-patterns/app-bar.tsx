@@ -25,7 +25,7 @@ import {
   Sun,
   Moon,
   Monitor,
-  FlaskConical,
+  SplinePointer,
   Play,
   UserPlus,
   ChevronsUpDown,
@@ -256,8 +256,8 @@ export function AppBar({
                   : "text-gray-600"
               )}
             >
-              <FlaskConical className="h-4 w-4" />
-              Beta Features
+              <SplinePointer className="h-4 w-4" />
+              Design Workspace
             </NavLink>
 
             {/* Profile Dropdown - Same styling for both variants */}
