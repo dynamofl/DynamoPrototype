@@ -26,6 +26,7 @@ import {
   DraftingCompass,
   ChevronRight,
   ArrowUpDown,
+  Workflow,
 } from 'lucide-react'
 import { useBetaFeatures } from '@/hooks/useBetaFeatures'
 import ProjectOverviewImg from '@/assets/images/BetaFeatures/ProjectOverview.png'
@@ -132,6 +133,15 @@ const betaFeatures: Feature[] = [
     category: 'Analytics & Reporting',
     type: 'experiment',
     toggleKey: 'reviewMode',
+  },
+  {
+    title: 'Unified Evals',
+    description: 'Run a unified evaluation on an AI system with a streamlined 3-step setup.',
+    path: '/unified-evals',
+    icon: Workflow,
+    category: 'Testing & Analysis',
+    image: EvaluationSandboxImg,
+    type: 'experiment',
   },
 ]
 
