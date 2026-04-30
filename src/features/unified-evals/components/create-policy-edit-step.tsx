@@ -1,6 +1,13 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { motion, useAnimation } from 'framer-motion'
-import { X } from 'lucide-react'
+import {
+  BookOpenCheck,
+  Check,
+  Globe,
+  Link as LinkIcon,
+  Sparkles,
+  X,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -18,6 +25,7 @@ function useAutoGrowTextarea(value: string) {
 export interface BehaviorItem {
   id: string
   text: string
+  proposed?: boolean
 }
 
 const CHAR_DELAY = 0.005
@@ -425,6 +433,430 @@ export function CreatePolicyEditStep({
           }}
         />
       )}
+
+      <ProposedReviewBar
+        allowed={allowed}
+        disallowed={disallowed}
+        onAllowedChange={onAllowedChange}
+        onDisallowedChange={onDisallowedChange}
+        disabled={isTyping}
+      />
+    </div>
+  )
+}
+
+interface ProposedReviewBarProps {
+  allowed: BehaviorItem[]
+  disallowed: BehaviorItem[]
+  onAllowedChange: (next: BehaviorItem[]) => void
+  onDisallowedChange: (next: BehaviorItem[]) => void
+  disabled: boolean
+}
+
+function ProposedReviewBar({
+  allowed,
+  disallowed,
+  onAllowedChange,
+  onDisallowedChange,
+  disabled,
+}: ProposedReviewBarProps) {
+  const allowedCount = allowed.filter((b) => b.proposed).length
+  const disallowedCount = disallowed.filter((b) => b.proposed).length
+  const total = allowedCount + disallowedCount
+
+  if (total === 0) {
+    return (
+      <DefaultActionBar
+        allowed={allowed}
+        disallowed={disallowed}
+        onAllowedChange={onAllowedChange}
+        onDisallowedChange={onDisallowedChange}
+      />
+    )
+  }
+
+  const sectionLabel =
+    allowedCount > 0 && disallowedCount > 0
+      ? 'Behaviors'
+      : allowedCount > 0
+        ? 'Allowed Behavior'
+        : 'Disallowed Behavior'
+
+  const acceptAll = () => {
+    if (allowedCount > 0) {
+      onAllowedChange(
+        allowed.map((b) => (b.proposed ? { ...b, proposed: false } : b)),
+      )
+    }
+    if (disallowedCount > 0) {
+      onDisallowedChange(
+        disallowed.map((b) => (b.proposed ? { ...b, proposed: false } : b)),
+      )
+    }
+  }
+
+  const rejectAll = () => {
+    if (allowedCount > 0) {
+      onAllowedChange(allowed.filter((b) => !b.proposed))
+    }
+    if (disallowedCount > 0) {
+      onDisallowedChange(disallowed.filter((b) => !b.proposed))
+    }
+  }
+
+  return (
+    <div className="pointer-events-none fixed inset-x-0 bottom-6 z-30 flex justify-center px-4">
+      <div className="pointer-events-auto flex max-w-2xl items-center gap-6 rounded-xl border border-gray-200 bg-gray-0 px-4 py-3 shadow-lg">
+        <span className="text-sm text-gray-700">
+          Generate {sectionLabel}:{' '}
+          <span className="font-medium text-gray-900">{total} Added</span>
+        </span>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button
+            type="button"
+            size="sm"
+            onClick={acceptAll}
+            disabled={disabled}
+          >
+            Accept All
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={rejectAll}
+            disabled={disabled}
+          >
+            Reject All
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+type OpenAction =
+  | 'auto-generate'
+  | 'extract-files'
+  | 'refer-web'
+  | 'proofread'
+  | null
+
+interface DefaultActionBarProps {
+  allowed: BehaviorItem[]
+  disallowed: BehaviorItem[]
+  onAllowedChange: (next: BehaviorItem[]) => void
+  onDisallowedChange: (next: BehaviorItem[]) => void
+}
+
+function DefaultActionBar({
+  allowed,
+  disallowed,
+  onAllowedChange,
+  onDisallowedChange,
+}: DefaultActionBarProps) {
+  const [openAction, setOpenAction] = useState<OpenAction>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!openAction) return
+    const handler = (e: MouseEvent) => {
+      if (!containerRef.current?.contains(e.target as Node)) {
+        setOpenAction(null)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [openAction])
+
+  const toggle = (action: Exclude<OpenAction, null>) =>
+    setOpenAction((curr) => (curr === action ? null : action))
+
+  const addProposedBehaviors = (allowedCount: number, disallowedCount: number) => {
+    if (allowedCount > 0) {
+      const next = Array.from({ length: allowedCount }, (_, i) => ({
+        id: createBehaviorId(),
+        text: `Generated allowed behavior ${i + 1}`,
+        proposed: true,
+      }))
+      onAllowedChange([...allowed, ...next])
+    }
+    if (disallowedCount > 0) {
+      const next = Array.from({ length: disallowedCount }, (_, i) => ({
+        id: createBehaviorId(),
+        text: `Generated disallowed behavior ${i + 1}`,
+        proposed: true,
+      }))
+      onDisallowedChange([...disallowed, ...next])
+    }
+    setOpenAction(null)
+  }
+
+  return (
+    <div className="pointer-events-none fixed inset-x-0 bottom-6 z-30 flex justify-center px-4">
+      <div
+        ref={containerRef}
+        className="pointer-events-auto relative"
+      >
+        {openAction === 'auto-generate' && (
+          <AutoGeneratePopover onGenerate={addProposedBehaviors} />
+        )}
+        {openAction === 'extract-files' && (
+          <ExtractFilesPopover
+            onExtract={() => addProposedBehaviors(2, 1)}
+          />
+        )}
+        {openAction === 'refer-web' && (
+          <ReferWebPopover onExtract={() => addProposedBehaviors(1, 1)} />
+        )}
+        {openAction === 'proofread' && (
+          <ProofreadPopover onProofread={() => addProposedBehaviors(1, 1)} />
+        )}
+
+        <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-gray-0 px-2 py-1.5 shadow-lg">
+          <FloatingActionItem
+            icon={Sparkles}
+            label="Auto Generate Behaviors"
+            active={openAction === 'auto-generate'}
+            onClick={() => toggle('auto-generate')}
+          />
+          <FloatingActionItem
+            icon={LinkIcon}
+            label="Extract from Files"
+            active={openAction === 'extract-files'}
+            onClick={() => toggle('extract-files')}
+          />
+          <FloatingActionItem
+            icon={Globe}
+            label="Refer Web"
+            active={openAction === 'refer-web'}
+            onClick={() => toggle('refer-web')}
+          />
+          <FloatingActionItem
+            icon={BookOpenCheck}
+            label="Proofread Policy"
+            active={openAction === 'proofread'}
+            onClick={() => toggle('proofread')}
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+interface FloatingActionItemProps {
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+  active?: boolean
+  onClick?: () => void
+}
+
+function FloatingActionItem({
+  icon: Icon,
+  label,
+  active = false,
+  onClick,
+}: FloatingActionItemProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-900 hover:bg-gray-50',
+        active && 'bg-gray-100',
+      )}
+    >
+      <Icon className="h-4 w-4 text-gray-700" />
+      {label}
+    </button>
+  )
+}
+
+interface AutoGeneratePopoverProps {
+  onGenerate: (allowedCount: number, disallowedCount: number) => void
+}
+
+function AutoGeneratePopover({ onGenerate }: AutoGeneratePopoverProps) {
+  const [allowedCount, setAllowedCount] = useState(3)
+  const [disallowedCount, setDisallowedCount] = useState(3)
+
+  return (
+    <PopoverShell title="Auto Generate Behaviors">
+      <SliderRow
+        label="Allowed Behaviors"
+        value={allowedCount}
+        onChange={setAllowedCount}
+      />
+      <SliderRow
+        label="Disallowed Behaviors"
+        value={disallowedCount}
+        onChange={setDisallowedCount}
+        className="mt-3"
+      />
+      <div className="mt-4 flex justify-end">
+        <Button
+          type="button"
+          size="sm"
+          onClick={() => onGenerate(allowedCount, disallowedCount)}
+        >
+          Generate
+        </Button>
+      </div>
+    </PopoverShell>
+  )
+}
+
+interface SliderRowProps {
+  label: string
+  value: number
+  onChange: (next: number) => void
+  className?: string
+}
+
+function SliderRow({ label, value, onChange, className }: SliderRowProps) {
+  return (
+    <div className={className}>
+      <div className="flex items-center justify-between px-1">
+        <span className="text-sm text-gray-700">{label}</span>
+        <span className="text-sm tabular-nums text-gray-900">{value}</span>
+      </div>
+      <input
+        type="range"
+        min={1}
+        max={10}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="mt-2 w-full accent-gray-900"
+      />
+    </div>
+  )
+}
+
+interface ExtractFilesPopoverProps {
+  onExtract: () => void
+}
+
+function ExtractFilesPopover({ onExtract }: ExtractFilesPopoverProps) {
+  const [files, setFiles] = useState<File[]>([])
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  return (
+    <PopoverShell title="Extract from Files">
+      <div
+        onClick={() => inputRef.current?.click()}
+        className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 px-4 py-6 text-center hover:border-gray-400 cursor-pointer"
+      >
+        <p className="text-sm text-gray-500">Drop files or</p>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={(e) => {
+            e.stopPropagation()
+            inputRef.current?.click()
+          }}
+        >
+          Upload Files
+        </Button>
+        <input
+          ref={inputRef}
+          type="file"
+          multiple
+          className="hidden"
+          onChange={(e) => {
+            setFiles((prev) => [...prev, ...Array.from(e.target.files ?? [])])
+            e.target.value = ''
+          }}
+        />
+      </div>
+      {files.length > 0 && (
+        <ul className="mt-3 flex flex-col gap-1 px-1">
+          {files.map((f, i) => (
+            <li key={i} className="truncate text-xs text-gray-700">
+              {f.name}
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="mt-4 flex justify-end">
+        <Button
+          type="button"
+          size="sm"
+          disabled={files.length === 0}
+          onClick={onExtract}
+        >
+          Extract
+        </Button>
+      </div>
+    </PopoverShell>
+  )
+}
+
+interface ReferWebPopoverProps {
+  onExtract: () => void
+}
+
+function ReferWebPopover({ onExtract }: ReferWebPopoverProps) {
+  const [url, setUrl] = useState('')
+
+  return (
+    <PopoverShell title="Refer Web">
+      <input
+        type="url"
+        value={url}
+        onChange={(e) => setUrl(e.target.value)}
+        placeholder="https://example.com/policy-reference"
+        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-gray-400 focus:outline-none"
+      />
+      <p className="mt-2 px-1 text-xs text-gray-500">
+        We'll extract content from this link and propose updates to your policy
+        description, allowed and disallowed behaviors.
+      </p>
+      <div className="mt-4 flex justify-end">
+        <Button
+          type="button"
+          size="sm"
+          disabled={!url.trim()}
+          onClick={onExtract}
+        >
+          Extract
+        </Button>
+      </div>
+    </PopoverShell>
+  )
+}
+
+interface ProofreadPopoverProps {
+  onProofread: () => void
+}
+
+function ProofreadPopover({ onProofread }: ProofreadPopoverProps) {
+  return (
+    <PopoverShell title="Proofread Policy">
+      <p className="px-1 text-sm text-gray-600">
+        Analyze the current policy and propose improvements to the description
+        and behaviors. You'll review each suggestion before it's applied.
+      </p>
+      <div className="mt-4 flex justify-end">
+        <Button type="button" size="sm" onClick={onProofread}>
+          Run Proofread
+        </Button>
+      </div>
+    </PopoverShell>
+  )
+}
+
+function PopoverShell({
+  title,
+  children,
+}: {
+  title: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className="absolute inset-x-0 bottom-full mb-2 rounded-xl border border-gray-200 bg-gray-0 p-4 shadow-md">
+      <p className="px-1 pb-3 text-xs font-medium text-gray-700">{title}</p>
+      {children}
     </div>
   )
 }
@@ -657,6 +1089,30 @@ function BehaviorsSection({
     return true
   }
 
+  const handleGenerate = (rowId: string, count: number) => {
+    const idx = items.findIndex((it) => it.id === rowId)
+    if (idx < 0) return
+    const generated: BehaviorItem[] = Array.from({ length: count }, (_, i) => ({
+      id: createBehaviorId(),
+      text: `Generated behavior ${i + 1}`,
+      proposed: true,
+    }))
+    onChange([
+      ...items.slice(0, idx),
+      ...generated,
+      ...items.slice(idx + 1),
+    ])
+    setFocusRequest({ id: generated[0].id, cursor: 'end' })
+  }
+
+  const handleAcceptProposed = (rowId: string) => {
+    onChange(
+      items.map((it) =>
+        it.id === rowId ? { ...it, proposed: false } : it,
+      ),
+    )
+  }
+
   const handleMergeBackspace = (
     currentId: string,
     currentText: string,
@@ -714,6 +1170,8 @@ function BehaviorsSection({
                 onBlurRow={() =>
                   setFocusedRowId((curr) => (curr === item.id ? null : curr))
                 }
+                onGenerate={(count) => handleGenerate(item.id, count)}
+                onAcceptProposed={() => handleAcceptProposed(item.id)}
               />
             </Reveal>
           )
@@ -750,6 +1208,8 @@ interface BehaviorRowProps {
   onMergeBackspace: (currentText: string) => boolean
   onFocusRow: () => void
   onBlurRow: () => void
+  onGenerate: (count: number) => void
+  onAcceptProposed: () => void
 }
 
 function BehaviorRow({
@@ -768,7 +1228,11 @@ function BehaviorRow({
   onMergeBackspace,
   onFocusRow,
   onBlurRow,
+  onGenerate,
+  onAcceptProposed,
 }: BehaviorRowProps) {
+  const [generateCount, setGenerateCount] = useState(3)
+  const isGenerateMode = item.text.trim().toLowerCase() === '/generate'
   const ref = useAutoGrowTextarea(item.text)
   const shakeControls = useAnimation()
 
@@ -855,19 +1319,30 @@ function BehaviorRow({
     }
   }
 
+  const isProposed = item.proposed === true
+
   return (
     <motion.div
       ref={rowRef}
       animate={shakeControls}
-      className="group flex items-start gap-2"
+      className="group relative flex items-start gap-2"
     >
       <div
         className={cn(
           'flex flex-1 items-start gap-3.5 rounded-md',
-          isSelected ? 'bg-gray-100' : 'group-hover:bg-gray-50',
+          isProposed
+            ? 'bg-gray-50'
+            : isSelected
+              ? 'bg-gray-100'
+              : 'group-hover:bg-gray-50',
         )}
       >
-        <div className="self-stretch w-0.5 shrink-0 rounded-full bg-gray-200" />
+        <div
+          className={cn(
+            'self-stretch w-0.5 shrink-0 rounded-full',
+            isProposed ? 'bg-blue-500' : 'bg-gray-200',
+          )}
+        />
         <textarea
           ref={ref}
           value={item.text}
@@ -876,22 +1351,82 @@ function BehaviorRow({
           onFocus={onFocusRow}
           onBlur={onBlurRow}
           readOnly={readOnly}
-          placeholder="Describe the behavior…"
+          placeholder="Describe the behavior or /generate to generate behaviors"
           rows={1}
           style={{ wordBreak: 'break-word' }}
-          className="flex-1 min-w-0 resize-none overflow-hidden bg-transparent py-1 text-sm leading-6 text-gray-900 placeholder:text-gray-400 focus:outline-none"
+          className={cn(
+            'flex-1 min-w-0 resize-none overflow-hidden bg-transparent py-1 text-sm leading-6 placeholder:text-gray-400 focus:outline-none',
+            isProposed ? 'text-blue-700' : 'text-gray-900',
+          )}
         />
       </div>
-      <Button
-        type="button"
-        variant="ghost"
-        onClick={onRemove}
-        disabled={readOnly}
-        aria-label="Remove behavior"
-        className="h-7 w-7 mt-0.5 shrink-0 p-0 opacity-0 transition-opacity group-hover:opacity-100"
-      >
-        <X className="h-3 w-3" />
-      </Button>
+      {isProposed ? (
+        <div className="flex shrink-0 items-center gap-1 mt-0.5">
+          <button
+            type="button"
+            onClick={onAcceptProposed}
+            disabled={readOnly}
+            aria-label="Accept Behavior"
+            className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-50"
+          >
+            <Check className="h-3 w-3" />
+          </button>
+          <button
+            type="button"
+            onClick={onRemove}
+            disabled={readOnly}
+            aria-label="Reject Behavior"
+            className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-50"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      ) : (
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={onRemove}
+          disabled={readOnly}
+          aria-label="Remove behavior"
+          className="h-7 w-7 mt-0.5 shrink-0 p-0 opacity-0 transition-opacity group-hover:opacity-100"
+        >
+          <X className="h-3 w-3" />
+        </Button>
+      )}
+
+      {isGenerateMode && !readOnly && (
+        <div
+          className="absolute left-3.5 top-full z-30 mt-1 w-72 rounded-lg border border-gray-200 bg-gray-0 p-3 shadow-md"
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <p className="px-1 pb-2 text-xs font-medium text-gray-700">
+            Generate Behaviors
+          </p>
+          <div className="flex items-center justify-between px-1">
+            <span className="text-sm text-gray-700">Number</span>
+            <span className="text-sm tabular-nums text-gray-900">
+              {generateCount}
+            </span>
+          </div>
+          <input
+            type="range"
+            min={1}
+            max={10}
+            value={generateCount}
+            onChange={(e) => setGenerateCount(Number(e.target.value))}
+            className="mt-2 w-full accent-gray-900"
+          />
+          <div className="mt-3 flex justify-end">
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => onGenerate(generateCount)}
+            >
+              Generate
+            </Button>
+          </div>
+        </div>
+      )}
     </motion.div>
   )
 }

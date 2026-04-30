@@ -16,7 +16,6 @@ import { DesignVersionPalette } from './components/design-version-palette'
 import { EvalTypeStep } from './components/eval-type-step'
 import { CreateNewPolicyStep } from './components/create-new-policy-step'
 import { CreatePolicyProcessingStep } from './components/create-policy-processing-step'
-import { CreatePolicySourcesStep } from './components/create-policy-sources-step'
 import {
   CreatePolicyEditStep,
   behaviorsFromStrings,
@@ -30,7 +29,6 @@ const TOTAL_STEPS = 2
 type View =
   | 'wizard'
   | 'create-policy'
-  | 'create-policy-sources'
   | 'create-policy-processing'
   | 'create-policy-edit'
 
@@ -61,10 +59,6 @@ export function CreateEvalRunPage() {
   const [policyWarnings, setPolicyWarnings] = useState<PolicyWarning[]>([])
   const [generationError, setGenerationError] = useState<string | null>(null)
   const lastObjectiveRef = useRef<string>('')
-  const [sourcesPayload, setSourcesPayload] = useState<{ objective: string; files: File[] }>({
-    objective: '',
-    files: [],
-  })
 
   useEffect(() => {
     setHasAnimatedJourney(true)
@@ -109,13 +103,7 @@ export function CreateEvalRunPage() {
     }
   }, [])
 
-  const handleObjectiveSubmit = (objective: string, files: File[]) => {
-    lastObjectiveRef.current = objective
-    setSourcesPayload({ objective, files })
-    setView('create-policy-sources')
-  }
-
-  const handleSourcesComplete = (enrichedContext: string) => {
+  const handleObjectiveSubmit = (enrichedContext: string) => {
     lastObjectiveRef.current = enrichedContext
     void runGeneration(enrichedContext)
   }
@@ -189,28 +177,6 @@ export function CreateEvalRunPage() {
           <div className="flex flex-1 items-center justify-center overflow-y-auto">
             <CreateNewPolicyStep
               onSubmit={handleObjectiveSubmit}
-              animateOnMount={animateOnMount}
-            />
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (view === 'create-policy-sources') {
-    return (
-      <div className="flex h-screen flex-col bg-gray-100 p-3">
-        <div className="flex flex-1 flex-col overflow-hidden rounded-xl border border-gray-200 bg-gray-0 shadow-sm">
-          <EvalRunHeader
-            title="Create New Policy"
-            onBack={() => setView('create-policy')}
-          />
-          <div className="flex flex-1 items-center justify-center overflow-y-auto">
-            <CreatePolicySourcesStep
-              objective={sourcesPayload.objective}
-              files={sourcesPayload.files}
-              onComplete={handleSourcesComplete}
-              onBack={() => setView('create-policy')}
               animateOnMount={animateOnMount}
             />
           </div>
