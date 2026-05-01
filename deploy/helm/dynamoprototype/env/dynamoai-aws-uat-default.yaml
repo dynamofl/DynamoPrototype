@@ -15,12 +15,12 @@ image:
 frontend:
   replicaCount: 2
   image:
-    tag: "03b452b"
+    tag: "f9a0394"
 
 agentApi:
   replicaCount: 2
   image:
-    tag: "8392bec"
+    tag: "f9a0394"
   # Served on its own dedicated hostname (proto-api.uat.internal.dynamo.ai)
   # via dynamoai-ingress, so no path prefix is needed.
   rootPath: ""
