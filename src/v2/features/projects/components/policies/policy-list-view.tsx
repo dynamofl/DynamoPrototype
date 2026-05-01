@@ -1,3 +1,6 @@
+import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
+import { Info, Languages, MessageSquare } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { PolicyTemplate } from './types'
 
@@ -7,6 +10,23 @@ interface PolicyListViewProps {
   hoveredTemplateId: string | null
   onToggle: (templateId: string) => void
   onHover: (template: PolicyTemplate | null) => void
+  animateOnMount?: boolean
+}
+
+const listVariants = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.04, delayChildren: 0.05 },
+  },
+}
+
+const rowVariants = {
+  hidden: { opacity: 0, y: 4 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.25, ease: 'easeOut' as const },
+  },
 }
 
 export function PolicyListView({
@@ -15,7 +35,14 @@ export function PolicyListView({
   hoveredTemplateId,
   onToggle,
   onHover,
+  animateOnMount = true,
 }: PolicyListViewProps) {
+  const [hasMounted, setHasMounted] = useState(!animateOnMount)
+
+  useEffect(() => {
+    setHasMounted(true)
+  }, [])
+
   if (templates.length === 0) {
     return (
       <p className="py-6 text-center text-[0.8125rem] text-gray-400">No matching templates</p>
@@ -23,16 +50,18 @@ export function PolicyListView({
   }
 
   return (
-    <div className="divide-y divide-gray-100">
+    <motion.div className="divide-y divide-gray-100" variants={listVariants}>
       {templates.map(template => {
         const selected = selectedIds.has(template.id)
         const isHovered = hoveredTemplateId === template.id
         return (
-          <div
+          <motion.div
             key={template.id}
+            variants={rowVariants}
+            initial={hasMounted ? false : undefined}
             onMouseEnter={() => onHover(template)}
             className={cn(
-              'flex  gap-2.5 mx-3 px-3 py-2.5 rounded-lg transition-colors cursor-default border-none',
+              'flex gap-2.5 px-3 py-2.5 rounded-lg transition-colors cursor-default border-none',
               isHovered ? 'bg-gray-50' : ''
             )}
           >
@@ -67,7 +96,7 @@ export function PolicyListView({
                 )}>
                   {template.name}
                 </span>
-                
+
                 <span className="py-0.5 rounded-full text-[0.75rem] text-gray-500 shrink-0">
                    / {template.category}
                 </span>
@@ -75,10 +104,34 @@ export function PolicyListView({
               <p className="text-[0.75rem] text-gray-500 line-clamp-1 mt-0.5">
                 {template.description}
               </p>
+              <PolicyMetaRow />
             </button>
-          </div>
+          </motion.div>
         )
       })}
+    </motion.div>
+  )
+}
+
+function PolicyMetaRow() {
+  return (
+    <div className="mt-1.5 truncate text-[0.75rem] text-gray-500">
+      <span className="inline-flex items-center gap-1 align-middle">
+        <Languages className="h-3 w-3" />
+        EN
+      </span>
+      <span className="mx-2 align-middle text-gray-300">•</span>
+      <span className="inline-flex items-center gap-1 align-middle">
+        <MessageSquare className="h-3 w-3" />
+        327 Eval Prompts
+      </span>
+      <span className="mx-2 align-middle text-gray-300">•</span>
+      <span className="inline-flex items-center gap-1 align-middle">
+        <Info className="h-3 w-3" />
+        johndoe@xyz.com
+      </span>
+      <span className="mx-2 align-middle text-gray-300">•</span>
+      <span className="align-middle">10 Apr, 2026</span>
     </div>
   )
 }

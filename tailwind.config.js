@@ -41,6 +41,9 @@ module.exports = {
   			'750': '750',
   			'850': '850'
   		},
+  		fontSize: {
+  			sm: ['0.8125rem', { lineHeight: '1.25rem' }]
+  		},
   	
   		colors: {
   			gray: {

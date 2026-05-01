@@ -1,0 +1,28 @@
+// Pipeline: builds DynamoPrototype/extract-api/Dockerfile (the FastAPI
+// MarkItDown extraction sidecar on Chainguard wolfi-base) and pushes
+// it to ECR.
+//
+// Job parameters (configure in the Jenkins job UI):
+//   awsAccountId - target ECR account, e.g. 058264092984
+//   awsRegion    - target ECR region,  e.g. us-east-1
+//
+// Runtime configuration (CORS_ALLOW_ORIGINS, ROOT_PATH, MAX_UPLOAD_MB,
+// EXTRACTION_TIMEOUT_SECONDS, EXTRACTION_CONCURRENCY) is supplied by the
+// Helm chart at deploy time as Kubernetes ConfigMap values, so no build
+// args are needed here.
+//
+// Notes:
+//   - The image's FROM line pulls from ECR `dynamoai-base`, which must be
+//     populated first via chainguard-poc/push-dynamoprototype-bases-to-ecr.sh
+//   - buildContextPath is `extract-api` so the build only sees that subtree
+//     (smaller context, faster uploads, can't accidentally bake the React
+//     app or .env into this image).
+
+@Library("dynamolib") _
+
+internalToolsDockerBuild(
+    dockerFilePath:   'extract-api/Dockerfile',
+    repo_name:        'dynamoprototype-extract-api',
+    projectKey:       'dynamoprototype_extract_api',
+    buildContextPath: 'extract-api'
+)

@@ -13,6 +13,7 @@ import { EvaluationResultsPage } from '@/features/evaluation-results'
 import { GuardrailsPage } from '@/features/guardrails'
 import { PolicyManagerPage, PolicyEditorPage } from '@/features/policy-manager'
 import { DatasetsPage } from '@/features/datasets'
+import { UnifiedEvalsPage, CreateEvalRunPage } from '@/features/unified-evals'
 import { ProjectsPage } from '@/features/projects'
 import { V2App } from '@/v2'
 import { SettingsPage } from '@/features/settings'
@@ -55,6 +56,10 @@ function App() {
       <Route path="/ai-systems/:systemName/evaluation/:evaluationId/:view" element={<AISystemEvaluationUnifiedPage />} />
       <Route path="/ai-systems/:systemName/evaluation/:evaluationId" element={<AISystemEvaluationUnifiedPage />} />
       <Route path="/ai-systems/:systemName/evaluation" element={<AISystemEvaluationUnifiedPage />} />
+
+      {/* Unified Evals Route - renders its own breadcrumb AppBar, so bypasses default layout */}
+      <Route path="/unified-evals" element={<UnifiedEvalsPage />} />
+      <Route path="/unified-evals/create" element={<CreateEvalRunPage />} />
 
       {/* All other routes with default layout */}
       <Route path="/*" element={
@@ -103,7 +108,7 @@ function App() {
 
               {/* Datasets Route */}
               <Route path="/datasets" element={<DatasetsPage />} />
-              
+
               {/* Table Pattern Demo Route */}
               <Route path="/table-demo" element={<TablePatternDemo />} />
               
