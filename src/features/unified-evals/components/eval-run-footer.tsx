@@ -10,6 +10,7 @@ interface EvalRunFooterProps {
   continueIcon?: ReactNode
   currentStep: number
   totalSteps: number
+  showStepIndicator?: boolean
 }
 
 export function EvalRunFooter({
@@ -20,6 +21,7 @@ export function EvalRunFooter({
   continueIcon,
   currentStep,
   totalSteps,
+  showStepIndicator = true,
 }: EvalRunFooterProps) {
   return (
     <div className="border-t border-gray-200">
@@ -28,17 +30,19 @@ export function EvalRunFooter({
           Back
         </Button>
 
-        <div className="flex items-center gap-2">
-          {Array.from({ length: totalSteps }).map((_, index) => (
-            <div
-              key={index}
-              className={cn(
-                'h-1.5 rounded-full transition-all',
-                index === currentStep ? 'w-5 bg-gray-900' : 'w-1.5 bg-gray-900/30'
-              )}
-            />
-          ))}
-        </div>
+        {showStepIndicator ? (
+          <div className="flex items-center gap-2">
+            {Array.from({ length: totalSteps }).map((_, index) => (
+              <div
+                key={index}
+                className={cn(
+                  'h-1.5 rounded-full transition-all',
+                  index === currentStep ? 'w-5 bg-gray-900' : 'w-1.5 bg-gray-900/30'
+                )}
+              />
+            ))}
+          </div>
+        ) : null}
 
         <Button
           onClick={onContinue}

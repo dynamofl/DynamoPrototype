@@ -14,12 +14,14 @@ import { PolicySelectionStep } from './components/policy-selection-step'
 import { PolicySelectionStepV2 } from './components/policy-selection-step-v2'
 import { DesignVersionPalette } from './components/design-version-palette'
 import { EvalTypeStep } from './components/eval-type-step'
+import { EvalTypeStepV2 } from './components/eval-type-step-v2'
 import { CreateNewPolicyStep } from './components/create-new-policy-step'
 import { CreatePolicyProcessingStep } from './components/create-policy-processing-step'
 import {
   CreatePolicyEditStep,
   behaviorsFromStrings,
   type BehaviorItem,
+  type ReferenceFile,
 } from './components/create-policy-edit-step'
 import { createGeneratedPolicyId } from './types/generated-policy'
 import { useDesignVersion } from './hooks/useDesignVersion'
@@ -59,6 +61,7 @@ export function CreateEvalRunPage() {
   const [policyWarnings, setPolicyWarnings] = useState<PolicyWarning[]>([])
   const [generationError, setGenerationError] = useState<string | null>(null)
   const lastObjectiveRef = useRef<string>('')
+  const [referenceFiles, setReferenceFiles] = useState<ReferenceFile[]>([])
 
   useEffect(() => {
     setHasAnimatedJourney(true)
@@ -103,8 +106,12 @@ export function CreateEvalRunPage() {
     }
   }, [])
 
-  const handleObjectiveSubmit = (enrichedContext: string) => {
+  const handleObjectiveSubmit = (
+    enrichedContext: string,
+    files: ReferenceFile[],
+  ) => {
     lastObjectiveRef.current = enrichedContext
+    setReferenceFiles(files)
     void runGeneration(enrichedContext)
   }
 
@@ -165,6 +172,20 @@ export function CreateEvalRunPage() {
   const isLastStep = currentStep === TOTAL_STEPS - 1
   const continueDisabled = currentStep === 0 && selectedPolicyIds.size === 0
   const wizardTemplates = [...extraTemplates, ...POLICY_TEMPLATES]
+  const useSplitFooter = designVersion === 'v2'
+
+  const evalRunFooter = (
+    <EvalRunFooter
+      onBack={handleBack}
+      onContinue={handleContinue}
+      continueDisabled={continueDisabled}
+      continueLabel={isLastStep ? 'Start Eval Run' : 'Continue'}
+      continueIcon={isLastStep ? <Play className="h-3 w-3" /> : undefined}
+      currentStep={currentStep}
+      totalSteps={TOTAL_STEPS}
+      showStepIndicator={!useSplitFooter}
+    />
+  )
 
   if (view === 'create-policy') {
     return (
@@ -226,11 +247,12 @@ export function CreateEvalRunPage() {
               </div>
             }
           />
-          <div className="flex flex-1 items-start justify-center overflow-y-auto">
+          <div className="flex flex-1 items-start overflow-y-auto">
             <CreatePolicyEditStep
               name={policyDraft.name}
               description={policyDraft.description}
               allowed={policyDraft.allowed}
+              referenceFiles={referenceFiles}
               disallowed={policyDraft.disallowed}
               onNameChange={(name) => setPolicyDraft((prev) => ({ ...prev, name }))}
               onDescriptionChange={(description) =>
@@ -257,42 +279,52 @@ export function CreateEvalRunPage() {
           title="Create New Eval Run"
           onClose={() => navigate('/unified-evals')}
         />
-        <div className="flex flex-1 items-stretch justify-center overflow-y-auto">
-          {currentStep === 0 ? (
-            designVersion === 'v2' ? (
+        {useSplitFooter ? (
+          <div className="flex flex-1 overflow-hidden">
+            {currentStep === 0 ? (
               <PolicySelectionStepV2
                 templates={wizardTemplates}
                 selectedIds={selectedPolicyIds}
                 onToggle={togglePolicy}
                 onCreateNewPolicy={() => setView('create-policy')}
                 animateOnMount={animateOnMount}
+                footer={evalRunFooter}
+                currentStep={currentStep}
+                totalSteps={TOTAL_STEPS}
               />
             ) : (
-              <PolicySelectionStep
-                templates={wizardTemplates}
-                selectedIds={selectedPolicyIds}
-                onToggle={togglePolicy}
-                onCreateNewPolicy={() => setView('create-policy')}
+              <EvalTypeStepV2
+                selectedAttackIds={selectedAttackIds}
+                onToggleAttack={toggleAttack}
                 animateOnMount={animateOnMount}
+                footer={evalRunFooter}
+                currentStep={currentStep}
+                totalSteps={TOTAL_STEPS}
               />
-            )
-          ) : (
-            <EvalTypeStep
-              selectedAttackIds={selectedAttackIds}
-              onToggleAttack={toggleAttack}
-              animateOnMount={animateOnMount}
-            />
-          )}
-        </div>
-        <EvalRunFooter
-          onBack={handleBack}
-          onContinue={handleContinue}
-          continueDisabled={continueDisabled}
-          continueLabel={isLastStep ? 'Start Eval Run' : 'Continue'}
-          continueIcon={isLastStep ? <Play className="h-3 w-3" /> : undefined}
-          currentStep={currentStep}
-          totalSteps={TOTAL_STEPS}
-        />
+            )}
+          </div>
+        ) : (
+          <>
+            <div className="flex flex-1 items-stretch justify-center overflow-y-auto">
+              {currentStep === 0 ? (
+                <PolicySelectionStep
+                  templates={wizardTemplates}
+                  selectedIds={selectedPolicyIds}
+                  onToggle={togglePolicy}
+                  onCreateNewPolicy={() => setView('create-policy')}
+                  animateOnMount={animateOnMount}
+                />
+              ) : (
+                <EvalTypeStep
+                  selectedAttackIds={selectedAttackIds}
+                  onToggleAttack={toggleAttack}
+                  animateOnMount={animateOnMount}
+                />
+              )}
+            </div>
+            {evalRunFooter}
+          </>
+        )}
       </div>
       <DesignVersionPalette version={designVersion} onChange={setDesignVersion} />
     </div>

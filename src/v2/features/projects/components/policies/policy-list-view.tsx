@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
+import { Info, Languages, MessageSquare } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { PolicyTemplate } from './types'
 
@@ -103,10 +104,34 @@ export function PolicyListView({
               <p className="text-[0.75rem] text-gray-500 line-clamp-1 mt-0.5">
                 {template.description}
               </p>
+              <PolicyMetaRow />
             </button>
           </motion.div>
         )
       })}
     </motion.div>
+  )
+}
+
+function PolicyMetaRow() {
+  return (
+    <div className="mt-1.5 truncate text-[0.75rem] text-gray-500">
+      <span className="inline-flex items-center gap-1 align-middle">
+        <Languages className="h-3 w-3" />
+        EN
+      </span>
+      <span className="mx-2 align-middle text-gray-300">•</span>
+      <span className="inline-flex items-center gap-1 align-middle">
+        <MessageSquare className="h-3 w-3" />
+        327 Eval Prompts
+      </span>
+      <span className="mx-2 align-middle text-gray-300">•</span>
+      <span className="inline-flex items-center gap-1 align-middle">
+        <Info className="h-3 w-3" />
+        johndoe@xyz.com
+      </span>
+      <span className="mx-2 align-middle text-gray-300">•</span>
+      <span className="align-middle">10 Apr, 2026</span>
+    </div>
   )
 }

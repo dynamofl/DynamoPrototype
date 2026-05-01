@@ -8,7 +8,14 @@ import {
   Sparkles,
   X,
 } from 'lucide-react'
+import { FileIcon } from '@untitledui/file-icons'
 import { Button } from '@/components/ui/button'
+import { PolicyProofreadService } from '@/lib/agents/policy-proofread-service'
+
+const getFileExtension = (name: string): string => {
+  const dot = name.lastIndexOf('.')
+  return dot === -1 ? 'empty' : name.slice(dot + 1).toLowerCase()
+}
 import { cn } from '@/lib/utils'
 
 function useAutoGrowTextarea(value: string) {
@@ -25,7 +32,16 @@ function useAutoGrowTextarea(value: string) {
 export interface BehaviorItem {
   id: string
   text: string
+  /** True when this row is a brand-new behavior awaiting accept/reject. */
   proposed?: boolean
+  /** When set, the user has a pending rewrite of this row's text. */
+  proposedText?: string
+  /** True when this existing row is proposed for removal. */
+  proposedRemove?: boolean
+}
+
+export interface ReferenceFile {
+  name: string
 }
 
 const CHAR_DELAY = 0.005
@@ -116,6 +132,7 @@ interface CreatePolicyEditStepProps {
   onDescriptionChange: (next: string) => void
   onAllowedChange: (next: BehaviorItem[]) => void
   onDisallowedChange: (next: BehaviorItem[]) => void
+  referenceFiles?: ReferenceFile[]
   animateOnMount?: boolean
 }
 
@@ -128,6 +145,7 @@ export function CreatePolicyEditStep({
   onDescriptionChange,
   onAllowedChange,
   onDisallowedChange,
+  referenceFiles = [],
 }: CreatePolicyEditStepProps) {
   const initialRef = useRef({ name, description, allowed, disallowed })
   const initial = initialRef.current
@@ -365,61 +383,71 @@ export function CreatePolicyEditStep({
   }, [selectedRowIds.size])
 
   return (
-    <div
-      ref={containerRef}
-      className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-3 py-12"
-    >
-      <div className="flex flex-col gap-3">
-        <Reveal delay={offsets.titleStart}>
-          <NameField
-            value={name}
-            onChange={onNameChange}
-            readOnly={isTyping}
-            onEnter={handleTitleEnter}
-            typewriter={
-              isTyping
-                ? { text: initial.name, startDelay: offsets.titleStart }
-                : undefined
-            }
-          />
-        </Reveal>
-        <Reveal delay={offsets.descStart}>
-          <DescriptionField
-            value={description}
-            onChange={onDescriptionChange}
-            readOnly={isTyping}
-            focusKey={descFocusKey}
-            typewriter={
-              isTyping
-                ? { text: initial.description, startDelay: offsets.descStart }
-                : undefined
-            }
-          />
-        </Reveal>
-      </div>
+    <div ref={containerRef} className="flex w-full">
+      <aside className="hidden w-64 shrink-0 border-r border-gray-200 px-4 py-12 lg:block">
+        <ReferenceFilesPanel files={referenceFiles} />
+      </aside>
 
-      <BehaviorsSection
-        label="Allowed Behaviors"
-        items={allowed}
-        onChange={onAllowedChange}
-        readOnly={isTyping}
-        animateOnMount={isTyping}
-        labelDelay={offsets.allowedLabelStart}
-        itemDelays={offsets.allowedItemStarts}
-        selectedIds={selectedRowIds}
-        registerRow={registerRow}
-      />
+      <main className="flex flex-1 justify-center">
+        <div className="flex w-full max-w-3xl flex-col gap-6 px-3 pb-24 pt-12">
+          <div className="flex flex-col gap-3">
+            <Reveal delay={offsets.titleStart}>
+              <NameField
+                value={name}
+                onChange={onNameChange}
+                readOnly={isTyping}
+                onEnter={handleTitleEnter}
+                typewriter={
+                  isTyping
+                    ? { text: initial.name, startDelay: offsets.titleStart }
+                    : undefined
+                }
+              />
+            </Reveal>
+            <Reveal delay={offsets.descStart}>
+              <DescriptionField
+                value={description}
+                onChange={onDescriptionChange}
+                readOnly={isTyping}
+                focusKey={descFocusKey}
+                typewriter={
+                  isTyping
+                    ? { text: initial.description, startDelay: offsets.descStart }
+                    : undefined
+                }
+              />
+            </Reveal>
+          </div>
 
-      <BehaviorsSection
-        label="Disallowed Behaviors"
-        items={disallowed}
-        onChange={onDisallowedChange}
-        readOnly={isTyping}
-        animateOnMount={isTyping}
-        labelDelay={offsets.disallowedLabelStart}
-        itemDelays={offsets.disallowedItemStarts}
-        selectedIds={selectedRowIds}
-        registerRow={registerRow}
+          <BehaviorsSection
+            label="Allowed Behaviors"
+            items={allowed}
+            onChange={onAllowedChange}
+            readOnly={isTyping}
+            animateOnMount={isTyping}
+            labelDelay={offsets.allowedLabelStart}
+            itemDelays={offsets.allowedItemStarts}
+            selectedIds={selectedRowIds}
+            registerRow={registerRow}
+          />
+
+          <BehaviorsSection
+            label="Disallowed Behaviors"
+            items={disallowed}
+            onChange={onDisallowedChange}
+            readOnly={isTyping}
+            animateOnMount={isTyping}
+            labelDelay={offsets.disallowedLabelStart}
+            itemDelays={offsets.disallowedItemStarts}
+            selectedIds={selectedRowIds}
+            registerRow={registerRow}
+          />
+        </div>
+      </main>
+
+      <aside
+        aria-hidden
+        className="hidden w-64 shrink-0 border-l border-gray-200 lg:block"
       />
 
       {dragRect && (
@@ -435,10 +463,13 @@ export function CreatePolicyEditStep({
       )}
 
       <ProposedReviewBar
+        name={name}
+        description={description}
         allowed={allowed}
         disallowed={disallowed}
         onAllowedChange={onAllowedChange}
         onDisallowedChange={onDisallowedChange}
+        referenceFiles={referenceFiles}
         disabled={isTyping}
       />
     </div>
@@ -446,61 +477,151 @@ export function CreatePolicyEditStep({
 }
 
 interface ProposedReviewBarProps {
+  name: string
+  description: string
   allowed: BehaviorItem[]
   disallowed: BehaviorItem[]
   onAllowedChange: (next: BehaviorItem[]) => void
   onDisallowedChange: (next: BehaviorItem[]) => void
+  referenceFiles: ReferenceFile[]
   disabled: boolean
 }
 
+/**
+ * The seed-empty row exists to give the user a "Describe the behavior…" slot
+ * to type into. We want it to stay pinned to the END of the section even when
+ * proposed adds get inserted from auto-generate / proofread / extract flows.
+ *
+ * A "plain empty" is a row with no text and no pending proposal flags — only
+ * the bottom seed slot looks like that. (Mid-list empties created by pressing
+ * Enter are temporary and disappear once the user types.)
+ */
+const isPlainEmptyRow = (b: BehaviorItem) =>
+  b.text.trim().length === 0 &&
+  !b.proposed &&
+  !b.proposedRemove &&
+  typeof b.proposedText !== 'string'
+
+const appendBeforeTrailingEmpty = (
+  list: BehaviorItem[],
+  additions: BehaviorItem[],
+): BehaviorItem[] => {
+  if (additions.length === 0) return list
+  const last = list[list.length - 1]
+  if (last && isPlainEmptyRow(last)) {
+    return [...list.slice(0, -1), ...additions, last]
+  }
+  return [...list, ...additions]
+}
+
+const countProposals = (items: BehaviorItem[]) => ({
+  added: items.filter((b) => b.proposed).length,
+  updated: items.filter((b) => typeof b.proposedText === 'string').length,
+  removed: items.filter((b) => b.proposedRemove).length,
+})
+
+const acceptAllInList = (items: BehaviorItem[]) =>
+  items
+    // drop rows proposed for removal
+    .filter((b) => !b.proposedRemove)
+    .map((b) => {
+      // commit proposed text rewrites
+      if (typeof b.proposedText === 'string') {
+        return { ...b, text: b.proposedText, proposedText: undefined }
+      }
+      // promote proposed-add rows to regular
+      if (b.proposed) return { ...b, proposed: false }
+      return b
+    })
+
+const rejectAllInList = (items: BehaviorItem[]) =>
+  items
+    // drop proposed-add rows entirely
+    .filter((b) => !b.proposed)
+    // revert pending mutations on existing rows
+    .map((b) =>
+      typeof b.proposedText === 'string' || b.proposedRemove
+        ? { ...b, proposedText: undefined, proposedRemove: false }
+        : b,
+    )
+
 function ProposedReviewBar({
+  name,
+  description,
   allowed,
   disallowed,
   onAllowedChange,
   onDisallowedChange,
+  referenceFiles,
   disabled,
 }: ProposedReviewBarProps) {
-  const allowedCount = allowed.filter((b) => b.proposed).length
-  const disallowedCount = disallowed.filter((b) => b.proposed).length
-  const total = allowedCount + disallowedCount
+  const allowedCounts = countProposals(allowed)
+  const disallowedCounts = countProposals(disallowed)
+  const totalAdded = allowedCounts.added + disallowedCounts.added
+  const totalUpdated = allowedCounts.updated + disallowedCounts.updated
+  const totalRemoved = allowedCounts.removed + disallowedCounts.removed
+  const total = totalAdded + totalUpdated + totalRemoved
 
   if (total === 0) {
     return (
       <DefaultActionBar
+        name={name}
+        description={description}
         allowed={allowed}
         disallowed={disallowed}
         onAllowedChange={onAllowedChange}
         onDisallowedChange={onDisallowedChange}
+        referenceFiles={referenceFiles}
       />
     )
   }
 
-  const sectionLabel =
-    allowedCount > 0 && disallowedCount > 0
-      ? 'Behaviors'
-      : allowedCount > 0
-        ? 'Allowed Behavior'
-        : 'Disallowed Behavior'
+  // Title: prefer "Proof Reading Results" when there's any update/remove
+  // (those only come from proofread), otherwise "Generate <Section>".
+  const isReviewResult = totalUpdated > 0 || totalRemoved > 0
+  const allowedHasAny =
+    allowedCounts.added + allowedCounts.updated + allowedCounts.removed > 0
+  const disallowedHasAny =
+    disallowedCounts.added + disallowedCounts.updated + disallowedCounts.removed > 0
+
+  const title = isReviewResult
+    ? 'Proof Reading Results'
+    : allowedHasAny && disallowedHasAny
+      ? 'Generate Behaviors'
+      : allowedHasAny
+        ? 'Generate Allowed Behavior'
+        : 'Generate Disallowed Behavior'
+
+  const segments: string[] = []
+  if (totalAdded > 0) segments.push(`${totalAdded} Added`)
+  if (totalUpdated > 0) segments.push(`${totalUpdated} Updated`)
+  if (totalRemoved > 0) segments.push(`${totalRemoved} Removed`)
 
   const acceptAll = () => {
-    if (allowedCount > 0) {
-      onAllowedChange(
-        allowed.map((b) => (b.proposed ? { ...b, proposed: false } : b)),
-      )
+    if (allowedCounts.added + allowedCounts.updated + allowedCounts.removed > 0) {
+      onAllowedChange(acceptAllInList(allowed))
     }
-    if (disallowedCount > 0) {
-      onDisallowedChange(
-        disallowed.map((b) => (b.proposed ? { ...b, proposed: false } : b)),
-      )
+    if (
+      disallowedCounts.added +
+        disallowedCounts.updated +
+        disallowedCounts.removed >
+      0
+    ) {
+      onDisallowedChange(acceptAllInList(disallowed))
     }
   }
 
   const rejectAll = () => {
-    if (allowedCount > 0) {
-      onAllowedChange(allowed.filter((b) => !b.proposed))
+    if (allowedCounts.added + allowedCounts.updated + allowedCounts.removed > 0) {
+      onAllowedChange(rejectAllInList(allowed))
     }
-    if (disallowedCount > 0) {
-      onDisallowedChange(disallowed.filter((b) => !b.proposed))
+    if (
+      disallowedCounts.added +
+        disallowedCounts.updated +
+        disallowedCounts.removed >
+      0
+    ) {
+      onDisallowedChange(rejectAllInList(disallowed))
     }
   }
 
@@ -508,8 +629,10 @@ function ProposedReviewBar({
     <div className="pointer-events-none fixed inset-x-0 bottom-6 z-30 flex justify-center px-4">
       <div className="pointer-events-auto flex max-w-2xl items-center gap-6 rounded-xl border border-gray-200 bg-gray-0 px-4 py-3 shadow-lg">
         <span className="text-sm text-gray-700">
-          Generate {sectionLabel}:{' '}
-          <span className="font-medium text-gray-900">{total} Added</span>
+          {title}:{' '}
+          <span className="font-medium text-gray-900">
+            {segments.join(' • ')}
+          </span>
         </span>
         <div className="flex shrink-0 items-center gap-2">
           <Button
@@ -543,17 +666,23 @@ type OpenAction =
   | null
 
 interface DefaultActionBarProps {
+  name: string
+  description: string
   allowed: BehaviorItem[]
   disallowed: BehaviorItem[]
   onAllowedChange: (next: BehaviorItem[]) => void
   onDisallowedChange: (next: BehaviorItem[]) => void
+  referenceFiles: ReferenceFile[]
 }
 
 function DefaultActionBar({
+  name,
+  description,
   allowed,
   disallowed,
   onAllowedChange,
   onDisallowedChange,
+  referenceFiles,
 }: DefaultActionBarProps) {
   const [openAction, setOpenAction] = useState<OpenAction>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -579,7 +708,7 @@ function DefaultActionBar({
         text: `Generated allowed behavior ${i + 1}`,
         proposed: true,
       }))
-      onAllowedChange([...allowed, ...next])
+      onAllowedChange(appendBeforeTrailingEmpty(allowed, next))
     }
     if (disallowedCount > 0) {
       const next = Array.from({ length: disallowedCount }, (_, i) => ({
@@ -587,13 +716,90 @@ function DefaultActionBar({
         text: `Generated disallowed behavior ${i + 1}`,
         proposed: true,
       }))
-      onDisallowedChange([...disallowed, ...next])
+      onDisallowedChange(appendBeforeTrailingEmpty(disallowed, next))
     }
     setOpenAction(null)
   }
 
+  const runProofread = async () => {
+    const result = await PolicyProofreadService.review(
+      {
+        name,
+        description,
+        allowed: allowed.map((b) => b.text),
+        disallowed: disallowed.map((b) => b.text),
+      },
+      referenceFiles.map((f) => ({ name: f.name })),
+    )
+
+    // Snapshot current items so all suggestions resolve against the original
+    // index space (we never mutate-then-look-up while applying).
+    const allowedSnapshot = allowed
+    const disallowedSnapshot = disallowed
+
+    const allowedAdditions: BehaviorItem[] = []
+    const disallowedAdditions: BehaviorItem[] = []
+    const allowedPatches = new Map<string, Partial<BehaviorItem>>()
+    const disallowedPatches = new Map<string, Partial<BehaviorItem>>()
+
+    for (const s of result.suggestions) {
+      const snapshot =
+        s.side === 'allowed' ? allowedSnapshot : disallowedSnapshot
+      const patches =
+        s.side === 'allowed' ? allowedPatches : disallowedPatches
+      const additions =
+        s.side === 'allowed' ? allowedAdditions : disallowedAdditions
+
+      if (s.type === 'add' && s.newText) {
+        additions.push({
+          id: createBehaviorId(),
+          text: s.newText,
+          proposed: true,
+        })
+      } else if (
+        s.type === 'update' &&
+        typeof s.index === 'number' &&
+        s.newText &&
+        snapshot[s.index]
+      ) {
+        const target = snapshot[s.index]
+        // skip no-op rewrites
+        if (target.text === s.newText) continue
+        patches.set(target.id, { proposedText: s.newText })
+      } else if (
+        s.type === 'remove' &&
+        typeof s.index === 'number' &&
+        snapshot[s.index]
+      ) {
+        const target = snapshot[s.index]
+        patches.set(target.id, { proposedRemove: true })
+      }
+    }
+
+    const applyPatches = (
+      list: BehaviorItem[],
+      patches: Map<string, Partial<BehaviorItem>>,
+      additions: BehaviorItem[],
+    ) => {
+      if (patches.size === 0 && additions.length === 0) return list
+      const patched = list.map((b) =>
+        patches.has(b.id) ? { ...b, ...patches.get(b.id) } : b,
+      )
+      return appendBeforeTrailingEmpty(patched, additions)
+    }
+
+    onAllowedChange(
+      applyPatches(allowedSnapshot, allowedPatches, allowedAdditions),
+    )
+    onDisallowedChange(
+      applyPatches(disallowedSnapshot, disallowedPatches, disallowedAdditions),
+    )
+
+    setOpenAction(null)
+  }
+
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-6 z-30 flex justify-center px-4">
+    <div className="pointer-events-none fixed inset-x-0 bottom-3 z-30 flex justify-center px-4">
       <div
         ref={containerRef}
         className="pointer-events-auto relative"
@@ -610,7 +816,7 @@ function DefaultActionBar({
           <ReferWebPopover onExtract={() => addProposedBehaviors(1, 1)} />
         )}
         {openAction === 'proofread' && (
-          <ProofreadPopover onProofread={() => addProposedBehaviors(1, 1)} />
+          <ProofreadPopover onProofread={runProofread} />
         )}
 
         <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-gray-0 px-2 py-1.5 shadow-lg">
@@ -641,6 +847,39 @@ function DefaultActionBar({
         </div>
       </div>
     </div>
+  )
+}
+
+interface ReferenceFilesPanelProps {
+  files: ReferenceFile[]
+}
+
+function ReferenceFilesPanel({ files }: ReferenceFilesPanelProps) {
+  return (
+    <section className="flex flex-col gap-2">
+      <h3 className="px-2 text-xs font-medium text-gray-700">Reference Files</h3>
+      {files.length === 0 ? (
+        <p className="px-2 text-xs text-gray-400">No Reference Files</p>
+      ) : (
+        <ul className="flex flex-col gap-0.5">
+          {files.map((f, i) => (
+            <li
+              key={`${f.name}-${i}`}
+              className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              <FileIcon
+                type={getFileExtension(f.name)}
+                size={20}
+                className="shrink-0"
+              />
+              <span className="truncate" title={f.name}>
+                {f.name}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   )
 }
 
@@ -827,19 +1066,44 @@ function ReferWebPopover({ onExtract }: ReferWebPopoverProps) {
 }
 
 interface ProofreadPopoverProps {
-  onProofread: () => void
+  onProofread: () => Promise<void>
 }
 
 function ProofreadPopover({ onProofread }: ProofreadPopoverProps) {
+  const [running, setRunning] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleClick = async () => {
+    if (running) return
+    setRunning(true)
+    setError(null)
+    try {
+      await onProofread()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to proofread.'
+      setError(message)
+    } finally {
+      setRunning(false)
+    }
+  }
+
   return (
     <PopoverShell title="Proofread Policy">
       <p className="px-1 text-sm text-gray-600">
-        Analyze the current policy and propose improvements to the description
-        and behaviors. You'll review each suggestion before it's applied.
+        Analyze the current policy and propose improvements to the behaviors.
+        You'll review each suggestion before it's applied.
       </p>
+      {error && (
+        <p className="mt-2 px-1 text-xs text-red-600">{error}</p>
+      )}
       <div className="mt-4 flex justify-end">
-        <Button type="button" size="sm" onClick={onProofread}>
-          Run Proofread
+        <Button
+          type="button"
+          size="sm"
+          onClick={handleClick}
+          disabled={running}
+        >
+          {running ? 'Running…' : 'Run Proofread'}
         </Button>
       </div>
     </PopoverShell>
@@ -1106,9 +1370,38 @@ function BehaviorsSection({
   }
 
   const handleAcceptProposed = (rowId: string) => {
+    const target = items.find((it) => it.id === rowId)
+    if (!target) return
+    if (target.proposedRemove) {
+      onChange(items.filter((it) => it.id !== rowId))
+      return
+    }
+    onChange(
+      items.map((it) => {
+        if (it.id !== rowId) return it
+        if (typeof it.proposedText === 'string') {
+          return { ...it, text: it.proposedText, proposedText: undefined }
+        }
+        return { ...it, proposed: false }
+      }),
+    )
+  }
+
+  const handleRejectProposed = (rowId: string) => {
+    const target = items.find((it) => it.id === rowId)
+    if (!target) return
+    // Proposed adds were never part of the original — reject = drop entirely.
+    if (target.proposed) {
+      onChange(items.filter((it) => it.id !== rowId))
+      return
+    }
+    // Proposed updates / removes are mutations on existing rows — reject =
+    // clear the pending mutation, keep the original text intact.
     onChange(
       items.map((it) =>
-        it.id === rowId ? { ...it, proposed: false } : it,
+        it.id === rowId
+          ? { ...it, proposedText: undefined, proposedRemove: false }
+          : it,
       ),
     )
   }
@@ -1172,6 +1465,7 @@ function BehaviorsSection({
                 }
                 onGenerate={(count) => handleGenerate(item.id, count)}
                 onAcceptProposed={() => handleAcceptProposed(item.id)}
+                onRejectProposed={() => handleRejectProposed(item.id)}
               />
             </Reveal>
           )
@@ -1210,6 +1504,7 @@ interface BehaviorRowProps {
   onBlurRow: () => void
   onGenerate: (count: number) => void
   onAcceptProposed: () => void
+  onRejectProposed: () => void
 }
 
 function BehaviorRow({
@@ -1230,6 +1525,7 @@ function BehaviorRow({
   onBlurRow,
   onGenerate,
   onAcceptProposed,
+  onRejectProposed,
 }: BehaviorRowProps) {
   const [generateCount, setGenerateCount] = useState(3)
   const isGenerateMode = item.text.trim().toLowerCase() === '/generate'
@@ -1319,7 +1615,10 @@ function BehaviorRow({
     }
   }
 
-  const isProposed = item.proposed === true
+  const isProposedAdd = item.proposed === true
+  const isProposedUpdate = typeof item.proposedText === 'string'
+  const isProposedRemove = item.proposedRemove === true
+  const hasPendingProposal = isProposedAdd || isProposedUpdate || isProposedRemove
 
   return (
     <motion.div
@@ -1330,7 +1629,7 @@ function BehaviorRow({
       <div
         className={cn(
           'flex flex-1 items-start gap-3.5 rounded-md',
-          isProposed
+          hasPendingProposal
             ? 'bg-gray-50'
             : isSelected
               ? 'bg-gray-100'
@@ -1340,42 +1639,57 @@ function BehaviorRow({
         <div
           className={cn(
             'self-stretch w-0.5 shrink-0 rounded-full',
-            isProposed ? 'bg-blue-500' : 'bg-gray-200',
+            hasPendingProposal ? 'bg-blue-500' : 'bg-gray-200',
           )}
         />
-        <textarea
-          ref={ref}
-          value={item.text}
-          onChange={(e) => onChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onFocus={onFocusRow}
-          onBlur={onBlurRow}
-          readOnly={readOnly}
-          placeholder="Describe the behavior or /generate to generate behaviors"
-          rows={1}
-          style={{ wordBreak: 'break-word' }}
-          className={cn(
-            'flex-1 min-w-0 resize-none overflow-hidden bg-transparent py-1 text-sm leading-6 placeholder:text-gray-400 focus:outline-none',
-            isProposed ? 'text-blue-700' : 'text-gray-900',
-          )}
-        />
+        {isProposedUpdate ? (
+          <div className="flex flex-1 min-w-0 flex-col gap-0.5 py-1">
+            <span className="text-sm leading-6 text-gray-400 line-through">
+              {item.text}
+            </span>
+            <span className="text-sm leading-6 text-blue-700">
+              {item.proposedText}
+            </span>
+          </div>
+        ) : (
+          <textarea
+            ref={ref}
+            value={item.text}
+            onChange={(e) => onChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onFocus={onFocusRow}
+            onBlur={onBlurRow}
+            readOnly={readOnly || isProposedRemove}
+            placeholder="Describe the behavior or /generate to generate behaviors"
+            rows={1}
+            style={{ wordBreak: 'break-word' }}
+            className={cn(
+              'flex-1 min-w-0 resize-none overflow-hidden bg-transparent py-1 text-sm leading-6 placeholder:text-gray-400 focus:outline-none',
+              isProposedRemove
+                ? 'text-blue-700 line-through'
+                : isProposedAdd
+                  ? 'text-blue-700'
+                  : 'text-gray-900',
+            )}
+          />
+        )}
       </div>
-      {isProposed ? (
+      {hasPendingProposal ? (
         <div className="flex shrink-0 items-center gap-1 mt-0.5">
           <button
             type="button"
             onClick={onAcceptProposed}
             disabled={readOnly}
-            aria-label="Accept Behavior"
+            aria-label="Accept Change"
             className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-50"
           >
             <Check className="h-3 w-3" />
           </button>
           <button
             type="button"
-            onClick={onRemove}
+            onClick={onRejectProposed}
             disabled={readOnly}
-            aria-label="Reject Behavior"
+            aria-label="Reject Change"
             className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-50"
           >
             <X className="h-3 w-3" />

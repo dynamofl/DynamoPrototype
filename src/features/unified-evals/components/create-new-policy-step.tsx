@@ -4,17 +4,23 @@ import {
   AlertCircle,
   ArrowRight,
   ArrowUpRight,
-  File as FileIcon,
   Loader2,
   MessageCircleDashed,
   Paperclip,
   X,
 } from 'lucide-react'
+import { FileIcon } from '@untitledui/file-icons'
 import { Button } from '@/components/ui/button'
 import {
   extractFile,
   type ExtractionErrorCode,
 } from '@/lib/agents/extraction-service'
+import type { ReferenceFile } from './create-policy-edit-step'
+
+const getFileExtension = (name: string): string => {
+  const dot = name.lastIndexOf('.')
+  return dot === -1 ? 'empty' : name.slice(dot + 1).toLowerCase()
+}
 
 const UPLOAD_SIM_DELAY_MIN_MS = 800
 const UPLOAD_SIM_DELAY_RANGE_MS = 700
@@ -165,7 +171,7 @@ const SUGGESTIONS = [
 ]
 
 interface CreateNewPolicyStepProps {
-  onSubmit: (enrichedContext: string) => void
+  onSubmit: (enrichedContext: string, referenceFiles: ReferenceFile[]) => void
   animateOnMount?: boolean
 }
 
@@ -201,7 +207,11 @@ export function CreateNewPolicyStep({
 
   const handleSubmit = () => {
     if (!canSubmit) return
-    onSubmit(buildEnrichedContext(objective.trim(), attachedFiles))
+    const enrichedContext = buildEnrichedContext(objective.trim(), attachedFiles)
+    const referenceFiles: ReferenceFile[] = attachedFiles.map((f) => ({
+      name: f.file.name,
+    }))
+    onSubmit(enrichedContext, referenceFiles)
   }
 
   const patchFile = (id: string, patch: Partial<AttachedFile>) => {
@@ -400,7 +410,7 @@ export function CreateNewPolicyStep({
         {attachedFiles.length > 0 && (
           <div
             ref={chipsScrollRef}
-            className="flex select-none gap-2 overflow-x-auto px-4 mt-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="flex select-none gap-2 overflow-x-auto px-3 mt-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             onPointerDown={handleChipsPointerDown}
             onPointerMove={handleChipsPointerMove}
             onPointerUp={handleChipsPointerEnd}
@@ -409,7 +419,7 @@ export function CreateNewPolicyStep({
             {attachedFiles.map((item) => (
               <div
                 key={item.id}
-                className="flex w-[280px] shrink-0 items-center gap-2 rounded-lg bg-gray-0 border border-gray-200 p-2"
+                className="flex w-[280px] shrink-0 items-center gap-2 rounded-xl bg-gray-0 border border-gray-200 p-2"
               >
                 <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-gray-100">
                   {item.status === 'uploading' || item.status === 'parsing' ? (
@@ -417,7 +427,10 @@ export function CreateNewPolicyStep({
                   ) : item.status === 'failed' ? (
                     <AlertCircle className="h-5 w-5 text-red-500" />
                   ) : (
-                    <FileIcon className="h-5 w-5 text-gray-600" />
+                    <FileIcon
+                      type={getFileExtension(item.file.name)}
+                      size={28}
+                    />
                   )}
                 </div>
                 <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
@@ -445,7 +458,7 @@ export function CreateNewPolicyStep({
                   aria-label={`Remove ${item.file.name}`}
                   className="shrink-0 self-start text-gray-500 hover:text-gray-900"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-4 w-4" />
                 </button>
               </div>
             ))}
