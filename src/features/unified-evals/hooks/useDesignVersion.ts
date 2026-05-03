@@ -2,10 +2,10 @@ import { useState } from 'react'
 
 const STORAGE_KEY = 'unified-evals-policy-design-version'
 
-export type DesignVersion = 'v1' | 'v2'
+export type DesignVersion = 'v1' | 'v2' | 'v3'
 
 const isDesignVersion = (value: unknown): value is DesignVersion =>
-  value === 'v1' || value === 'v2'
+  value === 'v1' || value === 'v2' || value === 'v3'
 
 export function useDesignVersion() {
   const [version, setVersionState] = useState<DesignVersion>(() => {

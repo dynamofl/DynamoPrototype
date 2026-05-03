@@ -41,6 +41,7 @@ export function DesignVersionPalette({ version, onChange }: DesignVersionPalette
           >
             <DropdownMenuRadioItem value="v1">Version 1</DropdownMenuRadioItem>
             <DropdownMenuRadioItem value="v2">Version 2</DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="v3">Version 3</DropdownMenuRadioItem>
           </DropdownMenuRadioGroup>
         </DropdownMenuContent>
       </DropdownMenu>
